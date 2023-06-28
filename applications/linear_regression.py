@@ -1,10 +1,10 @@
 import time
-import linops.jax_fns as xnp
-from linops.linear_algebra import lazify
-from linops.operators import SelfAdjoint
-from linops.operators import Diagonal
-from linops.experiment_utils import load_uci_data, print_time_taken, save_object
-from linops.experiment_utils import get_times, get_times_sk_linear
+import cola.jax_fns as xnp
+from cola.linear_algebra import lazify
+from cola.operators import SelfAdjoint
+from cola.operators import Diagonal
+from cola.experiment_utils import load_uci_data, print_time_taken, save_object
+from cola.experiment_utils import get_times, get_times_sk_linear
 # import jax.config
 # jax.config.update("jax_enable_x64", True)
 

@@ -1,8 +1,8 @@
 __version__ = '0.1.0'
 from .linear_algebra import *
-from linops.linalg import *
-from linops.ops import *
-# import linops.operators
+from cola.linalg import *
+from cola.ops import *
+# import cola.operators
 #  from .operator_base import LinearOperator
 #  from .operators import *
 #  try:

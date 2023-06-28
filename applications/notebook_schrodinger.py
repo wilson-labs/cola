@@ -5,8 +5,8 @@ import jax.numpy as jnp
 from jax import vmap, jit
 import jax
 from jax import jacfwd
-import linops as lo
-from linops.linalg.eigs import eig
+import cola as lo
+from cola.linalg.eigs import eig
 os.environ["CUDA_VISIBLE_DEVICES"] = "4"
 # from jax.config import config
 # config.update("jax_enable_x64", True)

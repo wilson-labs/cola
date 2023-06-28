@@ -1,10 +1,10 @@
 import time
 import jax.config
-import linops.jax_fns as xnp
-import linops as lo
-from linops.linear_algebra import lazify
-from linops.algorithms.svrg import svrg_eigh_max
-from linops.experiment_utils import load_uci_data, print_time_taken, save_object
+import cola.jax_fns as xnp
+import cola as lo
+from cola.linear_algebra import lazify
+from cola.algorithms.svrg import svrg_eigh_max
+from cola.experiment_utils import load_uci_data, print_time_taken, save_object
 jax.config.update("jax_enable_x64", True)
 
 save_output = True

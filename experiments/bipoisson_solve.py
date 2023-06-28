@@ -2,12 +2,12 @@ import time
 from functools import partial
 from jax import jit, vmap
 from jax.config import config
-import linops.jax_fns as xnp
-from linops.operator_base import LinearOperator
-from linops.operators import Symmetric
-from linops.experiment_utils import generate_biposson_data, construct_laplacian
-from linops.experiment_utils import get_dense_times, get_times
-from linops.experiment_utils import print_time_taken, save_object
+import cola.jax_fns as xnp
+from cola.operator_base import LinearOperator
+from cola.operators import Symmetric
+from cola.experiment_utils import generate_biposson_data, construct_laplacian
+from cola.experiment_utils import get_dense_times, get_times
+from cola.experiment_utils import print_time_taken, save_object
 
 config.update('jax_platform_name', 'cpu')
 config.update("jax_enable_x64", True)

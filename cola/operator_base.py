@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Union, Tuple, Any, List, Callable
-# import linops.linear_algebra  # import dot, add, mul
-import linops
+# import cola.linear_algebra  # import dot, add, mul
+import cola
 import numpy as np
 
 Array = Dtype = Any
@@ -13,7 +13,7 @@ def get_library_fns(dtype: Dtype):
     try:
         from jax import numpy as jnp
         if dtype in [jnp.float32, jnp.float64, jnp.complex64, jnp.int32, jnp.int64]:
-            import linops.jax_fns as fns
+            import cola.jax_fns as fns
             return fns
     except ImportError:
         pass
@@ -21,7 +21,7 @@ def get_library_fns(dtype: Dtype):
         import torch
         if dtype in [torch.float32, torch.float64, torch.complex64, torch.complex128,
                      torch.int32, torch.int64]:
-            import linops.torch_fns as fns
+            import cola.torch_fns as fns
             return fns
     except ImportError:
         raise ImportError("No supported array library found")
@@ -80,12 +80,12 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     @property
     def T(self):
         """ Matrix Transpose """
-        return linops.linear_algebra.transpose(self)
+        return cola.linear_algebra.transpose(self)
 
     @property
     def H(self):
         """ Matrix complex conjugate transpose (aka hermitian conjugate, adjoint)"""
-        return linops.linear_algebra.adjoint(self)
+        return cola.linear_algebra.adjoint(self)
 
     def flatten(self) -> Tuple[Array, ...]:
         return flatten_function(self)
@@ -93,7 +93,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     def __matmul__(self, X: Array) -> Array:
         # assert X.shape[0] == self.shape[-1], f"dimension mismatch {self.shape} vs {X.shape}"
         if isinstance(X, LinearOperator):
-            return linops.linear_algebra.dot(self, X)
+            return cola.linear_algebra.dot(self, X)
         elif len(X.shape) == 1:
             return self._matmat(X.reshape(-1, 1)).reshape(-1)
         elif len(X.shape) >= 2:
@@ -104,7 +104,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     def __rmatmul__(self, X: Array) -> Array:
         assert X.shape[-1] == self.shape[-2], f"dimension mismatch {self.shape} vs {X.shape}"
         if isinstance(X, LinearOperator):
-            return linops.linear_algebra.dot(X, self)
+            return cola.linear_algebra.dot(X, self)
         elif len(X.shape) == 1:
             return self._rmatmat(X.reshape(1, -1)).reshape(-1)
         elif len(X.shape) >= 2:
@@ -115,14 +115,14 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     def __add__(self, other):
         if other == 0:
             return self
-        return linops.linear_algebra.add(self, other)
+        return cola.linear_algebra.add(self, other)
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __mul__(self, c):
         # assert isinstance(c, (int, float)), "c must be a scalar"
-        return linops.linear_algebra.mul(self, c)
+        return cola.linear_algebra.mul(self, c)
 
     def __rmul__(self, c):
         return self * c
@@ -174,7 +174,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
                 return (self @ ej)[s]
             case (slice() | xnp.ndarray() | np.ndarray()) as s_i,  \
                  (slice() | xnp.ndarray() | np.ndarray()) as s_j:
-                from linops.operators import Sliced
+                from cola.operators import Sliced
                 return Sliced(A=self, slices=(s_i, s_j))
             case list(li), list(lj):
                 out = []

@@ -1,9 +1,9 @@
-import linops.torch_fns as xnp
-# import linops.jax_fns as xnp
-from linops.operators import Symmetric
-from linops.linear_algebra import lazify
-from linops.linalg.inverse import inverse
-from linops.algorithms.preconditioners import NystromPrecond
+import cola.torch_fns as xnp
+# import cola.jax_fns as xnp
+from cola.operators import Symmetric
+from cola.linear_algebra import lazify
+from cola.linalg.inverse import inverse
+from cola.algorithms.preconditioners import NystromPrecond
 from jax.config import config
 
 config.update('jax_platform_name', 'cpu')

@@ -1,9 +1,9 @@
 import time
 import matplotlib.pyplot as plt
-from linops.operator_base import CustomLinOp
-from linops.experiment_utils import print_time_taken
+from cola.operator_base import CustomLinOp
+from cola.experiment_utils import print_time_taken
 from functools import partial
-from linops.linalg.inverse import inverse
+from cola.linalg.inverse import inverse
 import jax
 from jax import vmap, jit
 import jax.numpy as jnp
@@ -11,7 +11,7 @@ import numpy as np
 import os
 # from scipy.sparse.linalg import LinearOperator
 # import scipy
-# import linops as lo
+# import cola as lo
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 

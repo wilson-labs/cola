@@ -1,12 +1,12 @@
 import time
-import linops.torch_fns as xnp
-from linops.experiment_utils import load_graph_data
-from linops.linalg.sqrt import sqrt
-from linops.linalg.inverse import inverse
-from linops.operators import Sparse, Diagonal, SelfAdjoint, I_like
-from linops.experiment_utils import get_times_spectral, get_times_spectral_sklearn
-from linops.experiment_utils import transform_to_csr
-from linops.experiment_utils import print_time_taken, save_object
+import cola.torch_fns as xnp
+from cola.experiment_utils import load_graph_data
+from cola.linalg.sqrt import sqrt
+from cola.linalg.inverse import inverse
+from cola.operators import Sparse, Diagonal, SelfAdjoint, I_like
+from cola.experiment_utils import get_times_spectral, get_times_spectral_sklearn
+from cola.experiment_utils import transform_to_csr
+from cola.experiment_utils import print_time_taken, save_object
 
 save_output = True
 embedding_size, n_clusters = 8, 8

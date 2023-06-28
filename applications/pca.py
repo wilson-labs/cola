@@ -1,9 +1,9 @@
 import time
 import jax.config
-import linops.jax_fns as xnp
-from linops.linear_algebra import lazify
-from linops.experiment_utils import get_times_pca, get_times_pca_sk
-from linops.experiment_utils import load_uci_data, print_time_taken, save_object
+import cola.jax_fns as xnp
+from cola.linear_algebra import lazify
+from cola.experiment_utils import get_times_pca, get_times_pca_sk
+from cola.experiment_utils import load_uci_data, print_time_taken, save_object
 
 jax.config.update("jax_enable_x64", True)
 

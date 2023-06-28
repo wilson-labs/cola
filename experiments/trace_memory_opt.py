@@ -1,14 +1,14 @@
 import time
 import tracemalloc
 import numpy as np
-from linops.operators import I_like
-# from linops.operators import Dense
-from linops.operators import Diagonal
-import linops.jax_fns as xnp
-from linops.experiment_utils import print_time_taken, save_object
-# from linops.utils_test import generate_spectrum, generate_lower_from_diag
-from linops.utils_test import generate_spectrum
-from linops.algorithms.cg import run_cg
+from cola.operators import I_like
+# from cola.operators import Dense
+from cola.operators import Diagonal
+import cola.jax_fns as xnp
+from cola.experiment_utils import print_time_taken, save_object
+# from cola.utils_test import generate_spectrum, generate_lower_from_diag
+from cola.utils_test import generate_spectrum
+from cola.algorithms.cg import run_cg
 from jax.config import config
 
 config.update('jax_platform_name', 'cpu')

@@ -1,6 +1,6 @@
-import linops.torch_fns as xnp
-from linops.operators import Diagonal
-from linops.linalg.inverse import inverse
+import cola.torch_fns as xnp
+from cola.operators import Diagonal
+from cola.linalg.inverse import inverse
 
 dtype = xnp.float32
 diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))

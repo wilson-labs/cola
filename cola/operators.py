@@ -1,9 +1,9 @@
 from functools import reduce, partial
-# import linops.linear_algebra
-from linops.operator_base import LinearOperator
-from linops.operator_base import Array, get_library_fns
+# import cola.linear_algebra
+from cola.operator_base import LinearOperator
+from cola.operator_base import Array, get_library_fns
 import numpy as np
-from linops.utils.parametric import parametric
+from cola.utils.parametric import parametric
 
 
 class Dense(LinearOperator):

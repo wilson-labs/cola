@@ -4,16 +4,16 @@ import numpy as np
 import seaborn as sns
 from sklearn import datasets
 from sklearn.cluster import KMeans
-import linops.torch_fns as xnp
-from linops.linalg.eigs import eig
-# from linops.linalg.sqrt import sqrt
-from linops.linalg.inverse import inverse
-from linops.experiment_utils import data_to_csr
-# from linops.experiment_utils import data_to_csr_neighbors
-from linops.operators import SelfAdjoint
-from linops.operators import I_like
-from linops.operators import Sparse
-from linops.operators import Diagonal
+import cola.torch_fns as xnp
+from cola.linalg.eigs import eig
+# from cola.linalg.sqrt import sqrt
+from cola.linalg.inverse import inverse
+from cola.experiment_utils import data_to_csr
+# from cola.experiment_utils import data_to_csr_neighbors
+from cola.operators import SelfAdjoint
+from cola.operators import I_like
+from cola.operators import Sparse
+from cola.operators import Diagonal
 
 sns.set(style="whitegrid", font_scale=3.0, rc={"lines.linewidth": 4.0})
 sns.set_palette("Set2")

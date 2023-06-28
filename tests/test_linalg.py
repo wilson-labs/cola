@@ -1,15 +1,15 @@
-import linops as co
-from linops import jax_fns
-from linops import torch_fns
-from linops.linear_algebra import lazify
-from linops.ops import Tridiagonal
-from linops.algorithms.lanczos import get_lu_from_tridiagonal
-from linops.algorithms.lanczos import construct_tridiagonal
-from linops.linalg.nullspace import nullspace
-from linops.linalg.eigs import power_iteration
-from linops.linear_algebra import kron
-from linops.utils_test import parametrize, relative_error
-from linops.utils_test import generate_spectrum, generate_pd_from_diag
+import cola as co
+from cola import jax_fns
+from cola import torch_fns
+from cola.linear_algebra import lazify
+from cola.ops import Tridiagonal
+from cola.algorithms.lanczos import get_lu_from_tridiagonal
+from cola.algorithms.lanczos import construct_tridiagonal
+from cola.linalg.nullspace import nullspace
+from cola.linalg.eigs import power_iteration
+from cola.linear_algebra import kron
+from cola.utils_test import parametrize, relative_error
+from cola.utils_test import generate_spectrum, generate_pd_from_diag
 from jax.config import config
 config.update('jax_platform_name', 'cpu')
 

@@ -1,8 +1,8 @@
-import linops.torch_fns as xnp
-from linops.linear_algebra import lazify
-from linops.operators import LowerTriangular
-from linops.linalg.eigs import eig
-from linops.utils_test import generate_lower_from_diag
+import cola.torch_fns as xnp
+from cola.linear_algebra import lazify
+from cola.operators import LowerTriangular
+from cola.linalg.eigs import eig
+from cola.utils_test import generate_lower_from_diag
 
 dtype = xnp.float32
 diag = xnp.array([1., 0.5, 0.25, 0.1], dtype=dtype)
