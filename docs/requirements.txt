@@ -1,0 +1,6 @@
+# Pandoc should be installed on the OS (sudo apt install pandoc)
+sphinx
+nbsphinx
+recommonmark
+sphinx_rtd_theme
+jupyter
