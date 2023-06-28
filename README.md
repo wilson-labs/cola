@@ -168,5 +168,5 @@ This work is supported by XXX.
 ## Licence
 CoLA is XXX licensed.
 
-## Suport and contact
+## Support and contact
 Please raise an issue if you find a bug or inadequate performance when using CoLA.
