@@ -10,7 +10,7 @@ CoLA supports both PyTorch and JAX.
 
 ## Installation
 ```shell
-git clone https://github.com/mfinzi/linops
+git clone https://github.com/wilson-labs/cola
 ```
 
 ## Features in CoLA
