@@ -3,9 +3,9 @@ from jax.random import PRNGKey
 from jax.random import normal
 from jax import numpy as jnp
 from jax.lax import while_loop as _while_loop
-from linops.utils.control_flow import while_loop as _while_loop_no_jit
+from cola.utils.control_flow import while_loop as _while_loop_no_jit
 from jax.lax import fori_loop as _for_loop
-# from linops.utils.control_flow import for_loop as _for_loop
+# from cola.utils.control_flow import for_loop as _for_loop
 from jax.lax import conj as conj_lax
 from jax.lax import dynamic_slice
 # from jax.lax import dynamic_update_slice
@@ -13,7 +13,7 @@ from jax.lax import expand_dims
 from jax import vjp
 from jax import jit, vmap, grad
 import jax
-from linops.utils.jax_tqdm import pbar_while, while_loop_winfo
+from cola.utils.jax_tqdm import pbar_while, while_loop_winfo
 from jax.lax.linalg import cholesky
 from jax.lax.linalg import svd
 from jax.lax.linalg import qr

@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 import seaborn as sns
-from linops.experiment_utils import load_object
-from linops.experiment_utils import convert_results_to_df
+from cola.experiment_utils import load_object
+from cola.experiment_utils import convert_results_to_df
 
 results = {}
 input_path = "./logs/trace_opt_20230523_1831.pkl"

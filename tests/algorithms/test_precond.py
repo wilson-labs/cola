@@ -1,14 +1,14 @@
-from linops import jax_fns
-from linops import torch_fns
-from linops.linear_algebra import lazify
-from linops.algorithms.preconditioners import get_nys_approx
-from linops.algorithms.preconditioners import select_rank_adaptively
-from linops.algorithms.preconditioners import NystromPrecond
-from linops.algorithms.preconditioners import AdaNysPrecond
-from linops.algorithms.preconditioners import sqrt
-from linops.algorithms.preconditioners import inverse
-from linops.utils_test import parametrize, relative_error, construct_e_vec
-from linops.utils_test import generate_spectrum, generate_pd_from_diag
+from cola import jax_fns
+from cola import torch_fns
+from cola.linear_algebra import lazify
+from cola.algorithms.preconditioners import get_nys_approx
+from cola.algorithms.preconditioners import select_rank_adaptively
+from cola.algorithms.preconditioners import NystromPrecond
+from cola.algorithms.preconditioners import AdaNysPrecond
+from cola.algorithms.preconditioners import sqrt
+from cola.algorithms.preconditioners import inverse
+from cola.utils_test import parametrize, relative_error, construct_e_vec
+from cola.utils_test import generate_spectrum, generate_pd_from_diag
 from jax.config import config
 
 config.update('jax_platform_name', 'cpu')

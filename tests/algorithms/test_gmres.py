@@ -1,11 +1,11 @@
 import numpy as np
-from linops import jax_fns
-from linops import torch_fns
-from linops.linear_algebra import lazify
-from linops.linalg.inverse import inverse
-from linops.algorithms.gmres import run_gmres
-from linops.utils_test import parametrize, relative_error
-from linops.utils_test import generate_spectrum, generate_pd_from_diag
+from cola import jax_fns
+from cola import torch_fns
+from cola.linear_algebra import lazify
+from cola.linalg.inverse import inverse
+from cola.algorithms.gmres import run_gmres
+from cola.utils_test import parametrize, relative_error
+from cola.utils_test import generate_spectrum, generate_pd_from_diag
 from jax.config import config
 
 config.update('jax_platform_name', 'cpu')

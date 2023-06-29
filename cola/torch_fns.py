@@ -1,6 +1,6 @@
 import torch
 from torch.autograd.functional import vjp, jvp
-from linops.utils.torch_tqdm import while_loop_winfo
+from cola.utils.torch_tqdm import while_loop_winfo
 from torch.nn import Parameter
 
 exp = torch.exp

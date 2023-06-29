@@ -1,9 +1,9 @@
-from linops.operator_base import LinearOperator
-from linops.operator_base import Array
-from linops.operators import Householder, Product
-# from linops.operators import get_householder_vec
-from linops.operators import get_householder_vec_simple
-from linops.utils.control_flow import for_loop
+from cola.operator_base import LinearOperator
+from cola.operator_base import Array
+from cola.operators import Householder, Product
+# from cola.operators import get_householder_vec
+from cola.operators import get_householder_vec_simple
+from cola.utils.control_flow import for_loop
 
 
 def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7,

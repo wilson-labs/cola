@@ -34,7 +34,7 @@ for dataset, Ns in cases:
         rhs = X.T @ y
 
         lin_kwargs = {"method": "cg", "info": True, "tol": 1e-4, "max_iters": 1000}
-        get_times(XTX, rhs, lin_kwargs, results[dataset][N], xnp, repeat, key="linops")
+        get_times(XTX, rhs, lin_kwargs, results[dataset][N], xnp, repeat, key="cola")
         get_times_sk_linear(X, y, mu, results[dataset][N], repeat)
 
 toc = time.time()

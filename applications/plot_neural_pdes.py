@@ -1,21 +1,21 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import seaborn as sns
-# from linops.experiment_utils import load_object
+# from cola.experiment_utils import load_object
 
 sns.set(style="whitegrid", font_scale=4.0)
 
-# linops_cpu = load_object("./logs/neural_pdes_linops_cpu.pkl")
-# linops_gpu = load_object("./logs/neural_pdes_linops_gpu.pkl")
+# cola_cpu = load_object("./logs/neural_pdes_cola_cpu.pkl")
+# cola_gpu = load_object("./logs/neural_pdes_cola_gpu.pkl")
 # scipy = load_object("./logs/neural_pdes_scipy.pkl")
-linops = {}
-linops["times"] = np.array([0., 0.5, 1.0, 1.5, 2.0])
-linops["res"] = np.array([3e-4, 1e-3, 5e-4, 6e-4, 3e-3])
+cola = {}
+cola["times"] = np.array([0., 0.5, 1.0, 1.5, 2.0])
+cola["res"] = np.array([3e-4, 1e-3, 5e-4, 6e-4, 3e-3])
 scipy = {}
 scipy["times"] = np.array([0., 0.5, 1.0, 1.5, 2.0])
 scipy["res"] = np.array([4e-4, 2e-3, 4e-4, 5e-4, 4e-3])
-results = [linops, scipy]
-labels = ["LinOps", "Neural-IVP"]
+results = [cola, scipy]
+labels = ["cola", "Neural-IVP"]
 colors = ["#2b8cbe", "#636363"]
 
 plt.figure(dpi=50, figsize=(14, 10))

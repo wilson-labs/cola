@@ -1,16 +1,16 @@
 import numpy as np
-from linops.ops import Householder
-from linops.ops import Product
-from linops.operators import get_householder_vec
-from linops import jax_fns
-from linops import torch_fns
-from linops.linear_algebra import lazify
-from linops.algorithms.arnoldi import get_arnoldi_matrix
-from linops.algorithms.arnoldi import arnoldi_eig
-from linops.algorithms.arnoldi import run_householder_arnoldi
-from linops.utils_test import parametrize, relative_error
-from linops.utils_test import generate_spectrum, generate_pd_from_diag
-from linops.utils_test import generate_lower_from_diag
+from cola.ops import Householder
+from cola.ops import Product
+from cola.operators import get_householder_vec
+from cola import jax_fns
+from cola import torch_fns
+from cola.linear_algebra import lazify
+from cola.algorithms.arnoldi import get_arnoldi_matrix
+from cola.algorithms.arnoldi import arnoldi_eig
+from cola.algorithms.arnoldi import run_householder_arnoldi
+from cola.utils_test import parametrize, relative_error
+from cola.utils_test import generate_spectrum, generate_pd_from_diag
+from cola.utils_test import generate_lower_from_diag
 from jax.config import config
 
 config.update('jax_platform_name', 'cpu')

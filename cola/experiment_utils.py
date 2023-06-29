@@ -28,23 +28,23 @@ from sklearn.impute import SimpleImputer
 from sklearn.cluster import KMeans
 from sklearn.cluster import SpectralClustering
 from sklearn.decomposition import PCA
-from linops.operators import SelfAdjoint
-from linops.operators import Diagonal
-from linops.operators import ScalarMul
-from linops.operators import I_like
-from linops.operator_base import CustomLinOp
-from linops.operator_base import LinearOperator
-from linops.linalg.eigs import eig
-from linops.linear_algebra import lazify
-from linops.linear_algebra import kron
-from linops.linalg.inverse import inverse
-from linops.algorithms.svrg import solve_svrg_rff
-from linops.algorithms.svd import get_randomized_svd
-from linops.algorithms.cg import run_batched_tracking_cg
-from linops.utils_test import generate_spectrum
-from linops.utils_test import generate_clustered_spectrum
-from linops.utils_test import generate_diagonals
-from linops.utils_test import generate_pd_from_diag
+from cola.operators import SelfAdjoint
+from cola.operators import Diagonal
+from cola.operators import ScalarMul
+from cola.operators import I_like
+from cola.operator_base import CustomLinOp
+from cola.operator_base import LinearOperator
+from cola.linalg.eigs import eig
+from cola.linear_algebra import lazify
+from cola.linear_algebra import kron
+from cola.linalg.inverse import inverse
+from cola.algorithms.svrg import solve_svrg_rff
+from cola.algorithms.svd import get_randomized_svd
+from cola.algorithms.cg import run_batched_tracking_cg
+from cola.utils_test import generate_spectrum
+from cola.utils_test import generate_clustered_spectrum
+from cola.utils_test import generate_diagonals
+from cola.utils_test import generate_pd_from_diag
 
 
 def get_times_pca_sk(X, pca_num, results, repeat):
@@ -71,7 +71,7 @@ def get_times_pca(XTX, args, results, repeat):
         t1 = time.time()
         times[idx] = t1 - t0
 
-    results["linops"] = {"times": times, "system_size": XTX.shape[0], "eigs": eigs}
+    results["cola"] = {"times": times, "system_size": XTX.shape[0], "eigs": eigs}
     print("*+" * 50)
     print(f"Times   {np.mean(times[1:]):1.5e} sec")
     print("*+" * 50)
@@ -106,9 +106,9 @@ def get_times_schrodinger(H, args, results, repeat):
         t1 = time.time()
         times[idx] = t1 - t0
 
-    results["linops"] = {"times": times, "grid_size": N2, "points": N}
+    results["cola"] = {"times": times, "grid_size": N2, "points": N}
     print("*+" * 50)
-    print(f"LinOps | grid size {N2:,d}")
+    print(f"cola | grid size {N2:,d}")
     print(f"Times   {np.mean(times[1:]):1.5e} sec")
     print("*+" * 50)
 
@@ -212,9 +212,9 @@ def get_times_minimal_surface(J_matvec, pde_op, args, results, repeat, tol=1e-3)
         t1 = time.time()
         times[idx] = t1 - t0
 
-    results["linops"] = {"times": times, "grid_size": N2, "points": N, "z": z}
+    results["cola"] = {"times": times, "grid_size": N2, "points": N, "z": z}
     print("*+" * 50)
-    print(f"LinOps | grid size {N2:,d}")
+    print(f"cola | grid size {N2:,d}")
     print(f"Times   {np.mean(times[1:]):1.5e} sec")
     print("*+" * 50)
 
@@ -250,7 +250,7 @@ def get_times_spectral(L, results, repeat, args):
         kmeans = KMeans(n_clusters=n_clusters).fit(x_emb)
         t1 = time.time()
         times[idx] = t1 - t0
-    results["linops"] = {
+    results["cola"] = {
         "times": times,
         "nodes": L.shape[0],
         "edges": num_edges,
@@ -259,7 +259,7 @@ def get_times_spectral(L, results, repeat, args):
         "labels": kmeans.labels_
     }
     print("*+" * 50)
-    print("LinOps")
+    print("cola")
     print(f"Times   {np.mean(times[1:]):1.5e} sec")
     print("*+" * 50)
     return results

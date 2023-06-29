@@ -1,18 +1,18 @@
 import numpy as np
-from linops import jax_fns
-from linops import torch_fns
-from linops.linear_algebra import lazify
-from linops.ops import Identity
-from linops.ops import Diagonal
-from linops.ops import CustomLinOp
-from linops.algorithms.preconditioners import NystromPrecond
-from linops.algorithms.cg import solve_cg
-from linops.algorithms.cg import run_batched_cg
-from linops.algorithms.cg import run_batched_tracking_cg
-from linops.algorithms.cg import run_cg
-from linops.utils_test import parametrize, relative_error
-from linops.utils_test import generate_spectrum, generate_pd_from_diag
-from linops.utils_test import generate_diagonals
+from cola import jax_fns
+from cola import torch_fns
+from cola.linear_algebra import lazify
+from cola.ops import Identity
+from cola.ops import Diagonal
+from cola.ops import CustomLinOp
+from cola.algorithms.preconditioners import NystromPrecond
+from cola.algorithms.cg import solve_cg
+from cola.algorithms.cg import run_batched_cg
+from cola.algorithms.cg import run_batched_tracking_cg
+from cola.algorithms.cg import run_cg
+from cola.utils_test import parametrize, relative_error
+from cola.utils_test import generate_spectrum, generate_pd_from_diag
+from cola.utils_test import generate_diagonals
 # from tests.algorithms.test_lanczos import construct_tridiagonal
 from jax.config import config
 

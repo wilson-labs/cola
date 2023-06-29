@@ -103,8 +103,8 @@ Design Choices
    :maxdepth: 1
    :caption: API Reference
 
-   package/linops.operators
-   package/linops.linear_algebra
+   package/cola.operators
+   package/cola.linear_algebra
 
 .. toctree::
    :maxdepth: 1

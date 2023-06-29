@@ -1,6 +1,6 @@
 Operators
 =========
 
-.. automodule:: linops.operators
+.. automodule:: cola.operators
     :members:
     :show-inheritance:

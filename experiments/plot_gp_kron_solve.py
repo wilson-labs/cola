@@ -1,12 +1,12 @@
 from matplotlib import pyplot as plt
 import seaborn as sns
-from linops.experiment_utils import load_object
-from linops.experiment_utils import convert_results_to_df
+from cola.experiment_utils import load_object
+from cola.experiment_utils import convert_results_to_df
 
 input_path = "./logs/gp_kron_solve_20230509_1946.pkl"
 results = load_object(input_path)
 df = convert_results_to_df(results)
-keys = ["dense", "iterative", "linops"]
+keys = ["dense", "iterative", "cola"]
 an = {
     "dense": {
         "color": "#636363",
@@ -16,7 +16,7 @@ an = {
         "color": "#de2d26",
         "label": "Iterative"
     },
-    "linops": {
+    "cola": {
         "color": "#2b8cbe",
         "label": "CoLA"
     }

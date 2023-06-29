@@ -1,6 +1,6 @@
 from typing import Tuple
-from linops.operator_base import LinearOperator
-from linops.operator_base import Array
+from cola.operator_base import LinearOperator
+from cola.operator_base import Array
 from plum import dispatch
 
 

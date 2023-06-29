@@ -1,15 +1,15 @@
 from typing import Tuple
 from math import prod
-from linops.linear_algebra import densify
-from linops.linear_algebra import diag
-from linops.operator_base import LinearOperator
-from linops.operator_base import Array
-from linops.operators import SelfAdjoint
-from linops.operators import LowerTriangular
-from linops.operators import Diagonal
-from linops.operators import I_like
-from linops.algorithms.lanczos import lanczos_eig
-from linops.algorithms.arnoldi import arnoldi_eig
+from cola.linear_algebra import densify
+from cola.linear_algebra import diag
+from cola.operator_base import LinearOperator
+from cola.operator_base import Array
+from cola.operators import SelfAdjoint
+from cola.operators import LowerTriangular
+from cola.operators import Diagonal
+from cola.operators import I_like
+from cola.algorithms.lanczos import lanczos_eig
+from cola.algorithms.arnoldi import arnoldi_eig
 from plum import dispatch
 
 

@@ -34,7 +34,7 @@ for N in Ns:
     results = get_times(Lit, rhs, it_kwargs, results, N, xnp, repeat, key="iterative")
 
     lin_kwargs = {"method": "auto", "info": True, "tol": 1e-11, "max_iters": 10_000}
-    results = get_times(LL, rhs, lin_kwargs, results, N, xnp, repeat, key="linops")
+    results = get_times(LL, rhs, lin_kwargs, results, N, xnp, repeat, key="cola")
 
 toc = time.time()
 print_time_taken(toc - tic)

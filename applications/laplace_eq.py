@@ -36,9 +36,9 @@ domain_ids = domain.reshape(-1).nonzero()[0]
 BCS = jnp.where(domain,jnp.zeros_like(x),(x+y)*jnp.cos(2*x))
 
 
-from linops.operators import CustomLinOp, Symmetric, SelfAdjoint
-from linops.linalg import solve_symmetric, solve
-from linops import LinearOperator
+from cola.operators import CustomLinOp, Symmetric, SelfAdjoint
+from cola.linalg import solve_symmetric, solve
+from cola import LinearOperator
 
 
 Lfull = LinearOperator(jnp.float32,shape=(N**ndims,N**ndims),matmat=jit(vmap(laplacian,-1,-1)))

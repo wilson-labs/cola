@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 README_FILE = 'README.md'
 
-project_name = "linops"
+project_name = "cola"
 setup(
     name=project_name,
     description="",
@@ -20,7 +20,7 @@ setup(
     # long_description=open('../README.md').read(),
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/mfinzi/linops',
+    url='https://github.com/mfinzi/cola',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

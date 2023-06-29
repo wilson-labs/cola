@@ -1,7 +1,7 @@
 from typing import Union
-from linops.operator_base import LinearOperator
-from linops.operator_base import CustomLinOp
-from linops.linalg.eigs import power_iteration
+from cola.operator_base import LinearOperator
+from cola.operator_base import CustomLinOp
+from cola.linalg.eigs import power_iteration
 from plum import dispatch
 
 

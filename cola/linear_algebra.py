@@ -1,10 +1,10 @@
 from typing import List, Union, Any
 from plum import dispatch
-from linops.operator_base import LinearOperator, Array
-from linops.operators import Dense
-from linops.operators import Kronecker, Product, KronSum, Sum
-from linops.operators import ScalarMul, Transpose, Adjoint, SelfAdjoint
-from linops.operators import BlockDiag, Identity, Diagonal, I_like
+from cola.operator_base import LinearOperator, Array
+from cola.operators import Dense
+from cola.operators import Kronecker, Product, KronSum, Sum
+from cola.operators import ScalarMul, Transpose, Adjoint, SelfAdjoint
+from cola.operators import BlockDiag, Identity, Diagonal, I_like
 
 Scalar = Array
 

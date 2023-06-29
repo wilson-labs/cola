@@ -2,10 +2,10 @@ import time
 import torch
 from gpytorch.kernels import RBFKernel
 from gpytorch.kernels import MultitaskKernel
-from linops import torch_fns as xnp
-from linops.operators import SelfAdjoint
-from linops.experiment_utils import get_dense_times, get_times, get_times_cg2
-from linops.experiment_utils import print_time_taken, save_object
+from cola import torch_fns as xnp
+from cola.operators import SelfAdjoint
+from cola.experiment_utils import get_dense_times, get_times, get_times_cg2
+from cola.experiment_utils import print_time_taken, save_object
 
 save_output = True
 output_path = "./logs/gp_kron_solve.pkl"
@@ -33,7 +33,7 @@ for N in Ns:
     results[N] = get_times_cg2(KA, rhs, it_kwargs, results[N], xnp, repeat)
 
     lin_kwargs = {"method": "auto", "info": True, "tol": 1e-6, "max_iters": 1_000}
-    results = get_times(K, rhs, lin_kwargs, results, N, xnp, repeat, key="linops")
+    results = get_times(K, rhs, lin_kwargs, results, N, xnp, repeat, key="cola")
 
 toc = time.time()
 print_time_taken(toc - tic)

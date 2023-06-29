@@ -2,8 +2,8 @@
 
 <!-- [![Documentation](https://readthedocs.org/projects/emlp/badge/)]() -->
 <!-- | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]() | -->
-[![tests](https://github.com/mfinzi/linops/actions/workflows/python-package.yml/badge.svg)](https://github.com/mfinzi/linops/actions/workflows/python-package.yml)
-[![codecov](https://codecov.io/gh/mfinzi/linops/branch/main/graph/badge.svg?token=bBnkfHv30C)](https://codecov.io/gh/mfinzi/linops)
+[![tests](https://github.com/mfinzi/cola/actions/workflows/python-package.yml/badge.svg)](https://github.com/mfinzi/cola/actions/workflows/python-package.yml)
+[![codecov](https://codecov.io/gh/mfinzi/cola/branch/main/graph/badge.svg?token=bBnkfHv30C)](https://codecov.io/gh/mfinzi/cola)
 
 CoLA is a numerical linear algebra framework that exploits the structure usually found on machine learning problems and beyond.
 CoLA supports both PyTorch and JAX.
@@ -77,9 +77,9 @@ def inverse(A: Diagonal, **kwargs):
 ```
 and once we have that dispatch rule available we can then use it in the following manner:
 ```python
-import linops.torch_fns as xnp
-from linops.operators import Diagonal
-from linops.linalg.inverse import inverse
+import cola.torch_fns as xnp
+from cola.operators import Diagonal
+from cola.linalg.inverse import inverse
 
 dtype = xnp.float32
 diag = xnp.array([1., 0.5, 0.25, 0.1], dtype=dtype)
@@ -104,7 +104,7 @@ def eig(A: Diagonal, eig_slice=slice(0, None, None), **kwargs):
 ```
 and continuing the previous example we would have
 ```python
-from linops.linalg.eigs import eig
+from cola.linalg.eigs import eig
 eigvals, eigvecs = eig(D)
 print(eigvals)
 ```
@@ -112,11 +112,11 @@ print(eigvals)
 2. **Solving a symmetric linear system** using CG and Nystr&ouml;m preconditioning using
    PyTorch
 ```python
-import linops.torch_fns as xnp
-from linops.operators import Symmetric
-from linops.linear_algebra import lazify
-from linops.linalg.inverse import inverse
-from linops.algorithms.preconditioners import NystromPrecond
+import cola.torch_fns as xnp
+from cola.operators import Symmetric
+from cola.linear_algebra import lazify
+from cola.linalg.inverse import inverse
+from cola.algorithms.preconditioners import NystromPrecond
 
 N, B = 10, 3
 L = lazify(xnp.randn(N, N, dtype=xnp.float32))
@@ -128,16 +128,16 @@ soln = A_inv @ rhs
 res = xnp.norm(A @ soln - rhs, axis=0)
 print(res)
 ```
-To change the backend to JAX simply modify the first import to `import linops.jax_fns as xnp`.
+To change the backend to JAX simply modify the first import to `import cola.jax_fns as xnp`.
 
 3. **Take the gradient of a linear solve**.
 A linear operator can be conceived as a structured container of some parameters.
 In CoLA, we have incorporated memory-efficient and fast routines to backpropagate through
 some algebraic operations such as a solve:
 ```python
-import linops.torch_fns as xnp
-from linops.operators import Diagonal
-from linops.linalg.inverse import inverse
+import cola.torch_fns as xnp
+from cola.operators import Diagonal
+from cola.linalg.inverse import inverse
 
 dtype = xnp.float32
 diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))

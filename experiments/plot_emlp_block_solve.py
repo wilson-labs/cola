@@ -1,8 +1,8 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import seaborn as sns
-from linops.experiment_utils import load_object
-from linops.experiment_utils import convert_results_to_df
+from cola.experiment_utils import load_object
+from cola.experiment_utils import convert_results_to_df
 
 input_path = "./logs/emlp_block_solve_20230515_1447.pkl"
 # input_path = "./logs/emlp_block_solve.pkl"
@@ -20,7 +20,7 @@ an = {
         "color": "#de2d26",
         "label": "Iterative"
     },
-    "linops": {
+    "cola": {
         "color": "#2b8cbe",
         "label": "CoLA"
     }

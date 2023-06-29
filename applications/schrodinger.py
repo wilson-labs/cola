@@ -1,10 +1,10 @@
 import time
 import numpy as np
 from scipy.sparse.linalg import LinearOperator as LOS
-from linops.experiment_utils import print_time_taken, save_object
-from linops.experiment_utils import construct_schrodinger_setting
-from linops.experiment_utils import get_times_schrodinger
-from linops.experiment_utils import get_times_schrodinger_jax
+from cola.experiment_utils import print_time_taken, save_object
+from cola.experiment_utils import construct_schrodinger_setting
+from cola.experiment_utils import get_times_schrodinger
+from cola.experiment_utils import get_times_schrodinger_jax
 
 save_output = True
 Ns = [5_000, 1_000, 500, 100]

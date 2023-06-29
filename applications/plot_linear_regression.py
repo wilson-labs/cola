@@ -1,15 +1,15 @@
 from matplotlib import pyplot as plt
 import pandas as pd
 import seaborn as sns
-from linops.experiment_utils import load_object
-from linops.experiment_utils import convert_results_to_df
+from cola.experiment_utils import load_object
+from cola.experiment_utils import convert_results_to_df
 
 input_path = "./logs/linear_regression_gpu_20230516_2147.pkl"
 results = load_object(input_path)
 df0 = convert_results_to_df(results["song"], var_name="system_size")
 df0["dataset"] = "song"
-mask = df0["case"] == "linops"
-df0["case"][mask] = "linops_gpu"
+mask = df0["case"] == "cola"
+df0["case"][mask] = "cola_gpu"
 input_path = "./logs/linear_regression_20230516_2116.pkl"
 # input_path = "./logs/linear_regression.pkl"
 results = load_object(input_path)
@@ -20,7 +20,7 @@ df2["dataset"] = "song"
 df = pd.concat((df1, df2, df0))
 # datasets = ["song", "protein"]
 datasets = ["song"]
-keys = ["sklearn", "linops_gpu", "linops"]
+keys = ["sklearn", "cola_gpu", "cola"]
 an = {
     "sklearn": {
         "song": {
@@ -32,7 +32,7 @@ an = {
             "label": "sk (pro)"
         },
     },
-    "linops": {
+    "cola": {
         "song": {
             "color": "#74a9cf",
             "label": "CoLA (CPU)"
@@ -42,7 +42,7 @@ an = {
             "label": "CoLA (pro)"
         },
     },
-    "linops_gpu": {
+    "cola_gpu": {
         "song": {
             "color": "#045a8d",
             "label": "CoLA (GPU)"

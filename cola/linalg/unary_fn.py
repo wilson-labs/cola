@@ -1,6 +1,6 @@
 from plum import dispatch
-from linops.operator_base import Array
-from linops.operator_base import LinearOperator
+from cola.operator_base import Array
+from cola.operator_base import LinearOperator
 from typing import Callable
 
 

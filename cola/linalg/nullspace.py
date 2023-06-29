@@ -1,6 +1,6 @@
-from linops.operator_base import LinearOperator, Array
-from linops.operator_base import get_library_fns
-from linops.linalg.eigs import eigmax
+from cola.operator_base import LinearOperator, Array
+from cola.operator_base import get_library_fns
+from cola.linalg.eigs import eigmax
 import logging
 import numpy as np
 

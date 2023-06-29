@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
-from linops.experiment_utils import load_object
+from cola.experiment_utils import load_object
 from palettable.cmocean.sequential import Thermal_8
 
 palette = Thermal_8.mpl_colors

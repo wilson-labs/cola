@@ -1,14 +1,14 @@
 import time
 import numpy as np
-from linops import jax_fns
-from linops.linalg.inverse import inverse
-from linops.experiment_utils import get_data_class1
-from linops.experiment_utils import print_time_taken
-from linops.experiment_utils import save_object
+from cola import jax_fns
+from cola.linalg.inverse import inverse
+from cola.experiment_utils import get_data_class1
+from cola.experiment_utils import print_time_taken
+from cola.experiment_utils import save_object
 from jax.config import config
 
 save_output = True
-case = "linops_cpu"
+case = "cola_cpu"
 if case.find("cpu") >= 0:
     config.update('jax_platform_name', 'cpu')
 output_path = f"./logs/timings_{case}.pkl"

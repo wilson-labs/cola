@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
-from linops.experiment_utils import load_object
+from cola.experiment_utils import load_object
 
 input_path = "./logs/pca_svrg_eig_20230509_1454.pkl"
 results = load_object(input_path)

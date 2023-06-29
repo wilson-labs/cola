@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
-from linops.experiment_utils import load_object
+from cola.experiment_utils import load_object
 
 
 input_path = "./logs/nivp_solve_20230516_1934.pkl"

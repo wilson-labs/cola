@@ -1,10 +1,10 @@
 import time
 import numpy as np
 from jax.scipy.sparse.linalg import cg
-from linops import jax_fns
-from linops.experiment_utils import get_data_class1
-from linops.experiment_utils import print_time_taken
-from linops.experiment_utils import save_object
+from cola import jax_fns
+from cola.experiment_utils import get_data_class1
+from cola.experiment_utils import print_time_taken
+from cola.experiment_utils import save_object
 from jax.config import config
 config.update('jax_platform_name', 'cpu')
 

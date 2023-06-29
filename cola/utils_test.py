@@ -1,6 +1,6 @@
 import pytest
 import inspect
-from linops.operator_base import get_library_fns
+from cola.operator_base import get_library_fns
 import numpy as np
 
 

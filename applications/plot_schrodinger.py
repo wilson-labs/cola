@@ -1,19 +1,19 @@
 from matplotlib import pyplot as plt
 import seaborn as sns
-from linops.experiment_utils import load_object
-from linops.experiment_utils import convert_results_to_df
+from cola.experiment_utils import load_object
+from cola.experiment_utils import convert_results_to_df
 
 input_path = "./logs/schrodinger_20230515_1630.pkl"
 # input_path = "./logs/schrodinger.pkl"
 results = load_object(input_path)
 df = convert_results_to_df(results, var_name="grid_size")
-keys = ["scipy", "linops"]
+keys = ["scipy", "cola"]
 an = {
     "scipy": {
         "color": "#7fc97f",
         "label": "SciPy"
     },
-    "linops": {
+    "cola": {
         "color": "#2b8cbe",
         "label": "CoLA"
     }

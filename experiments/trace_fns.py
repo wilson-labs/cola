@@ -1,4 +1,4 @@
-from linops.utils.control_flow import while_loop
+from cola.utils.control_flow import while_loop
 
 _small_value = 1e-40
 

@@ -1,11 +1,11 @@
 import time
 import jax.numpy as jnp
 import numpy as np
-from linops.experiment_utils import print_time_taken, save_object
-from linops.experiment_utils import construct_minimal_surface_setting
-from linops.experiment_utils import get_times_minimal_surface
-from linops.experiment_utils import get_times_minimal_scipy
-from linops.experiment_utils import get_times_minimal_jax
+from cola.experiment_utils import print_time_taken, save_object
+from cola.experiment_utils import construct_minimal_surface_setting
+from cola.experiment_utils import get_times_minimal_surface
+from cola.experiment_utils import get_times_minimal_scipy
+from cola.experiment_utils import get_times_minimal_jax
 # from jax.config import config
 # config.update("jax_enable_x64", True)
 # config.update('jax_platform_name', 'cpu')

@@ -1,8 +1,8 @@
 from typing import Callable
-from linops.operator_base import LinearOperator
-from linops.algorithms.lanczos import lanczos_parts
-from linops.algorithms.lanczos import construct_tridiagonal_batched
-# from linops.algorithms.lanczos import construct_tridiagonal
+from cola.operator_base import LinearOperator
+from cola.algorithms.lanczos import lanczos_parts
+from cola.algorithms.lanczos import construct_tridiagonal_batched
+# from cola.algorithms.lanczos import construct_tridiagonal
 
 
 def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int, max_iters: int,

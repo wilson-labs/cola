@@ -1,9 +1,9 @@
 from plum import dispatch
-from linops.linear_algebra import lazify
-from linops.operators import SelfAdjoint
-from linops.operators import Diagonal
-from linops.operators import Kronecker
-# from linops.linalg.eigs import eig
+from cola.linear_algebra import lazify
+from cola.operators import SelfAdjoint
+from cola.operators import Diagonal
+from cola.operators import Kronecker
+# from cola.linalg.eigs import eig
 
 
 @dispatch

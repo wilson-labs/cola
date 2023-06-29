@@ -1,9 +1,9 @@
 import jax
 import time
-from linops import jax_fns as xnp
-from linops.experiment_utils import construct_emlp_ops
-from linops.experiment_utils import get_times_emlp
-from linops.experiment_utils import print_time_taken, save_object
+from cola import jax_fns as xnp
+from cola.experiment_utils import construct_emlp_ops
+from cola.experiment_utils import get_times_emlp
+from cola.experiment_utils import print_time_taken, save_object
 
 jax.config.update('jax_platform_name', 'cpu')
 
@@ -23,7 +23,7 @@ for N in Ns:
         get_times_emlp(Rdense, results[N], repeat, key="dense")
 
     get_times_emlp(Riterative, results[N], repeat, key="iterative")
-    get_times_emlp(rep, results[N], repeat, key="linops")
+    get_times_emlp(rep, results[N], repeat, key="cola")
 
 toc = time.time()
 print_time_taken(toc - tic)

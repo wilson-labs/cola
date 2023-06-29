@@ -1,14 +1,14 @@
 import time
 import numpy as np
-from linops import jax_fns
-from linops.linear_algebra import lazify
-from linops.linalg.inverse import inverse
-from linops.operators import SelfAdjoint
-from linops.algorithms.cg import solve_cg
-from linops.utils_test import generate_spectrum
-from linops.utils_test import generate_diagonals
-from linops.experiment_utils import print_time_taken
-from linops.experiment_utils import save_object
+from cola import jax_fns
+from cola.linear_algebra import lazify
+from cola.linalg.inverse import inverse
+from cola.operators import SelfAdjoint
+from cola.algorithms.cg import solve_cg
+from cola.utils_test import generate_spectrum
+from cola.utils_test import generate_diagonals
+from cola.experiment_utils import print_time_taken
+from cola.experiment_utils import save_object
 
 save_output = False
 output_path = "./logs/sum_solve.pkl"

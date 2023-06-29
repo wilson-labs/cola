@@ -1,7 +1,7 @@
 from plum import dispatch
-from linops.operator_base import Array
-from linops.operator_base import LinearOperator
-from linops.operators import Diagonal, Kronecker, BlockDiag
+from cola.operator_base import Array
+from cola.operator_base import LinearOperator
+from cola.operators import Diagonal, Kronecker, BlockDiag
 
 
 @dispatch

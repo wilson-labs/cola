@@ -1,17 +1,17 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import seaborn as sns
-from linops.experiment_utils import load_object
+from cola.experiment_utils import load_object
 
 sns.set(style="whitegrid", font_scale=4.0)
 sns.set_palette("Set2")
 palette = sns.color_palette()
 
-linops_cpu = load_object("./logs/timings_linops_cpu.pkl")
-linops_gpu = load_object("./logs/timings_linops_gpu.pkl")
+cola_cpu = load_object("./logs/timings_cola_cpu.pkl")
+cola_gpu = load_object("./logs/timings_cola_gpu.pkl")
 scipy = load_object("./logs/timings_scipy.pkl")
-results = [linops_cpu, linops_gpu, scipy]
-labels = ["LinOps (CPU)", "LinOps (GPU)", "SciPy (CPU)", "GPyTorch (GPU)"]
+results = [cola_cpu, cola_gpu, scipy]
+labels = ["cola (CPU)", "cola (GPU)", "SciPy (CPU)", "GPyTorch (GPU)"]
 colors = ["#2b8cbe", "#a6bddb", "#7fc97f", "#e34a33"]
 # colors = [palette[0], palette[1]]
 

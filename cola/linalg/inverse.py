@@ -1,17 +1,17 @@
 from plum import dispatch
-from linops.operator_base import LinearOperator
-from linops.operators import Unitary
-from linops.operators import Diagonal
-from linops.operators import Identity
-from linops.operators import ScalarMul
-from linops.operators import Product
-from linops.operators import BlockDiag
-from linops.operators import Kronecker, SelfAdjoint, Sum
-from linops.algorithms.cg import solve_cg
-from linops.algorithms.gmres import run_gmres
-from linops.algorithms.svrg import solve_svrg_symmetric
+from cola.operator_base import LinearOperator
+from cola.operators import Unitary
+from cola.operators import Diagonal
+from cola.operators import Identity
+from cola.operators import ScalarMul
+from cola.operators import Product
+from cola.operators import BlockDiag
+from cola.operators import Kronecker, SelfAdjoint, Sum
+from cola.algorithms.cg import solve_cg
+from cola.algorithms.gmres import run_gmres
+from cola.algorithms.svrg import solve_svrg_symmetric
 import numpy as np
-from linops.utils.parametric import parametric
+from cola.utils.parametric import parametric
 
 
 @parametric

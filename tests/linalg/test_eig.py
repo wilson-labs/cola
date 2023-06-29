@@ -1,12 +1,12 @@
-from linops import jax_fns
-from linops import torch_fns
-from linops.linear_algebra import lazify
-from linops.ops import Diagonal
-from linops.ops import SelfAdjoint
-from linops.linalg.eigs import eig
+from cola import jax_fns
+from cola import torch_fns
+from cola.linear_algebra import lazify
+from cola.ops import Diagonal
+from cola.ops import SelfAdjoint
+from cola.linalg.eigs import eig
 from jax.config import config
-from linops.utils_test import parametrize, relative_error
-from linops.utils_test import generate_spectrum, generate_pd_from_diag
+from cola.utils_test import parametrize, relative_error
+from cola.utils_test import generate_spectrum, generate_pd_from_diag
 
 config.update('jax_platform_name', 'cpu')
 # config.update("jax_enable_x64", True)

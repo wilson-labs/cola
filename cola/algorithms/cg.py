@@ -1,8 +1,8 @@
-from linops.operator_base import Array
-from linops.operator_base import LinearOperator
-from linops.operators import I_like
-from linops.utils.custom_autodiff import solver_autograd
-# from linops.utils.control_flow import while_loop
+from cola.operator_base import Array
+from cola.operator_base import LinearOperator
+from cola.operators import I_like
+from cola.utils.custom_autodiff import solver_autograd
+# from cola.utils.control_flow import while_loop
 
 _small_value = 1e-40
 

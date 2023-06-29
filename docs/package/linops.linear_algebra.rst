@@ -1,6 +1,6 @@
 Linear Algebra
 ==============
 
-.. automodule:: linops.linear_algebra
+.. automodule:: cola.linear_algebra
     :members:
     :show-inheritance:

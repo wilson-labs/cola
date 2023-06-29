@@ -1,15 +1,15 @@
 import numpy as np
-from linops import jax_fns
-from linops import torch_fns
-from linops.linear_algebra import lazify
-from linops.algorithms.lanczos import construct_tridiagonal
-from linops.algorithms.lanczos import construct_tridiagonal_batched
-from linops.algorithms.lanczos import get_lanczos_coeffs
-from linops.algorithms.lanczos import lanczos_parts
-from linops.algorithms.lanczos import lanczos_max_eig
-from linops.utils_test import parametrize, relative_error
-from linops.utils_test import generate_spectrum, generate_pd_from_diag
-from linops.utils_test import generate_diagonals
+from cola import jax_fns
+from cola import torch_fns
+from cola.linear_algebra import lazify
+from cola.algorithms.lanczos import construct_tridiagonal
+from cola.algorithms.lanczos import construct_tridiagonal_batched
+from cola.algorithms.lanczos import get_lanczos_coeffs
+from cola.algorithms.lanczos import lanczos_parts
+from cola.algorithms.lanczos import lanczos_max_eig
+from cola.utils_test import parametrize, relative_error
+from cola.utils_test import generate_spectrum, generate_pd_from_diag
+from cola.utils_test import generate_diagonals
 from jax.config import config
 config.update('jax_platform_name', 'cpu')
 

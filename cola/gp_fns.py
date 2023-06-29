@@ -1,14 +1,14 @@
-from linops.operator_base import LinearOperator
-from linops.operator_base import Array
-from linops.operators import Diagonal
-from linops.operators import Kronecker
-from linops.linear_algebra import lazify
-from linops.linalg.inverse import inverse
-from linops.linalg.sqrt import sqrt
-from linops.linalg.eigs import eig
-from linops.linalg.logdet import logdet
-from linops.algorithms.cg import run_batched_cg
-from linops.algorithms.stochastic_lanczos_quad import stochastic_lanczos_quad
+from cola.operator_base import LinearOperator
+from cola.operator_base import Array
+from cola.operators import Diagonal
+from cola.operators import Kronecker
+from cola.linear_algebra import lazify
+from cola.linalg.inverse import inverse
+from cola.linalg.sqrt import sqrt
+from cola.linalg.eigs import eig
+from cola.linalg.logdet import logdet
+from cola.algorithms.cg import run_batched_cg
+from cola.algorithms.stochastic_lanczos_quad import stochastic_lanczos_quad
 from torch.autograd import Function
 
 

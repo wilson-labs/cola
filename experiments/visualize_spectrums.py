@@ -1,9 +1,9 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
-from linops.utils_test import generate_spectrum
-from linops.utils_test import generate_clustered_spectrum
-from linops.utils_test import generate_beta_spectrum
+from cola.utils_test import generate_spectrum
+from cola.utils_test import generate_clustered_spectrum
+from cola.utils_test import generate_beta_spectrum
 
 sns.set(style="whitegrid", font_scale=2.0, rc={"lines.linewidth": 3.0})
 sns.set_palette("Set1")

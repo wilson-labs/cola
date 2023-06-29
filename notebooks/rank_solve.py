@@ -1,11 +1,11 @@
 import time
 import numpy as np
-from linops import torch_fns
-from linops.linear_algebra import lazify
-from linops.algorithms.preconditioners import AdaNysPrecond
-from linops.algorithms.preconditioners import NystromPrecond
-from linops.operators import Identity
-from linops.algorithms.cg import run_batched_cg
+from cola import torch_fns
+from cola.linear_algebra import lazify
+from cola.algorithms.preconditioners import AdaNysPrecond
+from cola.algorithms.preconditioners import NystromPrecond
+from cola.operators import Identity
+from cola.algorithms.cg import run_batched_cg
 from tests.utils import generate_spectrum, generate_pd_from_diag
 
 xnp = torch_fns

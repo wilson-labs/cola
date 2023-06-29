@@ -1,14 +1,14 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import seaborn as sns
-from linops.experiment_utils import load_object
-from linops.experiment_utils import convert_results_to_df
+from cola.experiment_utils import load_object
+from cola.experiment_utils import convert_results_to_df
 
 input_path = "./logs/bipoisson_solve_20230509_1814.pkl"
 results = load_object(input_path)
 results[248]["dense"] = {"times": np.array([1000, 1000]), "system_size": 248 ** 2}  # for OOM
 df = convert_results_to_df(results)
-keys = ["dense", "iterative", "linops"]
+keys = ["dense", "iterative", "cola"]
 an = {
     "dense": {
         "color": "#636363",
@@ -18,7 +18,7 @@ an = {
         "color": "#de2d26",
         "label": "Iterative"
     },
-    "linops": {
+    "cola": {
         "color": "#2b8cbe",
         "label": "CoLA"
     }

@@ -1,13 +1,13 @@
 from matplotlib import pyplot as plt
 import seaborn as sns
-from linops.experiment_utils import load_object
-from linops.experiment_utils import convert_results_to_df
+from cola.experiment_utils import load_object
+from cola.experiment_utils import convert_results_to_df
 
 input_path = "./logs/minimal_20230515_1504.pkl"
 # input_path = "./logs/minimal.pkl"
 results = load_object(input_path)
 df = convert_results_to_df(results, var_name="grid_size")
-keys = ["scipy", "linops", "jax"]
+keys = ["scipy", "cola", "jax"]
 an = {
     "scipy": {
         # "color": "#006d2c",
@@ -19,7 +19,7 @@ an = {
         "color": "#fe9929",
         "label": "SciPy (JAX)"
     },
-    "linops": {
+    "cola": {
         "color": "#2b8cbe",
         # "color": "#045a8d",
         "label": "CoLA"

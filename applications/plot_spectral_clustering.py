@@ -1,14 +1,14 @@
 from matplotlib import pyplot as plt
 import seaborn as sns
-from linops.experiment_utils import load_object
-from linops.experiment_utils import convert_results_to_df
+from cola.experiment_utils import load_object
+from cola.experiment_utils import convert_results_to_df
 
 # input_path = "./logs/spectral_20230512_1237.pkl"
 input_path = "./logs/spectral.pkl"
 results = load_object(input_path)
 df = convert_results_to_df(results, var_name="edges")
-# keys = ["amg", "linops"]
-keys = ["amg", "arpack", "linops"]
+# keys = ["amg", "cola"]
+keys = ["amg", "arpack", "cola"]
 an = {
     "arpack": {
         "color": "#9e9ac8",
@@ -18,7 +18,7 @@ an = {
         "color": "#54278f",
         "label": "sk (A)"
     },
-    "linops": {
+    "cola": {
         "color": "#2b8cbe",
         "label": "CoLA"
     }

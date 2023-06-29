@@ -1,10 +1,10 @@
-from linops import jax_fns
+from cola import jax_fns
 import numpy as np
-from linops import torch_fns
-from linops.algorithms.stochastic_lanczos_quad import stochastic_lanczos_quad
-from linops.linear_algebra import lazify
-from linops.utils_test import parametrize, relative_error
-from linops.utils_test import generate_spectrum, generate_pd_from_diag
+from cola import torch_fns
+from cola.algorithms.stochastic_lanczos_quad import stochastic_lanczos_quad
+from cola.linear_algebra import lazify
+from cola.utils_test import parametrize, relative_error
+from cola.utils_test import generate_spectrum, generate_pd_from_diag
 from jax.config import config
 config.update('jax_platform_name', 'cpu')
 

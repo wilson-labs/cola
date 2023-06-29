@@ -1,25 +1,25 @@
 import pytest
 import numpy as np
-from linops import jax_fns
-from linops import torch_fns
-from linops.linear_algebra import kron, lazify
-from linops.ops import CustomLinOp
-from linops.ops import Tridiagonal
-from linops.ops import Diagonal
-from linops.ops import Identity
-from linops.ops import I_like
-from linops.ops import KronSum
-from linops.ops import Sum
-from linops.ops import ScalarMul
-from linops.ops import Product
-from linops.ops import Sliced
-from linops.ops import SelfAdjoint
-from linops.ops import Symmetric
-from linops.ops import Householder
-from linops.ops import Sparse
-from linops.ops import PSD
-from linops.operators import get_householder_vec
-from linops.utils_test import parametrize, relative_error
+from cola import jax_fns
+from cola import torch_fns
+from cola.linear_algebra import kron, lazify
+from cola.ops import CustomLinOp
+from cola.ops import Tridiagonal
+from cola.ops import Diagonal
+from cola.ops import Identity
+from cola.ops import I_like
+from cola.ops import KronSum
+from cola.ops import Sum
+from cola.ops import ScalarMul
+from cola.ops import Product
+from cola.ops import Sliced
+from cola.ops import SelfAdjoint
+from cola.ops import Symmetric
+from cola.ops import Householder
+from cola.ops import Sparse
+from cola.ops import PSD
+from cola.operators import get_householder_vec
+from cola.utils_test import parametrize, relative_error
 from jax.config import config
 
 config.update('jax_platform_name', 'cpu')
