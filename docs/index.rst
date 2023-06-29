@@ -33,24 +33,24 @@ PSD, symmetric, non-symmetric, real and complex linear operators.
 
 Installation
 ------------
-``CoLA`` requires Python >= 3.10
-
-We recommend installing via ``pip``:
+We recommend installing via ``pip``: (right now it is better to install locally)
 
 .. code-block:: bash
 
     pip install cola
 
-The installation requires the following packages:
-
-* ``PyTorch`` or ``JAX`` (or both)
-* ``plum-dispatch``
-
-Or for the latest version,
+To install locally, clone the repository and install via ``pip``:
 
 .. code-block:: bash
 
     git clone https://github.com/wilson-labs/cola
+    pip install -e .
+
+
+``CoLA`` requires Python >= 3.10
+
+The installation requires ``PyTorch`` or ``JAX`` to be installed,
+ and these requirements will not be installed automatically.
 
 Design Choices
 --------------
@@ -95,8 +95,8 @@ Design Choices
    notebooks/02_Linear_Regression.ipynb
    notebooks/03_GPs.ipynb
    notebooks/04_Spectral_Clustering.ipynb
-   notebooks/05_Shrodinger_Equation.ipynb
-   notebooks/06_Minimal_Surface.ipynb
+   notebooks/05_Boundary_Value_PDEs.ipynb
+   notebooks/06_PDE_Eigenvalue_Problems.ipynb
 
 .. toctree::
    :glob:
