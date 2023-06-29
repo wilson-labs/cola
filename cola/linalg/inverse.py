@@ -69,13 +69,11 @@ def inverse(A: LinearOperator, **kwargs):
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
         return A.ops.inv(A.to_dense())
-    cond = (method == 'svrg' or (method == 'auto' and len(A.A.Ms) > 1e4))
-    if issubclass(type(A), SelfAdjoint[Sum]) and cond:
+    if issubclass(type(A), SelfAdjoint[Sum]) and (method == 'svrg' or (method == 'auto' and len(A.A.Ms) > 1e4)):
         return SymmetricSVRGInverse(A.A, **kws)
     if issubclass(type(A), Sum) and (method == 'svrg' or (method == 'auto' and len(A.Ms) > 1e4)):
         return GenericSVRGInverse(A, **kws)
-    cond = (method == 'cg' or (method == 'auto' and np.prod(A.shape) > 1e6))
-    if issubclass(type(A), SelfAdjoint) and cond:
+    if issubclass(type(A), SelfAdjoint) and (method == 'cg' or (method == 'auto' and np.prod(A.shape) > 1e6)):
         return CGInverse(A, **kws)
     if method == 'gmres' or (method == 'auto' and np.prod(A.shape) > 1e6):
         return GMResInverse(A, **kws)
