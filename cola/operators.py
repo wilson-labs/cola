@@ -369,15 +369,15 @@ class Jacobian(LinearOperator):
         y_shape = f(x).shape
         assert len(y_shape) == 1, "y must be a vector"
 
-        super().__init__(dtype=x.dtype, shape=(y_shape, x.shape[0]))
+        super().__init__(dtype=x.dtype, shape=(y_shape[0], x.shape[0]))
 
     def _matmat(self, X):
         # primals = self.x[:,None]+self.ops.zeros((1,X.shape[1],), dtype=self.x.dtype)
-        return self.ops.vmap(partial(self.ops.jvp_derivs, self.f, self.x))(X.T).T
+        return self.ops.vmap(partial(self.ops.jvp_derivs, self.f, (self.x,)))((X.T,)).T
 
     def _rmatmat(self, X):
         # primals = self.x[None,:]+self.ops.zeros((X.shape[0],1), dtype=self.x.dtype)
-        return self.ops.vmap(partial(self.ops.vjp_derivs, self.f, self.x))(X)
+        return self.ops.vmap(partial(self.ops.vjp_derivs, self.f, (self.x,)))((X,))
 
     def __str__(self):
         return "J"

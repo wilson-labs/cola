@@ -141,7 +141,7 @@ def vjp_derivs(fun, primals, duals):
 
 
 def jvp_derivs(fun, primals, tangents):
-    # TODO: check conjugates for complex
+    # TODO: work with iterables
     _, output = jvp(fun, inputs=torch.conj(primals), v=torch.conj(tangents), create_graph=True)
     return torch.conj(output)
 
