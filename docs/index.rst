@@ -84,7 +84,6 @@ Design Choices
    :caption: Advanced Features
 
    notebooks/Adding_Linear_Operators.ipynb
-   notebooks/Defining_Dispatch_Rules.ipynb
    notebooks/Lower_Precision.ipynb
 
 .. toctree::
