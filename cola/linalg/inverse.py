@@ -91,10 +91,10 @@ def inverse(A: ScalarMul, **kwargs) -> ScalarMul:
     return ScalarMul(1 / A.c, shape=A.shape, dtype=A.dtype)
 
 
-@dispatch
-def inverse(A: Product, **kwargs) -> Product:
-    output = [inverse(M, **kwargs) for M in A.Ms].reverse()
-    return Product(*output)
+# @dispatch(lambda A, **kwargs: all([M.shape[-2] == M.shape[-1] for M in A.Ms]))
+# def inverse(A: Product, **kwargs) -> Product:
+#     output = [inverse(M, **kwargs) for M in A.Ms].reverse()
+#     return Product(*output)
 
 
 @dispatch

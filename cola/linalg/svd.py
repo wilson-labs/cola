@@ -21,12 +21,12 @@ def svd(X: LinearOperator, rank= None, top=True, tol=1e-7, method='auto') -> Tup
     # kws.update(kwargs)
     # method = kws.pop('method', 'auto')
     k=rank
-    assert top, "Only top singular values are supported at this time"
+    #assert top, "Only top singular values are supported at this time"
     xnp = X.ops
     if method == 'dense' or (method == 'auto' and np.prod(X.shape) <= 1e6):
         U,S,Vh = xnp.svd(X.to_dense())
         return U[:,:k], S[:k], Vh[:k,:]
-    if method == 'lanczos' or (method == 'auto' and np.prod(X.shape) > 1e6):
+    elif method == 'lanczos' or (method == 'auto' and np.prod(X.shape) > 1e6):
         Cov = X.H@X/X.shape[0]
         slc = slice(0,k) if not top else slice(-k,None)
         eigs, V = cola.eig(cola.operators.Symmetric(Cov),slc)#,slice(0,k))

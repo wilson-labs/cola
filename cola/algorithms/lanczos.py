@@ -1,7 +1,7 @@
 from cola.operator_base import LinearOperator
 from cola.operator_base import Array
 from cola.operator_base import get_library_fns
-
+from cola.utils import export
 
 def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7):
     """
@@ -15,6 +15,23 @@ def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 
     eigvals, _ = lanczos_eig(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
     return eigvals[-1]
 
+@export
+def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7):
+    """
+    Computes the lanczos decomposition of a matrix A: A = Q T Q^H, returns Q and T 
+
+    A: LinearOperator (n, n) positive definite
+    start_vector: Optional (n, b) matrix or (n,) single vector to start the lanczos process
+    max_iters: int maximum number of iters to run lanczos
+    tol: float: tolerance criteria to stop lanczos"""
+    xnp = A.ops
+    if start_vector is None:
+        start_vector = xnp.random.randn(*A.shape[:-1])
+    alpha, beta, iters, vec = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters, tol=tol)
+    alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
+    Q = vec[0, :, 1:-1]
+    T = construct_tridiagonal_batched(alpha, beta, alpha)
+    return Q, T
 
 def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7):
     """
