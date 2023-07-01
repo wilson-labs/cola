@@ -234,13 +234,6 @@ def flatten_function(obj) -> Tuple[List[Array], Callable]:
     else:
         raise NotImplementedError
 
-
-class CustomLinOp(LinearOperator):
-    def __init__(self, dtype, shape, matmat):
-        self._matmat = matmat
-        super().__init__(dtype, shape)
-
-
 def is_array(obj):
     if not hasattr(obj, 'dtype'):
         return False

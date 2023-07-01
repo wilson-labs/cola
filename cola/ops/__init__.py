@@ -1,4 +1,4 @@
-from ..operator_base import CustomLinOp
+from ..operator_base import LinearOperator
 from ..operators import Dense
 from ..operators import Tridiagonal
 from ..operators import Diagonal

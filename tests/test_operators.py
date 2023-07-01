@@ -3,7 +3,6 @@ import numpy as np
 from cola import jax_fns
 from cola import torch_fns
 from cola.linear_algebra import kron, lazify
-from cola.ops import CustomLinOp
 from cola.ops import Tridiagonal
 from cola.ops import Diagonal
 from cola.ops import Identity
@@ -18,6 +17,7 @@ from cola.ops import Symmetric
 from cola.ops import Householder
 from cola.ops import Sparse
 from cola.ops import PSD
+from cola.ops import LinearOperator
 from cola.operators import get_householder_vec
 from cola.utils_test import parametrize, relative_error
 from jax.config import config
@@ -315,7 +315,7 @@ def test_tridiagonal(xnp):
 @parametrize([torch_fns, jax_fns])
 def test_adjoint_property(xnp):
     A = xnp.array([[1 + 1j, 2 - 2j, 7 - 3j], [3 + 1j, 4 - 1j, 5 + 2j]])
-    B = CustomLinOp(shape=A.shape, matmat=lambda x: A @ x, dtype=A.dtype)
+    B = LinearOperator(shape=A.shape, matmat=lambda x: A @ x, dtype=A.dtype)
     X = xnp.array([1. + 1j, 4. - 2j, 2.5 + 1j, -.1 - 1j, -3. + 1j, -7. - 3j]).reshape(2, 3)
     rel_error = xnp.norm(relative_error(xnp.conj(A).T @ X, B.H @ X))
     assert rel_error < _tol
@@ -324,7 +324,7 @@ def test_adjoint_property(xnp):
 @parametrize([torch_fns, jax_fns])
 def test_transpose_property(xnp):
     A = xnp.array([[1., 2., 7], [3., 4., 5]])
-    B = CustomLinOp(shape=A.shape, matmat=lambda x: A @ x, dtype=A.dtype)
+    B = LinearOperator(shape=A.shape, matmat=lambda x: A @ x, dtype=A.dtype)
 
     X = xnp.array([1., 4., 2.5, -.1, -3., -7., -2., -5., 1.5]).reshape(3, 3)[:2, :]
     rel_error = relative_error(A.T @ X, B.T @ X)
@@ -335,7 +335,7 @@ def test_transpose_property(xnp):
 @parametrize([torch_fns, jax_fns])
 def test_vjp_transpose(xnp):
     A = xnp.array([[1., 2., 7], [3., 4., 5]])
-    B = CustomLinOp(shape=A.shape, matmat=lambda x: A @ x, dtype=A.dtype)
+    B = LinearOperator(shape=A.shape, matmat=lambda x: A @ x, dtype=A.dtype)
     X = xnp.array([1., 4., 2.5, -.1, -3., -7., -2., -5., 1.5]).reshape(3, 3)[:2, :2]
     rel_error = relative_error(X @ A, X @ B)
     assert rel_error < _tol, f"VJP transpose relative error: {rel_error}"

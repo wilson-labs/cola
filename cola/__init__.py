@@ -2,6 +2,7 @@ __version__ = '0.1.0'
 from .linear_algebra import *
 from .linalg import *
 # from .ops import *
+import cola.ops
 from .utils import *
 # import cola.operators
 #  from .operator_base import LinearOperator
