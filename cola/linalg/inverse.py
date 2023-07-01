@@ -10,9 +10,9 @@ from cola.operators import Kronecker, SelfAdjoint, Sum
 from cola.algorithms.cg import solve_cg
 from cola.algorithms.gmres import run_gmres
 from cola.algorithms.svrg import solve_svrg_symmetric
-import numpy as np
-from cola.utils.parametric import parametric
-
+import numpy as np  
+from cola.utils.dispatch import parametric
+from cola.utils import export
 
 @parametric
 class IterativeInverse(LinearOperator):
@@ -61,7 +61,7 @@ class SymmetricSVRGInverse(IterativeInverse):
 class GenericSVRGInverse(IterativeInverse):
     pass
 
-
+@export
 @dispatch
 def inverse(A: LinearOperator, **kwargs):
     kws = dict(tol=1e-6, P=None, x0=None, pbar=False, info=False, max_iters=5000)

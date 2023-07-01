@@ -2,8 +2,9 @@ from plum import dispatch
 from cola.operator_base import Array
 from cola.operator_base import LinearOperator
 from cola.operators import Diagonal, Kronecker, BlockDiag
+from cola.utils import export
 
-
+@export
 @dispatch
 def logdet(A: LinearOperator, tol=1e-7, info=False, pbar=True) -> Array:
     # add casework

@@ -11,8 +11,9 @@ from cola.operators import I_like
 from cola.algorithms.lanczos import lanczos_eig
 from cola.algorithms.arnoldi import arnoldi_eig
 from plum import dispatch
+from cola.utils import export
 
-
+@export
 @dispatch
 def eig(A: LinearOperator, eig_slice=slice(0, None, None), tol=1e-6, pbar=False, method='auto',
         info=False, max_iters=1000) -> Tuple[Array, Array]:

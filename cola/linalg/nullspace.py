@@ -1,6 +1,7 @@
 from cola.operator_base import LinearOperator, Array
 from cola.operator_base import get_library_fns
 from cola.linalg.eigs import eigmax
+from cola.utils import export
 import logging
 import numpy as np
 
@@ -12,7 +13,7 @@ def orthogonal_complement(C, tol=1e-5):
     rank = (S > tol).sum()
     return VH[rank:].conj().T
 
-
+@export
 def nullspace(C: LinearOperator, tol=1e-5, pbar=True, info=False, method='auto') -> Array:
     """ Computes the nullspace of a linear operator C, up to specified tolerance tol.
         Method choices ['auto', 'svd', 'krylov'] where auto selects the method

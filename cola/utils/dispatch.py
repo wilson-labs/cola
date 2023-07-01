@@ -7,7 +7,7 @@ from plum.type import resolve_type_hint
 from plum.util import repr_short
 
 
-_dispatch = Dispatcher()
+dispatch = Dispatcher()
 
 
 class ParametricTypeMeta(type):

@@ -3,7 +3,7 @@ from functools import reduce, partial
 from cola.operator_base import LinearOperator
 from cola.operator_base import Array, get_library_fns
 import numpy as np
-from cola.utils.parametric import parametric
+from cola.utils.dispatch import parametric
 
 
 class Dense(LinearOperator):
