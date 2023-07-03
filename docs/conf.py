@@ -18,11 +18,11 @@ exclude_patterns = [
     '_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints', 'notebooks/.ipynb_checkpoints'
 ]
 
-source_suffix = ['.rst', '.ipynb', '.md']
+source_suffix = ['.rst', '.md']
 
 html_theme = 'sphinx_rtd_theme'
 # html_theme = 'sphinx_rtd_theme_dark_mode'
-html_static_path = ['_static']
+# html_static_path = ['_static']
 autosummary_generate = True
 napolean_use_rtype = False
 nbsphinx_execute = 'never'
