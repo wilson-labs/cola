@@ -95,7 +95,7 @@ Design Choices
    notebooks/03_GPs.ipynb
    notebooks/04_Spectral_Clustering.ipynb
    notebooks/05_Boundary_Value_PDEs.ipynb
-   .. notebooks/06_PDE_Eigenvalue_Problems.ipynb
+   notebooks/06_PDE_Eigenvalue_Problems.ipynb
 
 .. toctree::
    :glob:
