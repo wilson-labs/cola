@@ -4,7 +4,7 @@ from cola import torch_fns
 from cola.linear_algebra import lazify
 from cola.ops import Identity
 from cola.ops import Diagonal
-from cola.ops import CustomLinOp
+from cola.ops import LinearOperator
 from cola.algorithms.preconditioners import NystromPrecond
 from cola.algorithms.cg import solve_cg
 from cola.algorithms.cg import run_batched_cg
@@ -201,7 +201,7 @@ def test_cg_easy_case(xnp):
         v2 = A[1, :, :] @ x[1, :, :]
         return xnp.concatenate((v1[None, ...], v2[None, ...]), 0)
 
-    A_fn = CustomLinOp(dtype=dtype, shape=A.shape, matmat=matmat)
+    A_fn = LinearOperator(dtype=dtype, shape=A.shape, matmat=matmat)
 
     fn = xnp.jit(solve_cg, static_argnums=(0, 3, 4, 5, 6, 7, 8))
     approx, _ = fn(A_fn, rhs)
