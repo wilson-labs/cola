@@ -1,6 +1,6 @@
 from typing import Union
 from cola.operator_base import LinearOperator
-from cola.operator_base import CustomLinOp
+from cola.operator_base import LinearOperator
 from cola.linalg.eigs import power_iteration
 from plum import dispatch
 
@@ -77,7 +77,7 @@ def estimate_approx_error(A, Lambda, U, tol, max_iter):
     def matmat(V):
         return A @ V - U @ (Diag * (U.T @ V))
 
-    E = CustomLinOp(dtype=A.dtype, shape=A.shape, matmat=matmat)
+    E = LinearOperator(dtype=A.dtype, shape=A.shape, matmat=matmat)
     error = power_iteration(E, tol=tol, max_iter=max_iter)
     return xnp.abs(error)
 
