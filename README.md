@@ -1,9 +1,9 @@
 # Compositional Linear Algebra (CoLA)
 
-<!-- [![Documentation](https://readthedocs.org/projects/emlp/badge/)]() -->
-<!-- | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]() | -->
+[![Documentation](https://readthedocs.org/projects/emlp/badge/)](https://cola.readthedocs.io/en/latest/)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mfinzi/equivariant-MLP/blob/master/docs/notebooks/colabs/all.ipynb)
 [![tests](https://github.com/wilson-labs/cola/actions/workflows/python-package.yml/badge.svg)](https://github.com/wilson-labs/cola/actions/workflows/python-package.yml)
-[![codecov](https://codecov.io/gh/mfinzi/cola/branch/main/graph/badge.svg?token=bBnkfHv30C)](https://codecov.io/gh/mfinzi/cola)
+[![codecov](https://codecov.io/gh/wilson-labs/cola/branch/main/graph/badge.svg?token=bBnkfHv30C)](https://codecov.io/gh/wilson-labs/cola)
 
 CoLA is a numerical linear algebra framework that exploits the structure usually found on machine learning problems and beyond.
 CoLA supports both PyTorch and JAX.
