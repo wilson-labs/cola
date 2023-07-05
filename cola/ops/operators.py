@@ -1,7 +1,7 @@
 from functools import reduce, partial
 # import cola.linear_algebra
-from cola.operator_base import LinearOperator
-from cola.operator_base import Array, get_library_fns
+from cola.ops.operator_base import LinearOperator
+from cola.ops.operator_base import Array, get_library_fns
 import numpy as np
 from cola.utils.dispatch import parametric
 
@@ -92,7 +92,7 @@ def I_like(A: LinearOperator) -> Identity:
 
 @parametric
 class Product(LinearOperator):
-    """ Matrix Multiply Product of Linear Operators """
+    """ Matrix Multiply Product of Linear ops """
     def __init__(self, *Ms):
         self.Ms = Ms
         for M1, M2 in zip(Ms[:-1], Ms[1:]):
@@ -118,7 +118,7 @@ class Product(LinearOperator):
 
 @parametric
 class Sum(LinearOperator):
-    """ Sum of Linear Operators """
+    """ Sum of Linear ops """
     def __init__(self, *Ms):
         self.Ms = Ms
         shape = Ms[0].shape
@@ -154,7 +154,7 @@ def product(c):
 
 @parametric
 class Kronecker(LinearOperator):
-    """ Kronecker product of linear operators Kronecker([M1,M2]):= M1⊗M2"""
+    """ Kronecker product of linear ops Kronecker([M1,M2]):= M1⊗M2"""
     def __init__(self, *Ms):
         self.Ms = Ms
         shape = product([Mi.shape[-2] for Mi in Ms]), product([Mi.shape[-1] for Mi in Ms])
@@ -427,7 +427,7 @@ class ConvolveND(LinearOperator):
 
 @parametric
 class SelfAdjoint(LinearOperator):
-    """ SelfAdjoint property for LinearOperators. """
+    """ SelfAdjoint property for Linearops. """
     def __init__(self, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], LinearOperator):
             self.A = args[0]
@@ -464,7 +464,7 @@ Symmetric = SelfAdjoint
 
 @parametric
 class PSD(SelfAdjoint):
-    """ Positive Semi-Definite property for LinearOperators.
+    """ Positive Semi-Definite property for Linearops.
         Implies SelfAdjoint. """
     pass
 
@@ -477,6 +477,7 @@ class Unitary(LinearOperator):
 
 
 class Householder(SelfAdjoint):
+    """ Householder rotation matrix."""
     def __init__(self, vec, beta=2.):
         super().__init__(shape=(vec.shape[-2], vec.shape[-2]), dtype=vec.dtype)
         self.vec = vec

@@ -1,5 +1,5 @@
 from typing import Callable
-from cola.operator_base import LinearOperator
+from cola.ops import LinearOperator
 from cola.algorithms.lanczos import lanczos_parts
 from cola.algorithms.lanczos import construct_tridiagonal_batched
 # from cola.algorithms.lanczos import construct_tridiagonal

@@ -1,5 +1,5 @@
 import cola.torch_fns as xnp
-from cola.operators import Diagonal
+from cola.ops import Diagonal
 from cola.linalg.inverse import inverse
 from cola.linalg.eigs import eig
 

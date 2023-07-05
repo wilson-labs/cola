@@ -3,7 +3,7 @@ import torch
 from gpytorch.kernels import RBFKernel
 from gpytorch.kernels import MultitaskKernel
 from cola import torch_fns as xnp
-from cola.operators import SelfAdjoint
+from cola.ops import SelfAdjoint
 from cola.experiment_utils import get_dense_times, get_times, get_times_cg2
 from cola.experiment_utils import print_time_taken, save_object
 

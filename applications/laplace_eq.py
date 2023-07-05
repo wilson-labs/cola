@@ -36,7 +36,7 @@ domain_ids = domain.reshape(-1).nonzero()[0]
 BCS = jnp.where(domain,jnp.zeros_like(x),(x+y)*jnp.cos(2*x))
 
 
-from cola.operators import CustomLinOp, Symmetric, SelfAdjoint
+from cola.ops import CustomLinOp, Symmetric, SelfAdjoint
 from cola.linalg import solve_symmetric, solve
 from cola import LinearOperator
 

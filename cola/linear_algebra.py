@@ -1,10 +1,10 @@
 from typing import List, Union, Any
 from plum import dispatch
-from cola.operator_base import LinearOperator, Array
-from cola.operators import Dense
-from cola.operators import Kronecker, Product, KronSum, Sum
-from cola.operators import ScalarMul, Transpose, Adjoint, SelfAdjoint
-from cola.operators import BlockDiag, Identity, Diagonal, I_like
+from cola.ops import LinearOperator, Array
+from cola.ops import Dense
+from cola.ops import Kronecker, Product, KronSum, Sum
+from cola.ops import ScalarMul, Transpose, Adjoint, SelfAdjoint
+from cola.ops import BlockDiag, Identity, Diagonal, I_like
 
 Scalar = Array
 
@@ -205,7 +205,7 @@ def trace(A: LinearOperator):
 
 
 def block_diag(*ops: List[LinearOperator]) -> LinearOperator:
-    """ Construct a block diagonal operator from a list of operators. """
+    """ Construct a block diagonal operator from a list of ops. """
     return BlockDiag(*ops)
 
 

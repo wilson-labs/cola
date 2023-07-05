@@ -3,8 +3,8 @@ from functools import partial
 from jax import jit, vmap
 from jax.config import config
 import cola.jax_fns as xnp
-from cola.operator_base import LinearOperator
-from cola.operators import Symmetric
+from cola.ops import LinearOperator
+from cola.ops import Symmetric
 from cola.experiment_utils import generate_biposson_data, construct_laplacian
 from cola.experiment_utils import get_dense_times, get_times
 from cola.experiment_utils import print_time_taken, save_object

@@ -2,7 +2,7 @@ import time
 from jax.config import config
 from cola import jax_fns as xnp
 from cola.gp_fns import construct_rffs
-from cola.operators import Symmetric, Dense, I_like
+from cola.ops import Symmetric, Dense, I_like
 from cola.experiment_utils import load_uci_data, print_time_taken, save_object
 from cola.experiment_utils import get_times_cg2, get_times_svrg
 

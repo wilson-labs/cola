@@ -1,11 +1,12 @@
 from plum import dispatch
 from cola.linear_algebra import lazify
-from cola.operators import SelfAdjoint
-from cola.operators import Diagonal
-from cola.operators import Kronecker
+from cola.ops import SelfAdjoint
+from cola.ops import Diagonal
+from cola.ops import Kronecker
+from cola.utils import export
 # from cola.linalg.eigs import eig
 
-
+@export
 @dispatch
 def sqrt(A: SelfAdjoint) -> SelfAdjoint:
     xnp = A.ops

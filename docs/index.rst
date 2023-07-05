@@ -6,30 +6,30 @@ Introduction
 Many areas of machine learning (ML) and science involve large-scale linear algebra problems,
 such as performing eigendecompositions, solving linear systems, computing matrix exponentials,
 and doing trace estimation.
-The linear operators involved often have Kronecker, convolutional, block diagonal, sum, or product structure.
+The linear ops involved often have Kronecker, convolutional, block diagonal, sum, or product structure.
 Yet, to exploit this structure, that is, in order to use specific algorithms that
 have faster runtimes than general algorithms, a user must manually implement these efficient routines on
 a case-by-case basis and be familiar with the different algorithms that exist for
 different structures. This process leads to a notorious implementation bottleneck!
 
 To eliminate this bottleneck we introduce ``CoLA``, a numerical linear algebra library designed to 
-automatically exploit the structure present in a diverse set of linear operators.
+automatically exploit the structure present in a diverse set of linear ops.
 To achieve this, ``CoLA`` automatically exploits compositional structure by leveraging over 70 dispatch
 rules which select different algorithms for the diverse structure present in a linear
 operator. Additionally, given our emphasis on ML applications, ``CoLA`` also
 supports both ``PyTorch`` and ``JAX``, leverage GPU and TPU acceleration, supports low
 precision, provides automatic computation of
 gradients, diagonals, transposes and adjoints of linear
-operators, and incorporates specialty algorithms such as SVRG and a novel
+ops, and incorporates specialty algorithms such as SVRG and a novel
 variation of Hutchinson's diagonal estimator which exploit the large-scale sum
-structure of several linear operators found in ML applications.
+structure of several linear ops found in ML applications.
 
 Furthermore, regardless of whether there is structure that can be exploited or not,
 ``CoLA`` can be used as a general purpose numerical linear algebra package
-for large-scale linear operators.
+for large-scale linear ops.
 ``CoLA`` provides an implementation of classical iterative algorithms for 
 solving linear systems, performing eigendecompositions and more for
-PSD, symmetric, non-symmetric, real and complex linear operators.
+PSD, symmetric, non-symmetric, real and complex linear ops.
 
 Installation
 ------------
@@ -57,12 +57,12 @@ Design Choices
 ``CoLA`` is designed with the following criteria in mind:
 
 * We enable easy extensibility by allowing users to define dispatch rules and linear
-  operators.
+  ops.
 * We adhere to the same API used for dense matrix operations.
 * We use multiple dispatch to exploit structure of a linear operator.
 * We provide support for both PyTorch and JAX.
 * We leverage automatic differentiation to define operations like transpose but also to
-  derive gradients of linear operators.
+  derive gradients of linear ops.
 
 .. toctree::
    :maxdepth: 1
@@ -83,7 +83,7 @@ Design Choices
    :maxdepth: 1
    :caption: Advanced Features
 
-   notebooks/Adding_Linear_Operators.ipynb
+   notebooks/Adding_Linear_ops.ipynb
    notebooks/Lower_Precision.ipynb
 
 .. toctree::

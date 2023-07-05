@@ -1,6 +1,6 @@
 import time
 import matplotlib.pyplot as plt
-from cola.operator_base import CustomLinOp
+from cola.ops import CustomLinOp
 from cola.experiment_utils import print_time_taken
 from functools import partial
 from cola.linalg.inverse import inverse

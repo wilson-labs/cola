@@ -30,7 +30,7 @@ setup(
     ],
     keywords=[
         'linear algebra',
-        'linear operators',
+        'linear ops',
         'sparse',
         'PDE',
         'AI',

@@ -3,7 +3,7 @@ import cola.torch_fns as xnp
 from cola.experiment_utils import load_graph_data
 from cola.linalg.sqrt import sqrt
 from cola.linalg.inverse import inverse
-from cola.operators import Sparse, Diagonal, SelfAdjoint, I_like
+from cola.ops import Sparse, Diagonal, SelfAdjoint, I_like
 from cola.experiment_utils import get_times_spectral, get_times_spectral_sklearn
 from cola.experiment_utils import transform_to_csr
 from cola.experiment_utils import print_time_taken, save_object

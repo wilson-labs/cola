@@ -4,7 +4,7 @@ from cola import torch_fns
 from cola.linear_algebra import lazify
 from cola.algorithms.preconditioners import AdaNysPrecond
 from cola.algorithms.preconditioners import NystromPrecond
-from cola.operators import Identity
+from cola.ops import Identity
 from cola.algorithms.cg import run_batched_cg
 from tests.utils import generate_spectrum, generate_pd_from_diag
 

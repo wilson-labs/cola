@@ -1,8 +1,8 @@
-from cola.operator_base import LinearOperator
-from cola.operator_base import Array
-from cola.operators import Householder, Product
-# from cola.operators import get_householder_vec
-from cola.operators import get_householder_vec_simple
+from cola.ops import LinearOperator
+from cola.ops import Array
+from cola.ops import Householder, Product
+# from cola.ops import get_householder_vec
+from cola.ops import get_householder_vec_simple
 from cola.utils.control_flow import for_loop
 
 

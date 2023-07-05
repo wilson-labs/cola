@@ -1,8 +1,8 @@
 import time
 import cola.jax_fns as xnp
 from cola.linear_algebra import lazify
-from cola.operators import SelfAdjoint
-from cola.operators import Diagonal
+from cola.ops import SelfAdjoint
+from cola.ops import Diagonal
 from cola.experiment_utils import load_uci_data, print_time_taken, save_object
 from cola.experiment_utils import get_times, get_times_sk_linear
 # import jax.config

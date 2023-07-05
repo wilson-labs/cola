@@ -1,9 +1,9 @@
 import time
 import tracemalloc
 import numpy as np
-from cola.operators import I_like
-# from cola.operators import Dense
-from cola.operators import Diagonal
+from cola.ops import I_like
+# from cola.ops import Dense
+from cola.ops import Diagonal
 import cola.jax_fns as xnp
 from cola.experiment_utils import print_time_taken, save_object
 # from cola.utils_test import generate_spectrum, generate_lower_from_diag

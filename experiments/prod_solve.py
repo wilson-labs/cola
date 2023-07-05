@@ -4,8 +4,8 @@ from cola import jax_fns
 from cola.linear_algebra import lazify
 from cola.linalg.inverse import inverse
 from cola.linear_algebra import kron
-from cola.operators import SelfAdjoint
-from cola.operators import Diagonal
+from cola.ops import SelfAdjoint
+from cola.ops import Diagonal
 from cola.algorithms.cg import solve_cg
 from cola.utils_test import generate_spectrum
 from cola.utils_test import generate_clustered_spectrum

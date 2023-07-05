@@ -1,6 +1,6 @@
 from cola import LinearOperator
 from cola.linalg.inverse import inverse
-from cola.operators import Symmetric
+from cola.ops import Symmetric
 import matplotlib.pyplot as plt
 from jax.config import config
 import jax

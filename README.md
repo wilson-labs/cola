@@ -33,7 +33,7 @@ Linear Algebra Operations
 - [ ] logdet
 - [ ] $f(A)$
       
-Linear Operators
+Linear ops
 - [x] Diag
 - [x] BlockDiag
 - [x] Kronecker
@@ -78,7 +78,7 @@ def inverse(A: Diagonal, **kwargs):
 and once we have that dispatch rule available we can then use it in the following manner:
 ```python
 import cola.torch_fns as xnp
-from cola.operators import Diagonal
+from cola.ops import Diagonal
 from cola.linalg.inverse import inverse
 
 dtype = xnp.float32
@@ -113,7 +113,7 @@ print(eigvals)
    PyTorch
 ```python
 import cola.torch_fns as xnp
-from cola.operators import Symmetric
+from cola.ops import Symmetric
 from cola.linear_algebra import lazify
 from cola.linalg.inverse import inverse
 from cola.algorithms.preconditioners import NystromPrecond
@@ -136,7 +136,7 @@ In CoLA, we have incorporated memory-efficient and fast routines to backpropagat
 some algebraic operations such as a solve:
 ```python
 import cola.torch_fns as xnp
-from cola.operators import Diagonal
+from cola.ops import Diagonal
 from cola.linalg.inverse import inverse
 
 dtype = xnp.float32

@@ -1,6 +1,6 @@
-from cola.operator_base import LinearOperator
-from cola.operator_base import Array
-from cola.operator_base import get_library_fns
+from cola.ops import LinearOperator
+from cola.ops import Array
+from cola.ops import get_library_fns
 from cola.utils import export
 
 def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7):

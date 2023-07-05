@@ -1,16 +1,7 @@
-from ..operator_base import LinearOperator
-from ..operators import Dense
-from ..operators import Tridiagonal
-from ..operators import Diagonal
-from ..operators import Identity
-from ..operators import I_like
-from ..operators import KronSum
-from ..operators import Sum
-from ..operators import ScalarMul
-from ..operators import Product
-from ..operators import Sliced
-from ..operators import SelfAdjoint
-from ..operators import Symmetric
-from ..operators import Householder
-from ..operators import Sparse
-from ..operators import PSD
+from cola.utils import import_from_all,import_every
+
+__all__ = []
+import_from_all("operator_base",globals(),__all__,__name__)
+#is_operator = lambda name,value: isinstance(value,type) and issubclass(value,LinearOperator)
+has_docstring=lambda name,value: hasattr(value,"__doc__") and value.__doc__ is not None
+import_every("operators",globals(),__all__,__name__)#,has_docstring)

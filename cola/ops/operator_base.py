@@ -3,10 +3,11 @@ from typing import Union, Tuple, Any, List, Callable
 # import cola.linear_algebra  # import dot, add, mul
 import cola
 import numpy as np
-
+from cola.utils import export
 Array = Dtype = Any
+export(Array)
 
-
+@export
 def get_library_fns(dtype: Dtype):
     """ Given a dtype e.g. jnp.float32 or torch.complex64, returns the appropriate
         namespace for standard array functionality (either torch_fns or jax_fns)."""
@@ -36,7 +37,7 @@ class AutoRegisteringPyTree(type):
         except ImportError:
             pass
 
-
+@export
 class LinearOperator(metaclass=AutoRegisteringPyTree):
     def __new__(cls, *args, **kwargs):
         """ Creates attributes for the flatten and unflatten functionality. """
@@ -174,7 +175,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
                 return (self @ ej)[s]
             case (slice() | xnp.ndarray() | np.ndarray()) as s_i,  \
                  (slice() | xnp.ndarray() | np.ndarray()) as s_j:
-                from cola.operators import Sliced
+                from cola.ops import Sliced
                 return Sliced(A=self, slices=(s_i, s_j))
             case list(li), list(lj):
                 out = []

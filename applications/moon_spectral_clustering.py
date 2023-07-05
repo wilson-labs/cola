@@ -10,10 +10,10 @@ from cola.linalg.eigs import eig
 from cola.linalg.inverse import inverse
 from cola.experiment_utils import data_to_csr
 # from cola.experiment_utils import data_to_csr_neighbors
-from cola.operators import SelfAdjoint
-from cola.operators import I_like
-from cola.operators import Sparse
-from cola.operators import Diagonal
+from cola.ops import SelfAdjoint
+from cola.ops import I_like
+from cola.ops import Sparse
+from cola.ops import Diagonal
 
 sns.set(style="whitegrid", font_scale=3.0, rc={"lines.linewidth": 4.0})
 sns.set_palette("Set2")

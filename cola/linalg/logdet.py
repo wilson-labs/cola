@@ -1,7 +1,7 @@
 from plum import dispatch
-from cola.operator_base import Array
-from cola.operator_base import LinearOperator
-from cola.operators import Diagonal, Kronecker, BlockDiag
+from cola.ops import Array
+from cola.ops import LinearOperator
+from cola.ops import Diagonal, Kronecker, BlockDiag
 from cola.utils import export
 
 @export

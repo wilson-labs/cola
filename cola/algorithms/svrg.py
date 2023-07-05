@@ -1,8 +1,8 @@
 import numpy as np
 import jax
 from cola.linalg.eigs import eigmax
-from cola.operators import Sum, Product, Dense
-from cola.operators import I_like
+from cola.ops import Sum, Product, Dense
+from cola.ops import I_like
 from cola.utils.control_flow import while_loop
 # import standard Union type
 

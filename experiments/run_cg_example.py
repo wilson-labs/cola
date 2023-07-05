@@ -1,6 +1,6 @@
 import cola.torch_fns as xnp
 # import cola.jax_fns as xnp
-from cola.operators import Symmetric
+from cola.ops import Symmetric
 from cola.linear_algebra import lazify
 from cola.linalg.inverse import inverse
 from cola.algorithms.preconditioners import NystromPrecond

@@ -1,12 +1,12 @@
 from plum import dispatch
-from cola.operator_base import LinearOperator
-from cola.operators import Unitary
-from cola.operators import Diagonal
-from cola.operators import Identity
-from cola.operators import ScalarMul
-from cola.operators import Product
-from cola.operators import BlockDiag
-from cola.operators import Kronecker, SelfAdjoint, Sum
+from cola.ops import LinearOperator
+from cola.ops import Unitary
+from cola.ops import Diagonal
+from cola.ops import Identity
+from cola.ops import ScalarMul
+from cola.ops import Product
+from cola.ops import BlockDiag
+from cola.ops import Kronecker, SelfAdjoint, Sum
 from cola.algorithms.cg import solve_cg
 from cola.algorithms.gmres import run_gmres
 from cola.algorithms.svrg import solve_svrg_symmetric

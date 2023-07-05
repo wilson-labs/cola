@@ -1,6 +1,6 @@
 from typing import Tuple
-from cola.operator_base import LinearOperator
-from cola.operator_base import Array
+from cola.ops import LinearOperator
+from cola.ops import Array
 from plum import dispatch
 from cola.utils import export
 import numpy as np
@@ -29,7 +29,7 @@ def svd(X: LinearOperator, rank= None, top=True, tol=1e-7, method='auto') -> Tup
     elif method == 'lanczos' or (method == 'auto' and np.prod(X.shape) > 1e6):
         Cov = X.H@X/X.shape[0]
         slc = slice(0,k) if not top else slice(-k,None)
-        eigs, V = cola.eig(cola.operators.Symmetric(Cov),slc)#,slice(0,k))
+        eigs, V = cola.eig(cola.ops.Symmetric(Cov),slc)#,slice(0,k))
         #TODO: reverse order if other side is bigger
         U = X@V # shape (n, k)
         # singular values are the norms

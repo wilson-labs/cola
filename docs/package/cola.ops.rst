@@ -1,4 +1,4 @@
-Operators
+ops
 =========
 
 .. automodule:: cola.ops

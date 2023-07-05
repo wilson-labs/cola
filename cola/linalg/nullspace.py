@@ -1,5 +1,5 @@
-from cola.operator_base import LinearOperator, Array
-from cola.operator_base import get_library_fns
+from cola.ops import LinearOperator, Array
+from cola.ops import get_library_fns
 from cola.linalg.eigs import eigmax
 from cola.utils import export
 import logging

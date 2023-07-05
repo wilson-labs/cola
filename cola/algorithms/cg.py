@@ -1,6 +1,6 @@
-from cola.operator_base import Array
-from cola.operator_base import LinearOperator
-from cola.operators import I_like
+from cola.ops import Array
+from cola.ops import LinearOperator
+from cola.ops import I_like
 from cola.utils.custom_autodiff import solver_autograd
 # from cola.utils.control_flow import while_loop
 
