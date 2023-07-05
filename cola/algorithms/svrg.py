@@ -1,5 +1,4 @@
 import numpy as np
-import jax
 import cola
 # from cola.linalg.eigs import eigmax
 from cola.ops import Sum, Product, Dense
@@ -40,6 +39,7 @@ def cg_svrg_fns(b):
 # @export
 def solve_svrg_symmetric(A: Sum, b, tol=1e-6, P=None, x0=None, pbar=False, info=False,
                          max_iters=5000, bs=50):
+    import jax
     # mult = jnp.linalg.norm(b, axis=0)
     # b_norm = do_safe_div(b, mult)
     assert isinstance(A, Sum), f"A (of type {type(A)}) must be directly a Sum"
@@ -161,6 +161,7 @@ def svrg_solveh(A: Product[Dense, Dense], b, tol=1e-6, pbar=False, info=False, m
 
 def solve_svrg_generic(A: Product[Dense, Dense], grad_fns, x0, tol=1e-6, P=None, pbar=False,
                        info=False, max_iters=5000, bs=50, lr_scale=1.):
+    import jax # TODO: enable support for pytorch
     gradients, vrdiffs = grad_fns
     # assert isinstance(A, Sum), f"A (of type {type(A)}) must be directly a Sum"
     xnp = A.ops
