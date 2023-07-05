@@ -1,6 +1,6 @@
 Operators
 =========
 
-.. automodule:: cola.operators
+.. automodule:: cola.ops
     :members:
     :show-inheritance:
