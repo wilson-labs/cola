@@ -102,7 +102,7 @@ Design Choices
    :maxdepth: 1
    :caption: API Reference
 
-   package/cola.operators
+   package/cola.ops
    package/cola.linear_algebra
 
 .. toctree::
