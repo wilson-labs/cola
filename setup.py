@@ -20,7 +20,7 @@ setup(
     # long_description=open('../README.md').read(),
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/mfinzi/cola',
+    url='https://github.com/wilson-labs/cola',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

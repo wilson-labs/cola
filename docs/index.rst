@@ -102,6 +102,7 @@ Design Choices
    :maxdepth: 1
    :caption: API Reference
 
+   package/cola.linalg
    package/cola.ops
    package/cola.linear_algebra
 
