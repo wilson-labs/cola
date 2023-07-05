@@ -2,7 +2,7 @@ from cola.ops import LinearOperator
 from cola.ops import Array
 from cola.ops import Diagonal
 from cola.ops import Kronecker
-from cola.linear_algebra import lazify
+from cola.basic_operations import lazify
 from cola.linalg.inverse import inverse
 from cola.linalg.sqrt import sqrt
 from cola.linalg.eigs import eig

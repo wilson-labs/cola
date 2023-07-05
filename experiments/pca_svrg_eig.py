@@ -2,7 +2,7 @@ import time
 import jax.config
 import cola.jax_fns as xnp
 import cola as lo
-from cola.linear_algebra import lazify
+from cola.basic_operations import lazify
 from cola.algorithms.svrg import svrg_eigh_max
 from cola.experiment_utils import load_uci_data, print_time_taken, save_object
 jax.config.update("jax_enable_x64", True)

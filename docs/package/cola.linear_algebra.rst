@@ -1,6 +1,6 @@
 Basic Operations
 ==============
 
-.. automodule:: cola.linear_algebra
+.. automodule:: cola.basic_operations
     :members:
     :show-inheritance:

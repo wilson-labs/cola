@@ -1,7 +1,7 @@
 __version__ = '0.1.0'
 # from .ops import LinearOperator
 import cola.ops
-from .linear_algebra import *
+from .basic_operations import *
 from .linalg import *
 # from .ops import *
 from .utils import *

@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from cola import jax_fns
 from cola import torch_fns
-from cola.linear_algebra import kron, lazify
+from cola.basic_operations import kron, lazify
 from cola.ops import Tridiagonal
 from cola.ops import Diagonal
 from cola.ops import Identity

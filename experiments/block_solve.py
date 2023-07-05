@@ -1,11 +1,11 @@
 import time
 import numpy as np
 from cola import jax_fns
-from cola.linear_algebra import lazify
+from cola.basic_operations import lazify
 from cola.linalg.inverse import inverse
 from cola.ops import SelfAdjoint
 from cola.ops import Diagonal
-from cola.linear_algebra import block_diag
+from cola.basic_operations import block_diag
 from cola.algorithms.cg import solve_cg
 from cola.utils_test import generate_spectrum
 from cola.utils_test import generate_beta_spectrum

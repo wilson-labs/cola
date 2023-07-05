@@ -1,6 +1,6 @@
 from cola import jax_fns
 from cola import torch_fns
-from cola.linear_algebra import lazify
+from cola.basic_operations import lazify
 from cola.algorithms.preconditioners import get_nys_approx
 from cola.algorithms.preconditioners import select_rank_adaptively
 from cola.algorithms.preconditioners import NystromPrecond

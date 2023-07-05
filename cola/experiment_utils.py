@@ -35,8 +35,8 @@ from cola.ops import I_like
 from cola.ops import CustomLinOp
 from cola.ops import LinearOperator
 from cola.linalg.eigs import eig
-from cola.linear_algebra import lazify
-from cola.linear_algebra import kron
+from cola.basic_operations import lazify
+from cola.basic_operations import kron
 from cola.linalg.inverse import inverse
 from cola.algorithms.svrg import solve_svrg_rff
 from cola.algorithms.svd import get_randomized_svd

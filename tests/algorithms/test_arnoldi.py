@@ -4,7 +4,7 @@ from cola.ops import Product
 from cola.ops import get_householder_vec
 from cola import jax_fns
 from cola import torch_fns
-from cola.linear_algebra import lazify
+from cola.basic_operations import lazify
 from cola.algorithms.arnoldi import get_arnoldi_matrix
 from cola.algorithms.arnoldi import arnoldi_eig
 from cola.algorithms.arnoldi import run_householder_arnoldi

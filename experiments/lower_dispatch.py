@@ -1,5 +1,5 @@
 import cola.torch_fns as xnp
-from cola.linear_algebra import lazify
+from cola.basic_operations import lazify
 from cola.ops import LowerTriangular
 from cola.linalg.eigs import eig
 from cola.utils_test import generate_lower_from_diag
