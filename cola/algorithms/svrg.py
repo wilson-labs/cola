@@ -1,6 +1,7 @@
 import numpy as np
 import jax
-from cola.linalg.eigs import eigmax
+import cola
+# from cola.linalg.eigs import eigmax
 from cola.ops import Sum, Product, Dense
 from cola.ops import I_like
 from cola.utils.control_flow import while_loop
@@ -107,7 +108,7 @@ def get_optimal_learning_rate(M, P, bs=1, stochastic=True):
         e_max = P.preconditioned_eigmax
         e_min = P.preconditioned_eigmin
     except AttributeError:
-        e_max = eigmax(M @ P, tol=5e-2)
+        e_max = cola.linalg.eigs.eigmax(M @ P, tol=5e-2)
         e_min = 1e-5 * e_max
     lr = .1 / (e_max + e_min)
     lr *= np.sqrt(bs) / 50.
