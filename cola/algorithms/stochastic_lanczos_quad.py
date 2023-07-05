@@ -3,8 +3,9 @@ from cola.ops import LinearOperator
 from cola.algorithms.lanczos import lanczos_parts
 from cola.algorithms.lanczos import construct_tridiagonal_batched
 # from cola.algorithms.lanczos import construct_tridiagonal
+from cola.utils import export
 
-
+@export
 def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int, max_iters: int,
                             tol: float = 1e-7):
     """

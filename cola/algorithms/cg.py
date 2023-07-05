@@ -3,10 +3,11 @@ from cola.ops import LinearOperator
 from cola.ops import I_like
 from cola.utils.custom_autodiff import solver_autograd
 # from cola.utils.control_flow import while_loop
+from cola.utils import export
 
 _small_value = 1e-40
 
-
+@export
 def solve_cg(A: LinearOperator, rhs: Array, x0=None, P=None, tol=1e-6, max_iters=5000, pbar=False,
              info=False):
     """

@@ -4,7 +4,7 @@ from cola.ops import Householder, Product
 # from cola.ops import get_householder_vec
 from cola.ops import get_householder_vec_simple
 from cola.utils.control_flow import for_loop
-
+from cola.utils import export
 
 def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7,
                 use_householder=False):

@@ -1,4 +1,8 @@
+from cola.utils import export
+
+@export
 def get_randomized_svd(A, rank):
+    """ TODO Andres: make docstring"""
     xnp = A.ops
     Omega = xnp.randn(*(A.shape[0], rank), dtype=A.dtype)
     Y = A @ Omega

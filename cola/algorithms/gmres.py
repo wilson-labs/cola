@@ -2,10 +2,12 @@ from cola.ops import LinearOperator
 from cola.ops import Array
 from cola.algorithms.arnoldi import run_householder_arnoldi
 from cola.algorithms.arnoldi import get_arnoldi_matrix
+from cola.utils import export
 
-
+@export
 def run_gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=None,
               use_householder=False, use_triangular=False, pbar=False, info=False):
+    """TODO Andres: docstring"""
     xnp = A.ops
     is_vector = len(rhs.shape) == 1
     if x0 is None:

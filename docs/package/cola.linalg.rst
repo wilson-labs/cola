@@ -1,4 +1,4 @@
-Linear Algebra
+Linear Algebra (high level interface)
 ==============
 
 .. automodule:: cola.linalg

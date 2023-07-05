@@ -3,6 +3,7 @@ from cola.ops import LinearOperator
 from cola.ops import LinearOperator
 from cola.linalg.eigs import power_iteration
 from plum import dispatch
+from cola.utils import export
 
 
 class AdaNysPrecond(LinearOperator):
@@ -81,8 +82,9 @@ def estimate_approx_error(A, Lambda, U, tol, max_iter):
     error = power_iteration(E, tol=tol, max_iter=max_iter)
     return xnp.abs(error)
 
-
+@export
 class NystromPrecond(LinearOperator):
+    """ TODO Andres: docstring"""
     def __init__(self, A, rank, mu=1e-7, eps=1e-8, adjust_mu=True):
         super().__init__(dtype=A.dtype, shape=A.shape)
         Omega = self.ops.randn(*(A.shape[0], rank), dtype=A.dtype)

@@ -105,6 +105,7 @@ Design Choices
    package/cola.linalg
    package/cola.ops
    package/cola.basic_operations
+   package/cola.algorithms
 
 .. toctree::
    :maxdepth: 1

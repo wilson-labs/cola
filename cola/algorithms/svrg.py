@@ -4,6 +4,7 @@ from cola.linalg.eigs import eigmax
 from cola.ops import Sum, Product, Dense
 from cola.ops import I_like
 from cola.utils.control_flow import while_loop
+from cola.utils import export
 # import standard Union type
 
 
@@ -35,7 +36,7 @@ def cg_svrg_fns(b):
 #         return Ahat.T@(Ahat@(W-anchor_W)) # not quite right
 #     return minres_grad, minres_grad_vrdiff
 
-
+# @export
 def solve_svrg_symmetric(A: Sum, b, tol=1e-6, P=None, x0=None, pbar=False, info=False,
                          max_iters=5000, bs=50):
     # mult = jnp.linalg.norm(b, axis=0)
@@ -124,9 +125,15 @@ def get_optimal_learning_rate(M, P, bs=1, stochastic=True):
     print(text)
     return lr, beta
 
-
+@export
 def svrg_eigh_max(A: Product[Dense, Dense], k=1, tol=1e-6, pbar=False, info=False, max_iters=5000,
                   bs=50, lr_scale=1.):
+    """ Use SVRG to find the largest k eigenvalues and eigenvectors of an hermitian matrix A.
+        Assumes A = B@C where B and C are dense matrices, decomposes the sum over the inner dimension.
+
+        Returns:
+            (eigvals, V), info
+    """
     x0 = A.ops.randn(A.shape[1], k, dtype=A.dtype)
     out, info = solve_svrg_generic(A, oja_svrg_fns(), tol=tol, pbar=pbar, info=info,
                                    max_iters=max_iters, bs=bs, lr_scale=lr_scale, x0=x0)
@@ -135,8 +142,15 @@ def svrg_eigh_max(A: Product[Dense, Dense], k=1, tol=1e-6, pbar=False, info=Fals
     return (eigvals, V), info
 
 
+@export
 def svrg_solveh(A: Product[Dense, Dense], b, tol=1e-6, pbar=False, info=False, max_iters=5000,
                 bs=50, lr_scale=1.):
+    """ Use SVRG solve the linear system Ax=b assuming an hermitian matrix A.
+        Assumes A = B@C where B and C are dense matrices, decomposes the sum over the inner dimension.
+
+        Returns:
+            x, info
+    """
     # x0 = A.ops.randn(A.shape[1], k, dtype=A.dtype)
     x0 = A.ops.randn(A.shape[1], b.shape[1], dtype=A.dtype)
     out, info = solve_svrg_generic(A, cg_svrg_fns(b), tol=tol, pbar=pbar, info=info,
