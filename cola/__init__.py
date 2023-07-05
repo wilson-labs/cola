@@ -1,5 +1,10 @@
 __version__ = '0.1.0'
 # from .ops import LinearOperator
+# import pkgutil
+# from cola.utils import import_from_all
+# __all__ = []
+# for loader, module_name, is_pkg in  pkgutil.walk_packages(__path__):
+#     import_from_all(module_name, globals(), __all__,__name__)
 import cola.ops
 from .basic_operations import *
 from .linalg import *

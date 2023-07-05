@@ -67,13 +67,13 @@ def eig(A: Diagonal, eig_slice=slice(0, None, None), **kwargs):
 def eigenvalues(A: LinearOperator, info=False, pbar=False):
     pass
 
-
+@export
 def eigmax(A: LinearOperator, tol=1e-7, max_iters=1000, pbar=False, info=False):
     """ Returns eigenvalue with largest magnitude of A
         up to specified tolerance tol."""
     return power_iteration(A, tol=tol, max_iter=max_iters, pbar=pbar, info=info)
 
-
+#@export
 def eigmin(A: LinearOperator, tol=1e-7):
     """ Returns eigenvalue with smallest magnitude of A
         up to specified tolerance tol."""
