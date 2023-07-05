@@ -6,7 +6,6 @@ from plum.function import _owner_transfer
 from plum.type import resolve_type_hint
 from plum.util import repr_short
 
-
 dispatch = Dispatcher()
 
 
@@ -16,14 +15,13 @@ class ParametricTypeMeta(type):
     If `Type(Arg1, Arg2, **kw_args)` is called, this returns
     `Type[type(Arg1), type(Arg2)](Arg1, Arg2, **kw_args)`.
     """
-
     def __getitem__(cls, p):
         if not cls.concrete:
             # Initialise the type parameters. This can perform, e.g., validation.
-            p = p if isinstance(p, tuple) else (p,)  # Ensure that it is a tuple.
+            p = p if isinstance(p, tuple) else (p, )  # Ensure that it is a tuple.
             p = cls.__init_type_parameter__(*p)
             # Type parameter has been initialised! Proceed to construct the type.
-            p = p if isinstance(p, tuple) else (p,)  # Again ensure that it is a tuple.
+            p = p if isinstance(p, tuple) else (p, )  # Again ensure that it is a tuple.
             return cls.__new__(cls, *p)
         else:
             raise TypeError("Cannot specify type parameters. This type is concrete.")
@@ -81,9 +79,7 @@ class ParametricTypeMeta(type):
         if cls.parametric:
             return getattr(cls, "_concrete", False)
         else:
-            raise RuntimeError(
-                "Cannot check whether a non-parametric type is instantiated or not."
-            )
+            raise RuntimeError("Cannot check whether a non-parametric type is instantiated or not.")
 
     @property
     def type_parameter(cls):
@@ -91,9 +87,7 @@ class ParametricTypeMeta(type):
         if cls.concrete:
             return cls._type_parameter
         else:
-            raise RuntimeError(
-                "Cannot get the type parameter of non-instantiated parametric type."
-            )
+            raise RuntimeError("Cannot get the type parameter of non-instantiated parametric type.")
 
 
 def _default_le_type_par(p_left, p_right):
@@ -107,7 +101,6 @@ def _default_le_type_par(p_left, p_right):
 
 class CovariantMeta(ParametricTypeMeta):
     """A metaclass that implements *covariance* of parametric types."""
-
     def __subclasscheck__(cls, subclass):
         if is_concrete(cls) and is_concrete(subclass):
             # Check that they are instances of the same parametric type.
@@ -115,8 +108,8 @@ class CovariantMeta(ParametricTypeMeta):
                 p_sub = subclass.type_parameter
                 p_cls = cls.type_parameter
                 # Ensure that both are in tuple form.
-                p_sub = p_sub if isinstance(p_sub, tuple) else (p_sub,)
-                p_cls = p_cls if isinstance(p_cls, tuple) else (p_cls,)
+                p_sub = p_sub if isinstance(p_sub, tuple) else (p_sub, )
+                p_cls = p_cls if isinstance(p_cls, tuple) else (p_cls, )
                 return cls.__le_type_parameter__(p_sub, p_cls)
 
         # Default behaviour to `type`s subclass check.
@@ -158,7 +151,7 @@ def parametric(original_class=None):
     # will error.
 
     if CovariantMeta in original_meta.__mro__:
-        bases = (original_meta,)
+        bases = (original_meta, )
         name = original_meta.__name__
     else:
         bases = (CovariantMeta, original_meta)
@@ -175,8 +168,9 @@ def parametric(original_class=None):
     def __new__(cls, *ps):
         # Only create a new subclass if it doesn't exist already.
         if ps not in subclasses:
-            
+
             if not original_class.__new__ is object.__new__:
+
                 def __new__(cls, *args, **kw_args):
                     return original_class.__new__(cls, *args, **kw_args)
             else:
@@ -187,7 +181,7 @@ def parametric(original_class=None):
             name += "[" + ", ".join(repr_short(p) for p in ps) + "]"
             subclass = meta(
                 name,
-                (parametric_class,),
+                (parametric_class, ),
                 {"__new__": __new__},
             )
             subclass._parametric = True
@@ -220,8 +214,11 @@ def parametric(original_class=None):
     # Create parametric class.
     parametric_class = meta(
         original_class.__name__,
-        (original_class,),
-        {"__new__": __new__, "__init_subclass__": __init_subclass__},
+        (original_class, ),
+        {
+            "__new__": __new__,
+            "__init_subclass__": __init_subclass__
+        },
     )
     parametric_class._parametric = True
     parametric_class._concrete = False
@@ -286,10 +283,8 @@ def type_parameter(x):
         t = type(x)
     if hasattr(t, "parametric"):
         return t.type_parameter
-    raise ValueError(
-        f"`{x}` is not a concrete parametric type or an instance of a"
-        f" concrete parametric type."
-    )
+    raise ValueError(f"`{x}` is not a concrete parametric type or an instance of a"
+                     f" concrete parametric type.")
 
 
 def kind(SuperClass=object):
@@ -299,7 +294,6 @@ def kind(SuperClass=object):
     Returns:
         object: New parametric type wrapper.
     """
-
     @parametric
     class Kind(SuperClass):
         def __init__(self, *xs):
@@ -318,7 +312,6 @@ Kind = kind()  #: A default kind provided for convenience.
 class Val:
     """A parametric type used to move information from the value domain to the type
     domain."""
-
     @classmethod
     def __infer_type_parameter__(cls, *arg):
         """Function called when the constructor of `Val` is called to determine the type
