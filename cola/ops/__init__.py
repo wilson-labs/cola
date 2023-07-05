@@ -1,5 +1,5 @@
+""" Linear Operators in CoLA"""
 from cola.utils import import_from_all, import_every
-
 __all__ = []
 import_from_all("operator_base", globals(), __all__, __name__)
 #is_operator = lambda name,value: isinstance(value,type) and issubclass(value,LinearOperator)

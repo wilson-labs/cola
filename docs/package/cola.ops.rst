@@ -1,5 +1,5 @@
 Linear Operators
-=========
+================
 
 .. automodule:: cola.ops
     :members:

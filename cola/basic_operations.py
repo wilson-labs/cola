@@ -1,3 +1,5 @@
+""" Basic operations on linear operators. """
+
 from typing import List, Union, Any
 from plum import dispatch
 from cola.ops import LinearOperator, Array

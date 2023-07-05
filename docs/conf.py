@@ -16,7 +16,7 @@ extensions = [
 templates_path = ['_templates']
 exclude_patterns = [
     '_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints', 'notebooks/.ipynb_checkpoints', 'notebooks/colabs/**'
-]
+, '**/_**.**']
 
 source_suffix = ['.rst', '.md']
 

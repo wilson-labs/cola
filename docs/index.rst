@@ -33,13 +33,13 @@ PSD, symmetric, non-symmetric, real and complex linear ops.
 
 Installation
 ------------
-We recommend installing via ``pip``: (right now it is better to install locally)
+We recommend installing via ``pip``:
 
 .. code-block:: bash
 
-    pip install cola
+    pip install git+https://github.com/wilson-labs/cola.git
 
-To install locally, clone the repository and install via ``pip``:
+To install locally instead, clone the repository and install via ``pip``:
 
 .. code-block:: bash
 
@@ -83,7 +83,7 @@ Design Choices
    :maxdepth: 1
    :caption: Advanced Features
 
-   notebooks/Adding_Linear_ops.ipynb
+   notebooks/Adding_Linear_Operators.ipynb
    notebooks/Lower_Precision.ipynb
 
 .. toctree::

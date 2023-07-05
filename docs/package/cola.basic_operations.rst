@@ -1,5 +1,5 @@
 Basic Operations
-==============
+================
 
 .. automodule:: cola.basic_operations
     :members:
