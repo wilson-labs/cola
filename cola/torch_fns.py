@@ -2,6 +2,7 @@ import torch
 from torch.autograd.functional import vjp, jvp
 from cola.utils.torch_tqdm import while_loop_winfo
 from torch.nn import Parameter
+import logging
 
 exp = torch.exp
 cos = torch.cos
@@ -50,6 +51,7 @@ argsort = torch.argsort
 sparse_csr = torch.sparse_csr_tensor
 roll=torch.roll
 maximum=torch.maximum
+PRNGKey = lambda x: x
 
 def vmap(fun, in_axes=0, out_axes=0):
     return torch.vmap(func=fun, in_dims=in_axes, out_dims=out_axes)
@@ -115,8 +117,12 @@ def sort(array):
     return sorted
 
 
-def randn(*shape, dtype=None):
-    return torch.randn(*shape, dtype=dtype)
+def randn(*shape, dtype=None, key=None):
+    if key is None:
+        print('Non keyed randn used. To be deprecated soon.')
+        logging.warning('Non keyed randn used. To be deprecated soon.')
+    z = torch.randn(*shape, dtype=dtype)
+    return z if key is None else (z,key)
 
 
 def fixed_normal_samples(shape, dtype=None):

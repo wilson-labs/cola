@@ -7,10 +7,10 @@ from cola.ops import Dense
 from cola.ops import Kronecker, Product, KronSum, Sum
 from cola.ops import ScalarMul, Transpose, Adjoint, SelfAdjoint
 from cola.ops import BlockDiag, Identity, Diagonal, I_like
-
+from cola.utils import export
 Scalar = Array
 
-
+@export
 def lazify(A: Union[LinearOperator, Array]) -> LinearOperator:
     """ Convert an array to a linear operator if it is not already one. """
     if isinstance(A, LinearOperator):
@@ -18,7 +18,7 @@ def lazify(A: Union[LinearOperator, Array]) -> LinearOperator:
     else:
         return Dense(A)
 
-
+@export
 def densify(A: Union[LinearOperator, Array]) -> Array:
     """ Convert a linear operator to a dense array if it is not already one. """
     if isinstance(A, LinearOperator):
@@ -108,6 +108,7 @@ def adjoint(A: LinearOperator):
 
 
 @dispatch
+@export
 def kron(A: Any, B: Any) -> Kronecker:
     return kron(lazify(A), lazify(B))
 
@@ -140,6 +141,7 @@ def kron(A: LinearOperator, B: Kronecker) -> Kronecker:
 
 
 @dispatch
+@export
 def kronsum(A: Any, B: Any) -> KronSum:
     return kronsum(lazify(A), lazify(B))
 
@@ -158,16 +160,9 @@ def kronsum(A: KronSum, B: LinearOperator) -> KronSum:
 def kronsum(A: LinearOperator, B: KronSum) -> KronSum:
     return KronSum(*((A, ) + B.Ms))
 
-
-def trace(A: LinearOperator):
-    assert A.shape[0] == A.shape[1], "Can't trace non square matrix"
-    return A.ops.sum(diag(A))
-
-
 def block_diag(*ops: List[LinearOperator]) -> LinearOperator:
     """ Construct a block diagonal operator from a list of ops. """
     return BlockDiag(*ops)
-
 
 def concatenate(ops: List[LinearOperator], axis=0) -> LinearOperator:
     raise NotImplementedError

@@ -19,6 +19,7 @@ from jax.lax.linalg import svd
 from jax.lax.linalg import qr
 from jax.scipy.linalg import solve_triangular as solvetri
 import numpy as np
+import logging
 
 cos = jnp.cos
 sin = jnp.sin
@@ -79,6 +80,7 @@ vmap = vmap
 grad = grad
 roll = jnp.roll
 maximum = jnp.maximum
+PRNGKey = PRNGKey
 # convolve = jax.scipy.signal.convolve
 
 
@@ -126,11 +128,19 @@ def expand(array, axis):
     return expand_dims(array, dimensions=(axis, ))
 
 
-def randn(*shape, dtype=None):
-    out = np.random.randn(*shape)
-    if dtype is not None:
-        out = out.astype(dtype)
-    return out
+def randn(*shape, dtype=None, key=None):
+    if key is None:
+        print('Non keyed randn used. To be deprecated soon.')
+        logging.warning('Non keyed randn used. To be deprecated soon.')
+        out = np.random.randn(*shape)
+        if dtype is not None:
+            out = out.astype(dtype)
+        return out
+    else:
+        z = normal(key, shape, dtype=dtype)
+        newkey = jax.random.split(key)[0]
+        return z, newkey
+
 
 
 def fixed_normal_samples(shape, dtype=None):
