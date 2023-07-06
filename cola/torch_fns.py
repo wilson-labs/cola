@@ -48,7 +48,8 @@ is_array = torch.is_tensor
 autograd = torch.autograd
 argsort = torch.argsort
 sparse_csr = torch.sparse_csr_tensor
-
+roll=torch.roll
+maximum=torch.maximum
 
 def vmap(fun, in_axes=0, out_axes=0):
     return torch.vmap(func=fun, in_dims=in_axes, out_dims=out_axes)

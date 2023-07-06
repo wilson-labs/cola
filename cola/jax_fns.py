@@ -77,7 +77,8 @@ ones = jnp.ones
 concat = jnp.concatenate
 vmap = vmap
 grad = grad
-
+roll = jnp.roll
+maximum = jnp.maximum
 # convolve = jax.scipy.signal.convolve
 
 
