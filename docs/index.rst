@@ -55,6 +55,7 @@ To install locally instead, clone the repository and install via ``pip``:
 .. code-block:: bash
 
     git clone https://github.com/wilson-labs/cola
+    cd cola
     pip install -e .
 
 

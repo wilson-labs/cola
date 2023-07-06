@@ -39,7 +39,7 @@ from cola.basic_operations import lazify
 from cola.basic_operations import kron
 from cola.linalg.inverse import inverse
 from cola.algorithms.svrg import solve_svrg_rff
-from cola.algorithms.svd import get_randomized_svd
+from cola.algorithms.svd import randomized_svd
 from cola.algorithms.cg import run_batched_tracking_cg
 from cola.utils_test import generate_spectrum
 from cola.utils_test import generate_clustered_spectrum
@@ -66,7 +66,7 @@ def get_times_pca(XTX, args, results, repeat):
     times = np.zeros(shape=(repeat, ))
     for idx in range(repeat):
         t0 = time.time()
-        eigs, *_ = get_randomized_svd(XTX, rank)
+        eigs, *_ = randomized_svd(XTX, rank)
         eigs[:pca_num]
         t1 = time.time()
         times[idx] = t1 - t0
@@ -344,7 +344,7 @@ def get_times_cg2(A, rhs, solver_kwargs, results, xnp, repeat):
     x0 = xnp.zeros_like(rhs)
     for idx in range(repeat):
         t0 = time.time()
-        # soln, info = solve_cg(A, rhs, **solver_kwargs)
+        # soln, info = cg(A, rhs, **solver_kwargs)
         soln, _, _, info = run_batched_tracking_cg(A, rhs, x0=x0, preconditioner=P, **solver_kwargs)
         errors = info[0][:, 0, 0]
         mask = errors > 0.

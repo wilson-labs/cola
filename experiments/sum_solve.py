@@ -4,7 +4,7 @@ from cola import jax_fns
 from cola.basic_operations import lazify
 from cola.linalg.inverse import inverse
 from cola.ops import SelfAdjoint
-from cola.algorithms.cg import solve_cg
+from cola.algorithms.cg import cg
 from cola.utils_test import generate_spectrum
 from cola.utils_test import generate_diagonals
 from cola.experiment_utils import print_time_taken
@@ -70,7 +70,7 @@ res = np.zeros(shape=(repeat, ))
 iterations = np.zeros(shape=(repeat, ))
 for idx in range(repeat):
     t0 = time.time()
-    soln, info = solve_cg(K, rhs)
+    soln, info = cg(K, rhs)
     t1 = time.time()
     times[idx] = t1 - t0
     res[idx] = xnp.norm(K @ soln - rhs)

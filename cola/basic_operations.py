@@ -110,6 +110,7 @@ def adjoint(A: LinearOperator):
 @dispatch
 @export
 def kron(A: Any, B: Any) -> Kronecker:
+    """ Kronecker product of two linear operators. """
     return kron(lazify(A), lazify(B))
 
 
@@ -160,6 +161,7 @@ def kronsum(A: KronSum, B: LinearOperator) -> KronSum:
 def kronsum(A: LinearOperator, B: KronSum) -> KronSum:
     return KronSum(*((A, ) + B.Ms))
 
+@export
 def block_diag(*ops: List[LinearOperator]) -> LinearOperator:
     """ Construct a block diagonal operator from a list of ops. """
     return BlockDiag(*ops)

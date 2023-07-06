@@ -3,7 +3,7 @@ from cola import jax_fns
 from cola import torch_fns
 from cola.basic_operations import lazify
 from cola.linalg.inverse import inverse
-from cola.algorithms.gmres import run_gmres
+from cola.algorithms.gmres import gmres
 from cola.utils_test import parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
 from jax.config import config
@@ -37,7 +37,7 @@ def test_gmres_easy(xnp):
     soln = xnp.array(soln, dtype=dtype)
 
     max_iters, tolerance = 3, 1e-8
-    fn = run_gmres
+    fn = gmres
     x0 = xnp.zeros_like(rhs)
 
     approx = fn(lazify(A), rhs, x0, max_iters, tolerance)

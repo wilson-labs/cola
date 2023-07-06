@@ -6,7 +6,7 @@ from cola.ops import Identity
 from cola.ops import Diagonal
 from cola.ops import LinearOperator
 from cola.algorithms.preconditioners import NystromPrecond
-from cola.algorithms.cg import solve_cg
+from cola.algorithms.cg import cg
 from cola.algorithms.cg import run_batched_cg
 from cola.algorithms.cg import run_batched_tracking_cg
 from cola.algorithms.cg import run_cg
@@ -203,16 +203,16 @@ def test_cg_easy_case(xnp):
 
     A_fn = LinearOperator(dtype=dtype, shape=A.shape, matmat=matmat)
 
-    fn = xnp.jit(solve_cg, static_argnums=(0, 3, 4, 5, 6, 7, 8))
+    fn = xnp.jit(cg, static_argnums=(0, 3, 4, 5, 6, 7, 8))
     approx, _ = fn(A_fn, rhs)
 
     rel_error = relative_error(soln, approx)
     assert rel_error < _tol
 
-    _, info = solve_cg(A_fn, rhs, info=True)
+    _, info = cg(A_fn, rhs, info=True)
     assert all([key in info.keys() for key in ["iterations", "residuals"]])
 
-    approx, _ = solve_cg(lazify(A[0, :, :]), rhs[0, :, 0], info=False)
+    approx, _ = cg(lazify(A[0, :, :]), rhs[0, :, 0], info=False)
     rel_error = relative_error(soln[0, :, 0], approx)
     assert rel_error < _tol
 
