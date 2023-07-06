@@ -68,6 +68,7 @@ Design Choices
    :maxdepth: 1
    :caption: Getting Started
 
+   notebooks/About.ipynb
    notebooks/Quick_Start.ipynb
    notebooks/LinOpIntro.ipynb
 
