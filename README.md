@@ -77,15 +77,21 @@ multiply by constants `*, /`, matrix multiply them `@` and combine them in other
 ```python
 import jax.numpy as jnp
 from cola import ops
+import jax.numpy as jnp
+from cola import ops
 A = ops.Diagonal(jnp.arange(5)+.1)
 B = ops.Dense(jnp.array([[2.,1.,],[-2.,1.1],[.01,.2]]))
-C = ops.I_like(B)
-D = B.T@B+0.01*C
-E = ops.Kronecker(A,ops.Dense(jnp.ones(2,2,dtype=jnp.float32)))
+C = B.T@B
+D = C+0.01*ops.I_like(C)
+E = ops.Kronecker(A,ops.Dense(jnp.ones((2,2))))
 F = ops.BlockDiag(E,D)
 
 v = jnp.ones(F.shape[-1])
 print(F@v)
+```
+```
+[0.2       0.2       2.2       2.2       4.2       4.2       6.2
+ 6.2       8.2       8.2       7.8121004 2.062    ]
 ```
 
 2. **Performing Linear Algebra** With these objects we can perform linear algebra operations even when they are very big.
@@ -108,7 +114,31 @@ Qs = ops.Symmetric(Q)
 %timeit cola.linalg.inverse(Qs)@v
 ```
 
-See https://cola.readthedocs.io/en/latest/ for our documentation and examples.
+3. **Jax and Pytorch** You can freely use jax or pytorch with Cola:
+```python
+import torch
+
+A = ops.Dense(torch.Tensor([[1.,2],[3,4]))
+print(cola.linalg.trace(ops.kron(A,A)))
+
+import jax.numpy as jnp
+A = ops.Dense(jnp.array([[1.,2],[3,4]))
+print(cola.linalg.trace(ops.kron(A,A)))
+```
+
+and both support autograd (and jit):
+```python
+from jax import grad, jit,vmap
+
+def myloss(x):
+  A = ops.Dense(jnp.array([[1.,2],[3,x]))
+
+  return jnp.ones(2)@cola.linalg.inverse(A)@jnp.ones(2)
+g = jit(vmap(grad(myloss)))(jnp.array([.5,.3]))
+print(g)
+```
+
+See https://cola.readthedocs.io/en/latest/ for our full documentation and many examples.
 
 ## Use cases and examples
 See our examples and tutorials on how to use CoLA for different problems.

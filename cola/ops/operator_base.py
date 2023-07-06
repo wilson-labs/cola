@@ -25,7 +25,8 @@ def get_library_fns(dtype: Dtype):
             import cola.torch_fns as fns
             return fns
     except ImportError:
-        raise ImportError("No supported array library found")
+        pass
+    raise ImportError("No supported array library found")
 
 
 class AutoRegisteringPyTree(type):

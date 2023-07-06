@@ -74,17 +74,17 @@ def mul(A: LinearOperator, c: Scalar) -> LinearOperator:
 
 @dispatch
 def mul(A: ScalarMul, c: Scalar) -> ScalarMul:
-    return ScalarMul(A.c * c, A.shape)
+    return ScalarMul(A.c * c, A.shape,A.dtype)
 
 
 @dispatch
 def mul(c: Scalar, A: ScalarMul) -> ScalarMul:
-    return ScalarMul(A.c * c, A.shape)
+    return ScalarMul(A.c * c, A.shape,A.dtype)
 
 
 @dispatch
 def mul(A: ScalarMul, B: ScalarMul) -> ScalarMul:
-    return ScalarMul(A.c * B.c, A.shape)
+    return ScalarMul(A.c * B.c, A.shape,A.dtype)
 
 
 @dispatch
