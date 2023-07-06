@@ -1,14 +1,14 @@
 from cola.ops import LinearOperator
 from cola.ops import Array
 from cola.ops import Householder, Product
-# from cola.ops import get_householder_vec
-from cola.ops import get_householder_vec_simple
 from cola.utils.control_flow import for_loop
 from cola.utils import export
 
 
+@export
 def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7,
                 use_householder=False):
+    """ TODO Andres: docstring """
     xnp = A.ops
     if use_householder:
         Q, H = run_householder_arnoldi(A=A, rhs=rhs, max_iters=max_iters)
@@ -20,6 +20,38 @@ def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7
     eigvals, eigvectors = xnp.eig(H)
     # aux = eigvectors @ xnp.diag(eigvals) @ xnp.inv(eigvectors) - H
     return eigvals, Q[:, :-1] @ eigvectors
+
+
+def get_householder_vec_simple(x, idx, xnp):
+    indices = xnp.arange(x.shape[0])
+    vec = xnp.where(indices >= idx, x=x, y=0.)
+    x_norm = xnp.norm(vec)
+    vec = xnp.update_array(vec, vec[idx] - x_norm, idx)
+    beta = xnp.nan_to_num(2. / xnp.norm(vec)**2., posinf=0., neginf=0., nan=0.)
+    return vec, beta
+
+
+def get_householder_vec(x, idx, xnp):
+    # indices = xnp.arange(x.shape[0])
+    # aux = xnp.where(indices >= idx + 1, x=x, y=0.)
+    # sigma_2 = xnp.norm(aux)**2.
+    sigma_2 = xnp.norm(x[idx + 1:])**2.
+    vec = xnp.zeros_like(x)
+    vec = xnp.update_array(vec, x[idx:], slice(idx, None, None))
+    if sigma_2 == 0 and x[idx] >= 0:
+        beta = 0
+    elif sigma_2 == 0 and x[idx] < 0:
+        beta = -2
+    else:
+        x_norm_partial = xnp.sqrt(x[idx]**2 + sigma_2)
+        if x[idx] <= 0:
+            vec = xnp.update_array(vec, x[idx] - x_norm_partial, idx)
+        else:
+            vec = xnp.update_array(vec, -sigma_2 / (x[idx] + x_norm_partial), idx)
+        beta = 2 * vec[idx]**2 / (sigma_2 + vec[idx]**2)
+        vec = vec / vec[idx]
+        vec = xnp.update_array(vec, vec[idx:] / vec[idx], slice(idx, None, None))
+    return vec, beta
 
 
 def run_householder_arnoldi(A: LinearOperator, rhs: Array, max_iters: int):

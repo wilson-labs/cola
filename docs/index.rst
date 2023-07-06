@@ -55,6 +55,7 @@ To install locally instead, clone the repository and install via ``pip``:
 .. code-block:: bash
 
     git clone https://github.com/wilson-labs/cola
+    cd cola
     pip install -e .
 
 
@@ -114,9 +115,10 @@ Design Choices
    :maxdepth: 1
    :caption: API Reference
 
-   package/cola.linalg
+   package/cola.linear_operators
    package/cola.ops
-   package/cola.basic_operations
+   package/cola.linalg
+   package/cola.fns
    package/cola.algorithms
 
 .. toctree::

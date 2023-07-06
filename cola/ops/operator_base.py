@@ -1,13 +1,13 @@
 from abc import abstractmethod
 from typing import Union, Tuple, Any, List, Callable
-# import cola.basic_operations  # import dot, add, mul
+# import cola.fns  # import dot, add, mul
 import cola
 import numpy as np
 from cola.utils import export
 Array = Dtype = Any
 export(Array)
 
-@export
+@export #TODO: remove the export
 def get_library_fns(dtype: Dtype):
     """ Given a dtype e.g. jnp.float32 or torch.complex64, returns the appropriate
         namespace for standard array functionality (either torch_fns or jax_fns)."""
@@ -40,6 +40,7 @@ class AutoRegisteringPyTree(type):
 
 @export
 class LinearOperator(metaclass=AutoRegisteringPyTree):
+    """ Linear Operator base class """
     def __new__(cls, *args, **kwargs):
         """ Creates attributes for the flatten and unflatten functionality. """
         # print("LinearOperator.__new__ called with",cls)#, args, kwargs)
@@ -82,12 +83,12 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     @property
     def T(self):
         """ Matrix Transpose """
-        return cola.basic_operations.transpose(self)
+        return cola.fns.transpose(self)
 
     @property
     def H(self):
         """ Matrix complex conjugate transpose (aka hermitian conjugate, adjoint)"""
-        return cola.basic_operations.adjoint(self)
+        return cola.fns.adjoint(self)
 
     def flatten(self) -> Tuple[Array, ...]:
         return flatten_function(self)
@@ -95,7 +96,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     def __matmul__(self, X: Array) -> Array:
         # assert X.shape[0] == self.shape[-1], f"dimension mismatch {self.shape} vs {X.shape}"
         if isinstance(X, LinearOperator):
-            return cola.basic_operations.dot(self, X)
+            return cola.fns.dot(self, X)
         elif len(X.shape) == 1:
             return self._matmat(X.reshape(-1, 1)).reshape(-1)
         elif len(X.shape) >= 2:
@@ -106,7 +107,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     def __rmatmul__(self, X: Array) -> Array:
         assert X.shape[-1] == self.shape[-2], f"dimension mismatch {self.shape} vs {X.shape}"
         if isinstance(X, LinearOperator):
-            return cola.basic_operations.dot(X, self)
+            return cola.fns.dot(X, self)
         elif len(X.shape) == 1:
             return self._rmatmat(X.reshape(1, -1)).reshape(-1)
         elif len(X.shape) >= 2:
@@ -117,14 +118,14 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     def __add__(self, other):
         if other == 0:
             return self
-        return cola.basic_operations.add(self, other)
+        return cola.fns.add(self, other)
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __mul__(self, c):
         # assert isinstance(c, (int, float)), "c must be a scalar"
-        return cola.basic_operations.mul(self, c)
+        return cola.fns.mul(self, c)
 
     def __rmul__(self, c):
         return self * c

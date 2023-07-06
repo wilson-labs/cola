@@ -7,8 +7,8 @@ from cola.ops import ScalarMul
 from cola.ops import Product
 from cola.ops import BlockDiag
 from cola.ops import Kronecker, SelfAdjoint, Sum
-from cola.algorithms.cg import solve_cg
-from cola.algorithms.gmres import run_gmres
+from cola.algorithms.cg import cg
+from cola.algorithms.gmres import gmres
 from cola.algorithms.svrg import solve_svrg_symmetric
 import numpy as np  
 from cola.utils.dispatch import parametric
@@ -28,8 +28,8 @@ class CGInverse(IterativeInverse):
         self.info = {}
 
     def _matmat(self, X):
-        # TODO: move this info handling to solve_cg?
-        out, self.info = solve_cg(self.A, X, **self.kwargs)
+        # TODO: move this info handling to cg?
+        out, self.info = cg(self.A, X, **self.kwargs)
         return out
 
 
@@ -41,7 +41,7 @@ class GMResInverse(IterativeInverse):
         self.info = {}
 
     def _matmat(self, X):
-        out = run_gmres(self.A, X, **self.kwargs)
+        out = gmres(self.A, X, **self.kwargs)
         return out
 
 
@@ -53,7 +53,7 @@ class SymmetricSVRGInverse(IterativeInverse):
         self.info = {}
 
     def _matmat(self, X):
-        # TODO: move this info handling to solve_cg?
+        # TODO: move this info handling to cg?
         out, self.info = solve_svrg_symmetric(self.A, X, **self.kwargs)
         return out
 

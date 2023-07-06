@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from cola import jax_fns
 from cola import torch_fns
-from cola.basic_operations import kron, lazify
+from cola.fns import kron, lazify
 from cola.ops import Tridiagonal
 from cola.ops import Diagonal
 from cola.ops import Identity
@@ -18,7 +18,7 @@ from cola.ops import Householder
 from cola.ops import Sparse
 from cola.ops import PSD
 from cola.ops import LinearOperator
-from cola.ops import get_householder_vec
+from cola.algorithms.arnoldi import get_householder_vec
 from cola.utils_test import parametrize, relative_error
 from jax.config import config
 
