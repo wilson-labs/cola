@@ -4,7 +4,7 @@ from cola.linalg.eigs import eigmax
 from cola.utils import export
 import logging
 import numpy as np
-
+from plum import dispatch
 
 def orthogonal_complement(C, tol=1e-5):
     """ Computes the orthogonal complement to a given matrix proj"""
