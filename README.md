@@ -1,6 +1,6 @@
 # Compositional Linear Algebra (CoLA)
 
-[![Documentation](https://readthedocs.org/projects/emlp/badge/)](https://cola.readthedocs.io/en/latest/)
+[![Documentation](https://readthedocs.org/projects/cola/badge/)](https://cola.readthedocs.io/en/latest/)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wilson-labs/cola/blob/master/docs/notebooks/colabs/all.ipynb)
 [![tests](https://github.com/wilson-labs/cola/actions/workflows/python-package.yml/badge.svg)](https://github.com/wilson-labs/cola/actions/workflows/python-package.yml)
 [![codecov](https://codecov.io/gh/wilson-labs/cola/branch/main/graph/badge.svg?token=bBnkfHv30C)](https://codecov.io/gh/wilson-labs/cola)
@@ -27,17 +27,23 @@ pip install git+https://github.com/wilson-labs/cola.git
 Linear Algebra Operations
 - [x] inverse: $A^{-1}$
 - [x] eig: $U \Lambda U^{-1}$
-- [ ] diag
-- [ ] trace
+- [x] diag
+- [x] trace
 - [ ] exp
 - [ ] logdet
 - [ ] $f(A)$
+- [ ] SVD
+- [ ] pseudoinverse
       
 Linear ops
 - [x] Diag
 - [x] BlockDiag
 - [x] Kronecker
 - [x] KronSum
+- [x] Sparse
+- [x] Jacobian
+- [x] Hessian
+- [ ] Fisher
 - [ ] Concatenated
 - [ ] Triangular
 - [ ] Tridiagonal
@@ -65,89 +71,44 @@ If you use CoLA, please cite the following paper:
 -->
 
 ## Quick start guide
-1. **Defining a dispatch rule**. The way that we exploit structure in CoLA is through
-   dispatch rules. To illustrate, we will show how the dispatch rules for a diagonal
-   operator work. In terms of linear solves, we write
+1. **LinearOperators** The core object in CoLA is the LinearOperator. You can add and subtract them `+, -`,
+multiply by constants `*, /`, matrix multiply them `@` and combine them in other ways:
+`kron, kronsum, block_diag` etc.
 ```python
-from plum import dispatch
+import jax.numpy as jnp
+from cola import ops
+A = ops.Diagonal(jnp.arange(5)+.1)
+B = ops.Dense(jnp.array([[2.,1.,],[-2.,1.1],[.01,.2]]))
+C = ops.I_like(B)
+D = B.T@B+0.01*C
+E = ops.Kronecker(A,ops.Dense(jnp.ones(2,2,dtype=jnp.float32)))
+F = ops.BlockDiag(E,D)
 
-@dispatch
-def inverse(A: Diagonal, **kwargs):
-    return Diagonal(1. / A.diag)
-```
-and once we have that dispatch rule available we can then use it in the following manner:
-```python
-import cola.torch_fns as xnp
-from cola.ops import Diagonal
-from cola.linalg.inverse import inverse
-
-dtype = xnp.float32
-diag = xnp.array([1., 0.5, 0.25, 0.1], dtype=dtype)
-D = Diagonal(diag)
-rhs = xnp.randn(diag.shape[0], 1, dtype=dtype)
-soln = inverse(D) @ rhs
-res = xnp.norm(D @ soln - rhs, axis=0)
-print(res)
-```
-If we now want to define a rule to get the eigendecomposition of a diagonal operator we
-would write:
-```python
-@dispatch
-def eig(A: Diagonal, eig_slice=slice(0, None, None), **kwargs):
-    xnp = A.ops
-    eig_vecs = I_like(A).to_dense()
-    sorted_ind = xnp.argsort(A.diag)
-    eig_vals = A.diag[sorted_ind]
-    eig_vecs = eig_vecs[:, sorted_ind]
-    return eig_vals[eig_slice], eig_vecs[:, eig_slice]
-
-```
-and continuing the previous example we would have
-```python
-from cola.linalg.eigs import eig
-eigvals, eigvecs = eig(D)
-print(eigvals)
+v = jnp.ones(F.shape[-1])
+print(F@v)
 ```
 
-2. **Solving a symmetric linear system** using CG and Nystr&ouml;m preconditioning using
-   PyTorch
+2. **Performing Linear Algebra** With these objects we can perform linear algebra operations even when they are very big.
 ```python
-import cola.torch_fns as xnp
-from cola.ops import Symmetric
-from cola.basic_operations import lazify
-from cola.linalg.inverse import inverse
-from cola.algorithms.preconditioners import NystromPrecond
-
-N, B = 10, 3
-L = lazify(xnp.randn(N, N, dtype=xnp.float32))
-A = Symmetric(L.T @ L)
-P = NystromPrecond(A, rank=A.shape[0] // 2)
-rhs = xnp.randn(N, B, dtype=xnp.float32)
-A_inv = inverse(A, method='cg', P=P)
-soln = A_inv @ rhs
-res = xnp.norm(A @ soln - rhs, axis=0)
-print(res)
+print(cola.linalg.trace(F))
+Q = F.T@F+1e-3*I_like(F)
+b = cola.linalg.inverse(Q)@v
+print(jnp.linalg.norm(Q@b-v))
+print(cola.linalg.eig(F)[0][:5])
+print(cola.sqrt(A))
+print(cola.logdet(D))
 ```
-To change the backend to JAX simply modify the first import to `import cola.jax_fns as xnp`.
 
-3. **Take the gradient of a linear solve**.
-A linear operator can be conceived as a structured container of some parameters.
-In CoLA, we have incorporated memory-efficient and fast routines to backpropagate through
-some algebraic operations such as a solve:
+For many of these functions, if we know additional information about the matrices we can annotate them
+to enable the algorithms to run faster.
+
 ```python
-import cola.torch_fns as xnp
-from cola.ops import Diagonal
-from cola.linalg.inverse import inverse
-
-dtype = xnp.float32
-diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
-D = Diagonal(diag)
-rhs = xnp.randn(diag.shape[0], 1, dtype=dtype)
-soln = inverse(D, method="cg") @ rhs
-loss = xnp.norm(soln)
-loss.backward()
-print(diag.grad)
+Qs = ops.Symmetric(Q)
+%timeit cola.linalg.inverse(Q)@v
+%timeit cola.linalg.inverse(Qs)@v
 ```
+
+See https://cola.readthedocs.io/en/latest/ for our documentation and examples.
 
 ## Use cases and examples
 See our examples and tutorials on how to use CoLA for different problems.
