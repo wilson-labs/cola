@@ -115,8 +115,9 @@ Design Choices
    :maxdepth: 1
    :caption: API Reference
 
-   package/cola.linalg
+   package/cola.linear_operators
    package/cola.ops
+   package/cola.linalg
    package/cola.basic_operations
    package/cola.algorithms
 

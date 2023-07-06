@@ -5,4 +5,6 @@ __all__ = []
 import_from_all("basic_operations", globals(), __all__,__name__)
 import_from_all("linalg", globals(), __all__,__name__)
 import_from_all("utils", globals(), __all__,__name__)
+from .ops import LinearOperator
+__all__.append("LinearOperator")
 # import_from_all("ops", globals(), __all__,__name__)

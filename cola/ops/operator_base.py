@@ -7,7 +7,7 @@ from cola.utils import export
 Array = Dtype = Any
 export(Array)
 
-@export
+@export #TODO: remove the export
 def get_library_fns(dtype: Dtype):
     """ Given a dtype e.g. jnp.float32 or torch.complex64, returns the appropriate
         namespace for standard array functionality (either torch_fns or jax_fns)."""
@@ -40,6 +40,7 @@ class AutoRegisteringPyTree(type):
 
 @export
 class LinearOperator(metaclass=AutoRegisteringPyTree):
+    """ Linear Operator base class """
     def __new__(cls, *args, **kwargs):
         """ Creates attributes for the flatten and unflatten functionality. """
         # print("LinearOperator.__new__ called with",cls)#, args, kwargs)
