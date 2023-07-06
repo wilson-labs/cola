@@ -102,7 +102,15 @@ b = cola.linalg.inverse(Q)@v
 print(jnp.linalg.norm(Q@b-v))
 print(cola.linalg.eig(F)[0][:5])
 print(cola.sqrt(A))
-print(cola.logdet(D))
+#print(cola.logdet(D))
+```
+
+```
+31.2701
+0.0010193728
+[ 2.0000000e-01+0.j  0.0000000e+00+0.j  2.1999998e+00+0.j
+ -1.1920929e-07+0.j  4.1999998e+00+0.j]
+diag([0.31622776 1.0488088  1.4491377  1.7606816  2.0248456 ])
 ```
 
 For many of these functions, if we know additional information about the matrices we can annotate them
@@ -118,12 +126,17 @@ Qs = ops.Symmetric(Q)
 ```python
 import torch
 
-A = ops.Dense(torch.Tensor([[1.,2],[3,4]))
+A = ops.Dense(torch.Tensor([[1.,2],[3,4]]))
 print(cola.linalg.trace(ops.kron(A,A)))
 
 import jax.numpy as jnp
-A = ops.Dense(jnp.array([[1.,2],[3,4]))
+A = ops.Dense(jnp.array([[1.,2],[3,4]]))
 print(cola.linalg.trace(ops.kron(A,A)))
+```
+
+```
+tensor(25.)
+25.0
 ```
 
 and both support autograd (and jit):
@@ -131,11 +144,15 @@ and both support autograd (and jit):
 from jax import grad, jit,vmap
 
 def myloss(x):
-  A = ops.Dense(jnp.array([[1.,2],[3,x]))
+  A = ops.Dense(jnp.array([[1.,2],[3,x]]))
 
   return jnp.ones(2)@cola.linalg.inverse(A)@jnp.ones(2)
-g = jit(vmap(grad(myloss)))(jnp.array([.5,.3]))
+g = jit(vmap(grad(myloss)))(jnp.array([.5,10.]))
 print(g)
+```
+
+```
+[-0.06611571 -0.12499995]
 ```
 
 See https://cola.readthedocs.io/en/latest/ for our full documentation and many examples.
