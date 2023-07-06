@@ -25,8 +25,8 @@ def eig(A: LinearOperator, eig_slice=slice(0, None, None), tol=1e-6, pbar=False,
         return eig_vals[eig_slice], eig_vecs[:, eig_slice]
     elif method == 'arnoldi' or (method == 'auto' and prod(A.shape) >= 1e6):
         rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
-        eig_vals, eig_vecs, Q = arnoldi_eig(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
-        return eig_vals[eig_slice], eig_vecs[:, eig_slice], Q[:, eig_slice]
+        eig_vals, eig_vecs = arnoldi_eig(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
+        return eig_vals[eig_slice], eig_vecs[:, eig_slice]
     else:
         raise ValueError(f"Unknown method {method}")
 

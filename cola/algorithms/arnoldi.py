@@ -6,6 +6,7 @@ from cola.ops import get_householder_vec_simple
 from cola.utils.control_flow import for_loop
 from cola.utils import export
 
+
 def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7,
                 use_householder=False):
     xnp = A.ops
@@ -18,7 +19,7 @@ def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7
         H = H[:-1, :]
     eigvals, eigvectors = xnp.eig(H)
     # aux = eigvectors @ xnp.diag(eigvals) @ xnp.inv(eigvectors) - H
-    return eigvals, eigvectors, Q
+    return eigvals, Q[:, :-1] @ eigvectors
 
 
 def run_householder_arnoldi(A: LinearOperator, rhs: Array, max_iters: int):
