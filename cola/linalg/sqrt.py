@@ -6,8 +6,8 @@ from cola.ops import Kronecker
 from cola.utils import export
 # from cola.linalg.eigs import eig
 
-@export
 @dispatch
+@export
 def sqrt(A: SelfAdjoint) -> SelfAdjoint:
     xnp = A.ops
     # eig_vals, eig_vecs = eig(A)

@@ -13,6 +13,7 @@ def orthogonal_complement(C, tol=1e-5):
     rank = (S > tol).sum()
     return VH[rank:].conj().T
 
+@dispatch
 @export
 def nullspace(C: LinearOperator, tol=1e-5, pbar=True, info=False, method='auto') -> Array:
     """ Computes the nullspace of a linear operator C, up to specified tolerance tol.

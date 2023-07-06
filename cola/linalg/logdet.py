@@ -4,8 +4,8 @@ from cola.ops import LinearOperator
 from cola.ops import Diagonal, Kronecker, BlockDiag
 from cola.utils import export
 
-@export
 @dispatch
+@export
 def logdet(A: LinearOperator, tol=1e-7, info=False, pbar=True) -> Array:
     # add casework
     raise NotImplementedError

@@ -1,4 +1,4 @@
-""" High level linear algebra functions, with dispatch rules. """
+""" High level linear algebra functions, """
 import pkgutil
 from cola.utils import import_from_all
 __all__ = []

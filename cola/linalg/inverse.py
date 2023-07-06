@@ -61,8 +61,9 @@ class SymmetricSVRGInverse(IterativeInverse):
 class GenericSVRGInverse(IterativeInverse):
     pass
 
-@export
+
 @dispatch
+@export
 def inverse(A: LinearOperator, **kwargs):
     kws = dict(tol=1e-6, P=None, x0=None, pbar=False, info=False, max_iters=5000)
     kws.update(kwargs)

@@ -6,8 +6,8 @@ from cola.utils import export
 import numpy as np
 import cola
 
-@export
 @dispatch
+@export
 def svd(X: LinearOperator, rank= None, top=True, tol=1e-7, method='auto') -> Tuple[Array]:
     """ Computes the singular value decomposition of a linear operator A.
     :param A: The linear operator to decompose

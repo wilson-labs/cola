@@ -14,8 +14,9 @@ from cola.algorithms import power_iteration
 from plum import dispatch
 from cola.utils import export
 
-@export
+
 @dispatch
+@export
 def eig(A: LinearOperator, eig_slice=slice(0, None, None), tol=1e-6, pbar=False, method='auto',
         info=False, max_iters=1000) -> Tuple[Array, Array]:
     xnp = A.ops
