@@ -127,11 +127,11 @@ Qs = ops.Symmetric(Q)
 import torch
 
 A = ops.Dense(torch.Tensor([[1.,2],[3,4]]))
-print(cola.linalg.trace(ops.kron(A,A)))
+print(cola.linalg.trace(cola.kron(A,A)))
 
 import jax.numpy as jnp
 A = ops.Dense(jnp.array([[1.,2],[3,4]]))
-print(cola.linalg.trace(ops.kron(A,A)))
+print(cola.linalg.trace(cola.kron(A,A)))
 ```
 
 ```
