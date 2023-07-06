@@ -159,48 +159,6 @@ def kronsum(A: LinearOperator, B: KronSum) -> KronSum:
     return KronSum(*((A, ) + B.Ms))
 
 
-@dispatch
-def diag(v: Array, k=0):
-    assert k == 0, "Off diagonal diag not yet supported"
-    assert len(v.shape) == 1, f"Unknown input {v.shape}"
-    return Diagonal(v)
-
-
-@dispatch
-def diag(A: LinearOperator, k=0) -> Array:
-    raise NotImplementedError
-
-
-@dispatch
-def diag(A: Dense, diagonal=0) -> Array:
-    xnp = A.ops
-    return xnp.diag(A.A, diagonal=diagonal)
-
-
-@dispatch
-def diag(A: Identity, k=0) -> Array:
-    if k == 0:
-        return A.ops.ones(A.shape[0], A.dtype)
-    else:
-        return A.ops.zeros(A.shape[0] - k, A.dtype)
-
-
-@dispatch
-def diag(A: Sum, k=0) -> Array:
-    return Sum(diag(M) for M in A.Ms)
-
-
-@dispatch
-def diag(A: BlockDiag, k=0) -> Array:
-    assert k == 0, "Havent filled this case yet, need to pad with 0s"
-    return A.ops.concatenate([diag(M) for M in A.Ms])
-
-
-@dispatch
-def diag(A: ScalarMul, k=0) -> Array:
-    return A.c * diag(I_like(A), k=k)
-
-
 def trace(A: LinearOperator):
     assert A.shape[0] == A.shape[1], "Can't trace non square matrix"
     return A.ops.sum(diag(A))
