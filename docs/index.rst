@@ -31,6 +31,17 @@ for large-scale linear ops.
 solving linear systems, performing eigendecompositions and more for
 PSD, symmetric, non-symmetric, real and complex linear ops.
 
+Below we highlight some of the important features that ``CoLA`` has and how they
+compare with competitors.
+
+.. image:: ./CoLA_Table2.png
+   :alt: Example Image
+
+``PyLops`` only supports propagating gradients through vectors but not
+through the linear operator’s parameters. Moreover, ``PyLops`` has limited GPU
+support through CUPY, but lacks support for ``PyTorch``, ``JAX`` or ``TensorFlow`` which
+are necessary for modern machine learning applications.
+
 Installation
 ------------
 We recommend installing via ``pip``:
