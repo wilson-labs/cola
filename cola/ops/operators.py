@@ -213,6 +213,7 @@ class Diagonal(LinearOperator):
     """ Diagonal LinearOperator. O(n) time and space matmuls"""
     def __init__(self, diag):
         super().__init__(dtype=diag.dtype, shape=(len(diag), ) * 2)
+        self.diag = diag
 
     def _matmat(self, X: Array) -> Array:
         return self.diag[:, None] * X
