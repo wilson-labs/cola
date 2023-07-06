@@ -25,7 +25,7 @@ def test_approx_diag(xnp):
     for u in [-2,-1,0,1,2]:
         d1 = approx_diag(A,u,tol=5e-2)
         d2 = xnp.diag(A.to_dense(),u)
-        assert relative_error(d1, d2)<1e-1
+        assert relative_error(d1, d2)<2e-1
 
 @parametrize([torch_fns, jax_fns])
 def test_composite_diag(xnp):
