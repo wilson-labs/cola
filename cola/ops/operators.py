@@ -20,7 +20,7 @@ class Dense(LinearOperator):
 
 
 class LowerTriangular(Dense):
-    """ Lower Triangular Linear Operator """
+    """ Lower Triangular Linear Operator. (Wraps dense)"""
     pass
 
 
@@ -57,6 +57,7 @@ def get_householder_vec(x, idx, xnp):
 
 
 class Sparse(LinearOperator):
+    """ Sparse CSR linear operator (TODO elaborate)"""
     def __init__(self, data, indices, indptr, shape):
         super().__init__(dtype=data.dtype, shape=shape)
         self.A = self.ops.sparse_csr(indptr, indices, data)
@@ -252,14 +253,6 @@ class Diagonal(LinearOperator):
     """ Diagonal LinearOperator. O(n) time and space matmuls"""
     def __init__(self, diag):
         super().__init__(dtype=diag.dtype, shape=(len(diag), ) * 2)
-        self.diag = diag
-
-    def _bilinear_derivative(self, dual: Array, primals: Array) -> Array:
-        grad = self.ops.sum(dual * primals, axis=1)
-        return (grad, )
-
-    def _dense_to_flat(self, A: Array) -> Array:
-        return self.ops.diag(A)
 
     def _matmat(self, X: Array) -> Array:
         return self.diag[:, None] * X
@@ -410,6 +403,7 @@ class Concatenated(LinearOperator):
 
 
 class ConvolveND(LinearOperator):
+    """ n-Dimensional convolution Linear operator (only works in jax right now.) """
     def __init__(self, filter, array_shape, mode='same'):
         self.filter = filter
         self.array_shape = array_shape
