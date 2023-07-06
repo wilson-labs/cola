@@ -24,38 +24,6 @@ class LowerTriangular(Dense):
     pass
 
 
-def get_householder_vec_simple(x, idx, xnp):
-    indices = xnp.arange(x.shape[0])
-    vec = xnp.where(indices >= idx, x=x, y=0.)
-    x_norm = xnp.norm(vec)
-    vec = xnp.update_array(vec, vec[idx] - x_norm, idx)
-    beta = xnp.nan_to_num(2. / xnp.norm(vec)**2., posinf=0., neginf=0., nan=0.)
-    return vec, beta
-
-
-def get_householder_vec(x, idx, xnp):
-    # indices = xnp.arange(x.shape[0])
-    # aux = xnp.where(indices >= idx + 1, x=x, y=0.)
-    # sigma_2 = xnp.norm(aux)**2.
-    sigma_2 = xnp.norm(x[idx + 1:])**2.
-    vec = xnp.zeros_like(x)
-    vec = xnp.update_array(vec, x[idx:], slice(idx, None, None))
-    if sigma_2 == 0 and x[idx] >= 0:
-        beta = 0
-    elif sigma_2 == 0 and x[idx] < 0:
-        beta = -2
-    else:
-        x_norm_partial = xnp.sqrt(x[idx]**2 + sigma_2)
-        if x[idx] <= 0:
-            vec = xnp.update_array(vec, x[idx] - x_norm_partial, idx)
-        else:
-            vec = xnp.update_array(vec, -sigma_2 / (x[idx] + x_norm_partial), idx)
-        beta = 2 * vec[idx]**2 / (sigma_2 + vec[idx]**2)
-        vec = vec / vec[idx]
-        vec = xnp.update_array(vec, vec[idx:] / vec[idx], slice(idx, None, None))
-    return vec, beta
-
-
 class Sparse(LinearOperator):
     """ Sparse CSR linear operator (TODO elaborate)"""
     def __init__(self, data, indices, indptr, shape):
@@ -134,14 +102,6 @@ class Sum(LinearOperator):
 
     def _rmatmat(self, v):
         return sum(v @ M for M in self.Ms)
-
-    def _bilinear_derivative(self, dual, primals):
-        out = []
-        for M in self.Ms:
-            # aux = M._bilinear_derivative(dual, primals)
-            for var in M._bilinear_derivative(dual, primals):
-                out.append(var)
-        return tuple(out)
 
     def __str__(self):
         if len(self.Ms) > 5:
