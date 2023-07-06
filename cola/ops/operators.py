@@ -1,5 +1,5 @@
 from functools import reduce, partial
-# import cola.basic_operations
+# import cola.fns
 from cola.ops.operator_base import LinearOperator
 from cola.ops.operator_base import Array, get_library_fns
 import numpy as np

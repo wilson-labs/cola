@@ -118,7 +118,7 @@ Design Choices
    package/cola.linear_operators
    package/cola.ops
    package/cola.linalg
-   package/cola.basic_operations
+   package/cola.fns
    package/cola.algorithms
 
 .. toctree::

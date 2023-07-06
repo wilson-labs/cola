@@ -1,7 +1,7 @@
 import numpy as np
 from cola import jax_fns
 from cola import torch_fns
-from cola.basic_operations import lazify
+from cola.fns import lazify
 from cola.linalg.inverse import inverse
 from cola.algorithms.gmres import gmres
 from cola.utils_test import parametrize, relative_error

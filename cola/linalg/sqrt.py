@@ -1,5 +1,5 @@
 from plum import dispatch
-from cola.basic_operations import lazify
+from cola.fns import lazify
 from cola.ops import SelfAdjoint
 from cola.ops import Diagonal
 from cola.ops import Kronecker

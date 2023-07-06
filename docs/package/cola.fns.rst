@@ -1,7 +1,7 @@
-Basic Operations
+Functions
 ================
 
-.. automodule:: cola.basic_operations
+.. automodule:: cola.fns
     :members:
     :show-inheritance:
     :member-order: bysource

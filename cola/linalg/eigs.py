@@ -1,6 +1,6 @@
 from typing import Tuple
 from math import prod
-from cola.basic_operations import densify
+from cola.fns import densify
 from cola.linalg import diag
 from cola.ops import LinearOperator
 from cola.ops import Array

@@ -1,4 +1,6 @@
-""" Basic operations on linear operators. """
+""" Functional interface. Different functions for combining operators and convenience functions.
+Like with linalg, these functions have dispatch rules and should be used in favor of the 
+LinearOperator constructors when possible. """
 
 from typing import List, Union, Any
 from plum import dispatch

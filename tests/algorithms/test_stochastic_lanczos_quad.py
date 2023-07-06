@@ -2,7 +2,7 @@ from cola import jax_fns
 import numpy as np
 from cola import torch_fns
 from cola.algorithms.stochastic_lanczos_quad import stochastic_lanczos_quad
-from cola.basic_operations import lazify
+from cola.fns import lazify
 from cola.utils_test import parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
 from jax.config import config
