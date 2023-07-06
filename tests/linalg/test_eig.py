@@ -34,9 +34,10 @@ def test_general(xnp):
     assert rel_error < _tol
     assert eig_vecs.shape == (10, 2)
 
-    eig_vals, eig_vecs, Q = eig(A, tol=1e-6, info=True, method="arnoldi", max_iters=A.shape[-1])
+    eig_vals, eig_vecs = eig(A, tol=1e-6, info=True, method="arnoldi", max_iters=A.shape[-1])
     eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs, dtype)
-    approx = Q[:, :-1] @ eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T @ Q[:, :-1].T
+    approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
+    # approx = Q[:, :-1] @ eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T @ Q[:, :-1].T
     rel_error = relative_error(soln_vals, xnp.sort(eig_vals))
     assert rel_error < 5e-3
     rel_error = relative_error(A.to_dense(), approx)

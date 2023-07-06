@@ -19,7 +19,7 @@ def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7
         H = H[:-1, :]
     eigvals, eigvectors = xnp.eig(H)
     # aux = eigvectors @ xnp.diag(eigvals) @ xnp.inv(eigvectors) - H
-    return eigvals, Q[:, :-1] @ eigvectors
+    return eigvals, xnp.cast(Q[:, :-1], dtype=eigvectors.dtype) @ eigvectors
 
 
 def get_householder_vec_simple(x, idx, xnp):
