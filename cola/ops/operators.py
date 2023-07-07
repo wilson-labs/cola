@@ -7,7 +7,15 @@ from cola.utils.dispatch import parametric
 
 
 class Dense(LinearOperator):
-    """ LinearOperator wrapping of a dense matrix. O(n^2) memory and time mvms """
+    """ LinearOperator wrapping of a dense matrix. O(n^2) memory and time mvms.
+
+    Args:
+        A (array_like): Dense matrix to be wrapped.
+
+    Example:
+        >>> A = np.array([[1, 2], [3, 4]])
+        >>> op = Dense(A)
+    """
     def __init__(self, A: Array):
         self.A = A
         super().__init__(dtype=A.dtype, shape=A.shape)
@@ -25,7 +33,21 @@ class LowerTriangular(Dense):
 
 
 class Sparse(LinearOperator):
-    """ Sparse CSR linear operator (TODO elaborate)"""
+    """ Sparse CSR linear operator.
+    
+    Args:
+        data (array_like): 1-D array representing the nonzero values of the sparse matrix.
+        indices (array_like): 1-D array representing the column indices of the nonzero values.
+        indptr (array_like): 1-D array representing the index pointers for the rows in the sparse matrix.
+        shape (tuple): Shape of the sparse matrix.
+
+    Example:
+        >>> data = np.array([1, 2, 3, 4, 5, 6])
+        >>> indices = np.array([0, 2, 1, 0, 2, 1])
+        >>> indptr = np.array([0, 2, 4, 6])
+        >>> shape = (3, 3)
+        >>> op = Sparse(data, indices, indptr, shape)
+    """
     def __init__(self, data, indices, indptr, shape):
         super().__init__(dtype=data.dtype, shape=shape)
         self.A = self.ops.sparse_csr(indptr, indices, data)
@@ -48,7 +70,17 @@ class ScalarMul(LinearOperator):
 
 
 class Identity(ScalarMul):
-    """ Linear Operator representing the identity matrix """
+    """ Linear Operator representing the identity matrix. Can also be created from I_like(A)
+        
+        Args:
+            shape (tuple): Shape of the identity matrix.
+            dtype: Data type of the identity matrix.
+
+        Example:
+            >>> shape = (3, 3)
+            >>> dtype = np.float64
+            >>> op = Identity(shape, dtype)
+    """
     def __init__(self, shape, dtype):
         super().__init__(1, shape, dtype)
 
@@ -115,7 +147,16 @@ def product(c):
 
 @parametric
 class Kronecker(LinearOperator):
-    """ Kronecker product of linear ops Kronecker([M1,M2]):= M1⊗M2"""
+    """ Kronecker product of linear ops Kronecker([M1,M2]):= M1⊗M2
+    
+    Args:
+        *Ms (array_like): Sequence of linear operators representing the Kronecker product operands.
+
+    Example:
+        >>> M1 = np.array([[1, 2], [3, 4]])
+        >>> M2 = np.array([[5, 6], [7, 8]])
+        >>> op = Kronecker(M1, M2)
+    """
     def __init__(self, *Ms):
         self.Ms = Ms
         shape = product([Mi.shape[-2] for Mi in Ms]), product([Mi.shape[-1] for Mi in Ms])
@@ -148,7 +189,15 @@ def kronsum(A, B):
 
 @parametric
 class KronSum(LinearOperator):
-    """ Kronecker Sum Linear Operator, KronSum([A,B]):= A ⊗ I + I ⊗ B"""
+    """ Kronecker Sum Linear Operator, KronSum(A,B):= A ⊕ B = A ⊗ I + I ⊗ B
+        Args:
+            *Ms (array_like): Sequence of matrices representing the Kronecker sum operands.
+            
+        Example:
+            >>> M1 = np.array([[1, 2], [3, 4]])
+            >>> M2 = np.array([[5, 6], [7, 8]])
+            >>> op = KronSum(M1, M2)
+    """
     def __init__(self, *Ms):
         self.Ms = Ms
         shape = product([Mi.shape[-2] for Mi in Ms]), product([Mi.shape[-1] for Mi in Ms])
@@ -177,7 +226,17 @@ class KronSum(LinearOperator):
 @parametric
 class BlockDiag(LinearOperator):
     """ Block Diagonal Linear Operator. BlockDiag([A,B]):= [A 0; 0 B]
-        Component matrices need not be square."""
+
+    Args:
+        *Ms (array_like): Sequence of matrices representing the blocks.
+        multiplicities (list, optional): List of integers representing the multiplicities
+            of the corresponding blocks in *Ms. Default is None, which assigns a multiplicity
+            of 1 to each block.
+    Example:
+        >>> M1 = np.array([[1, 2], [3, 4]])
+        >>> M2 = np.array([[5, 6], [7, 8]])
+        >>> op = BlockDiag(M1, M2, multiplicities=[2, 3])
+    """
     def __init__(self, *Ms, multiplicities=None):
         self.Ms = Ms
         self.multiplicities = [1 for _ in Ms] if multiplicities is None else multiplicities
@@ -210,7 +269,15 @@ class BlockDiag(LinearOperator):
 
 
 class Diagonal(LinearOperator):
-    """ Diagonal LinearOperator. O(n) time and space matmuls"""
+    """ Diagonal LinearOperator. O(n) time and space matmuls.
+
+        Args:
+            diag (array_like): 1-D array representing the diagonal elements of the matrix.
+
+        Example:
+            >>> d = np.array([1, 2, 3])
+            >>> op = Diagonal(d)
+        """
     def __init__(self, diag):
         super().__init__(dtype=diag.dtype, shape=(len(diag), ) * 2)
         self.diag = diag
@@ -314,7 +381,18 @@ class Sliced(LinearOperator):
 
 class Jacobian(LinearOperator):
     """ Jacobian (linearization) of a function f: R^n -> R^m at point x.
-        Matrix has shape (m, n)"""
+        Matrix has shape (m, n)
+        
+    Args:
+        f (callable): Function representing the mapping from R^n to R^m.
+        x (array_like): 1-D array representing the point at which to compute the Jacobian.
+
+    Example:
+        >>> def f(x):
+        ...     return jnp.array([x[0]**2, x[1]**3, np.sin(x[2])])
+        >>> x = jnp.array([1, 2, 3])
+        >>> op = Jacobian(f, x)
+    """
     def __init__(self, f, x):
         self.f = f
         self.x = x
@@ -339,7 +417,18 @@ class Jacobian(LinearOperator):
 
 class Hessian(LinearOperator):
     """ Hessian of a scalar function f: R^n -> R at point x.
-        Matrix has shape (n, n)"""
+        Matrix has shape (n, n)
+    
+    Args:
+        f (callable): Function representing the mapping from R^n to R^m.
+        x (array_like): 1-D array representing the point at which to compute the Jacobian.
+
+    Example:
+        >>> def f(x):
+        ...     return x[1]**3+np.sin(x[2])
+        >>> x = jnp.array([1, 2, 3])
+        >>> op = Hessian(f, x)
+    """
     def __init__(self, f, x):
         self.f = f
         self.x = x
