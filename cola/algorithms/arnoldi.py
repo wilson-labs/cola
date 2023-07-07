@@ -17,12 +17,7 @@ def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7
         fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3))
         Q, H, _ = fn(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
         H, Q = H[:-1, :], Q[:, :-1]
-    # eigvals, eigvectors = xnp.eig(H)
-    eigvals, eigvectors = xnp.eigh(H)
-    # import numpy as np
-    # np.save("H.npy", np.array(H))
-    # np.save("Q.npy", np.array(Q))
-    # aux = eigvectors @ xnp.diag(eigvals) @ xnp.inv(eigvectors) - H
+    eigvals, eigvectors = xnp.eig(H)
     return eigvals, xnp.cast(Q, dtype=eigvectors.dtype) @ eigvectors
 
 
