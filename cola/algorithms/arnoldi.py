@@ -16,10 +16,10 @@ def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7
         # Q, H, _ = get_arnoldi_matrix(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
         fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3))
         Q, H, _ = fn(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
-        H = H[:-1, :]
+        H, Q = H[:-1, :], Q[:, :-1]
     eigvals, eigvectors = xnp.eig(H)
     # aux = eigvectors @ xnp.diag(eigvals) @ xnp.inv(eigvectors) - H
-    return eigvals, xnp.cast(Q[:, :-1], dtype=eigvectors.dtype) @ eigvectors
+    return eigvals, xnp.cast(Q, dtype=eigvectors.dtype) @ eigvectors
 
 
 def get_householder_vec_simple(x, idx, xnp):
