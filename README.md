@@ -28,42 +28,9 @@ pip install git+https://github.com/wilson-labs/cola.git
 * Runs with real and complex numbers.
 * Contains several randomized linear algebra algorithms.
 
-### Features being added
-Linear Algebra Operations
-- [x] inverse: $A^{-1}$
-- [x] eig: $U \Lambda U^{-1}$
-- [x] diag
-- [x] trace
-- [ ] exp
-- [ ] logdet
-- [ ] $f(A)$
-- [ ] SVD
-- [ ] pseudoinverse
-      
-Linear ops
-- [x] Diag
-- [x] BlockDiag
-- [x] Kronecker
-- [x] KronSum
-- [x] Sparse
-- [x] Jacobian
-- [x] Hessian
-- [ ] Fisher
-- [ ] Concatenated
-- [ ] Triangular
-- [ ] Tridiagonal
-- [ ] CholeskyDecomposition
-- [ ] LUDecomposition
-- [ ] EigenDecomposition
-      
-Attributes
-- [x] SelfAdjoint
-- [ ] PSD
-- [ ] Unitary
-
 ## Citing us
 If you use CoLA, please cite the following paper:
-<!--
+
 > [Andres Potapczynski, Marc Finzi, Geoff Pleiss, and Andrew Gordon Wilson. "Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra." Advances in Neural Information Processing Systems (2023).]()
 ```
 @article{potapczynski2023cola,
@@ -73,7 +40,7 @@ If you use CoLA, please cite the following paper:
   year={2023}
 }
 ```
--->
+
 
 ## Quick start guide
 1. **LinearOperators** The core object in CoLA is the LinearOperator. You can add and subtract them `+, -`,
@@ -165,7 +132,39 @@ See https://cola.readthedocs.io/en/latest/ for our full documentation and many e
 ## Use cases and examples
 See our examples and tutorials on how to use CoLA for different problems.
 
-## API reference
+### Features being added
+Linear Algebra Operations
+- [x] inverse: $A^{-1}$
+- [x] eig: $U \Lambda U^{-1}$
+- [x] diag
+- [x] trace
+- [ ] exp
+- [ ] logdet
+- [ ] $f(A)$
+- [ ] SVD
+- [ ] pseudoinverse
+      
+Linear ops
+- [x] Diag
+- [x] BlockDiag
+- [x] Kronecker
+- [x] KronSum
+- [x] Sparse
+- [x] Jacobian
+- [x] Hessian
+- [ ] Fisher
+- [ ] Concatenated
+- [x] Triangular
+- [ ] FFT
+- [ ] Tridiagonal
+- [ ] CholeskyDecomposition
+- [ ] LUDecomposition
+- [ ] EigenDecomposition
+      
+Attributes
+- [x] SelfAdjoint
+- [ ] PSD
+- [ ] Unitary
 
 ## Contributing
 See the contributing guidelines `CONTRIBUTING.md` for information on submitting issues
