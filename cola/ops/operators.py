@@ -190,6 +190,7 @@ def kronsum(A, B):
 @parametric
 class KronSum(LinearOperator):
     """ Kronecker Sum Linear Operator, KronSum(A,B):= A ⊕ B = A ⊗ I + I ⊗ B
+
         Args:
             *Ms (array_like): Sequence of matrices representing the Kronecker sum operands.
             
@@ -415,7 +416,7 @@ class Jacobian(LinearOperator):
         return "J"
 
 
-class Hessian(LinearOperator):
+class Hessian(SelfAdjoint):
     """ Hessian of a scalar function f: R^n -> R at point x.
         Matrix has shape (n, n)
     
@@ -435,9 +436,10 @@ class Hessian(LinearOperator):
         assert len(x.shape) == 1, "x must be a vector"
         super().__init__(dtype=x.dtype, shape=(x.shape[0], x.shape[0]))
 
-    def _matmat(self, _):
-        # compose JVP and VJP
-        raise NotImplementedError()
+    def _matmat(self, X):
+        xnp = self.ops
+        # primals = self.x[:,None]+self.ops.zeros((1,X.shape[1],), dtype=self.x.dtype)
+        return xnp.vmap(partial(xnp.jvp_derivs, xnp.grad(self.f), (self.x,)))((X.T,)).T
 
     def __str__(self):
         return "H"

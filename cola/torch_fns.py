@@ -152,6 +152,9 @@ def jvp_derivs(fun, primals, tangents):
     _, output = jvp(fun, inputs=torch.conj(primals), v=torch.conj(tangents), create_graph=True)
     return torch.conj(output)
 
+def grad(fn):
+    return lambda x: torch.autograd.grad([fn(x)],x)[0]
+
 
 def linear_transpose(fun, primals, duals):
     return vjp_derivs(fun, primals, duals)
