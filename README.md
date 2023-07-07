@@ -1,3 +1,8 @@
+<p align="center">
+ <img src="https://user-images.githubusercontent.com/6753639/251633368-1ec42732-1759-45d7-b949-51df6429a90a.svg"  width="300" height="150">
+</p>
+
+
 # Compositional Linear Algebra (CoLA)
 
 [![Documentation](https://readthedocs.org/projects/cola/badge/)](https://cola.readthedocs.io/en/latest/)
