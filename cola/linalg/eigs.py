@@ -1,6 +1,5 @@
 from typing import Tuple
 from math import prod
-from cola.fns import densify
 from cola.linalg import diag
 from cola.ops import LinearOperator
 from cola.ops import Array
@@ -24,14 +23,23 @@ def eig(A: LinearOperator, eig_slice=slice(0, None, None), tol=1e-6, pbar=False,
         # print("*=" * 50)
         # print("SciPy Sparse")
         # from scipy.sparse.linalg import eigs
+        # from scipy.sparse.linalg import LinearOperator as LO
         # import numpy as np
-        # eig_vals, eig_vecs = eigs(np.array(A.to_dense(), dtype=np.float64), k=100)
+
+        # def matvec(x):
+        #     out = A @ x
+        #     return np.array(out, dtype=np.float64)
+
+        # A_LO = LO(dtype=np.float64, shape=A.shape, matvec=matvec)
+        # eig_vals, eig_vecs = eigs(A_LO, k=100)
         # print("*=" * 50)
+
         eig_vals, eig_vecs = xnp.eig(A.to_dense())
         return eig_vals[eig_slice], eig_vecs[:, eig_slice]
     elif method == 'arnoldi' or (method == 'auto' and prod(A.shape) >= 1e6):
         rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
-        eig_vals, eig_vecs = arnoldi_eig(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
+        # eig_vals, eig_vecs = arnoldi_eig(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
+        eig_vals, eig_vecs = arnoldi_eig(A=A, rhs=rhs, max_iters=100, tol=tol)
         return eig_vals[eig_slice], eig_vecs[:, eig_slice]
     else:
         raise ValueError(f"Unknown method {method}")
