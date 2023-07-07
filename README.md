@@ -179,7 +179,7 @@ and pull requests.
 This work is supported by XXX.
 
 ## Licence
-CoLA is Apache License 2.0 licensed.
+CoLA is Apache 2.0 licensed.
 
 ## Support and contact
 Please raise an issue if you find a bug or inadequate performance when using CoLA.
