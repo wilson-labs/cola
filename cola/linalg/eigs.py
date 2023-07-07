@@ -38,10 +38,9 @@ def eig(A: LinearOperator, eig_slice=slice(0, None, None), tol=1e-6, pbar=False,
         return eig_vals[eig_slice], eig_vecs[:, eig_slice]
     elif method == 'arnoldi' or (method == 'auto' and prod(A.shape) >= 1e6):
         rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
-        eig_vals, eig_vecs = arnoldi_eig(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
-        # eig_vals, eig_vecs = arnoldi_eig(A=A, rhs=rhs, max_iters=max_iters, tol=tol,
-        #                                  use_householder=True)
-        # eig_vals, eig_vecs = arnoldi_eig(A=A, rhs=rhs, max_iters=100, tol=tol)
+        # max_iters = 100
+        eig_vals, eig_vecs = arnoldi_eig(A=A, rhs=rhs, max_iters=max_iters, tol=tol,
+                                         use_householder=True)
         return eig_vals[eig_slice], eig_vecs[:, eig_slice]
     else:
         raise ValueError(f"Unknown method {method}")
@@ -66,6 +65,7 @@ def eig(A: SelfAdjoint, eig_slice=slice(0, None, None), tol=1e-6, pbar=False, me
         eig_vals, eig_vecs = xnp.eigh(A.to_dense())
     elif method == 'lanczos' or (method == 'auto' and prod(A.shape) >= 1e6):
         rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
+        # max_iters = 100
         eig_vals, eig_vecs = lanczos_eig(A, rhs, max_iters=max_iters, tol=tol)
     else:
         raise ValueError(f"Unknown method {method}")
