@@ -415,6 +415,34 @@ class Jacobian(LinearOperator):
     def __str__(self):
         return "J"
 
+@parametric
+class SelfAdjoint(LinearOperator):
+    """ SelfAdjoint property for Linearops. """
+    def __init__(self, *args, **kwargs):
+        if len(args) == 1 and isinstance(args[0], LinearOperator):
+            self.A = args[0]
+            self._matmat = self.A._matmat
+            super().__init__(self.A.dtype, self.A.shape)
+        else:
+            super().__init__(*args, **kwargs)
+
+    def _rmatmat(self, X: Array) -> Array:
+        return self.ops.conj(self._matmat(self.ops.conj(X).T)).T
+
+    @property
+    def T(self):
+        return self
+
+    @property
+    def H(self):
+        return self
+
+    def __str__(self):
+        if hasattr(self, 'A'):
+            return f"S[{str(self.A)}]"
+        else:
+            return super().__str__()
+
 
 class Hessian(SelfAdjoint):
     """ Hessian of a scalar function f: R^n -> R at point x.
@@ -471,33 +499,6 @@ class ConvolveND(LinearOperator):
 # Properties
 
 
-@parametric
-class SelfAdjoint(LinearOperator):
-    """ SelfAdjoint property for Linearops. """
-    def __init__(self, *args, **kwargs):
-        if len(args) == 1 and isinstance(args[0], LinearOperator):
-            self.A = args[0]
-            self._matmat = self.A._matmat
-            super().__init__(self.A.dtype, self.A.shape)
-        else:
-            super().__init__(*args, **kwargs)
-
-    def _rmatmat(self, X: Array) -> Array:
-        return self.ops.conj(self._matmat(self.ops.conj(X).T)).T
-
-    @property
-    def T(self):
-        return self
-
-    @property
-    def H(self):
-        return self
-
-    def __str__(self):
-        if hasattr(self, 'A'):
-            return f"S[{str(self.A)}]"
-        else:
-            return super().__str__()
 
 
 Symmetric = SelfAdjoint
