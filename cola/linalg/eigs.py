@@ -20,20 +20,6 @@ def eig(A: LinearOperator, eig_slice=slice(0, None, None), tol=1e-6, pbar=False,
         info=False, max_iters=1000) -> Tuple[Array, Array]:
     xnp = A.ops
     if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
-        # print("*=" * 50)
-        # print("SciPy Sparse")
-        # from scipy.sparse.linalg import eigs
-        # from scipy.sparse.linalg import LinearOperator as LO
-        # import numpy as np
-
-        # def matvec(x):
-        #     out = A @ x
-        #     return np.array(out, dtype=np.float64)
-
-        # A_LO = LO(dtype=np.float64, shape=A.shape, matvec=matvec)
-        # eig_vals, eig_vecs = eigs(A_LO, k=100)
-        # print("*=" * 50)
-
         eig_vals, eig_vecs = xnp.eig(A.to_dense())
         return eig_vals[eig_slice], eig_vecs[:, eig_slice]
     elif method == 'arnoldi' or (method == 'auto' and prod(A.shape) >= 1e6):
