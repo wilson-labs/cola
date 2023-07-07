@@ -1,3 +1,8 @@
+<p align="center">
+ <img src="https://user-images.githubusercontent.com/6753639/251633368-1ec42732-1759-45d7-b949-51df6429a90a.svg"  width="300" height="150">
+</p>
+
+
 # Compositional Linear Algebra (CoLA)
 
 [![Documentation](https://readthedocs.org/projects/cola/badge/)](https://cola.readthedocs.io/en/latest/)
@@ -5,7 +10,7 @@
 [![tests](https://github.com/wilson-labs/cola/actions/workflows/python-package.yml/badge.svg)](https://github.com/wilson-labs/cola/actions/workflows/python-package.yml)
 [![codecov](https://codecov.io/gh/wilson-labs/cola/branch/main/graph/badge.svg?token=bBnkfHv30C)](https://codecov.io/gh/wilson-labs/cola)
 
-CoLA is a numerical linear algebra framework that exploits the structure usually found on machine learning problems and beyond.
+CoLA is a framework for scalable linear algebra, automatically exploiting the structure often found in machine learning problems and beyond. 
 CoLA supports both PyTorch and JAX.
 
 ## Installation
@@ -89,7 +94,7 @@ Qs = ops.Symmetric(Q)
 %timeit cola.linalg.inverse(Qs)@v
 ```
 
-3. **Jax and Pytorch** You can freely use jax or pytorch with Cola:
+3. **JAX and PyTorch** You can freely use JAX or PyTorch with CoLA:
 ```python
 import torch
 
@@ -173,7 +178,7 @@ and pull requests.
 This work is supported by XXX.
 
 ## Licence
-CoLA is XXX licensed.
+CoLA is Apache 2.0 licensed.
 
 ## Support and contact
 Please raise an issue if you find a bug or inadequate performance when using CoLA.

@@ -23,14 +23,14 @@ def test_arnoldi_eig(xnp):
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=4, dtype=np.float32)
     A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype)
     rhs = xnp.cast(xnp.randn(A.shape[1], 1, dtype=xnp.float32), dtype=dtype)
-    eigvals, eigvecs, Q = arnoldi_eig(lazify(A), rhs, max_iters=A.shape[-1])
+    eigvals, eigvecs = arnoldi_eig(lazify(A), rhs, max_iters=A.shape[-1])
     approx = xnp.sort(xnp.cast(eigvals, xnp.float32))
     soln = xnp.sort(xnp.array(diag, xnp.float32))
 
     rel_error = relative_error(soln, approx)
     assert rel_error < 1e-3
 
-    approx = Q[:, :-1] @ eigvecs @ xnp.diag(eigvals) @ xnp.inv(eigvecs) @ xnp.conj(Q[:, :-1]).T
+    approx = eigvecs @ xnp.diag(eigvals) @ xnp.inv(eigvecs)
     rel_error = relative_error(A, approx)
     assert rel_error < 1e-3
 

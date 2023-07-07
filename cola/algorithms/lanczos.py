@@ -49,6 +49,9 @@ def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7):
     alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
     Q = vec[0, :, 1:-1]
     T = construct_tridiagonal_batched(alpha, beta, alpha)
+    # import numpy as np
+    # H = np.load("H.npy")
+    # H = xnp.array(H, dtype=T.dtype)
     eigvals, eigvectors = xnp.eigh(T[0, :, :])
     V = Q @ eigvectors
     return eigvals, V
