@@ -10,7 +10,7 @@
 [![tests](https://github.com/wilson-labs/cola/actions/workflows/python-package.yml/badge.svg)](https://github.com/wilson-labs/cola/actions/workflows/python-package.yml)
 [![codecov](https://codecov.io/gh/wilson-labs/cola/branch/main/graph/badge.svg?token=bBnkfHv30C)](https://codecov.io/gh/wilson-labs/cola)
 
-CoLA is a numerical linear algebra framework that exploits the structure usually found on machine learning problems and beyond.
+CoLA is a framework for scalable linear algebra, automatically exploiting the structure often found in machine learning problems and beyond. 
 CoLA supports both PyTorch and JAX.
 
 ## Installation
