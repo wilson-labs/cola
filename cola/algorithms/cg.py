@@ -7,9 +7,10 @@ from cola.utils import export
 
 _small_value = 1e-40
 
+
 @export
 def cg(A: LinearOperator, rhs: Array, x0=None, P=None, tol=1e-6, max_iters=5000, pbar=False,
-             info=False):
+       info=False):
     """
     Solves a Ax=b using CG (conjugate gradients).
 
@@ -32,7 +33,8 @@ def cg(A: LinearOperator, rhs: Array, x0=None, P=None, tol=1e-6, max_iters=5000,
     if P is None:
         P = I_like(A)
     # soln, res, iters, infodict = run_batched_cg(A, rhs, x0, max_iters, tol, P, pbar=pbar)
-    cg_fn = xnp.jit(run_cg, static_argnums=(0, 6))
+    # cg_fn = xnp.jit(run_cg static_argnums=(0, 6))
+    cg_fn = xnp.jit(run_batched_cg, static_argnums=(0, 6))
     # cg_fn = run_batched_cg
     # TODO: check why the performance degrades so much when adding 5
     # cg_fn = xnp.jit(run_batched_cg, static_argnums=(0, 5, 6))
@@ -55,6 +57,7 @@ def cg_bwd(res, grads, unflatten, *args, **kwargs):
     def fun(*theta):
         Aop = unflatten(theta)
         return Aop @ soln
+
     d_params = xnp.vjp_derivs(fun, op_args, -db)
     dA = unflatten(d_params)
     return (dA, db)
