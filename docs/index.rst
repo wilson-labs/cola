@@ -1,7 +1,7 @@
 Compositional Linear Algebra (CoLA)
 ===================================
 
-*CoLA  is a multiplatform library that enables fast linear algebra operations with support for GPU acceleration and autograd. Want to efficiently compute eigenvalues, a matrix inverse, a log determinant? Want to work with JAX or PyTorch? Then CoLA is the library for you. If your matrix has structure -- say it can be decomposed as a Kronecker product -- then even better. Read on to find out more.*
+*CoLA  is a multiplatform library that enables fast linear algebra operations with support for GPU acceleration and autograd. Want to efficiently compute eigenvalues, a matrix inverse, a log determinant, or some other matrix operation? Want to work with JAX or PyTorch? Then CoLA is the library for you. If your matrix has structure -- say it can be decomposed as a Kronecker product -- then even better. Read on to find out more.*
 
 Introduction
 ------------
