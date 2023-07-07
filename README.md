@@ -127,7 +127,7 @@ Qs = ops.Symmetric(Q)
 %timeit cola.linalg.inverse(Qs)@v
 ```
 
-3. **Jax and Pytorch** You can freely use jax or pytorch with Cola:
+3. **JAX and PyTorch** You can freely use JAX or PyTorch with CoLA:
 ```python
 import torch
 
@@ -179,7 +179,7 @@ and pull requests.
 This work is supported by XXX.
 
 ## Licence
-CoLA is XXX licensed.
+CoLA is Apache License 2.0 licensed.
 
 ## Support and contact
 Please raise an issue if you find a bug or inadequate performance when using CoLA.
