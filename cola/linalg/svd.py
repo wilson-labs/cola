@@ -10,12 +10,15 @@ import cola
 @export
 def svd(X: LinearOperator, rank= None, top=True, tol=1e-7, method='auto') -> Tuple[Array]:
     """ Computes the singular value decomposition of a linear operator A.
-    :param A: The linear operator to decompose
-    :param k: The rank of the svd to compute
-    :param top: Whether to compute the largest or smallest singular values
-    :param tol: The tolerance to use for the svd
-    :param method: The method to use for the svd (auto, dense, lanczos)
-    :return: A tuple of (U, S, VH) where U is shape (m, k), S is shape (k, k), and VH is shape (k, n)
+
+    Args:
+        A: The linear operator to decompose
+        k: The rank of the svd to compute
+        top: Whether to compute the largest or smallest singular values
+        tol: The tolerance to use for the svd
+        method: The method to use for the svd (auto, dense, lanczos)
+
+    Returns: A tuple of (U, S, VH) where U is shape (m, k), S is shape (k, k), and VH is shape (k, n)
     """
     # kws = dict(k: int, top=True, tol=1e-7, method='auto')
     # kws.update(kwargs)
