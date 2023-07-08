@@ -43,38 +43,36 @@ If you use CoLA, please cite the following paper:
 
 
 ## Quick start guide
-1. **LinearOperators** The core object in CoLA is the LinearOperator. You can add and subtract them `+, -`,
+1. **LinearOperators**. The core object in CoLA is the LinearOperator. You can add and subtract them `+, -`,
 multiply by constants `*, /`, matrix multiply them `@` and combine them in other ways:
 `kron, kronsum, block_diag` etc.
 ```python
 import jax.numpy as jnp
-from cola import ops
-import jax.numpy as jnp
-from cola import ops
-A = ops.Diagonal(jnp.arange(5)+.1)
-B = ops.Dense(jnp.array([[2.,1.,],[-2.,1.1],[.01,.2]]))
-C = B.T@B
-D = C+0.01*ops.I_like(C)
-E = ops.Kronecker(A,ops.Dense(jnp.ones((2,2))))
-F = ops.BlockDiag(E,D)
+import cola
+
+A = cola.ops.Diagonal(jnp.arange(5) + .1)
+B = cola.ops.Dense(jnp.array([[2., 1.], [-2., 1.1], [.01, .2]]))
+C = B.T @ B
+D = C + 0.01 * cola.ops.I_like(C)
+E = cola.ops.Kronecker(A, cola.ops.Dense(jnp.ones((2, 2))))
+F = cola.ops.BlockDiag(E, D)
 
 v = jnp.ones(F.shape[-1])
-print(F@v)
+print(F @ v)
 ```
 ```
 [0.2       0.2       2.2       2.2       4.2       4.2       6.2
  6.2       8.2       8.2       7.8121004 2.062    ]
 ```
 
-2. **Performing Linear Algebra** With these objects we can perform linear algebra operations even when they are very big.
+2. **Performing Linear Algebra**. With these objects we can perform linear algebra operations even when they are very big.
 ```python
 print(cola.linalg.trace(F))
-Q = F.T@F+1e-3*I_like(F)
-b = cola.linalg.inverse(Q)@v
-print(jnp.linalg.norm(Q@b-v))
+Q = F.T @ F + 1e-3 * cola.ops.I_like(F)
+b = cola.linalg.inverse(Q) @ v
+print(jnp.linalg.norm(Q @ b - v))
 print(cola.linalg.eig(F)[0][:5])
 print(cola.sqrt(A))
-#print(cola.logdet(D))
 ```
 
 ```
@@ -89,21 +87,21 @@ For many of these functions, if we know additional information about the matrice
 to enable the algorithms to run faster.
 
 ```python
-Qs = ops.Symmetric(Q)
+Qs = cola.ops.Symmetric(Q)
 %timeit cola.linalg.inverse(Q)@v
 %timeit cola.linalg.inverse(Qs)@v
 ```
 
-3. **JAX and PyTorch** You can freely use JAX or PyTorch with CoLA:
+3. **JAX and PyTorch**. We support both ML frameworks.
 ```python
 import torch
 
-A = ops.Dense(torch.Tensor([[1.,2],[3,4]]))
-print(cola.linalg.trace(cola.kron(A,A)))
+A = cola.ops.Dense(torch.Tensor([[1., 2], [3, 4]]))
+print(cola.linalg.trace(cola.kron(A, A)))
 
 import jax.numpy as jnp
-A = ops.Dense(jnp.array([[1.,2],[3,4]]))
-print(cola.linalg.trace(cola.kron(A,A)))
+A = cola.ops.Dense(jnp.array([[1., 2], [3, 4]]))
+print(cola.linalg.trace(cola.kron(A, A)))
 ```
 
 ```
@@ -113,13 +111,14 @@ tensor(25.)
 
 and both support autograd (and jit):
 ```python
-from jax import grad, jit,vmap
+from jax import grad, jit, vmap
 
 def myloss(x):
-  A = ops.Dense(jnp.array([[1.,2],[3,x]]))
+    A = cola.ops.Dense(jnp.array([[1., 2], [3, x]]))
+    return jnp.ones(2) @ cola.linalg.inverse(A) @ jnp.ones(2)
 
-  return jnp.ones(2)@cola.linalg.inverse(A)@jnp.ones(2)
-g = jit(vmap(grad(myloss)))(jnp.array([.5,10.]))
+
+g = jit(vmap(grad(myloss)))(jnp.array([.5, 10.]))
 print(g)
 ```
 
