@@ -26,5 +26,5 @@ def power_iteration(A: LinearOperator, tol=1e-7, max_iter=1000, pbar=False, info
         return (i < max_iter) & (err(state) > tol)
 
     while_loop, infos = xnp.while_loop_winfo(err, tol, pbar=pbar)
-    *_, emax, _ = while_loop(cond, body, (0, v, v, 10., 1.))
-    return (emax, infos) if info else emax
+    _, v,_, emax, _ = while_loop(cond, body, (0, v, v, 10., 1.))
+    return (v,emax, infos) if info else v,emax

@@ -18,6 +18,25 @@ from cola.utils import export
 @export
 def eig(A: LinearOperator, eig_slice=slice(0, None, None), tol=1e-6, pbar=False, method='auto',
         info=False, max_iters=1000) -> Tuple[Array, Array]:
+    """
+    Computes eigenvalues and eigenvectors of a linear operator.
+
+    Args:
+        A (LinearOperator): The linear operator for which eigenvalues and eigenvectors are computed.
+        eig_slice (slice): Optional. Slice object defining the range of eigenvalues to return. Default is slice(0, None, None) (all eigenvalues).
+        tol (float): Optional. Tolerance for convergence. Default is 1e-6.
+        pbar (bool): Optional. Whether to display a progress bar during computation. Default is False.
+        method (str): Optional. Method to use for computation. 'dense' computes eigenvalues and eigenvectors using dense matrix operations. 'arnoldi' computes using Arnoldi iteration. 'auto' automatically selects the method based on the size of the linear operator. Default is 'auto'.
+        info (bool): Optional. Whether to display additional information. Default is False.
+        max_iters (int): Optional. Maximum number of iterations for Arnoldi method. Default is 1000.
+
+    Returns:
+        Tuple[Array, Array]: A tuple containing eigenvalues and eigenvectors. The eigenvalues are given by eig_vals[eig_slice] and the eigenvectors are given by eig_vecs[:, eig_slice].
+
+    Example:
+        A = MyLinearOperator()
+        eig_vals, eig_vecs = eig(A, eig_slice=slice(0, 5), tol=1e-4)
+    """
     xnp = A.ops
     if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
         eig_vals, eig_vecs = xnp.eig(A.to_dense())
@@ -45,6 +64,12 @@ def eig(A: LowerTriangular, eig_slice=slice(0, None, None), method="dense", *arg
 @dispatch
 def eig(A: SelfAdjoint, eig_slice=slice(0, None, None), tol=1e-6, pbar=False, method='auto',
         info=False, max_iters=1000) -> Tuple[Array, Array]:
+    """ More efficient implementation of eig for self-adjoint operators.
+
+    Example:
+        A = cola.ops.SelfAdjoint(MyLinearOperator())
+        eig_vals, eig_vecs = eig(A, tol=1e-4)
+    """
     xnp = A.ops
     if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
         eig_vals, eig_vecs = xnp.eigh(A.to_dense())
@@ -70,10 +95,13 @@ def eigenvalues(A: LinearOperator, info=False, pbar=False):
     pass
 
 @export
-def eigmax(A: LinearOperator, tol=1e-7, max_iters=1000, pbar=False, info=False):
+def eigmax(A: LinearOperator, tol=1e-7, max_iters=1000, pbar=False, info=False,vector=False):
     """ Returns eigenvalue with largest magnitude of A
-        up to specified tolerance tol."""
-    return power_iteration(A, tol=tol, max_iter=max_iters, pbar=pbar, info=info)
+        up to specified tolerance tol.
+        If vector=True, also returns the corresponding eigenvector.
+    """
+    e0, v0 = power_iteration(A, tol=tol, max_iter=max_iters, pbar=pbar, info=info)
+    return e0 if not vector else (e0, v0)
 
 #@export
 def eigmin(A: LinearOperator, tol=1e-7):
