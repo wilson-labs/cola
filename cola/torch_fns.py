@@ -14,6 +14,7 @@ sign = torch.sign
 Parameter = Parameter
 any = torch.any
 inv = torch.linalg.inv
+pinv = torch.linalg.pinv
 norm = torch.linalg.norm
 abs = torch.abs
 all = torch.all

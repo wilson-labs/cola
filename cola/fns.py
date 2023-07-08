@@ -10,7 +10,9 @@ from cola.ops import Kronecker, Product, KronSum, Sum
 from cola.ops import ScalarMul, Transpose, Adjoint, SelfAdjoint
 from cola.ops import BlockDiag, Identity, Diagonal, I_like
 from cola.utils import export
+
 Scalar = Array
+
 
 @export
 def lazify(A: Union[LinearOperator, Array]) -> LinearOperator:
@@ -19,6 +21,7 @@ def lazify(A: Union[LinearOperator, Array]) -> LinearOperator:
         return A
     else:
         return Dense(A)
+
 
 @export
 def densify(A: Union[LinearOperator, Array]) -> Array:
@@ -76,17 +79,17 @@ def mul(A: LinearOperator, c: Scalar) -> LinearOperator:
 
 @dispatch
 def mul(A: ScalarMul, c: Scalar) -> ScalarMul:
-    return ScalarMul(A.c * c, A.shape,A.dtype)
+    return ScalarMul(A.c * c, A.shape, A.dtype)
 
 
 @dispatch
 def mul(c: Scalar, A: ScalarMul) -> ScalarMul:
-    return ScalarMul(A.c * c, A.shape,A.dtype)
+    return ScalarMul(A.c * c, A.shape, A.dtype)
 
 
 @dispatch
 def mul(A: ScalarMul, B: ScalarMul) -> ScalarMul:
-    return ScalarMul(A.c * B.c, A.shape,A.dtype)
+    return ScalarMul(A.c * B.c, A.shape, A.dtype)
 
 
 @dispatch
@@ -105,7 +108,7 @@ def adjoint(A: LinearOperator):
 
 
 # @dispatch
-# def adjoint(A: Adjoint): 
+# def adjoint(A: Adjoint):
 #     return A.A
 
 
@@ -163,10 +166,12 @@ def kronsum(A: KronSum, B: LinearOperator) -> KronSum:
 def kronsum(A: LinearOperator, B: KronSum) -> KronSum:
     return KronSum(*((A, ) + B.Ms))
 
+
 @export
 def block_diag(*ops: List[LinearOperator]) -> LinearOperator:
     """ Construct a block diagonal operator from a list of ops. """
     return BlockDiag(*ops)
+
 
 def concatenate(ops: List[LinearOperator], axis=0) -> LinearOperator:
     raise NotImplementedError

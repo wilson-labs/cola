@@ -96,11 +96,11 @@ Qs = cola.ops.Symmetric(Q)
 ```python
 import torch
 
-A = cola.ops.Dense(torch.Tensor([[1., 2], [3, 4]]))
+A = cola.ops.Dense(torch.Tensor([[1., 2.], [3., 4.]]))
 print(cola.linalg.trace(cola.kron(A, A)))
 
 import jax.numpy as jnp
-A = cola.ops.Dense(jnp.array([[1., 2], [3, 4]]))
+A = cola.ops.Dense(jnp.array([[1., 2.], [3., 4.]]))
 print(cola.linalg.trace(cola.kron(A, A)))
 ```
 
@@ -114,7 +114,7 @@ and both support autograd (and jit):
 from jax import grad, jit, vmap
 
 def myloss(x):
-    A = cola.ops.Dense(jnp.array([[1., 2], [3, x]]))
+    A = cola.ops.Dense(jnp.array([[1., 2.], [3., x]]))
     return jnp.ones(2) @ cola.linalg.inverse(A) @ jnp.ones(2)
 
 
