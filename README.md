@@ -36,7 +36,7 @@ If you use CoLA, please cite the following paper:
 @article{potapczynski2023cola,
   title={{Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra}},
   author={Andres Potapczynski and Marc Finzi and Geoff Pleiss and Andrew Gordon Wilson},
-  journal={Advances in Neural Information Processing Systems (NeurIPS)},
+  journal={Pre-print},
   year={2023}
 }
 ```
