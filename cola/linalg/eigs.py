@@ -94,19 +94,33 @@ def eig(A: Diagonal, eig_slice=slice(0, None, None), **kwargs):
 def eigenvalues(A: LinearOperator, info=False, pbar=False):
     pass
 
+
 @export
 def eigmax(A: LinearOperator, tol=1e-7, max_iters=1000, pbar=False, info=False,vector=False):
-    """ Returns eigenvalue with largest magnitude of A
-        up to specified tolerance tol.
+    """ Returns eigenvalue with largest magnitude of A up to specified tolerance tol.
         If vector=True, also returns the corresponding eigenvector.
+
+        Args:
+            A (LinearOperator): The linear operator for which to compute the eigenvalue.
+            tol (float, optional): Tolerance for convergence. Default is 1e-7.
+            max_iters (int, optional): Maximum number of iterations. Default is 1000.
+            pbar (bool, optional): Whether to display a progress bar. Default is False.
+            info (bool, optional): Whether to display iteration information. Default is False.
+            vector (bool, optional): Whether to compute and return the corresponding eigenvector. Default is False.
+
+        Returns:
+            float or tuple: The eigenvalue with the largest magnitude of A. If `vector` is True, a tuple (eigenvalue, eigenvector) is returned.
+
+        Example:
+            >>> eig = eigmax(A, tol=1e-3)
+            >>> eig, vec = eigmax(A, tol=1e-3, vector=True)
     """
-    e0, v0 = power_iteration(A, tol=tol, max_iter=max_iters, pbar=pbar, info=info)
+    v0, e0 = power_iteration(A, tol=tol, max_iter=max_iters, pbar=pbar, info=info)
     return e0 if not vector else (e0, v0)
+
 
 #@export
 def eigmin(A: LinearOperator, tol=1e-7):
     """ Returns eigenvalue with smallest magnitude of A
         up to specified tolerance tol."""
     raise NotImplementedError
-
-
