@@ -1,5 +1,4 @@
 from functools import reduce, partial
-# import cola.fns
 from cola.ops.operator_base import LinearOperator
 from cola.ops.operator_base import Array, get_library_fns
 import numpy as np
@@ -34,11 +33,11 @@ class LowerTriangular(Dense):
 
 class Sparse(LinearOperator):
     """ Sparse CSR linear operator.
-    
+
     Args:
         data (array_like): 1-D array representing the nonzero values of the sparse matrix.
         indices (array_like): 1-D array representing the column indices of the nonzero values.
-        indptr (array_like): 1-D array representing the index pointers for the rows in the sparse matrix.
+        indptr (array_like): 1-D array representing the index pointers for the rows of the matrix.
         shape (tuple): Shape of the sparse matrix.
 
     Example:
@@ -71,7 +70,7 @@ class ScalarMul(LinearOperator):
 
 class Identity(ScalarMul):
     """ Linear Operator representing the identity matrix. Can also be created from I_like(A)
-        
+
         Args:
             shape (tuple): Shape of the identity matrix.
             dtype: Data type of the identity matrix.
@@ -148,7 +147,7 @@ def product(c):
 @parametric
 class Kronecker(LinearOperator):
     """ Kronecker product of linear ops Kronecker([M1,M2]):= M1⊗M2
-    
+
     Args:
         *Ms (array_like): Sequence of linear operators representing the Kronecker product operands.
 
@@ -193,7 +192,7 @@ class KronSum(LinearOperator):
 
         Args:
             *Ms (array_like): Sequence of matrices representing the Kronecker sum operands.
-            
+
         Example:
             >>> M1 = np.array([[1, 2], [3, 4]])
             >>> M2 = np.array([[5, 6], [7, 8]])
@@ -297,7 +296,12 @@ class Diagonal(LinearOperator):
 
 
 class Tridiagonal(LinearOperator):
-    """ Tridiagonal linear operator. O(n) time and space matmuls"""
+    """ Tridiagonal linear operator. O(n) time and space matmuls.
+    Args:
+        alpha (array_like): 1-D array representing lower band of the operator.
+        beta (array_like): 1-D array representing diagonal of the operator.
+        gamma (array_like): 1-D array representing upper band of the operator.
+    """
     def __init__(self, alpha: Array, beta: Array, gamma: Array):
         super().__init__(dtype=beta.dtype, shape=(beta.shape[0], beta.shape[0]))
         self.alpha, self.beta, self.gamma = alpha, beta, gamma
@@ -383,7 +387,7 @@ class Sliced(LinearOperator):
 class Jacobian(LinearOperator):
     """ Jacobian (linearization) of a function f: R^n -> R^m at point x.
         Matrix has shape (m, n)
-        
+
     Args:
         f (callable): Function representing the mapping from R^n to R^m.
         x (array_like): 1-D array representing the point at which to compute the Jacobian.
@@ -406,14 +410,15 @@ class Jacobian(LinearOperator):
 
     def _matmat(self, X):
         # primals = self.x[:,None]+self.ops.zeros((1,X.shape[1],), dtype=self.x.dtype)
-        return self.ops.vmap(partial(self.ops.jvp_derivs, self.f, (self.x,)))((X.T,)).T
+        return self.ops.vmap(partial(self.ops.jvp_derivs, self.f, (self.x, )))((X.T, )).T
 
     def _rmatmat(self, X):
         # primals = self.x[None,:]+self.ops.zeros((X.shape[0],1), dtype=self.x.dtype)
-        return self.ops.vmap(partial(self.ops.vjp_derivs, self.f, (self.x,)))((X,))
+        return self.ops.vmap(partial(self.ops.vjp_derivs, self.f, (self.x, )))((X, ))
 
     def __str__(self):
         return "J"
+
 
 @parametric
 class SelfAdjoint(LinearOperator):
@@ -447,7 +452,7 @@ class SelfAdjoint(LinearOperator):
 class Hessian(SelfAdjoint):
     """ Hessian of a scalar function f: R^n -> R at point x.
         Matrix has shape (n, n)
-    
+
     Args:
         f (callable): Function representing the mapping from R^n to R^m.
         x (array_like): 1-D array representing the point at which to compute the Jacobian.
@@ -467,7 +472,7 @@ class Hessian(SelfAdjoint):
     def _matmat(self, X):
         xnp = self.ops
         # primals = self.x[:,None]+self.ops.zeros((1,X.shape[1],), dtype=self.x.dtype)
-        return xnp.vmap(partial(xnp.jvp_derivs, xnp.grad(self.f), (self.x,)))((X.T,)).T
+        return xnp.vmap(partial(xnp.jvp_derivs, xnp.grad(self.f), (self.x, )))((X.T, )).T
 
     def __str__(self):
         return "H"
@@ -496,17 +501,7 @@ class ConvolveND(LinearOperator):
         return self.conv(Z).reshape(X.shape[-1], -1).T
 
 
-# Properties
-
-
-
-
 Symmetric = SelfAdjoint
-
-# @parametric
-# class Symmetric(SelfAdjoint):
-#     def _rmatmat(self, X: Array) -> Array:
-#         return self._matmat(X.T).T
 
 
 @parametric
