@@ -8,15 +8,17 @@ from cola.utils import export
 @export
 def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int, max_iters: int,
                             tol: float = 1e-7):
-    """
-    Approximates trace(f(A)) for a positive definite operator A. For example, if f(t) = log(t)
-    then the algorithm approximates log(det(A)).
+    """Approximates trace(f(A)) for a positive definite operator A.
 
-    A: LinearOperator (n, n) positive definite
-    fun: Callable | function to apply to the eigenvalues
-    num_samples: int | number of samples to use to approximate for the approximation
-    max_iters: int | maximum number of iters to run lanczos
-    tol: float | tolerance criteria to stop lanczos
+    Args:
+        A (LinearOperator): The linear operator representing the matrix A.
+        fun (Callable): The function to apply to the eigenvalues.
+        num_samples (int): The number of samples to use for the approximation.
+        max_iters (int): The maximum number of iterations to run Lanczos.
+        tol (float, optional): The tolerance criteria to stop Lanczos. Defaults to 1e-7.
+
+    Returns:
+        float: The approximate value of trace(f(A)).
     """
     # TODO: ask about what to do with the jit compilation here given the iter shape change
     xnp = A.ops

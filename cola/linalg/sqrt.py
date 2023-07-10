@@ -3,11 +3,16 @@ from cola.fns import lazify
 from cola.ops import SelfAdjoint
 from cola.ops import Diagonal
 from cola.ops import Kronecker
+from cola.ops import LinearOperator
 from cola.utils import export
 # from cola.linalg.eigs import eig
 
 @dispatch
 @export
+def sqrt(A:LinearOperator):
+    """ Matrix sqrt of a Linear operator. If S=Sqrt(A), then S@S = A."""
+    raise NotImplementedError(f"sqrt not implemented for {type(A)}")
+
 def sqrt(A: SelfAdjoint) -> SelfAdjoint:
     xnp = A.ops
     # eig_vals, eig_vecs = eig(A)

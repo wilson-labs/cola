@@ -12,16 +12,20 @@ _small_value = 1e-40
 def cg(A: LinearOperator, rhs: Array, x0=None, P=None, tol=1e-6, max_iters=5000, pbar=False,
        info=False):
     """
-    Solves a Ax=b using CG (conjugate gradients).
+    Solves Ax=b using CG (conjugate gradients).
 
-    A: LinearOperator | (n, n) positive definite
-    b: Array | (n, b) multiple right hands or (n,) single vector
-    x0: Array | (n, b) or (n,) initial solution guess (default zero)
-    P: LinearOperator | preconditioner (default identity)
-    tol: float | stopping criteria
-    max_iters: int | maximum number of iters
-    pbar: bool | flag for showing progress bar
-    info: bool | flag for returning info dict
+    Args:
+        A (LinearOperator): (n, n) positive definite.
+        rhs (Array): (n, b) multiple right hands or (n,) single vector.
+        x0 (Array, optional): (n, b) or (n,) initial solution guess (default zero).
+        P (LinearOperator, optional): Preconditioner (default identity).
+        tol (float, optional): Stopping criteria.
+        max_iters (int, optional): Maximum number of iterations.
+        pbar (bool, optional): Flag for showing progress bar.
+        info (bool, optional): Flag for returning info dict.
+
+    Returns:
+        tuple: Solution array and info dictionary if info is True.
     """
     xnp = A.ops
     is_vector = len(rhs.shape) == 1

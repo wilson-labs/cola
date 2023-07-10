@@ -16,15 +16,32 @@ def orthogonal_complement(C, tol=1e-5):
 @dispatch
 @export
 def nullspace(C: LinearOperator, tol=1e-5, pbar=True, info=False, method='auto') -> Array:
-    """ Computes the nullspace of a linear operator C, up to specified tolerance tol.
-        Method choices ['auto', 'svd', 'krylov'] where auto selects the method
-        automatically based on the C matrix size. """
+    """Computes the nullspace of a linear operator C.
+
+    Args:
+        C (LinearOperator): The linear operator to compute the nullspace for.
+        tol (float, optional): Tolerance for the computation. Default is 1e-5.
+        pbar (bool, optional): Whether to display a progress bar. Default is True.
+        info (bool, optional): Whether to return additional information. Default is False.
+        method (str, optional): Method to use for computation. Options are 'dense', 'krylov' and 'auto'. 'auto' chooses based on the C matrix size. Default is 'auto'.
+
+    Returns:
+        Array: The nullspace of C, shape (C.shape[1], rank(C)).
+
+    Example:
+        >>> C = MyLinearOperator()
+        >>> Q = nullspace(C, method='auto', pbar=False)
+        >>> C@Q # should be zero
+
+    """
 
     if method == 'dense' or (method == 'auto' and np.prod(C.shape) < 3e7):
         Q = orthogonal_complement(C.to_dense(), tol=tol)
-        return Q if not info else (Q, None)
+        return Q
     if method == 'krylov' or (method == 'auto' and np.prod(C.shape) > 3e7):
-        return krylov_constraint_solve(C, tol=tol, pbar=pbar, info=info)
+        Q, inf = krylov_constraint_solve(C, tol=tol, pbar=pbar, info=True)
+        Q.info = inf
+        return Q
     else:
         raise ValueError(f"Unknown method {method}")
 

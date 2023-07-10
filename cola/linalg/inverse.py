@@ -65,6 +65,26 @@ class GenericSVRGInverse(IterativeInverse):
 @dispatch
 @export
 def inverse(A: LinearOperator, **kwargs):
+    """(lazily) computes the inverse of a linear operator, equivalent to solve.
+
+    Args:
+        A (LinearOperator): The linear operator to compute the inverse of.
+        tol (float, optional): The tolerance criteria. Defaults to 1e-6.
+        P (array, optional): Preconditioner matrix
+        x0 (array, optional): The initial guess for the solution
+        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
+        info (bool, optional): Whether to print additional information. Defaults to False.
+        max_iters (int, optional): The maximum number of iterations. Defaults to 5000.
+        method (str, optional): Method to use, defaults to 'auto', options are 'auto', 'dense', 'cg', 'gmres', 'svrg'.
+
+    Returns:
+        Array: The inverse of the linear operator.
+
+    Example:
+        >>> A = MyLinearOperator()
+        >>> x = cola.inverse(A) @ b
+
+    """
     kws = dict(tol=1e-6, P=None, x0=None, pbar=False, info=False, max_iters=5000)
     kws.update(kwargs)
     method = kws.pop('method', 'auto')

@@ -30,7 +30,20 @@ def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):
 
 @export
 def exact_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False,info=False):
-    """ Extract the (kth) diagonal of a linear operator. """
+    """Extracts the (kth) diagonal of a linear operator.
+
+    Args:
+        A (LinearOperator): Linear operator.
+        k (int, optional): Index of the diagonal to extract (default 0).
+        bs (int, optional): Chunk size (default 100).
+        tol (float, optional): (doesn't do anything)
+        max_iters (int, optional): (doesn't do anything).
+        pbar (bool, optional): Flag for showing progress bar.
+        info (bool, optional): Flag for returning info.
+
+    Returns:
+        Array: Extracted diagonal elements.
+    """
     bs = min(100,A.shape[0])
     # lazily create chunks of the identity matrix of size bs
     diag_sum = 0
@@ -45,7 +58,19 @@ def exact_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False,i
 
 @export
 def approx_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False,info=False):
-    """ Extract the (kth) diagonal of a linear operator using stochastic estimation """
+    """ Extract the (kth) diagonal of a linear operator using stochastic estimation
+    
+    Args:
+        A (LinearOperator): Linear operator.
+        k (int, optional): Index of the diagonal to extract (default 0).
+        bs (int, optional): Chunk size (default 100).
+        tol (float, optional): Tolerance (default 3e-2).
+        max_iters (int, optional): Maximum number of iterations (default 10000).
+        pbar (bool, optional): Flag for showing progress bar.
+        info (bool, optional): Flag for returning info.
+
+    Returns:
+        Array: Extracted diagonal elements."""
     bs = min(100,A.shape[0])
     # lazily create chunks of the identity matrix of size bs
     xnp = A.ops

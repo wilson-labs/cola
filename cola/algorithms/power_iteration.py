@@ -5,6 +5,20 @@ from cola.ops import LinearOperator
 @export
 def power_iteration(A: LinearOperator, tol=1e-7, max_iter=1000, pbar=False, info=False,
                     momentum=None):
+    """Performs power iteration to compute the dominant eigenvector and eigenvalue of a matrix A.
+
+    Args:
+        A (LinearOperator): The linear operator representing the matrix A.
+        tol (float, optional): The tolerance criteria for convergence. Defaults to 1e-7.
+        max_iter (int, optional): The maximum number of iterations. Defaults to 1000.
+        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
+        info (bool, optional): Whether to return additional information. Defaults to False.
+        momentum (float, optional): The momentum parameter for accelerated power iteration. Defaults to None.
+
+    Returns:
+        Tuple or Array: If info is False, returns a tuple (v, emax).
+            If info is True, returns (v, emax, infodict).
+    """
     xnp = A.ops
     v = xnp.fixed_normal_samples(A.shape[-1:], A.dtype)
 

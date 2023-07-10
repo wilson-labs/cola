@@ -45,7 +45,7 @@ def test_large_trace(xnp, method):
     array = xnp.fixed_normal_samples((210, 210))
     A = Dense(array)
     A = LinearOperator(A.dtype, A.shape, A._matmat)
-    d1 = trace(A, method=method, tol=5e-2)
+    d1 = trace(A, method=method, tol=2e-2)
     d2 = xnp.diag(array).sum()
     assert relative_error(d1, d2) < (1e-1 if method == 'approx' else 1e-5)
 

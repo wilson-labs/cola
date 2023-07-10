@@ -17,13 +17,19 @@ def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 
 
 @export
 def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7):
-    """
-    Computes the lanczos decomposition of a matrix A: A = Q T Q^H, returns Q and T 
+    """Computes the Lanczos decomposition of a matrix A.
 
-    A: LinearOperator (n, n) positive definite
-    start_vector: Optional (n, b) matrix or (n,) single vector to start the lanczos process
-    max_iters: int maximum number of iters to run lanczos
-    tol: float: tolerance criteria to stop lanczos"""
+    Args:
+        A (LinearOperator): The linear operator representing the matrix A.
+        start_vector (Array, optional): The initial vector to start the Lanczos process.
+            If not provided, a random vector will be used. Defaults to None.
+        max_iters (int, optional): The maximum number of iterations to run Lanczos. Defaults to 100.
+        tol (float, optional): The tolerance criteria to stop Lanczos. Defaults to 1e-7.
+
+    Returns:
+        Q (Array): The orthogonal matrix Q in the Lanczos decomposition A = Q T Q^H.
+        T (Array): The tridiagonal matrix T in the Lanczos decomposition A = Q T Q^H.
+    """
     xnp = A.ops
     if start_vector is None:
         start_vector = xnp.random.randn(*A.shape[:-1])

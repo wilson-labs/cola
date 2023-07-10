@@ -5,21 +5,56 @@ from cola.utils.control_flow import for_loop
 from cola.utils import export
 
 
-@export
+# @export
 def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7,
                 use_householder=False):
-    """ TODO Andres: docstring """
+    """Computes eigenvalues and eigenvectors using the Arnoldi method.
+
+    Args:
+        A (LinearOperator): The linear operator representing the matrix A.
+        rhs (Array): The right-hand side vector.
+        max_iters (int): The maximum number of iterations.
+        tol (float, optional): The tolerance criteria. Defaults to 1e-7.
+        use_householder (bool, optional): Whether to use Householder Arnoldi iteration. Defaults to False.
+
+    Returns:
+        Tuple: A tuple containing the eigenvalues and eigenvectors.
+            - eigvals (Array): eigenvalues of shape (max_iters,).
+            - eigvectors (Array): eigenvectors of shape (n, max_iters).
+    """
+    Q,H = arnoldi(A=A, start_vector=rhs, max_iters=max_iters, tol=tol, use_householder=use_householder)
     xnp = A.ops
-    if use_householder:
-        Q, H = run_householder_arnoldi(A=A, rhs=rhs, max_iters=max_iters)
-    else:
-        # Q, H, _ = get_arnoldi_matrix(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
-        fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3))
-        Q, H, _ = fn(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
-        H, Q = H[:-1, :], Q[:, :-1]
     eigvals, eigvectors = xnp.eig(H)
     return eigvals, xnp.cast(Q, dtype=eigvectors.dtype) @ eigvectors
 
+@export
+def arnoldi(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1e-7,
+                use_householder=False):
+    """Computes the Arnoldi decomposition of a matrix A = QHQ^H.
+
+    Args:
+        A (LinearOperator): The linear operator representing the matrix A.
+        start_vector (Array, optional): The vector to start the arnoldi iterations.
+        max_iters (int): The maximum number of iterations.
+        tol (float, optional): The tolerance criteria. Defaults to 1e-7.
+        use_householder (bool, optional): Whether to use Householder Arnoldi iteration. Defaults to False.
+
+    Returns:
+        Q (Array): The orthogonal matrix Q.
+        H (Array): The upper hessenberg matrix H.
+    """
+    xnp = A.ops
+    xnp = A.ops
+    if start_vector is None:
+        start_vector = xnp.random.randn(*A.shape[:-1])
+    if use_householder:
+        Q, H = run_householder_arnoldi(A=A, rhs=start_vector, max_iters=max_iters)
+    else:
+        # Q, H, _ = get_arnoldi_matrix(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
+        fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3))
+        Q, H, _ = fn(A=A, rhs=start_vector, max_iters=max_iters, tol=tol)
+        H, Q = H[:-1, :], Q[:, :-1]
+    return Q, H
 
 def get_householder_vec_simple(x, idx, xnp):
     indices = xnp.arange(x.shape[0])
