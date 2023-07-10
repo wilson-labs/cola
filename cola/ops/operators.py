@@ -297,6 +297,7 @@ class Diagonal(LinearOperator):
 
 class Tridiagonal(LinearOperator):
     """ Tridiagonal linear operator. O(n) time and space matmuls.
+
     Args:
         alpha (array_like): 1-D array representing lower band of the operator.
         beta (array_like): 1-D array representing diagonal of the operator.
