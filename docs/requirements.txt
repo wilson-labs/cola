@@ -5,3 +5,4 @@ recommonmark
 sphinx_rtd_theme
 jupyter
 nbmerge
+sphinx-autodoc-typehints
