@@ -53,13 +53,14 @@ sparse_csr = torch.sparse_csr_tensor
 roll = torch.roll
 maximum = torch.maximum
 
+from torch._vmap_internals import vmap as _vmap
 
 def PRNGKey(x):
     return x
 
 
 def vmap(fun, in_axes=0, out_axes=0):
-    return torch.vmap(func=fun, in_dims=in_axes, out_dims=out_axes)
+    return _vmap(func=fun, in_dims=in_axes, out_dims=out_axes)
 
 
 def stack(tensors, axis=0):
@@ -135,7 +136,7 @@ def fixed_normal_samples(shape, dtype=None):
     return torch.randn(*shape, dtype=dtype)
 
 
-def vjp_derivs(fun, primals, duals):
+def vjp_derivs(fun, primals, duals, create_graph=True):
     if isinstance(primals, (list, tuple)):
         conj_primals = type(primals)((torch.conj(primal) for primal in primals))
     else:
@@ -144,7 +145,7 @@ def vjp_derivs(fun, primals, duals):
         conj_duals = type(duals)((torch.conj(primal) for primal in duals))
     else:
         conj_duals = torch.conj(duals)
-    _, output = vjp(fun, inputs=conj_primals, v=conj_duals, create_graph=True)
+    _, output = vjp(fun, inputs=conj_primals, v=conj_duals, create_graph=create_graph)
     if isinstance(output, (list, tuple)):
         conj_output = type(output)((torch.conj(primal) for primal in output))
     else:
@@ -152,14 +153,21 @@ def vjp_derivs(fun, primals, duals):
     return conj_output
 
 
-def jvp_derivs(fun, primals, tangents):
-    # TODO: work with iterables
-    _, output = jvp(fun, inputs=torch.conj(primals), v=torch.conj(tangents), create_graph=True)
+def jvp_derivs(fun, primals, tangents,create_graph=True):
+    if isinstance(primals, (list, tuple)):
+        conj_primals = type(primals)((torch.conj(primal) for primal in primals))
+    else:
+        conj_primals = torch.conj(primals)
+    if isinstance(tangents, (list, tuple)):
+        conj_tangents = type(tangents)((torch.conj(primal) for primal in tangents))
+    else:
+        conj_tangents = torch.conj(tangents)
+    _, output = jvp(fun, inputs=conj_primals, v=conj_tangents, create_graph=create_graph)
     return torch.conj(output)
 
 
 def grad(fn):
-    return lambda x: torch.autograd.grad([fn(x)], x)[0]
+    return lambda x: torch.autograd.grad([fn(x)], x, create_graph=True)[0]
 
 
 def linear_transpose(fun, primals, duals):

@@ -480,8 +480,15 @@ class Hessian(SelfAdjoint):
 
     def _matmat(self, X):
         xnp = self.ops
-        # primals = self.x[:,None]+self.ops.zeros((1,X.shape[1],), dtype=self.x.dtype)
-        return xnp.vmap(partial(xnp.jvp_derivs, xnp.grad(self.f), (self.x, )))((X.T, )).T
+        mvm = partial(xnp.jvp_derivs, xnp.grad(self.f), (self.x, ), create_graph=False)
+        # hack to make it work with pytorch
+        if xnp.__name__=='cola.torch_fns':
+            out = xnp.zeros((self.shape[-1], X.shape[-1]), dtype=self.dtype)
+            for i in range(X.shape[1]):
+                out[:, i] = mvm(X[:, i])
+            return out
+        else:
+            return xnp.vmap(mvm)((X.T, )).T
 
     def __str__(self):
         return "H"
