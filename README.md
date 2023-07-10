@@ -21,7 +21,7 @@ pip install git+https://github.com/wilson-labs/cola.git
 ## Features in CoLA
 * Provides several compositional rules to exploit problem structure through multiple dispatch.
 * Works with PyTorch and JAX
-* Supports hardware acceleration through GPU an TPU (JAX).
+* Supports hardware acceleration through GPU and TPU (JAX).
 * Supports different types of numerical precision.
 * Has memory-efficient Autograd routines for different iterative algorithms.
 * Provides operations for both symmetric and non-symmetric matrices.
