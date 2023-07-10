@@ -303,7 +303,7 @@ def test_tridiagonal(xnp):
          [-0.85312595, -0.52601772]]
 
     A_j = xnp.array(A)
-    alpha_j = xnp.array([alpha]).T
+    alpha_j = xnp.array(alpha)
     beta_j = xnp.array([beta]).T
     gamma_j = xnp.array([gamma]).T
     B = Tridiagonal(alpha=alpha_j, beta=beta_j, gamma=gamma_j)

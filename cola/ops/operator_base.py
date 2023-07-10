@@ -237,6 +237,7 @@ def flatten_function(obj) -> Tuple[List[Array], Callable]:
     else:
         raise NotImplementedError
 
+
 def is_array(obj):
     if not hasattr(obj, 'dtype'):
         return False

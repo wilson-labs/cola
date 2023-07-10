@@ -305,6 +305,8 @@ class Tridiagonal(LinearOperator):
     """
     def __init__(self, alpha: Array, beta: Array, gamma: Array):
         super().__init__(dtype=beta.dtype, shape=(beta.shape[0], beta.shape[0]))
+        alpha, beta = ensure_vec_is_matrix(alpha), ensure_vec_is_matrix(beta)
+        gamma = ensure_vec_is_matrix(gamma)
         self.alpha, self.beta, self.gamma = alpha, beta, gamma
 
     def _matmat(self, X: Array) -> Array:
@@ -322,6 +324,12 @@ class Tridiagonal(LinearOperator):
         aux_gamma = xnp.update_array(aux_gamma, self.gamma * X[1:], ind)
         output += aux_gamma
         return output
+
+
+def ensure_vec_is_matrix(vec):
+    if len(vec.shape) == 1:
+        vec = vec.reshape(-1, 1)
+    return vec
 
 
 @parametric
