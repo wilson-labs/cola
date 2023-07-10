@@ -113,6 +113,12 @@ Design Choices
    notebooks/06_PDE_Eigenvalue_Problems.ipynb
 
 .. toctree::
+   :maxdepth: 1
+   :caption: Exercise
+
+   notebooks/07_worksheet.ipynb
+
+.. toctree::
    :glob:
    :maxdepth: 1
    :caption: API Reference
