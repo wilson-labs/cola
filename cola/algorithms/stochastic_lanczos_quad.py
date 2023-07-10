@@ -5,6 +5,7 @@ from cola.algorithms.lanczos import construct_tridiagonal_batched
 # from cola.algorithms.lanczos import construct_tridiagonal
 from cola.utils import export
 
+
 @export
 def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int, max_iters: int,
                             tol: float = 1e-7):
@@ -20,7 +21,7 @@ def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int, 
     Returns:
         float: The approximate value of trace(f(A)).
     """
-    # TODO: ask about what to do with the jit compilation here given the iter shape change
+    # TODO: how can we jit here given the iter shape change?
     xnp = A.ops
     rhs = xnp.randn(A.shape[1], num_samples, dtype=A.dtype)
     alpha, beta, iters, _ = lanczos_parts(A, rhs, max_iters, tol)
