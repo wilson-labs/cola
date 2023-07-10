@@ -3,6 +3,7 @@ from cola.ops import Array
 from cola.ops import get_library_fns
 from cola.utils import export
 
+
 def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7):
     """
     Computes the maximum eigenvalue using lanczos
@@ -14,6 +15,7 @@ def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 
     """
     eigvals, _ = lanczos_eig(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
     return eigvals[-1]
+
 
 @export
 def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7):
@@ -38,6 +40,7 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
     Q = vec[0, :, 1:-1]
     T = construct_tridiagonal_batched(alpha, beta, alpha)
     return Q, T
+
 
 def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7):
     """

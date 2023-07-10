@@ -50,9 +50,13 @@ is_array = torch.is_tensor
 autograd = torch.autograd
 argsort = torch.argsort
 sparse_csr = torch.sparse_csr_tensor
-roll=torch.roll
-maximum=torch.maximum
-PRNGKey = lambda x: x
+roll = torch.roll
+maximum = torch.maximum
+
+
+def PRNGKey(x):
+    return x
+
 
 def vmap(fun, in_axes=0, out_axes=0):
     return torch.vmap(func=fun, in_dims=in_axes, out_dims=out_axes)
@@ -123,7 +127,7 @@ def randn(*shape, dtype=None, key=None):
         print('Non keyed randn used. To be deprecated soon.')
         logging.warning('Non keyed randn used. To be deprecated soon.')
     z = torch.randn(*shape, dtype=dtype)
-    return z if key is None else (z,key)
+    return z if key is None else (z, key)
 
 
 def fixed_normal_samples(shape, dtype=None):
@@ -153,8 +157,9 @@ def jvp_derivs(fun, primals, tangents):
     _, output = jvp(fun, inputs=torch.conj(primals), v=torch.conj(tangents), create_graph=True)
     return torch.conj(output)
 
+
 def grad(fn):
-    return lambda x: torch.autograd.grad([fn(x)],x)[0]
+    return lambda x: torch.autograd.grad([fn(x)], x)[0]
 
 
 def linear_transpose(fun, primals, duals):
