@@ -94,7 +94,7 @@ def I_like(A: LinearOperator) -> Identity:
 class Product(LinearOperator):
     """ Matrix Multiply Product of Linear ops """
     def __init__(self, *Ms):
-        self.Ms = [cola.fns.lazify(M) for M in Ms]
+        self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
         for M1, M2 in zip(Ms[:-1], Ms[1:]):
             if M1.shape[-1] != M2.shape[-2]:
                 raise ValueError(f"dimension mismatch {M1.shape} vs {M2.shape}")
@@ -120,7 +120,7 @@ class Product(LinearOperator):
 class Sum(LinearOperator):
     """ Sum of Linear ops """
     def __init__(self, *Ms):
-        self.Ms = [cola.fns.lazify(M) for M in Ms]
+        self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
         shape = Ms[0].shape
         for M in Ms:
             if M.shape != shape:
@@ -157,7 +157,7 @@ class Kronecker(LinearOperator):
         >>> op = Kronecker(M1, M2)
     """
     def __init__(self, *Ms):
-        self.Ms = [cola.fns.lazify(M) for M in Ms]
+        self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
         shape = product([Mi.shape[-2] for Mi in Ms]), product([Mi.shape[-1] for Mi in Ms])
         dtype = Ms[0].dtype
         super().__init__(dtype, shape)
@@ -199,7 +199,7 @@ class KronSum(LinearOperator):
             >>> op = KronSum(M1, M2)
     """
     def __init__(self, *Ms):
-        self.Ms = [cola.fns.lazify(M) for M in Ms]
+        self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
         shape = product([Mi.shape[-2] for Mi in Ms]), product([Mi.shape[-1] for Mi in Ms])
         dtype = Ms[0].dtype
         super().__init__(dtype, shape)
@@ -238,7 +238,7 @@ class BlockDiag(LinearOperator):
         >>> op = BlockDiag(M1, M2, multiplicities=[2, 3])
     """
     def __init__(self, *Ms, multiplicities=None):
-        self.Ms = [cola.fns.lazify(M) for M in Ms]
+        self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
         self.multiplicities = [1 for _ in Ms] if multiplicities is None else multiplicities
         shape = (sum(Mi.shape[-2] * c for Mi, c in zip(Ms, self.multiplicities)),
                  sum(Mi.shape[-1] * c for Mi, c in zip(Ms, self.multiplicities)))
