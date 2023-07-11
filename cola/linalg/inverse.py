@@ -75,7 +75,7 @@ def inverse(A: LinearOperator, **kwargs):
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
         info (bool, optional): Whether to print additional information. Defaults to False.
         max_iters (int, optional): The maximum number of iterations. Defaults to 5000.
-        method (str, optional): Method to use, defaults to 'auto', options are 'auto', 'dense', 'cg', 'gmres', 'svrg'.
+        method (str, optional): Method to use, defaults to 'auto', options are 'auto', 'dense', 'krylov', 'svrg'.
 
     Returns:
         Array: The inverse of the linear operator.
@@ -94,9 +94,9 @@ def inverse(A: LinearOperator, **kwargs):
         return SymmetricSVRGInverse(A.A, **kws)
     elif issubclass(type(A), Sum) and (method == 'svrg' or (method == 'auto' and len(A.Ms) > 1e4)):
         return GenericSVRGInverse(A, **kws)
-    elif issubclass(type(A), SelfAdjoint) and (method == 'cg' or (method == 'auto' and np.prod(A.shape) > 1e6)):
+    elif issubclass(type(A), SelfAdjoint) and ((method == 'cg' or method=='krylov') or (method == 'auto' and np.prod(A.shape) > 1e6)):
         return CGInverse(A, **kws)
-    elif method == 'gmres' or (method == 'auto' and np.prod(A.shape) > 1e6):
+    elif (method == 'gmres' or method=='krylov') or (method == 'auto' and np.prod(A.shape) > 1e6):
         return GMResInverse(A, **kws)
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
