@@ -81,6 +81,5 @@ def trace(A: LinearOperator, **kwargs):
     return diag(A, k=0, **kwargs).sum()
 
 @dispatch
-def trace(A: Kronecker, k=0):
-    assert k==0, "Need to verify correctness of rule for off diagonal case"
+def trace(A: Kronecker, **kwargs):
     return product([trace(M) for M in A.Ms])

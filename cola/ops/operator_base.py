@@ -55,6 +55,12 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         self.ops = get_library_fns(dtype)
         if matmat is not None:
             self._matmat = matmat
+        # self._args
+        # self._kwargs
+
+    def to(self, dtype=None, device=None):
+        # returns a new linear operator.
+        raise NotImplementedError()
 
     @abstractmethod
     def _matmat(self, X: Array) -> Array:

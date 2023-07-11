@@ -12,7 +12,7 @@ class Dense(LinearOperator):
         A (array_like): Dense matrix to be wrapped.
 
     Example:
-        >>> A = np.array([[1, 2], [3, 4]])
+        >>> A = jnp.array([[1, 2], [3, 4]])
         >>> op = Dense(A)
     """
     def __init__(self, A: Array):
@@ -41,9 +41,9 @@ class Sparse(LinearOperator):
         shape (tuple): Shape of the sparse matrix.
 
     Example:
-        >>> data = np.array([1, 2, 3, 4, 5, 6])
-        >>> indices = np.array([0, 2, 1, 0, 2, 1])
-        >>> indptr = np.array([0, 2, 4, 6])
+        >>> data = jnp.array([1, 2, 3, 4, 5, 6])
+        >>> indices = jnp.array([0, 2, 1, 0, 2, 1])
+        >>> indptr = jnp.array([0, 2, 4, 6])
         >>> shape = (3, 3)
         >>> op = Sparse(data, indices, indptr, shape)
     """
@@ -77,7 +77,7 @@ class Identity(ScalarMul):
 
         Example:
             >>> shape = (3, 3)
-            >>> dtype = np.float64
+            >>> dtype =  jnp.float64
             >>> op = Identity(shape, dtype)
     """
     def __init__(self, shape, dtype):
@@ -152,8 +152,8 @@ class Kronecker(LinearOperator):
         *Ms (array_like): Sequence of linear operators representing the Kronecker product operands.
 
     Example:
-        >>> M1 = np.array([[1, 2], [3, 4]])
-        >>> M2 = np.array([[5, 6], [7, 8]])
+        >>> M1 = jnp.array([[1, 2], [3, 4]])
+        >>> M2 = jnp.array([[5, 6], [7, 8]])
         >>> op = Kronecker(M1, M2)
     """
     def __init__(self, *Ms):
@@ -194,8 +194,8 @@ class KronSum(LinearOperator):
             *Ms (array_like): Sequence of matrices representing the Kronecker sum operands.
 
         Example:
-            >>> M1 = np.array([[1, 2], [3, 4]])
-            >>> M2 = np.array([[5, 6], [7, 8]])
+            >>> M1 = jnp.array([[1, 2], [3, 4]])
+            >>> M2 = jnp.array([[5, 6], [7, 8]])
             >>> op = KronSum(M1, M2)
     """
     def __init__(self, *Ms):
@@ -233,8 +233,8 @@ class BlockDiag(LinearOperator):
             of the corresponding blocks in *Ms. Default is None, which assigns a multiplicity
             of 1 to each block.
     Example:
-        >>> M1 = np.array([[1, 2], [3, 4]])
-        >>> M2 = np.array([[5, 6], [7, 8]])
+        >>> M1 = jnp.array([[1, 2], [3, 4]])
+        >>> M2 = jnp.array([[5, 6], [7, 8]])
         >>> op = BlockDiag(M1, M2, multiplicities=[2, 3])
     """
     def __init__(self, *Ms, multiplicities=None):
@@ -275,7 +275,7 @@ class Diagonal(LinearOperator):
             diag (array_like): 1-D array representing the diagonal elements of the matrix.
 
         Example:
-            >>> d = np.array([1, 2, 3])
+            >>> d = jnp.array([1, 2, 3])
             >>> op = Diagonal(d)
         """
     def __init__(self, diag):
@@ -373,7 +373,7 @@ class Sliced(LinearOperator):
     def __init__(self, A, slices):
         self.A = A
         self.slices = slices
-        new_shape = np.arange(A.shape[0])[slices[0]].shape + np.arange(A.shape[1])[slices[1]].shape
+        new_shape = jnp.arange(A.shape[0])[slices[0]].shape + jnp.arange(A.shape[1])[slices[1]].shape
         super().__init__(dtype=A.dtype, shape=new_shape)
 
     def _matmat(self, X: Array) -> Array:
@@ -403,8 +403,8 @@ class Jacobian(LinearOperator):
 
     Example:
         >>> def f(x):
-        ...     return jnp.array([x[0]**2, x[1]**3, np.sin(x[2])])
-        >>> x = jnp.array([1, 2, 3])
+        ...     return  jnp.array([x[0]**2, x[1]**3, jnp.sin(x[2])])
+        >>> x =  jnp.array([1, 2, 3])
         >>> op = Jacobian(f, x)
     """
     def __init__(self, f, x):
@@ -469,7 +469,7 @@ class Hessian(SelfAdjoint):
     Example:
         >>> def f(x):
         ...     return x[1]**3+np.sin(x[2])
-        >>> x = jnp.array([1, 2, 3])
+        >>> x =  jnp.array([1, 2, 3])
         >>> op = Hessian(f, x)
     """
     def __init__(self, f, x):
@@ -519,7 +519,7 @@ class ConvolveND(LinearOperator):
         self.filter = filter
         self.array_shape = array_shape
         assert mode == 'same'
-        super().__init__(dtype=filter.dtype, shape=(np.prod(array_shape), np.prod(array_shape)))
+        super().__init__(dtype=filter.dtype, shape=(np.prod(array_shape), jnp.prod(array_shape)))
         self.conv = self.ops.vmap(partial(self.ops.convolve, in2=filter, mode=mode))
 
     def _matmat(self, X):
