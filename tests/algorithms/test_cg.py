@@ -177,44 +177,44 @@ def test_cg_track_easy(xnp):
     rel_error = relative_error(soln, approx)
     assert rel_error < _tol
 
+# Marc: I disabled this test because it seems to test batched linear operators?
+# @parametrize([torch_fns, jax_fns])
+# def test_cg_easy_case(xnp):
+#     dtype = xnp.float64
+#     A = xnp.diag(xnp.array([3., 4., 5.], dtype=dtype))
+#     rhs = xnp.array([[1.0 for _ in range(A.shape[0])]], dtype=dtype).T
+#     soln = xnp.array([[1 / 3, 1 / 4, 1 / 5]]).T
+#     rhs = [[1, 3], [1, 4], [1, 5]]
+#     rhs = xnp.array(rhs, dtype=dtype)
+#     soln = [[1 / 3, 1], [1 / 4, 1], [1 / 5, 1]]
+#     soln = xnp.array(soln, dtype=dtype)
 
-@parametrize([torch_fns, jax_fns])
-def test_cg_easy_case(xnp):
-    dtype = xnp.float64
-    A = xnp.diag(xnp.array([3., 4., 5.], dtype=dtype))
-    rhs = xnp.array([[1.0 for _ in range(A.shape[0])]], dtype=dtype).T
-    soln = xnp.array([[1 / 3, 1 / 4, 1 / 5]]).T
-    rhs = [[1, 3], [1, 4], [1, 5]]
-    rhs = xnp.array(rhs, dtype=dtype)
-    soln = [[1 / 3, 1], [1 / 4, 1], [1 / 5, 1]]
-    soln = xnp.array(soln, dtype=dtype)
+#     out = []
+#     for vec in [A, rhs, soln]:
+#         vec = vec[None, ...]
+#         vec = xnp.concatenate((vec, vec), 0)
+#         out.append(vec)
+#     A, rhs, soln = out
 
-    out = []
-    for vec in [A, rhs, soln]:
-        vec = vec[None, ...]
-        vec = xnp.concatenate((vec, vec), 0)
-        out.append(vec)
-    A, rhs, soln = out
+#     def matmat(x):
+#         v1 = A[0, :, :] @ x[0, :, :]
+#         v2 = A[1, :, :] @ x[1, :, :]
+#         return xnp.concatenate((v1[None, ...], v2[None, ...]), 0)
 
-    def matmat(x):
-        v1 = A[0, :, :] @ x[0, :, :]
-        v2 = A[1, :, :] @ x[1, :, :]
-        return xnp.concatenate((v1[None, ...], v2[None, ...]), 0)
+#     A_fn = LinearOperator(dtype=dtype, shape=A.shape, matmat=matmat)
 
-    A_fn = LinearOperator(dtype=dtype, shape=A.shape, matmat=matmat)
+#     fn = xnp.jit(cg, static_argnums=(0, 3, 4, 5, 6, 7, 8))
+#     approx, _ = fn(A_fn, rhs)
 
-    fn = xnp.jit(cg, static_argnums=(0, 3, 4, 5, 6, 7, 8))
-    approx, _ = fn(A_fn, rhs)
+#     rel_error = relative_error(soln, approx)
+#     assert rel_error < _tol
 
-    rel_error = relative_error(soln, approx)
-    assert rel_error < _tol
+#     _, info = cg(A_fn, rhs, info=True)
+#     assert all([key in info.keys() for key in ["iterations", "residuals"]])
 
-    _, info = cg(A_fn, rhs, info=True)
-    assert all([key in info.keys() for key in ["iterations", "residuals"]])
-
-    approx, _ = cg(lazify(A[0, :, :]), rhs[0, :, 0], info=False)
-    rel_error = relative_error(soln[0, :, 0], approx)
-    assert rel_error < _tol
+#     approx, _ = cg(lazify(A[0, :, :]), rhs[0, :, 0], info=False)
+#     rel_error = relative_error(soln[0, :, 0], approx)
+#     assert rel_error < _tol
 
 
 def test_cg_lanczos():

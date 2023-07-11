@@ -12,7 +12,7 @@ from cola.algorithms.svrg import solve_svrg_symmetric
 import numpy as np
 from cola.utils.dispatch import parametric
 from cola.utils import export
-
+from cola.fns import lazify
 
 @parametric
 class IterativeInverse(LinearOperator):
@@ -89,14 +89,14 @@ def inverse(A: LinearOperator, **kwargs):
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
-        return A.ops.inv(A.to_dense())
-    if issubclass(type(A), SelfAdjoint[Sum]) and (method == 'svrg' or (method == 'auto' and len(A.A.Ms) > 1e4)):
+        return lazify(A.ops.inv(A.to_dense()))
+    elif issubclass(type(A), SelfAdjoint[Sum]) and (method == 'svrg' or (method == 'auto' and len(A.A.Ms) > 1e4)):
         return SymmetricSVRGInverse(A.A, **kws)
-    if issubclass(type(A), Sum) and (method == 'svrg' or (method == 'auto' and len(A.Ms) > 1e4)):
+    elif issubclass(type(A), Sum) and (method == 'svrg' or (method == 'auto' and len(A.Ms) > 1e4)):
         return GenericSVRGInverse(A, **kws)
-    if issubclass(type(A), SelfAdjoint) and (method == 'cg' or (method == 'auto' and np.prod(A.shape) > 1e6)):
+    elif issubclass(type(A), SelfAdjoint) and (method == 'cg' or (method == 'auto' and np.prod(A.shape) > 1e6)):
         return CGInverse(A, **kws)
-    if method == 'gmres' or (method == 'auto' and np.prod(A.shape) > 1e6):
+    elif method == 'gmres' or (method == 'auto' and np.prod(A.shape) > 1e6):
         return GMResInverse(A, **kws)
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")

@@ -4,10 +4,11 @@ from typing import Union, Tuple, Any, List, Callable
 import cola
 import numpy as np
 from cola.utils import export
+from numbers import Number
+
 Array = Dtype = Any
 export(Array)
 
-@export #TODO: remove the export
 def get_library_fns(dtype: Dtype):
     """ Given a dtype e.g. jnp.float32 or torch.complex64, returns the appropriate
         namespace for standard array functionality (either torch_fns or jax_fns)."""
@@ -43,11 +44,9 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     """ Linear Operator base class """
     def __new__(cls, *args, **kwargs):
         """ Creates attributes for the flatten and unflatten functionality. """
-        # print("LinearOperator.__new__ called with",cls)#, args, kwargs)
         obj = super().__new__(cls)
         obj._args = args
         obj._kwargs = kwargs
-        # assert "Product" not in str(cls)
         return obj
 
     def __init__(self, dtype: Dtype, shape: Tuple, matmat=None):
@@ -94,7 +93,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         return flatten_function(self)
 
     def __matmul__(self, X: Array) -> Array:
-        # assert X.shape[0] == self.shape[-1], f"dimension mismatch {self.shape} vs {X.shape}"
+        assert X.shape[0] == self.shape[-1], f"dimension mismatch {self.shape} vs {X.shape}"
         if isinstance(X, LinearOperator):
             return cola.fns.dot(self, X)
         elif len(X.shape) == 1:
@@ -116,8 +115,11 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
             raise NotImplementedError
 
     def __add__(self, other):
-        if other == 0:
-            return self
+        # check if is numbers.Number
+        
+        if isinstance(other, Number):
+            if other == 0:
+                return self
         return cola.fns.add(self, other)
 
     def __radd__(self, other):
