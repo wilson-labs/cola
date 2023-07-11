@@ -38,7 +38,7 @@ def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=No
         Q, H, _ = get_arnoldi_matrix(A=A, rhs=res, max_iters=max_iters, tol=tol)
         Q = Q[:, :-1]
     beta = xnp.norm(res, axis=-2)
-    e1 = xnp.zeros(shape=(H.shape[0], rhs.shape[-1]), dtype=rhs.dtype)
+    e1 = xnp.zeros(shape=(H.shape[0], 1), dtype=rhs.dtype)
     e1 = xnp.update_array(e1, beta, 0)
 
     if use_triangular:
