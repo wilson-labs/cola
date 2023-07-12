@@ -12,8 +12,6 @@ from cola.ops import Sum
 from cola.ops import ScalarMul
 from cola.ops import Product
 from cola.ops import Sliced
-from cola.annotations import SelfAdjoint,PSD
-from cola.annotations import Symmetric
 from cola.ops import Householder
 from cola.ops import Sparse
 from cola.ops import LinearOperator
@@ -38,7 +36,10 @@ def test_find_device(xnp):
 
     Ops = [Aop, Bop, Cop, Dop, Fop]
     for Op in Ops:
-        assert Op.device is not None
+        print(Op.device)
+        print(xnp.get_default_device())
+        print(Op.device == xnp.get_default_device())
+        assert Op.device == xnp.get_default_device()
 
 
 @parametrize([torch_fns])
@@ -72,6 +73,7 @@ def test_householder(xnp):
         approx = xnp.update_array(approx, x[:idx], slice(None, idx, None))
         rel_error = relative_error(approx, R @ x)
         assert rel_error < _tol
+
 
 @parametrize([torch_fns, jax_fns])
 def test_unflatten(xnp):

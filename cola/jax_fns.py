@@ -85,8 +85,14 @@ isreal = jnp.isreal
 allclose = jnp.allclose
 # convolve = jax.scipy.signal.convolve
 
+
+def get_device(array):
+    return array.device()
+
+
 def get_default_device():
     return jax.devices()[0]
+
 
 def device(device_name):
     del device_name
@@ -150,7 +156,6 @@ def randn(*shape, dtype=None, key=None):
         z = normal(key, shape, dtype=dtype)
         newkey = jax.random.split(key)[0]
         return z, newkey
-
 
 
 def fixed_normal_samples(shape, dtype=None):
