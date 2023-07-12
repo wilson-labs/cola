@@ -7,8 +7,8 @@ from cola.ops import KronSum, ScalarMul, Product, Sliced
 from cola.ops import Sparse, LowerTriangular, Kronecker, Permutation
 from cola.ops import Dense, BlockDiag, Jacobian, Hessian
 
-from cola.ops import SelfAdjoint
-from cola.ops import PSD
+from cola.annotations import SelfAdjoint
+from cola.annotations import PSD
 from cola.ops import LinearOperator
 
 xnp = jax_fns

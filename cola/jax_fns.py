@@ -81,6 +81,8 @@ grad = grad
 roll = jnp.roll
 maximum = jnp.maximum
 PRNGKey = PRNGKey
+isreal = jnp.isreal
+allclose = jnp.allclose
 # convolve = jax.scipy.signal.convolve
 
 

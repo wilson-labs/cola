@@ -1,6 +1,6 @@
 from plum import dispatch
 from cola.fns import lazify
-from cola.ops import SelfAdjoint
+from cola.annotations import SelfAdjoint
 from cola.ops import Diagonal
 from cola.ops import Kronecker
 from cola.ops import LinearOperator

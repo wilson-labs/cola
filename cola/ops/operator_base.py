@@ -40,7 +40,6 @@ class AutoRegisteringPyTree(type):
         except ImportError:
             pass
 
-
 def find_device(obj, xnp):
     if is_array(obj) or isinstance(obj, LinearOperator):
         return obj.device
@@ -68,17 +67,24 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         obj._kwargs = kwargs
         return obj
 
-    def __init__(self, dtype: Dtype, shape: Tuple, matmat=None):
+    def __init__(self, dtype: Dtype, shape: Tuple, matmat=None,annotations={}):
         self.dtype = dtype
         self.shape = shape
         self.ops = get_library_fns(dtype)
         if matmat is not None:
             self._matmat = matmat
+        self.annotations = cola.annotations.get_annotations(self)
+        self.annotations.update(annotations)
         self.device = find_device([self._args, self._kwargs], self.ops)
 
     def to(self, dtype=None, device=None):
         # returns a new linear operator.
         raise NotImplementedError()
+
+    def isa(self, annotation) -> bool:
+        """ Returns True if the LinearOperator has the given annotation. """
+        return any(issubclass(a,annotation) for a in self.annotations)
+
 
     @abstractmethod
     def _matmat(self, X: Array) -> Array:
@@ -129,6 +135,8 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
 
     def __rmatmul__(self, X: Array) -> Array:
         assert X.shape[-1] == self.shape[-2], f"dimension mismatch {self.shape} vs {X.shape}"
+        if self.isa(cola.annotations.SelfAdjoint):
+            return self.__matmul__(X.T).T
         if isinstance(X, LinearOperator):
             return cola.fns.dot(X, self)
         elif len(X.shape) == 1:
@@ -140,10 +148,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
 
     def __add__(self, other):
         # check if is numbers.Number
-
-        if isinstance(other, Number):
-            if other == 0:
-                return self
+        if isinstance(other, Number) and other == 0: return self
         return cola.fns.add(self, other)
 
     def __radd__(self, other):
@@ -270,3 +275,14 @@ def is_array(obj):
     if get_library_fns(obj.dtype).is_array(obj):
         return True
     return False
+
+def find_device(obj, xnp):
+    if is_array(obj) or isinstance(obj, LinearOperator):
+        return obj.device
+    elif isinstance(obj, (tuple, list, set, dict)):
+        for ob in obj:
+            device = find_device(ob, xnp)
+            if device is not None:
+                return device
+    else:
+        return None

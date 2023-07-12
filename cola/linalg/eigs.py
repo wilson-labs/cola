@@ -3,7 +3,6 @@ from math import prod
 from cola.linalg import diag
 from cola.ops import LinearOperator
 from cola.ops import Array
-from cola.ops import SelfAdjoint
 from cola.ops import LowerTriangular
 from cola.ops import Diagonal
 from cola.ops import I_like
@@ -12,6 +11,7 @@ from cola.algorithms.arnoldi import arnoldi_eig
 from cola.algorithms import power_iteration
 from plum import dispatch
 from cola.utils import export
+from cola.annotations import SelfAdjoint
 
 
 @dispatch
@@ -38,7 +38,14 @@ def eig(A: LinearOperator, eig_slice=slice(0, None, None), tol=1e-6, pbar=False,
         eig_vals, eig_vecs = eig(A, eig_slice=slice(0, 5), tol=1e-4)
     """
     xnp = A.ops
-    if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
+    if A.isa(SelfAdjoint):
+        if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
+            eig_vals, eig_vecs = xnp.eigh(A.to_dense())
+        elif method == 'lanczos' or (method == 'auto' and prod(A.shape) >= 1e6):
+            rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
+            eig_vals, eig_vecs = lanczos_eig(A, rhs, max_iters=max_iters, tol=tol)
+        return eig_vals[eig_slice], eig_vecs[:, eig_slice]
+    elif method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
         eig_vals, eig_vecs = xnp.eig(A.to_dense())
         return eig_vals[eig_slice], eig_vecs[:, eig_slice]
     elif method == 'arnoldi' or (method == 'auto' and prod(A.shape) >= 1e6):
@@ -50,6 +57,25 @@ def eig(A: LinearOperator, eig_slice=slice(0, None, None), tol=1e-6, pbar=False,
         raise ValueError(f"Unknown method {method}")
 
 
+#@dispatch
+# def eig(A: SelfAdjoint, eig_slice=slice(0, None, None), tol=1e-6, pbar=False, method='auto',
+#         info=False, max_iters=1000) -> Tuple[Array, Array]:
+#     """ More efficient implementation of eig for self-adjoint operators.
+
+#     Example:
+#         A = cola.SelfAdjoint(MyLinearOperator())
+#         eig_vals, eig_vecs = eig(A, tol=1e-4)
+#     """
+#     xnp = A.ops
+#     if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
+#         eig_vals, eig_vecs = xnp.eigh(A.to_dense())
+#     elif method == 'lanczos' or (method == 'auto' and prod(A.shape) >= 1e6):
+#         rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
+#         eig_vals, eig_vecs = lanczos_eig(A, rhs, max_iters=max_iters, tol=tol)
+#     else:
+#         raise ValueError(f"Unknown method {method}")
+#     return eig_vals[eig_slice], eig_vecs[:, eig_slice]
+
 @dispatch
 def eig(A: LowerTriangular, eig_slice=slice(0, None, None), method="dense", *args, **kwargs):
     xnp = A.ops
@@ -59,26 +85,6 @@ def eig(A: LowerTriangular, eig_slice=slice(0, None, None), method="dense", *arg
         return eig_vals, eig_vecs
     else:
         raise ValueError(f"Unknown method {method}")
-
-
-@dispatch
-def eig(A: SelfAdjoint, eig_slice=slice(0, None, None), tol=1e-6, pbar=False, method='auto',
-        info=False, max_iters=1000) -> Tuple[Array, Array]:
-    """ More efficient implementation of eig for self-adjoint operators.
-
-    Example:
-        A = cola.ops.SelfAdjoint(MyLinearOperator())
-        eig_vals, eig_vecs = eig(A, tol=1e-4)
-    """
-    xnp = A.ops
-    if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
-        eig_vals, eig_vecs = xnp.eigh(A.to_dense())
-    elif method == 'lanczos' or (method == 'auto' and prod(A.shape) >= 1e6):
-        rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
-        eig_vals, eig_vecs = lanczos_eig(A, rhs, max_iters=max_iters, tol=tol)
-    else:
-        raise ValueError(f"Unknown method {method}")
-    return eig_vals[eig_slice], eig_vecs[:, eig_slice]
 
 
 @dispatch

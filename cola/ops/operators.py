@@ -50,6 +50,7 @@ class Sparse(LinearOperator):
     def __init__(self, data, indices, indptr, shape):
         super().__init__(dtype=data.dtype, shape=shape)
         self.A = self.ops.sparse_csr(indptr, indices, data)
+        
 
     def _matmat(self, V):
         return self.A @ V
@@ -279,8 +280,9 @@ class Diagonal(LinearOperator):
             >>> op = Diagonal(d)
         """
     def __init__(self, diag):
-        super().__init__(dtype=diag.dtype, shape=(len(diag), ) * 2)
         self.diag = diag
+        super().__init__(dtype=diag.dtype, shape=(len(diag), ) * 2)
+        
 
     def _matmat(self, X: Array) -> Array:
         return self.diag[:, None] * X
@@ -304,10 +306,11 @@ class Tridiagonal(LinearOperator):
         gamma (array_like): 1-D array representing upper band of the operator.
     """
     def __init__(self, alpha: Array, beta: Array, gamma: Array):
-        super().__init__(dtype=beta.dtype, shape=(beta.shape[0], beta.shape[0]))
         alpha, beta = ensure_vec_is_matrix(alpha), ensure_vec_is_matrix(beta)
         gamma = ensure_vec_is_matrix(gamma)
         self.alpha, self.beta, self.gamma = alpha, beta, gamma
+        super().__init__(dtype=beta.dtype, shape=(beta.shape[0], beta.shape[0]))
+        
 
     def _matmat(self, X: Array) -> Array:
         xnp = self.ops
@@ -336,8 +339,9 @@ def ensure_vec_is_matrix(vec):
 class Transpose(LinearOperator):
     """ Transpose of a Linear Operator"""
     def __init__(self, A):
-        super().__init__(dtype=A.dtype, shape=(A.shape[1], A.shape[0]))
         self.A = A
+        super().__init__(dtype=A.dtype, shape=(A.shape[1], A.shape[0]))
+        
 
     def _matmat(self, x):
         return self.A._rmatmat(x.T).T
@@ -353,8 +357,9 @@ class Transpose(LinearOperator):
 class Adjoint(LinearOperator):
     """ Complex conjugate transpose of a Linear Operator (aka adjoint)"""
     def __init__(self, A):
-        super().__init__(dtype=A.dtype, shape=(A.shape[1], A.shape[0]))
         self.A = A
+        super().__init__(dtype=A.dtype, shape=(A.shape[1], A.shape[0]))
+        
 
     def _matmat(self, x):
         return self.ops.conj(self.A._rmatmat(self.ops.conj(x).T)).T
@@ -373,8 +378,7 @@ class Sliced(LinearOperator):
     def __init__(self, A, slices):
         self.A = A
         self.slices = slices
-        xnp = A.ops
-        new_shape = xnp.arange(A.shape[0])[slices[0]].shape + xnp.arange(A.shape[1])[slices[1]].shape
+        new_shape = np.arange(A.shape[0])[slices[0]].shape + np.arange(A.shape[1])[slices[1]].shape
         super().__init__(dtype=A.dtype, shape=new_shape)
 
     def _matmat(self, X: Array) -> Array:
@@ -430,36 +434,8 @@ class Jacobian(LinearOperator):
         return "J"
 
 
-@parametric
-class SelfAdjoint(LinearOperator):
-    """ SelfAdjoint property for Linearops. """
-    def __init__(self, *args, **kwargs):
-        if len(args) == 1 and isinstance(args[0], LinearOperator):
-            self.A = args[0]
-            self._matmat = self.A._matmat
-            super().__init__(self.A.dtype, self.A.shape)
-        else:
-            super().__init__(*args, **kwargs)
 
-    def _rmatmat(self, X: Array) -> Array:
-        return self.ops.conj(self._matmat(self.ops.conj(X).T)).T
-
-    @property
-    def T(self):
-        return self
-
-    @property
-    def H(self):
-        return self
-
-    def __str__(self):
-        if hasattr(self, 'A'):
-            return f"S[{str(self.A)}]"
-        else:
-            return super().__str__()
-
-
-class Hessian(SelfAdjoint):
+class Hessian(LinearOperator):
     """ Hessian of a scalar function f: R^n -> R at point x.
         Matrix has shape (n, n)
 
@@ -520,6 +496,7 @@ class ConvolveND(LinearOperator):
         self.filter = filter
         self.array_shape = array_shape
         assert mode == 'same'
+        import jax.numpy as jnp
         super().__init__(dtype=filter.dtype, shape=(np.prod(array_shape), jnp.prod(array_shape)))
         self.conv = self.ops.vmap(partial(self.ops.convolve, in2=filter, mode=mode))
 
@@ -528,24 +505,7 @@ class ConvolveND(LinearOperator):
         return self.conv(Z).reshape(X.shape[-1], -1).T
 
 
-Symmetric = SelfAdjoint
-
-
-@parametric
-class PSD(SelfAdjoint):
-    """ Positive Semi-Definite property for Linearops.
-        Implies SelfAdjoint. """
-    pass
-
-
-@parametric
-class Unitary(LinearOperator):
-    def __init__(self, A: LinearOperator):
-        self.A = A
-        super().__init__(dtype=A.dtype, shape=A.shape)
-
-
-class Householder(SelfAdjoint):
+class Householder(LinearOperator):
     """ Householder rotation matrix."""
     def __init__(self, vec, beta=2.):
         super().__init__(shape=(vec.shape[-2], vec.shape[-2]), dtype=vec.dtype)

@@ -2,7 +2,7 @@ from cola import jax_fns
 from cola import torch_fns
 from cola.fns import lazify
 from cola.ops import Diagonal
-from cola.ops import SelfAdjoint
+from cola.annotations import SelfAdjoint
 from cola.linalg.eigs import eig
 from jax.config import config
 from cola.utils_test import parametrize, relative_error

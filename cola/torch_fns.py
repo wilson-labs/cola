@@ -53,14 +53,15 @@ argsort = torch.argsort
 sparse_csr = torch.sparse_csr_tensor
 roll = torch.roll
 maximum = torch.maximum
-
+isreal = torch.isreal
+allclose = torch.allclose
+from torch._vmap_internals import vmap as _vmap
 
 def device(device_name):
     if device_name == "cpu":
         return torch.device("cpu")
     else:
         return torch.device("gpu:0")
-
 
 def PRNGKey(x):
     return x
