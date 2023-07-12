@@ -16,7 +16,7 @@ def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=No
         x0 (Array, optional): The initial guess for the solution. Defaults to None.
         max_iters (int, optional): The maximum number of iterations. Defaults to None.
         tol (float, optional): The tolerance for convergence. Defaults to 1e-7.
-        P (array, optional): Preconditioner matrix. Defaults to None.
+        P (array, optional): Preconditioner. Defaults to None.
         use_householder (bool, optional): Use Householder Arnoldi iteration. Defaults to False.
         use_triangular (bool, optional): Use triangular QR factorization. Defaults to False.
         pbar (bool, optional): show a progress bar. Defaults to False.
@@ -34,7 +34,7 @@ def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=No
         x0 = x0[..., None]
     res = rhs - A @ x0
     if use_householder:
-        Q, H = run_householder_arnoldi(A=A, rhs=res, max_iters=max_iters)
+        Q, H, infodict = run_householder_arnoldi(A=A, rhs=res, max_iters=max_iters)
     else:
         Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=res, max_iters=max_iters, tol=tol,
                                                pbar=pbar)

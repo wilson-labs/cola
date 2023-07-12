@@ -50,7 +50,7 @@ def test_householder_arnoldi_matrix(xnp):
 
     # fn = run_householder_arnoldi
     fn = xnp.jit(run_householder_arnoldi, static_argnums=(0, 2))
-    Q_approx, H_approx = fn(lazify(A), rhs, max_iters=A.shape[0])
+    Q_approx, H_approx, _ = fn(lazify(A), rhs, max_iters=A.shape[0])
 
     for soln, approx in ((Q_sol, Q_approx), (H_sol, H_approx)):
         rel_error = relative_error(xnp.array(soln, dtype=dtype), approx)

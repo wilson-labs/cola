@@ -126,7 +126,8 @@ def run_householder_arnoldi(A: LinearOperator, rhs: Array, max_iters: int):
     state = for_loop(1, max_iters + 1, body_fun, init_val)
     state = last_iter_fun(state)
     Q, H, *_ = state
-    return Q[:, 1:], H[:, 1:]
+    infodict = {}
+    return Q[:, 1:], H[:, 1:], infodict
 
 
 def initialize_householder_arnoldi(xnp, rhs, max_iters, dtype):
