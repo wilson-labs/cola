@@ -373,7 +373,8 @@ class Sliced(LinearOperator):
     def __init__(self, A, slices):
         self.A = A
         self.slices = slices
-        new_shape = jnp.arange(A.shape[0])[slices[0]].shape + jnp.arange(A.shape[1])[slices[1]].shape
+        xnp = A.ops
+        new_shape = xnp.arange(A.shape[0])[slices[0]].shape + xnp.arange(A.shape[1])[slices[1]].shape
         super().__init__(dtype=A.dtype, shape=new_shape)
 
     def _matmat(self, X: Array) -> Array:
