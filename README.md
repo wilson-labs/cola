@@ -31,7 +31,10 @@ pip install git+https://github.com/wilson-labs/cola.git
 ## Citing us
 If you use CoLA, please cite the following paper:
 
-> [Andres Potapczynski, Marc Finzi, Geoff Pleiss, and Andrew Gordon Wilson. "Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra." Pre-print (2023).]()
+<!-- > [Andres Potapczynski, Marc Finzi, Geoff Pleiss, and Andrew Gordon Wilson. "Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra." Pre-print (2023).]()
+-->
+> Andres Potapczynski, Marc Finzi, Geoff Pleiss, and Andrew Gordon Wilson. "Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra." Pre-print (2023).
+Link to be added soon.
 ```
 @article{potapczynski2023cola,
   title={{Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra}},
