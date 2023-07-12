@@ -37,14 +37,14 @@ def cg(A: LinearOperator, rhs: Array, x0=None, P=None, tol=1e-6, max_iters=5000,
     if P is None:
         P = I_like(A)
     # soln, res, iters, infodict = run_batched_cg(A, rhs, x0, max_iters, tol, P, pbar=pbar)
-    cg_fn = xnp.jit(run_cg, static_argnums=(0, 6))
-    #cg_fn = xnp.jit(run_batched_cg, static_argnums=(0, 6))
+    #cg_fn = xnp.jit(run_cg, static_argnums=(0, 3,4,5,6))
+    cg_fn = run_cg
     # cg_fn = run_batched_cg
     # TODO: check why the performance degrades so much when adding 5
     # cg_fn = xnp.jit(run_batched_cg, static_argnums=(0, 5, 6))
     soln, res, iters, infodict = cg_fn(A, rhs, x0, max_iters, tol, P, pbar=pbar)
     soln = soln.reshape(-1) if is_vector else soln
-    infodict['residuals'] = res
+    #infodict['residuals'] = res
     infodict['iterations'] = iters
     return soln, infodict
 
@@ -78,21 +78,23 @@ def run_batched_cg(A, b, x0, max_iters, tol, preconditioner, pbar):
     b_norm = do_safe_div(b, mult, xnp=xnp)
     init_val = initialize(A=A, b=b_norm, preconditioner=preconditioner, x0=x0, xnp=xnp)
 
+    @xnp.jit
     def cond(state):
         flag = cond_fun(state, tol, max_iters, xnp=xnp)
         return flag
 
+    @xnp.jit
     def body_fun(state):
         state = take_cg_step(state, A, preconditioner, xnp=xnp)
         return state
 
-    def track_res(res):
-        out = xnp.norm(res[2], axis=-2)
-        return out
+    @xnp.jit
+    def track_res(state):
+        return xnp.norm(state[2],axis=-2).mean()
 
-    #while_fn, info = xnp.while_loop_winfo(track_res, pbar=pbar, tol=tol)
+    while_fn, info = xnp.while_loop_winfo(track_res, pbar=pbar, tol=tol)
     # while_fn, info = while_loop, {}
-    while_fn, info = xnp.while_loop, {}
+    #while_fn, info = xnp.while_loop, {}
     state = while_fn(cond_fun=cond, body_fun=body_fun, init_val=init_val)
     return state[0] * mult, state[2] * mult, state[1], info
 
@@ -104,7 +106,7 @@ def initialize(A, b, preconditioner, x0, xnp):
     gamma0 = xnp.sum(xnp.conj(r0) * z0, axis=-2, keepdims=True)
     alpha0 = xnp.zeros(shape=gamma0.shape, dtype=r0.dtype)
     beta0 = xnp.zeros(shape=gamma0.shape, dtype=r0.dtype)
-    return (x0, xnp.array(0, dtype=xnp.int32), r0, p0, alpha0, beta0, gamma0)
+    return (x0, 0, r0, p0, alpha0, beta0, gamma0)
 
 
 def cond_fun(value, tol, max_iters, xnp):
