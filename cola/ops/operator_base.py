@@ -40,21 +40,20 @@ class AutoRegisteringPyTree(type):
         except ImportError:
             pass
 
-def find_device(obj):
-    if is_array(obj) or isinstance(obj, LinearOperator):
-        try:
-            return obj.device
-        except AttributeError:
-            import jax
-            return jax.devices()[0]
+
+def find_device(obj, xnp):
+    if is_array(obj):
+        return xnp.get_device(obj)
+    elif isinstance(obj, LinearOperator):
+        return obj.device
     elif isinstance(obj, (tuple, list, set)):
         for ob in obj:
-            device = find_device(ob)
+            device = find_device(ob, xnp)
             if device is not None:
                 return device
     elif isinstance(obj, dict):
         for _, ob in obj.items():
-            device = find_device(ob)
+            device = find_device(ob, xnp)
             if device is not None:
                 return device
     else:
@@ -71,7 +70,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         obj._kwargs = kwargs
         return obj
 
-    def __init__(self, dtype: Dtype, shape: Tuple, matmat=None,annotations={}):
+    def __init__(self, dtype: Dtype, shape: Tuple, matmat=None, annotations={}):
         self.dtype = dtype
         self.shape = shape
         self.ops = get_library_fns(dtype)
@@ -79,7 +78,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
             self._matmat = matmat
         self.annotations = cola.annotations.get_annotations(self)
         self.annotations.update(annotations)
-        device = find_device([self._args, self._kwargs])
+        device = find_device([self._args, self._kwargs], self.ops)
         self.device = device or self.ops.get_default_device()
 
     def to(self, dtype=None, device=None):
@@ -88,8 +87,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
 
     def isa(self, annotation) -> bool:
         """ Returns True if the LinearOperator has the given annotation. """
-        return any(issubclass(a,annotation) for a in self.annotations)
-
+        return any(issubclass(a, annotation) for a in self.annotations)
 
     @abstractmethod
     def _matmat(self, X: Array) -> Array:
@@ -153,7 +151,8 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
 
     def __add__(self, other):
         # check if is numbers.Number
-        if isinstance(other, Number) and other == 0: return self
+        if isinstance(other, Number) and other == 0:
+            return self
         return cola.fns.add(self, other)
 
     def __radd__(self, other):
@@ -245,6 +244,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         import jax
         new_args = jax.tree_util.tree_unflatten(aux[1], children)
         return cls(*new_args, **aux[0])
+
 
 def flatten_function(obj) -> Tuple[List[Array], Callable]:
     if is_array(obj):

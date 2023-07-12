@@ -55,16 +55,22 @@ roll = torch.roll
 maximum = torch.maximum
 isreal = torch.isreal
 allclose = torch.allclose
-from torch._vmap_internals import vmap as _vmap
+
+
+def get_device(array):
+    return array.device
+
 
 def get_default_device():
     return torch.device("cpu")
+
 
 def device(device_name):
     if device_name == "cpu":
         return torch.device("cpu")
     else:
         return torch.device("gpu:0")
+
 
 def PRNGKey(x):
     return x
@@ -164,7 +170,7 @@ def vjp_derivs(fun, primals, duals, create_graph=True):
     return conj_output
 
 
-def jvp_derivs(fun, primals, tangents,create_graph=True):
+def jvp_derivs(fun, primals, tangents, create_graph=True):
     if isinstance(primals, (list, tuple)):
         conj_primals = type(primals)((torch.conj(primal) for primal in primals))
     else:
