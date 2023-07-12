@@ -87,7 +87,10 @@ allclose = jnp.allclose
 
 
 def get_device(array):
-    return array.device()
+    if not isinstance(array, jax.core.Tracer):
+        return array.device()
+    else:
+        return get_default_device()
 
 
 def get_default_device():
