@@ -26,6 +26,21 @@ config.update('jax_platform_name', 'cpu')
 _tol = 1e-6
 
 
+@parametrize([torch_fns, jax_fns])
+def test_find_device(xnp):
+    dtype = xnp.float32
+    Aop = Diagonal(xnp.array([0.1, -0.2], dtype=dtype))
+    diag2 = xnp.array([3., -7.], dtype=dtype)
+    Bop = Diagonal(diag=diag2)
+    Cop = KronSum(Aop, Bop)
+    Dop = Diagonal(xnp.array([1., 2., 3., 4], dtype=dtype))
+    Fop = Sum(Cop, Dop)
+
+    Ops = [Aop, Bop, Cop, Dop, Fop]
+    for Op in Ops:
+        assert Op.device is not None
+
+
 @parametrize([torch_fns])
 def test_sparse(xnp):
     dtype = xnp.float32
