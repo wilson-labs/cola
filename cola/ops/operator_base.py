@@ -9,6 +9,7 @@ from numbers import Number
 Array = Dtype = Any
 export(Array)
 
+
 def get_library_fns(dtype: Dtype):
     """ Given a dtype e.g. jnp.float32 or torch.complex64, returns the appropriate
         namespace for standard array functionality (either torch_fns or jax_fns)."""
@@ -39,6 +40,24 @@ class AutoRegisteringPyTree(type):
         except ImportError:
             pass
 
+
+def find_device(obj, xnp):
+    if is_array(obj) or isinstance(obj, LinearOperator):
+        return obj.device
+    elif isinstance(obj, (tuple, list, set)):
+        for ob in obj:
+            device = find_device(ob, xnp)
+            if device is not None:
+                return device
+    elif isinstance(obj, dict):
+        for _, ob in obj.items():
+            device = find_device(ob, xnp)
+            if device is not None:
+                return device
+    else:
+        return None
+
+
 @export
 class LinearOperator(metaclass=AutoRegisteringPyTree):
     """ Linear Operator base class """
@@ -55,8 +74,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         self.ops = get_library_fns(dtype)
         if matmat is not None:
             self._matmat = matmat
-        # self._args
-        # self._kwargs
+        self.device = find_device([self._args, self._kwargs], self.ops)
 
     def to(self, dtype=None, device=None):
         # returns a new linear operator.
@@ -122,7 +140,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
 
     def __add__(self, other):
         # check if is numbers.Number
-        
+
         if isinstance(other, Number):
             if other == 0:
                 return self

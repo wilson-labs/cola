@@ -2,6 +2,7 @@ import torch
 from torch.autograd.functional import vjp, jvp
 from cola.utils.torch_tqdm import while_loop_winfo
 from torch.nn import Parameter
+from torch._vmap_internals import vmap as _vmap
 import logging
 
 exp = torch.exp
@@ -53,7 +54,13 @@ sparse_csr = torch.sparse_csr_tensor
 roll = torch.roll
 maximum = torch.maximum
 
-from torch._vmap_internals import vmap as _vmap
+
+def device(device_name):
+    if device_name == "cpu":
+        return torch.device("cpu")
+    else:
+        return torch.device("gpu:0")
+
 
 def PRNGKey(x):
     return x
