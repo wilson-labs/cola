@@ -5,39 +5,42 @@ from cola.utils.control_flow import for_loop
 from cola.utils import export
 
 
-# @export
 def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7,
                 use_householder=False):
-    """Computes eigenvalues and eigenvectors using the Arnoldi method.
+    """Computes eigenvalues and eigenvectors using Arnoldi iteration.
 
     Args:
         A (LinearOperator): The linear operator representing the matrix A.
         rhs (Array): The right-hand side vector.
         max_iters (int): The maximum number of iterations.
         tol (float, optional): The tolerance criteria. Defaults to 1e-7.
-        use_householder (bool, optional): Whether to use Householder Arnoldi iteration. Defaults to False.
+        use_householder (bool, optional): Use Householder Arnoldi iteration. Defaults to False.
 
     Returns:
         Tuple: A tuple containing the eigenvalues and eigenvectors.
             - eigvals (Array): eigenvalues of shape (max_iters,).
             - eigvectors (Array): eigenvectors of shape (n, max_iters).
     """
-    Q,H = arnoldi(A=A, start_vector=rhs, max_iters=max_iters, tol=tol, use_householder=use_householder)
+    Q, H = arnoldi(A=A, start_vector=rhs, max_iters=max_iters, tol=tol,
+                   use_householder=use_householder)
     xnp = A.ops
     eigvals, eigvectors = xnp.eig(H)
     return eigvals, xnp.cast(Q, dtype=eigvectors.dtype) @ eigvectors
 
+
 @export
 def arnoldi(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1e-7,
-                use_householder=False):
-    """Computes the Arnoldi decomposition of a matrix A = QHQ^H.
+            use_householder: bool = False, pbar: bool = False, info: bool = False):
+    """Computes the Arnoldi decomposition of the matrix A = QHQ^*.
 
     Args:
         A (LinearOperator): The linear operator representing the matrix A.
         start_vector (Array, optional): The vector to start the arnoldi iterations.
         max_iters (int): The maximum number of iterations.
         tol (float, optional): The tolerance criteria. Defaults to 1e-7.
-        use_householder (bool, optional): Whether to use Householder Arnoldi iteration. Defaults to False.
+        use_householder (bool, optional): Use Householder Arnoldi iteration. Defaults to False.
+        pbar (bool, optional): show a progress bar. Defaults to False.
+        info (bool, optional): print additional information. Defaults to False.
 
     Returns:
         Q (Array): The orthogonal matrix Q.
@@ -50,11 +53,15 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1
     if use_householder:
         Q, H = run_householder_arnoldi(A=A, rhs=start_vector, max_iters=max_iters)
     else:
-        # Q, H, _ = get_arnoldi_matrix(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
-        fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3))
-        Q, H, _ = fn(A=A, rhs=start_vector, max_iters=max_iters, tol=tol)
+        # Q, H, _ = get_arnoldi_matrix(A=A, rhs=rhs, max_iters=max_iters, tol=tol, pbar=pbar)
+        fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3, 4))
+        Q, H, _, infodict = fn(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
         H, Q = H[:-1, :], Q[:, :-1]
-    return Q, H
+    if info:
+        return Q, H, infodict
+    else:
+        return Q, H
+
 
 def get_householder_vec_simple(x, idx, xnp):
     indices = xnp.arange(x.shape[0])
@@ -131,7 +138,8 @@ def initialize_householder_arnoldi(xnp, rhs, max_iters, dtype):
     return Q, H, zj
 
 
-def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7):
+def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float,
+                       pbar: bool):
     xnp = A.ops
 
     def cond_fun(state):
@@ -165,10 +173,12 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
         return idx + 1, Q, H, norm
 
     init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-    state = xnp.while_loop(cond_fun, body_fun, init_val)
+    # state = xnp.while_loop(cond_fun, body_fun, init_val)
+    while_fn, info = xnp.while_loop_winfo(cond_fun, pbar=pbar, tol=tol)
+    state = while_fn(cond_fun, body_fun, init_val)
     state = last_iter_fun(state)
     idx, Q, H, _ = state
-    return Q, H[:max_iters + 1, :max_iters], idx
+    return Q, H[:max_iters + 1, :max_iters], idx, info
 
 
 def initialize_arnoldi(xnp, rhs, max_iters, dtype):

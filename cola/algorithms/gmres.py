@@ -4,9 +4,10 @@ from cola.algorithms.arnoldi import run_householder_arnoldi
 from cola.algorithms.arnoldi import get_arnoldi_matrix
 from cola.utils import export
 
+
 @export
 def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=None,
-              use_householder=False, use_triangular=False, pbar=False, info=False):
+          use_householder=False, use_triangular=False, pbar=False, info=False):
     """Solves a linear system Ax = rhs using the GMRES method.
 
     Args:
@@ -16,10 +17,10 @@ def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=No
         max_iters (int, optional): The maximum number of iterations. Defaults to None.
         tol (float, optional): The tolerance for convergence. Defaults to 1e-7.
         P (array, optional): Preconditioner matrix. Defaults to None.
-        use_householder (bool, optional): Whether to use Householder Arnoldi iteration. Defaults to False.
-        use_triangular (bool, optional): Whether to use triangular QR factorization. Defaults to False.
-        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
-        info (bool, optional): Whether to print additional information. Defaults to False.
+        use_householder (bool, optional): Use Householder Arnoldi iteration. Defaults to False.
+        use_triangular (bool, optional): Use triangular QR factorization. Defaults to False.
+        pbar (bool, optional): show a progress bar. Defaults to False.
+        info (bool, optional): print additional information. Defaults to False.
 
     Returns:
         Array: The solution vector x, satisfying Ax = rhs.
@@ -35,7 +36,8 @@ def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=No
     if use_householder:
         Q, H = run_householder_arnoldi(A=A, rhs=res, max_iters=max_iters)
     else:
-        Q, H, _ = get_arnoldi_matrix(A=A, rhs=res, max_iters=max_iters, tol=tol)
+        Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=res, max_iters=max_iters, tol=tol,
+                                               pbar=pbar)
         Q = Q[:, :-1]
     beta = xnp.norm(res, axis=-2)
     e1 = xnp.zeros(shape=(H.shape[0], 1), dtype=rhs.dtype)
@@ -53,7 +55,10 @@ def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=No
     soln = x0 + Q @ y
     if is_vector:
         soln = soln[:, 0]
-    return soln
+    if info:
+        return soln, infodict
+    else:
+        return soln
 
 
 def get_hessenberg_triangular_qr(H, xnp):
