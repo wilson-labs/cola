@@ -42,7 +42,11 @@ class AutoRegisteringPyTree(type):
 
 def find_device(obj):
     if is_array(obj) or isinstance(obj, LinearOperator):
-        return obj.device
+        try:
+            return obj.device
+        except AttributeError:
+            import jax
+            return jax.devices()[0]
     elif isinstance(obj, (tuple, list, set)):
         for ob in obj:
             device = find_device(ob)
