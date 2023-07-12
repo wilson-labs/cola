@@ -42,7 +42,8 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
     return Q, T
 
 
-def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7):
+def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7,
+                pbar=False, info=False):
     """
     Computes the eigenvalues and eigenvectors using lanczos
 
@@ -50,11 +51,13 @@ def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7):
     rhs: Array (n, b) multiple right hands or (n,) single vector (usually randomly sampled)
     max_iters: int maximum number of iters to run lanczos
     tol: float: tolerance criteria to stop lanczos
+    pbar: bool: flag to print progress bar
     """
     xnp = A.ops
     # alpha, beta, iters = get_lanczos_coeffs(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
     # T = construct_tridiagonal(alpha[:iters - 1], beta[:iters], alpha[:iters - 1])
-    alpha, beta, iters, vec = lanczos_parts(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
+    out = lanczos_parts(A=A, rhs=rhs, max_iters=max_iters, tol=tol, pbar=pbar)
+    alpha, beta, iters, vec, infodict = out
     alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
     Q = vec[0, :, 1:-1]
     T = construct_tridiagonal_batched(alpha, beta, alpha)
@@ -66,7 +69,7 @@ def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7):
     return eigvals, V
 
 
-def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7):
+def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pbar: bool):
     """
     Runs lanczos and saves the tridiagional matrix diagonal (beta) and bands (alpha) as
     well as the number of iterations (iter) and the ortonormal vectors found (vec)
@@ -75,6 +78,7 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e
     rhs: Array (n, b) multiple right hands or (n,) single vector (usually randomly sampled)
     max_iters: int maximum number of iters to run lanczos
     tol: float: tolerance criteria to stop lanczos
+    pbar: bool: flag to print progress bar
 
     https://en.wikipedia.org/wiki/Lanczos_algorithm
     """
@@ -107,9 +111,11 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e
         return flag
 
     init_val = initialize_lanczos_vec(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-    state = xnp.while_loop(cond_fun, body_fun, init_val)
+    # state = xnp.while_loop(cond_fun, body_fun, init_val)
+    while_fn, info = xnp.while_loop_winfo(cond_fun, pbar=pbar, tol=tol)
+    state = while_fn(cond_fun, body_fun, init_val)
     iter, vec, beta, alpha = state
-    return alpha[..., 1:], beta, iter - 1, vec
+    return alpha[..., 1:], beta, iter - 1, vec, info
 
 
 def initialize_lanczos_vec(xnp, rhs, max_iters, dtype):

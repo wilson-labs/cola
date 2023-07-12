@@ -27,8 +27,9 @@ def test_lanczos_complex(xnp):
 
     B = lazify(A)
     max_iters, tolerance = A.shape[0], 1e-7
-    fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3))
-    alpha, beta, idx, Q = fn(B, rhs, max_iters, tolerance)
+    fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
+    pbar = False
+    alpha, beta, idx, Q, _ = fn(B, rhs, max_iters, tolerance, pbar)
     alpha, Q = alpha[..., :idx - 1], Q[0, :, 1:-1]
     T = construct_tridiagonal(alpha.T, beta.T, alpha.T)
 
@@ -51,8 +52,9 @@ def test_lanczos_random(xnp):
 
     B = lazify(A)
     max_iters, tolerance = A.shape[0], 1e-7
-    fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3))
-    alpha, beta, idx, Q = fn(B, rhs, max_iters, tolerance)
+    fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
+    pbar = False
+    alpha, beta, idx, Q, _ = fn(B, rhs, max_iters, tolerance, pbar)
     alpha, Q = alpha[..., :idx - 1], Q[0, :, 1:-1]
     T = construct_tridiagonal(alpha.T, beta.T, alpha.T)
 
@@ -76,8 +78,9 @@ def test_lanczos_manual(xnp):
 
         B = lazify(A)
         max_iters, tolerance = A.shape[0], 1e-7
-        fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3))
-        alpha, beta, idx, Q = fn(B, rhs, max_iters, tolerance)
+        fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
+        pbar = False
+        alpha, beta, idx, Q, _ = fn(B, rhs, max_iters, tolerance, pbar)
         Q = Q[0, :, 1:-1]
 
         assert idx == idx_soln
@@ -97,8 +100,9 @@ def test_lanczos_iter(xnp):
 
     B = lazify(A)
     max_iters, tolerance = A.shape[0], 1e-7
-    fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3))
-    alpha, beta, idx, Q = fn(B, rhs, max_iters, tolerance)
+    pbar = False
+    fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
+    alpha, beta, idx, Q, _ = fn(B, rhs, max_iters, tolerance, pbar)
     alpha, Q = alpha[..., :idx - 1], Q[..., 1:-1]
     T = construct_tridiagonal_batched(alpha, beta, alpha)
     eigvals, _ = xnp.eigh(T)
