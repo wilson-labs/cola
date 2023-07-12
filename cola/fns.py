@@ -2,14 +2,19 @@
 Like with linalg, these functions have dispatch rules and should be used in favor of the 
 LinearOperator constructors when possible. """
 
-from typing import List, Union, Any
+from typing import List, Union, Any, Set
+from collections.abc import Iterable
 from plum import dispatch
 from cola.ops import LinearOperator, Array
 from cola.ops import Dense
 from cola.ops import Kronecker, Product, KronSum, Sum
-from cola.ops import ScalarMul, Transpose, Adjoint, SelfAdjoint
+from cola.ops import ScalarMul, Transpose, Adjoint
 from cola.ops import BlockDiag, Identity, Diagonal, I_like
+from cola.ops import Diagonal
 from cola.utils import export
+from cola.annotations import SelfAdjoint
+# import reduce
+from functools import reduce
 
 Scalar = Array
 
@@ -35,11 +40,6 @@ def densify(A: Union[LinearOperator, Array]) -> Array:
 @dispatch
 def dot(A: LinearOperator, B: LinearOperator) -> Product:
     return Product(A, B)
-
-
-# @dispatch
-# def dot(A: SelfAdjoint, B: SelfAdjoint) -> SelfAdjoint:
-#     return type(A)(Product([A, B]))
 
 
 @dispatch
@@ -138,12 +138,6 @@ def kron(A: Kronecker, B: LinearOperator) -> Kronecker:
 @dispatch
 def kron(A: LinearOperator, B: Kronecker) -> Kronecker:
     return Kronecker(*((A, ) + B.Ms))
-
-
-# @dispatch
-# def kron(A: SelfAdjoint, B: SelfAdjoint) -> Kronecker:
-#     return SelfAdjoint(kron(A.A, B.A))
-# will create some problems?
 
 
 @dispatch

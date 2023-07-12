@@ -1,11 +1,12 @@
 from plum import dispatch
 from cola.ops import LinearOperator
-from cola.ops import Unitary
+from cola.annotations import Unitary
 from cola.ops import Diagonal
 from cola.ops import Identity
 from cola.ops import ScalarMul
 from cola.ops import BlockDiag
-from cola.ops import Kronecker, SelfAdjoint, Sum
+from cola.ops import Kronecker, Sum
+from cola.annotations import SelfAdjoint
 from cola.algorithms.cg import cg
 from cola.algorithms.gmres import gmres
 from cola.algorithms.svrg import solve_svrg_symmetric
@@ -90,11 +91,11 @@ def inverse(A: LinearOperator, **kwargs):
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
         return lazify(A.ops.inv(A.to_dense()))
-    elif issubclass(type(A), SelfAdjoint[Sum]) and (method == 'svrg' or (method == 'auto' and len(A.A.Ms) > 1e4)):
-        return SymmetricSVRGInverse(A.A, **kws)
+    # elif issubclass(type(A), SelfAdjoint[Sum]) and (method == 'svrg' or (method == 'auto' and len(A.A.Ms) > 1e4)):
+    #     return SymmetricSVRGInverse(A.A, **kws)
     elif issubclass(type(A), Sum) and (method == 'svrg' or (method == 'auto' and len(A.Ms) > 1e4)):
         return GenericSVRGInverse(A, **kws)
-    elif issubclass(type(A), SelfAdjoint) and ((method == 'cg' or method=='krylov') or (method == 'auto' and np.prod(A.shape) > 1e6)):
+    elif A.isa(SelfAdjoint) and ((method == 'cg' or method=='krylov') or (method == 'auto' and np.prod(A.shape) > 1e6)):
         return CGInverse(A, **kws)
     elif (method == 'gmres' or method=='krylov') or (method == 'auto' and np.prod(A.shape) > 1e6):
         return GMResInverse(A, **kws)
@@ -105,7 +106,6 @@ def inverse(A: LinearOperator, **kwargs):
 @dispatch
 def inverse(A: Identity, **kwargs):
     return A
-
 
 @dispatch
 def inverse(A: ScalarMul, **kwargs) -> ScalarMul:

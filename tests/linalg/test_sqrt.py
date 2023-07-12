@@ -4,7 +4,7 @@ from cola.fns import kron
 from cola.fns import lazify
 from cola.linalg.sqrt import sqrt
 from cola.ops import Diagonal
-from cola.ops import SelfAdjoint
+from cola.annotations import SelfAdjoint
 from cola.utils_test import parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
 from jax.config import config

@@ -52,7 +52,8 @@ argsort = torch.argsort
 sparse_csr = torch.sparse_csr_tensor
 roll = torch.roll
 maximum = torch.maximum
-
+isreal = torch.isreal
+allclose = torch.allclose
 from torch._vmap_internals import vmap as _vmap
 
 def PRNGKey(x):

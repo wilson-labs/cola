@@ -12,11 +12,10 @@ from cola.ops import Sum
 from cola.ops import ScalarMul
 from cola.ops import Product
 from cola.ops import Sliced
-from cola.ops import SelfAdjoint
-from cola.ops import Symmetric
+from cola.annotations import SelfAdjoint,PSD
+from cola.annotations import Symmetric
 from cola.ops import Householder
 from cola.ops import Sparse
-from cola.ops import PSD
 from cola.ops import LinearOperator
 from cola.algorithms.arnoldi import get_householder_vec
 from cola.utils_test import parametrize, relative_error
@@ -58,27 +57,6 @@ def test_householder(xnp):
         approx = xnp.update_array(approx, x[:idx], slice(None, idx, None))
         rel_error = relative_error(approx, R @ x)
         assert rel_error < _tol
-
-
-@parametrize([torch_fns, jax_fns])
-def test_adjoint_and_symmetric(xnp):
-    dtype = xnp.float32
-    A = [[-0.38105885, -1.13140889, -1.66344203], [1.38351046, 0.50665351, -0.29059844],
-         [0.18752258, 0.60077083, -0.95329955]]
-    Aop = SelfAdjoint(lazify(xnp.array(A, dtype=dtype)))
-    eye = I_like(Aop).to_dense()
-    rel_error = relative_error(Aop.to_dense().T, eye @ Aop)
-    assert rel_error < _tol
-
-    Aop = Symmetric(lazify(xnp.array(A, dtype=dtype)))
-    eye = I_like(Aop).to_dense()
-    rel_error = relative_error(Aop.to_dense().T, eye @ Aop)
-    assert rel_error < _tol
-
-    Aop = PSD(lazify(xnp.array(A, dtype=dtype)))
-    rel_error = relative_error(Aop.to_dense(), Aop.T.to_dense())
-    assert rel_error < _tol
-
 
 @parametrize([torch_fns, jax_fns])
 def test_unflatten(xnp):
