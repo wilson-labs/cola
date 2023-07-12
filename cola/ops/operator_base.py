@@ -246,14 +246,20 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         new_args = jax.tree_util.tree_unflatten(aux[1], children)
         return cls(*new_args, **aux[0])
 
-
 def flatten_function(obj) -> Tuple[List[Array], Callable]:
     if is_array(obj):
         return [obj], lambda x: x[0]
-    elif isinstance(obj, (LinearOperator, tuple, list)):  # TODO add dict?
-        args = obj._args if isinstance(obj, LinearOperator) else obj
+
+    elif isinstance(obj, LinearOperator):
+        flat, unflatten = flatten_function((obj._args,obj._kwargs))
+        def unflatten_op(params):
+            args, kwargs = unflatten(params)
+            return obj.__class__(*args, **kwargs)
+        return flat, unflatten_op
+
+    elif isinstance(obj, (tuple, list)):  # TODO add dict?
         unflatten_fns, flat, slices = [], [], [slice(-1, 0)]
-        for arg in args:
+        for arg in obj:
             params, unflatten = flatten_function(arg)
             slices.append(
                 slice(slices[-1].stop, slices[-1].stop + len(params)))
@@ -264,14 +270,26 @@ def flatten_function(obj) -> Tuple[List[Array], Callable]:
             new_params = []
             for slc, unflatten in zip(slices[1:], unflatten_fns):
                 new_params.append(unflatten(params[slc]))
-            if isinstance(obj, LinearOperator):
-                # return obj.tree_unflatten(obj._kwargs, new_params)
-                return obj.__class__(*new_params, **obj._kwargs)
-            else:
-                return obj.__class__(new_params)
+            return obj.__class__(new_params)
+        return flat, unflatten
+
+    elif isinstance(obj, dict):
+        unflatten_fns, flat, slices = [], [], [slice(-1, 0)]
+        for key, val in obj.items():
+            params, unflatten = flatten_function(val)
+            slices.append(
+                slice(slices[-1].stop, slices[-1].stop + len(params)))
+            unflatten_fns.append(unflatten)
+            flat.extend(params)
+        
+        def unflatten(params):
+            new_params = {}
+            for key, slc, unflatten in zip(obj.keys(), slices[1:], unflatten_fns):
+                new_params[key] = unflatten(params[slc])
+            return new_params
         return flat, unflatten
     else:
-        raise NotImplementedError
+        return [], lambda x: obj
 
 
 def is_array(obj):

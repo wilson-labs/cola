@@ -37,8 +37,8 @@ def cg(A: LinearOperator, rhs: Array, x0=None, P=None, tol=1e-6, max_iters=5000,
     if P is None:
         P = I_like(A)
     # soln, res, iters, infodict = run_batched_cg(A, rhs, x0, max_iters, tol, P, pbar=pbar)
-    # cg_fn = xnp.jit(run_cg static_argnums=(0, 6))
-    cg_fn = xnp.jit(run_batched_cg, static_argnums=(0, 6))
+    cg_fn = xnp.jit(run_cg, static_argnums=(0, 6))
+    #cg_fn = xnp.jit(run_batched_cg, static_argnums=(0, 6))
     # cg_fn = run_batched_cg
     # TODO: check why the performance degrades so much when adding 5
     # cg_fn = xnp.jit(run_batched_cg, static_argnums=(0, 5, 6))
@@ -86,11 +86,11 @@ def run_batched_cg(A, b, x0, max_iters, tol, preconditioner, pbar):
         state = take_cg_step(state, A, preconditioner, xnp=xnp)
         return state
 
-    # def track_res(res):
-    #     out = xnp.norm(res[2], axis=-2)
-    #     return out
+    def track_res(res):
+        out = xnp.norm(res[2], axis=-2)
+        return out
 
-    # while_fn, info = xnp.while_loop_winfo(track_res, pbar=pbar, tol=tol)
+    #while_fn, info = xnp.while_loop_winfo(track_res, pbar=pbar, tol=tol)
     # while_fn, info = while_loop, {}
     while_fn, info = xnp.while_loop, {}
     state = while_fn(cond_fun=cond, body_fun=body_fun, init_val=init_val)

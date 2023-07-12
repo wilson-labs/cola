@@ -45,6 +45,8 @@ Symmetric = Hermitian = SelfAdjoint
 class PSD(SelfAdjoint):
     pass
 
+[export(a) for a in [Stiefel, Unitary, SelfAdjoint, Symmetric, Hermitian,PSD]]
+
 @dispatch
 @export
 def get_annotations(A: LinearOperator) -> Set[str]:
