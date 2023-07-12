@@ -57,6 +57,9 @@ isreal = torch.isreal
 allclose = torch.allclose
 from torch._vmap_internals import vmap as _vmap
 
+def get_default_device():
+    return torch.device("cpu")
+
 def device(device_name):
     if device_name == "cpu":
         return torch.device("cpu")

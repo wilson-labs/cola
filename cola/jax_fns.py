@@ -85,6 +85,8 @@ isreal = jnp.isreal
 allclose = jnp.allclose
 # convolve = jax.scipy.signal.convolve
 
+def get_default_device():
+    return jax.devices()[0]
 
 def device(device_name):
     del device_name

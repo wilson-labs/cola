@@ -40,17 +40,17 @@ class AutoRegisteringPyTree(type):
         except ImportError:
             pass
 
-def find_device(obj, xnp):
+def find_device(obj):
     if is_array(obj) or isinstance(obj, LinearOperator):
         return obj.device
     elif isinstance(obj, (tuple, list, set)):
         for ob in obj:
-            device = find_device(ob, xnp)
+            device = find_device(ob)
             if device is not None:
                 return device
     elif isinstance(obj, dict):
         for _, ob in obj.items():
-            device = find_device(ob, xnp)
+            device = find_device(ob)
             if device is not None:
                 return device
     else:
@@ -75,7 +75,8 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
             self._matmat = matmat
         self.annotations = cola.annotations.get_annotations(self)
         self.annotations.update(annotations)
-        self.device = find_device([self._args, self._kwargs], self.ops)
+        device = find_device([self._args, self._kwargs])
+        self.device = device or self.ops.get_default_device()
 
     def to(self, dtype=None, device=None):
         # returns a new linear operator.
@@ -275,14 +276,3 @@ def is_array(obj):
     if get_library_fns(obj.dtype).is_array(obj):
         return True
     return False
-
-def find_device(obj, xnp):
-    if is_array(obj) or isinstance(obj, LinearOperator):
-        return obj.device
-    elif isinstance(obj, (tuple, list, set, dict)):
-        for ob in obj:
-            device = find_device(ob, xnp)
-            if device is not None:
-                return device
-    else:
-        return None
