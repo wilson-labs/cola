@@ -48,13 +48,13 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1
     xnp = A.ops
     xnp = A.ops
     if start_vector is None:
-        start_vector = xnp.random.randn(*A.shape[:-1])
+        start_vector = xnp.fixed_normal_samples((A.shape[-1],1))
     if use_householder:
         Q, H, infodict = run_householder_arnoldi(A=A, rhs=start_vector, max_iters=max_iters)
     else:
-        # Q, H, _ = get_arnoldi_matrix(A=A, rhs=rhs, max_iters=max_iters, tol=tol, pbar=pbar)
-        fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3, 4))
-        Q, H, _, infodict = fn(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
+        Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
+        #fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3, 4))
+        #Q, H, _, infodict = fn(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
         H, Q = H[:-1, :], Q[:, :-1]
     return Q, H
 
@@ -145,6 +145,7 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
         is_large = norm >= tol
         return is_not_max & is_large
 
+    @xnp.jit
     def body_fun(state):
         idx, Q, H, _ = state
         new_vec = A @ Q[..., [idx]]
@@ -158,6 +159,7 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
         H = xnp.update_array(H, h_vec[..., 0], ..., idx)
         return idx + 1, Q, H, norm
 
+    @xnp.jit
     def last_iter_fun(state):
         idx, Q, H, _ = state
         new_vec = A @ Q[..., [idx]]
@@ -171,7 +173,8 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
 
     init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
     # state = xnp.while_loop(cond_fun, body_fun, init_val)
-    while_fn, info = xnp.while_loop_winfo(cond_fun, pbar=pbar, tol=tol)
+    while_fn, info = xnp.while_loop_winfo(lambda s: s[-1], pbar=pbar, tol=tol)
+    #while_fn, info = xnp.while_loop, {}
     state = while_fn(cond_fun, body_fun, init_val)
     state = last_iter_fun(state)
     idx, Q, H, _ = state
@@ -184,5 +187,5 @@ def initialize_arnoldi(xnp, rhs, max_iters, dtype):
     Q = xnp.zeros(shape=(rhs.shape[-2], max_iters + 1), dtype=dtype)
     rhs = rhs / xnp.norm(rhs)
     Q = xnp.update_array(Q, xnp.copy(rhs[:, 0]), ..., 0)
-    norm = xnp.array(1., dtype=rhs.real.dtype)
+    norm = 1.#xnp.array(1., dtype=rhs.real.dtype)
     return idx, Q, H, norm

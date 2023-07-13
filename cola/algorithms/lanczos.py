@@ -86,47 +86,52 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
     xnp = A.ops
 
     def body_fun(state):
-        iter, vec, beta, alpha = state
-        update = xnp.norm(vec[..., iter], axis=-1, keepdims=True)
-        vec = xnp.update_array(vec, vec[..., iter] / update, ..., iter)
+        i, vec, beta, alpha = state
+        update = xnp.norm(vec[..., i], axis=-1, keepdims=True)
+        vec = xnp.update_array(vec, vec[..., i] / update, ..., i)
 
-        # new_vec = A @ vec[..., iter]
+        # new_vec = A @ vec[..., i]
         aux = xnp.permute(vec, axes=[1, 0, 2])
-        new_vec = (A @ aux[..., iter]).T
-        update = xnp.sum(xnp.conj(new_vec) * vec[..., iter], axis=-1)
-        beta = xnp.update_array(beta, update, ..., iter - 1)
-        aux = beta[..., [iter - 1]] * vec[..., iter] + alpha[..., [iter - 1]] * vec[..., iter - 1]
+        new_vec = (A @ aux[..., i]).T
+        update = xnp.sum(xnp.conj(new_vec) * vec[..., i], axis=-1)
+        beta = xnp.update_array(beta, update, ..., i - 1)
+        aux = beta[..., [i - 1]] * vec[..., i] + alpha[..., [i - 1]] * vec[..., i - 1]
         new_vec -= aux
         new_vec = do_double_gram(vec, new_vec, xnp)
 
-        vec = xnp.update_array(vec, new_vec, ..., iter + 1)
-        alpha = xnp.update_array(alpha, xnp.norm(vec[..., iter + 1], axis=-1), ..., iter)
+        vec = xnp.update_array(vec, new_vec, ..., i + 1)
+        alpha = xnp.update_array(alpha, xnp.norm(vec[..., i + 1], axis=-1), ..., i)
 
-        return iter + 1, vec, beta, alpha
+        return i + 1, vec, beta, alpha
+
+    def error(state):
+        i,*_, alpha = state
+        return xnp.max(alpha[..., i - 1].real)
 
     def cond_fun(state):
-        iter, *_, alpha = state
-        is_max = iter <= max_iters
-        is_tol = (alpha[..., iter - 1].real >= tol) | (iter <= 1)
+        i, *_, alpha = state
+        is_max = i <= max_iters
+        is_tol = (alpha[..., i - 1].real >= tol) | (i <= 1)
         flag = is_max & xnp.any(is_tol)
         return flag
 
     init_val = initialize_lanczos_vec(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
     # state = xnp.while_loop(cond_fun, body_fun, init_val)
-    while_fn, info = xnp.while_loop_winfo(cond_fun, pbar=pbar, tol=tol)
+    while_fn, info = xnp.while_loop_winfo(error, pbar=pbar, tol=tol)
+    #while_fn, info = xnp.while_loop_winfo(cond_fun, pbar=pbar, tol=tol)
     state = while_fn(cond_fun, body_fun, init_val)
-    iter, vec, beta, alpha = state
-    return alpha[..., 1:], beta, iter - 1, vec, info
+    i, vec, beta, alpha = state
+    return alpha[..., 1:], beta, i - 1, vec, info
 
 
 def initialize_lanczos_vec(xnp, rhs, max_iters, dtype):
-    iter = xnp.array(1, dtype=xnp.int32)
+    i = xnp.array(1, dtype=xnp.int32)
     beta = xnp.zeros(shape=(rhs.shape[-1], max_iters), dtype=dtype)
     alpha = xnp.zeros(shape=(rhs.shape[-1], max_iters + 1), dtype=dtype)
     vec = xnp.zeros(shape=(rhs.shape[-1], rhs.shape[0], max_iters + 2), dtype=dtype)
     rhs = rhs / xnp.norm(rhs, axis=-2, keepdims=True)
     vec = xnp.update_array(vec, xnp.copy(rhs.T), ..., 1)
-    return iter, vec, beta, alpha
+    return i, vec, beta, alpha
 
 
 def do_double_gram(vec, new_vec, xnp):
@@ -145,41 +150,41 @@ def get_lanczos_coeffs(A: LinearOperator, rhs: Array, max_iters: int, tol: float
     xnp = A.ops
 
     def body_fun(state):
-        iter, vec, vec_prev, beta, alpha = state
+        i, vec, vec_prev, beta, alpha = state
 
         new_vec = A @ vec
         update = xnp.sum(new_vec * vec, axis=-2)
-        beta = xnp.update_array(beta, update, iter - 1)
-        new_vec -= beta[iter - 1] * vec
-        new_vec -= alpha[iter - 1] * vec_prev
+        beta = xnp.update_array(beta, update, i - 1)
+        new_vec -= beta[i - 1] * vec
+        new_vec -= alpha[i - 1] * vec_prev
         update = xnp.norm(new_vec, axis=-2)
-        alpha = xnp.update_array(alpha, update, iter)
+        alpha = xnp.update_array(alpha, update, i)
         new_vec /= update
 
         vec_prev = xnp.copy(vec)
         vec = xnp.copy(new_vec)
-        return iter + 1, vec, vec_prev, beta, alpha
+        return i + 1, vec, vec_prev, beta, alpha
 
     def cond_fun(state):
-        iter, *_, alpha = state
-        is_max = iter <= max_iters
-        is_tol = (alpha[iter - 1, 0] >= tol) | (iter <= 1)
+        i, *_, alpha = state
+        is_max = i <= max_iters
+        is_tol = (alpha[i - 1, 0] >= tol) | (i <= 1)
         flag = (is_max) & is_tol
         return flag
 
     init_val = initialize_lanczos(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
     state = xnp.while_loop(cond_fun, body_fun, init_val)
-    iter, *_, beta, alpha = state
-    return alpha[1:], beta[:-1], iter - 1
+    i, *_, beta, alpha = state
+    return alpha[1:], beta[:-1], i - 1
 
 
 def initialize_lanczos(xnp, vec, max_iters, dtype):
-    iter = xnp.array(1, dtype=xnp.int32)
+    i = xnp.array(1, dtype=xnp.int32)
     beta = xnp.zeros(shape=(max_iters + 1, 1), dtype=dtype)
     alpha = xnp.zeros(shape=(max_iters + 1, 1), dtype=dtype)
     vec /= xnp.norm(vec)
     vec_prev = xnp.copy(vec)
-    return iter, vec, vec_prev, beta, alpha
+    return i, vec, vec_prev, beta, alpha
 
 
 def construct_tridiagonal(alpha: Array, beta: Array, gamma: Array) -> Array:
@@ -203,9 +208,9 @@ def get_lu_from_tridiagonal(A: LinearOperator) -> Array:
     eigenvals = xnp.zeros(shape=(A.shape[0], ), dtype=A.dtype)
     eigenvals = xnp.update_array(eigenvals, A.beta[0, 0], 0)
 
-    def body_fun(iter, state):
-        pi = A.beta[iter + 1, 0] - ((A.alpha[iter, 0] * A.gamma[iter, 0]) / state[iter])
-        state = xnp.update_array(state, pi, iter + 1)
+    def body_fun(i, state):
+        pi = A.beta[i + 1, 0] - ((A.alpha[i, 0] * A.gamma[i, 0]) / state[i])
+        state = xnp.update_array(state, pi, i + 1)
         return state
 
     lower, upper = xnp.array(0, dtype=xnp.int32), xnp.array(A.shape[0] - 1, dtype=xnp.int32)
