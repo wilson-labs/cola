@@ -22,19 +22,6 @@ class UnitaryDecomposition(LinearOperator):
         self.Q = cola.fns.lazify(Q)
         self.A = cola.fns.lazify(A)
 
-@export
-def LanczosDecomposition(A: LinearOperator, start_vector= None, max_iters=100, tol=1e-7, pbar=False):
-    Q,T,*info = cola.algorithms.lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
-    return UnitaryDecomposition(Q,T)
-
-@export
-def ArnoldiDecomposition(A: LinearOperator, start_vector=None,
-     max_iters=100, tol=1e-7, use_householder=False, pbar=False):
-    Q,H,*info = cola.algorithms.arnoldi(A=A, start_vector=start_vector, max_iters=max_iters,
-         tol=tol, use_householder=use_householder, pbar=pbar)
-    return UnitaryDecomposition(Q,H)
-
-
 @inverse.dispatch
 def inverse(A: UnitaryDecomposition, **kwargs):
     Q, A = A.Q, A.A
@@ -42,10 +29,10 @@ def inverse(A: UnitaryDecomposition, **kwargs):
 
 @eig.dispatch
 def eig(A: UnitaryDecomposition, **kwargs):
-    
     Q, A = A.Q, A.A
     print("called eig",Q.shape,A.shape)
-    return eig(A,**kwargs)
+    eigvals, eigvecs = eig(A,**kwargs)
+    return eigvals, A.ops.cast(Q.A, dtype=eigvecs.dtype)@eigvecs
 
 @trace.dispatch
 def trace(A: UnitaryDecomposition, **kwargs):

@@ -2,7 +2,7 @@ from cola.ops import LinearOperator
 from cola.ops import Array
 from cola.ops import get_library_fns
 from cola.utils import export
-
+import cola
 
 def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7):
     """
@@ -31,6 +31,7 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
     Returns:
         Q (Array): The orthogonal matrix Q in the Lanczos decomposition A = Q T Q^H.
         T (Array): The tridiagonal matrix T in the Lanczos decomposition A = Q T Q^H.
+        info (dict): A dictionary containing information about the Lanczos process.
     """
     xnp = A.ops
     if start_vector is None:
@@ -39,11 +40,19 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
     alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
     Q = vec[0, :, 1:-1]
     T = construct_tridiagonal_batched(alpha, beta, alpha)[0]
-    return Q, T
+    return Q, T, info
+
+@export
+def LanczosDecomposition(A: LinearOperator, start_vector= None, max_iters=100, tol=1e-7, pbar=False):
+    """ Provides the Lanczos decomposition of a matrix A = Q T Q^H. LinearOperator form of lanczos,
+        see lanczos for arguments."""
+    Q,T,info = lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
+    A_approx = cola.UnitaryDecomposition(Q,T)
+    A_approx.info = info
+    return A_approx
 
 
-def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7,
-                pbar=False, info=False):
+def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7, pbar=False):
     """
     Computes the eigenvalues and eigenvectors using lanczos
 
@@ -53,15 +62,8 @@ def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7,
     tol: float: tolerance criteria to stop lanczos
     pbar: bool: flag to print progress bar
     """
-    xnp = A.ops
-    # alpha, beta, iters = get_lanczos_coeffs(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
-    # T = construct_tridiagonal(alpha[:iters - 1], beta[:iters], alpha[:iters - 1])
-    out = lanczos_parts(A=A, rhs=rhs, max_iters=max_iters, tol=tol, pbar=pbar)
-    alpha, beta, iters, vec, infodict = out
-    alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
-    Q = vec[0, :, 1:-1]
-    T = construct_tridiagonal_batched(alpha, beta, alpha)
-    eigvals, eigvectors = xnp.eigh(T[0, :, :])
+    Q,T,info = lanczos(A=A, start_vector=rhs, max_iters=max_iters, tol=tol, pbar=pbar)
+    eigvals, eigvectors = xnp.eigh(T)
     V = Q @ eigvectors
     # sort the eigenvalues and eigenvectors
     idx = xnp.argsort(eigvals, axis=-1)

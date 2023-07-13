@@ -47,10 +47,10 @@ def eig(A: LinearOperator, **kwargs) -> Tuple[Array, Array]:
             print("using dense eigh")
             return eig_vals[eig_slice], eig_vecs[:, eig_slice]
         elif method == 'lanczos' or (method == 'auto' and prod(A.shape) >= 1e6):
-            #return eig(cola.LanczosDecomposition(A, **kws),eig_slice=eig_slice)
-            rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
-            eig_vals, eig_vecs = lanczos_eig(A, rhs, **kws)
-            return eig_vals[eig_slice], eig_vecs[:, eig_slice]
+            return eig(cola.algorithms.LanczosDecomposition(A, **kws),eig_slice=eig_slice)
+            # rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
+            # eig_vals, eig_vecs = lanczos_eig(A, rhs, **kws)
+            # return eig_vals[eig_slice], eig_vecs[:, eig_slice]
         else:
             raise ValueError(f"Unknown method {method} for SelfAdjoint operator")
     elif method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
@@ -59,7 +59,7 @@ def eig(A: LinearOperator, **kwargs) -> Tuple[Array, Array]:
         return eig_vals[eig_slice], eig_vecs[:, eig_slice]
     elif method == 'arnoldi' or (method == 'auto' and prod(A.shape) >= 1e6):
         print("Using Arnoldi method")
-        #return eig(cola.ArnoldiDecomposition(A, **kws),eig_slice=eig_slice)
+        return eig(cola.algorithms.ArnoldiDecomposition(A, **kws),eig_slice=eig_slice)
         rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
         eig_vals, eig_vecs = arnoldi_eig(A=A, rhs=rhs, use_householder=True, **kws)
         return eig_vals[eig_slice], eig_vecs[:, eig_slice]

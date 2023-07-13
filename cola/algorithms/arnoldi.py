@@ -3,6 +3,7 @@ from cola.ops import Array
 from cola.ops import Householder, Product
 from cola.utils.control_flow import for_loop
 from cola.utils import export
+import cola
 
 
 def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7,
@@ -21,7 +22,7 @@ def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7
             - eigvals (Array): eigenvalues of shape (max_iters,).
             - eigvectors (Array): eigenvectors of shape (n, max_iters).
     """
-    Q, H = arnoldi(A=A, start_vector=rhs, max_iters=max_iters, tol=tol,
+    Q, H, info = arnoldi(A=A, start_vector=rhs, max_iters=max_iters, tol=tol,
                    use_householder=use_householder, pbar=pbar)
     xnp = A.ops
     eigvals, eigvectors = xnp.eig(H)
@@ -56,8 +57,18 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1
         #fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3, 4))
         #Q, H, _, infodict = fn(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
         H, Q = H[:-1, :], Q[:, :-1]
-    return Q, H
+    return Q, H, infodict
 
+@export
+def ArnoldiDecomposition(A: LinearOperator, start_vector=None,
+     max_iters=100, tol=1e-7, use_householder=False, pbar=False):
+    """ Provides the Lanczos decomposition of a matrix A = Q H Q^H. LinearOperator form of arnoldi,
+        see arnoldi for arguments."""
+    Q,H,info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters,
+         tol=tol, use_householder=use_householder, pbar=pbar)
+    A_approx = cola.UnitaryDecomposition(Q,H)
+    A_approx.info = info
+    return A_approx
 
 def get_householder_vec_simple(x, idx, xnp):
     indices = xnp.arange(x.shape[0])
