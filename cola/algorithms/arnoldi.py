@@ -64,7 +64,7 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1
 @export
 def ArnoldiDecomposition(A: LinearOperator, start_vector=None, max_iters=100, tol=1e-7,
                          use_householder=False, pbar=False):
-    """ Provides the Lanczos decomposition of a matrix A = Q H Q^H. LinearOperator form of arnoldi,
+    """ Provides the Arnoldi decomposition of a matrix A = Q H Q^H. LinearOperator form of arnoldi,
         see arnoldi for arguments."""
     Q, H, info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
                          use_householder=use_householder, pbar=pbar)
