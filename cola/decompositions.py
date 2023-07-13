@@ -5,9 +5,9 @@ from cola.utils.dispatch import parametric
 import cola
 from typing import Callable
 
-from cola.algorithms import lanczos, arnoldi
-
 from cola.utils import export
+from cola.linalg import inverse, eig, trace, logdet, apply_unary
+
 
 @export
 class UnitaryDecomposition(LinearOperator):
@@ -22,18 +22,30 @@ class UnitaryDecomposition(LinearOperator):
         self.Q = cola.fns.lazify(Q)
         self.A = cola.fns.lazify(A)
 
+@export
+def LanczosDecomposition(A: LinearOperator, start_vector= None, max_iters=100, tol=1e-7, pbar=False):
+    Q,T,*info = cola.algorithms.lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
+    return UnitaryDecomposition(Q,T)
 
-from cola.linalg import inverse, eigs, trace, logdet, apply_unary
+@export
+def ArnoldiDecomposition(A: LinearOperator, start_vector=None,
+     max_iters=100, tol=1e-7, use_householder=False, pbar=False):
+    Q,H,*info = cola.algorithms.arnoldi(A=A, start_vector=start_vector, max_iters=max_iters,
+         tol=tol, use_householder=use_householder, pbar=pbar)
+    return UnitaryDecomposition(Q,H)
+
 
 @inverse.dispatch
 def inverse(A: UnitaryDecomposition, **kwargs):
     Q, A = A.Q, A.A
     return Q @ inverse(A,**kwargs) @ Q.H
 
-@eigs.dispatch
-def eigs(A: UnitaryDecomposition, **kwargs):
+@eig.dispatch
+def eig(A: UnitaryDecomposition, **kwargs):
+    
     Q, A = A.Q, A.A
-    return eigs(A,**kwargs)
+    print("called eig",Q.shape,A.shape)
+    return eig(A,**kwargs)
 
 @trace.dispatch
 def trace(A: UnitaryDecomposition, **kwargs):
@@ -42,5 +54,6 @@ def trace(A: UnitaryDecomposition, **kwargs):
 
 @apply_unary.dispatch
 def apply_unary(fn: Callable, A: UnitaryDecomposition, **kwargs):
+    # Need to think carefully about the case where Q is not full rank
     Q, A = A.Q, A.A
     return Q@apply_unary(fn, A, **kwargs)@Q.H

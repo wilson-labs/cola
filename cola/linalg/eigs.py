@@ -11,13 +11,12 @@ from cola.algorithms.arnoldi import arnoldi_eig
 from cola.algorithms import power_iteration
 from plum import dispatch
 from cola.utils import export
-from cola.annotations import SelfAdjoint
-
+# from cola.annotations import SelfAdjoint
+import cola
 
 @dispatch
 @export
-def eig(A: LinearOperator, eig_slice=slice(0, None, None), tol=1e-6, pbar=False, method='auto',
-        info=False, max_iters=1000) -> Tuple[Array, Array]:
+def eig(A: LinearOperator, **kwargs) -> Tuple[Array, Array]:
     """
     Computes eigenvalues and eigenvectors of a linear operator.
 
@@ -27,7 +26,6 @@ def eig(A: LinearOperator, eig_slice=slice(0, None, None), tol=1e-6, pbar=False,
         tol (float): Optional. Tolerance for convergence. Default is 1e-6.
         pbar (bool): Optional. Whether to display a progress bar during computation. Default is False.
         method (str): Optional. Method to use for computation. 'dense' computes eigenvalues and eigenvectors using dense matrix operations. 'arnoldi' computes using Arnoldi iteration. 'auto' automatically selects the method based on the size of the linear operator. Default is 'auto'.
-        info (bool): Optional. Whether to display additional information. Default is False.
         max_iters (int): Optional. Maximum number of iterations for Arnoldi method. Default is 1000.
 
     Returns:
@@ -37,21 +35,33 @@ def eig(A: LinearOperator, eig_slice=slice(0, None, None), tol=1e-6, pbar=False,
         A = MyLinearOperator()
         eig_vals, eig_vecs = eig(A, eig_slice=slice(0, 5), tol=1e-4)
     """
+    kws = dict(eig_slice=slice(0, None, None), tol=1e-6, pbar=False, method='auto',max_iters=1000)
+    kws.update(kwargs)
+    method = kws.pop('method')
+    eig_slice = kws.pop('eig_slice')
     xnp = A.ops
-    if A.isa(SelfAdjoint):
+    if A.isa(cola.SelfAdjoint):
+        print("Using SelfAdjoint method")
         if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
             eig_vals, eig_vecs = xnp.eigh(A.to_dense())
+            print("using dense eigh")
+            return eig_vals[eig_slice], eig_vecs[:, eig_slice]
         elif method == 'lanczos' or (method == 'auto' and prod(A.shape) >= 1e6):
+            #return eig(cola.LanczosDecomposition(A, **kws),eig_slice=eig_slice)
             rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
-            eig_vals, eig_vecs = lanczos_eig(A, rhs, max_iters=max_iters, tol=tol)
-        return eig_vals[eig_slice], eig_vecs[:, eig_slice]
+            eig_vals, eig_vecs = lanczos_eig(A, rhs, **kws)
+            return eig_vals[eig_slice], eig_vecs[:, eig_slice]
+        else:
+            raise ValueError(f"Unknown method {method} for SelfAdjoint operator")
     elif method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
+        print("Using dense method")
         eig_vals, eig_vecs = xnp.eig(A.to_dense())
         return eig_vals[eig_slice], eig_vecs[:, eig_slice]
     elif method == 'arnoldi' or (method == 'auto' and prod(A.shape) >= 1e6):
+        print("Using Arnoldi method")
+        #return eig(cola.ArnoldiDecomposition(A, **kws),eig_slice=eig_slice)
         rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
-        eig_vals, eig_vecs = arnoldi_eig(A=A, rhs=rhs, max_iters=max_iters, tol=tol,
-                                         use_householder=True)
+        eig_vals, eig_vecs = arnoldi_eig(A=A, rhs=rhs, use_householder=True, **kws)
         return eig_vals[eig_slice], eig_vecs[:, eig_slice]
     else:
         raise ValueError(f"Unknown method {method}")
@@ -76,24 +86,22 @@ def eig(A: LinearOperator, eig_slice=slice(0, None, None), tol=1e-6, pbar=False,
 #         raise ValueError(f"Unknown method {method}")
 #     return eig_vals[eig_slice], eig_vecs[:, eig_slice]
 
-@dispatch
-def eig(A: LowerTriangular, eig_slice=slice(0, None, None), method="dense", *args, **kwargs):
-    xnp = A.ops
-    if method == "dense":
-        eig_vals = diag(A.A)[eig_slice]
-        eig_vecs = xnp.eye(eig_vals.shape[0], eig_vals.shape[0])
-        return eig_vals, eig_vecs
-    else:
-        raise ValueError(f"Unknown method {method}")
+# @dispatch
+# def eig(A: LowerTriangular, **kwargs):
+#     xnp = A.ops
+#     eig_vals = diag(A.A)[eig_slice]
+#         eig_vecs = xnp.eye(eig_vals.shape[0], eig_vals.shape[0])
+#         return eig_vals, eig_vecs
+#     else:
+#         raise ValueError(f"Unknown method {method}")
 
 
 @dispatch
 def eig(A: Diagonal, eig_slice=slice(0, None, None), **kwargs):
     xnp = A.ops
-    eig_vecs = I_like(A).to_dense()
     sorted_ind = xnp.argsort(A.diag)
     eig_vals = A.diag[sorted_ind]
-    eig_vecs = eig_vecs[:, sorted_ind]
+    eig_vecs = I_like(A).to_dense()[:, sorted_ind]
     return eig_vals[eig_slice], eig_vecs[:, eig_slice]
 
 
@@ -102,7 +110,7 @@ def eigenvalues(A: LinearOperator, info=False, pbar=False):
 
 
 @export
-def eigmax(A: LinearOperator, tol=1e-7, max_iters=1000, pbar=False, info=False,vector=False):
+def eigmax(A: LinearOperator, tol=1e-7, max_iters=1000, pbar=False, vector=False):
     """ Returns eigenvalue with largest magnitude of A up to specified tolerance tol.
         If vector=True, also returns the corresponding eigenvector.
 
@@ -111,7 +119,6 @@ def eigmax(A: LinearOperator, tol=1e-7, max_iters=1000, pbar=False, info=False,v
             tol (float, optional): Tolerance for convergence. Default is 1e-7.
             max_iters (int, optional): Maximum number of iterations. Default is 1000.
             pbar (bool, optional): Whether to display a progress bar. Default is False.
-            info (bool, optional): Whether to display iteration information. Default is False.
             vector (bool, optional): Whether to compute and return the corresponding eigenvector. Default is False.
 
         Returns:
@@ -121,7 +128,7 @@ def eigmax(A: LinearOperator, tol=1e-7, max_iters=1000, pbar=False, info=False,v
             >>> eig = eigmax(A, tol=1e-3)
             >>> eig, vec = eigmax(A, tol=1e-3, vector=True)
     """
-    v0, e0 = power_iteration(A, tol=tol, max_iter=max_iters, pbar=pbar, info=info)
+    v0, e0, info = power_iteration(A, tol=tol, max_iter=max_iters, pbar=pbar)
     return e0 if not vector else (e0, v0)
 
 

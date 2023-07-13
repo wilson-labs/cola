@@ -6,7 +6,7 @@ from cola.ops import Identity
 from cola.ops import ScalarMul
 from cola.ops import BlockDiag
 from cola.ops import Kronecker, Sum
-from cola.annotations import SelfAdjoint
+# from cola.annotations import SelfAdjoint
 from cola.algorithms.cg import cg
 from cola.algorithms.gmres import gmres
 from cola.algorithms.svrg import solve_svrg_symmetric
@@ -14,6 +14,7 @@ import numpy as np
 from cola.utils.dispatch import parametric
 from cola.utils import export
 from cola.fns import lazify
+import cola
 
 @parametric
 class IterativeInverse(LinearOperator):
@@ -95,7 +96,7 @@ def inverse(A: LinearOperator, **kwargs):
     #     return SymmetricSVRGInverse(A.A, **kws)
     elif issubclass(type(A), Sum) and (method == 'svrg' or (method == 'auto' and len(A.Ms) > 1e4)):
         return GenericSVRGInverse(A, **kws)
-    elif A.isa(SelfAdjoint) and ((method == 'cg' or method=='krylov') or (method == 'auto' and np.prod(A.shape) > 1e6)):
+    elif A.isa(cola.SelfAdjoint) and ((method == 'cg' or method=='krylov') or (method == 'auto' and np.prod(A.shape) > 1e6)):
         return CGInverse(A, **kws)
     elif (method == 'gmres' or method=='krylov') or (method == 'auto' and np.prod(A.shape) > 1e6):
         return GMResInverse(A, **kws)

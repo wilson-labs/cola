@@ -12,7 +12,6 @@ from cola.ops import ScalarMul, Transpose, Adjoint
 from cola.ops import BlockDiag, Identity, Diagonal, I_like
 from cola.ops import Diagonal
 from cola.utils import export
-from cola.annotations import SelfAdjoint
 # import reduce
 from functools import reduce
 

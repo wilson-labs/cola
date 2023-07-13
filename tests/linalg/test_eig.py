@@ -1,7 +1,7 @@
 from cola import jax_fns
 from cola import torch_fns
 from cola.fns import lazify
-from cola.ops import Diagonal
+from cola.ops import Diagonal, LinearOperator
 from cola.annotations import SelfAdjoint
 from cola.linalg.eigs import eig
 from jax.config import config
@@ -28,13 +28,14 @@ def test_general(xnp):
     assert rel_error < _tol
     rel_error = relative_error(A.to_dense(), approx)
     assert rel_error < _tol * 5
-    eig_vals, eig_vecs = eig(A, eig_slice=slice(0, 2, None), tol=1e-6, info=True)
+    eig_vals, eig_vecs = eig(A, eig_slice=slice(-2, None), tol=1e-6, info=True)
     eig_vals = xnp.cast(eig_vals, dtype)
     rel_error = relative_error(soln_vals[-2:], xnp.sort(eig_vals))
     assert rel_error < _tol
     assert eig_vecs.shape == (10, 2)
 
-    eig_vals, eig_vecs = eig(A, tol=1e-6, info=True, method="arnoldi", max_iters=A.shape[-1])
+    A.annotations = set()
+    eig_vals, eig_vecs = eig(A, tol=1e-6, method="arnoldi", max_iters=A.shape[-1])
     eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs, dtype)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
     # approx = Q[:, :-1] @ eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T @ Q[:, :-1].T
@@ -61,11 +62,13 @@ def test_adjoint(xnp):
     assert rel_error < _tol
 
     eig_vals, eig_vecs = eig(A, method="lanczos", max_iters=A.shape[-1])
+    print(eig_vals.shape, eig_vecs.shape)
+    print(soln_vals.shape)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
 
     rel_error = relative_error(soln_vals, eig_vals)
     assert rel_error < _tol
-
+    
     rel_error = relative_error(A.to_dense(), approx)
     assert rel_error < _tol
 

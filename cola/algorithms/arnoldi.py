@@ -6,7 +6,7 @@ from cola.utils import export
 
 
 def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7,
-                use_householder=False):
+                use_householder=False, pbar=False):
     """Computes eigenvalues and eigenvectors using Arnoldi iteration.
 
     Args:
@@ -22,7 +22,7 @@ def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7
             - eigvectors (Array): eigenvectors of shape (n, max_iters).
     """
     Q, H = arnoldi(A=A, start_vector=rhs, max_iters=max_iters, tol=tol,
-                   use_householder=use_householder)
+                   use_householder=use_householder, pbar=pbar)
     xnp = A.ops
     eigvals, eigvectors = xnp.eig(H)
     return eigvals, xnp.cast(Q, dtype=eigvectors.dtype) @ eigvectors
@@ -30,7 +30,7 @@ def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7
 
 @export
 def arnoldi(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1e-7,
-            use_householder: bool = False, pbar: bool = False, info: bool = False):
+            use_householder: bool = False, pbar: bool = False):
     """Computes the Arnoldi decomposition of the matrix A = QHQ^*.
 
     Args:
@@ -40,7 +40,6 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1
         tol (float, optional): The tolerance criteria. Defaults to 1e-7.
         use_householder (bool, optional): Use Householder Arnoldi iteration. Defaults to False.
         pbar (bool, optional): show a progress bar. Defaults to False.
-        info (bool, optional): print additional information. Defaults to False.
 
     Returns:
         Q (Array): The orthogonal matrix Q.
@@ -51,16 +50,13 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1
     if start_vector is None:
         start_vector = xnp.random.randn(*A.shape[:-1])
     if use_householder:
-        Q, H = run_householder_arnoldi(A=A, rhs=start_vector, max_iters=max_iters)
+        Q, H, infodict = run_householder_arnoldi(A=A, rhs=start_vector, max_iters=max_iters)
     else:
         # Q, H, _ = get_arnoldi_matrix(A=A, rhs=rhs, max_iters=max_iters, tol=tol, pbar=pbar)
         fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3, 4))
         Q, H, _, infodict = fn(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
         H, Q = H[:-1, :], Q[:, :-1]
-    if info:
-        return Q, H, infodict
-    else:
-        return Q, H
+    return Q, H
 
 
 def get_householder_vec_simple(x, idx, xnp):

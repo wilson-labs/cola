@@ -18,7 +18,7 @@ def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 
 
 
 @export
-def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7):
+def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7, pbar=False):
     """Computes the Lanczos decomposition of a matrix A.
 
     Args:
@@ -34,11 +34,11 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
     """
     xnp = A.ops
     if start_vector is None:
-        start_vector = xnp.random.randn(*A.shape[:-1])
-    alpha, beta, iters, vec = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters, tol=tol)
+        start_vector = xnp.fixed_normal_samples((A.shape[0],1))
+    alpha, beta, iters, vec, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
     alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
     Q = vec[0, :, 1:-1]
-    T = construct_tridiagonal_batched(alpha, beta, alpha)
+    T = construct_tridiagonal_batched(alpha, beta, alpha)[0]
     return Q, T
 
 
@@ -61,11 +61,12 @@ def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7,
     alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
     Q = vec[0, :, 1:-1]
     T = construct_tridiagonal_batched(alpha, beta, alpha)
-    # import numpy as np
-    # H = np.load("H.npy")
-    # H = xnp.array(H, dtype=T.dtype)
     eigvals, eigvectors = xnp.eigh(T[0, :, :])
     V = Q @ eigvectors
+    # sort the eigenvalues and eigenvectors
+    idx = xnp.argsort(eigvals, axis=-1)
+    eigvals = eigvals[..., idx]
+    V = V[..., idx]
     return eigvals, V
 
 
