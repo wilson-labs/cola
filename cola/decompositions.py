@@ -30,7 +30,6 @@ def inverse(A: UnitaryDecomposition, **kwargs):
 @eig.dispatch
 def eig(A: UnitaryDecomposition, **kwargs):
     Q, A = A.Q, A.A
-    print("called eig",Q.shape,A.shape)
     eigvals, eigvecs = eig(A,**kwargs)
     return eigvals, A.ops.cast(Q.A, dtype=eigvecs.dtype)@eigvecs
 

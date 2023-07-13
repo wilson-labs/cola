@@ -7,7 +7,7 @@ from cola.utils import export
 
 @export
 def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=None,
-          use_householder=False, use_triangular=False, pbar=False, info=False):
+          use_householder=False, use_triangular=False, pbar=False):
     """Solves a linear system Ax = rhs using the GMRES method.
 
     Args:
@@ -20,10 +20,9 @@ def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=No
         use_householder (bool, optional): Use Householder Arnoldi iteration. Defaults to False.
         use_triangular (bool, optional): Use triangular QR factorization. Defaults to False.
         pbar (bool, optional): show a progress bar. Defaults to False.
-        info (bool, optional): print additional information. Defaults to False.
 
     Returns:
-        Array: The solution vector x, satisfying Ax = rhs.
+        (tuple): (x, info) The solution vector x, satisfying Ax = rhs and the info dictionary.
     """
     xnp = A.ops
     is_vector = len(rhs.shape) == 1
@@ -55,10 +54,7 @@ def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=No
     soln = x0 + Q @ y
     if is_vector:
         soln = soln[:, 0]
-    if info:
-        return soln, infodict
-    else:
-        return soln
+    return soln, infodict
 
 
 def get_hessenberg_triangular_qr(H, xnp):

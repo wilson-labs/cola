@@ -9,8 +9,7 @@ _small_value = 1e-40
 
 
 @export
-def cg(A: LinearOperator, rhs: Array, x0=None, P=None, tol=1e-6, max_iters=5000, pbar=False,
-       info=False):
+def cg(A: LinearOperator, rhs: Array, x0=None, P=None, tol=1e-6, max_iters=5000, pbar=False):
     """
     Solves Ax=b using CG (conjugate gradients).
 
@@ -22,7 +21,6 @@ def cg(A: LinearOperator, rhs: Array, x0=None, P=None, tol=1e-6, max_iters=5000,
         tol (float, optional): Stopping criteria.
         max_iters (int, optional): Maximum number of iterations.
         pbar (bool, optional): Flag for showing progress bar.
-        info (bool, optional): Flag for returning info dict.
 
     Returns:
         tuple: Solution array and info dictionary if info is True.
@@ -45,7 +43,7 @@ def cg(A: LinearOperator, rhs: Array, x0=None, P=None, tol=1e-6, max_iters=5000,
     soln, res, iters, infodict = cg_fn(A, rhs, x0, max_iters, tol, P, pbar=pbar)
     soln = soln.reshape(-1) if is_vector else soln
     #infodict['residuals'] = res
-    infodict['iterations'] = iters
+    #infodict['iterations'] = iters
     return soln, infodict
 
 

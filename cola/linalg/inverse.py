@@ -75,7 +75,6 @@ def inverse(A: LinearOperator, **kwargs):
         P (array, optional): Preconditioner matrix
         x0 (array, optional): The initial guess for the solution
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
-        info (bool, optional): Whether to print additional information. Defaults to False.
         max_iters (int, optional): The maximum number of iterations. Defaults to 5000.
         method (str, optional): Method to use, defaults to 'auto', options are 'auto', 'dense', 'krylov', 'svrg'.
 
@@ -87,7 +86,8 @@ def inverse(A: LinearOperator, **kwargs):
         >>> x = cola.inverse(A) @ b
 
     """
-    kws = dict(tol=1e-6, P=None, x0=None, pbar=False, info=False, max_iters=5000)
+    kws = dict(tol=1e-6, P=None, x0=None, pbar=False, max_iters=5000)
+    assert not kwargs.keys()-kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
