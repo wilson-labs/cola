@@ -6,6 +6,22 @@ from tqdm.auto import tqdm
 
 
 def while_loop_winfo(errorfn, tol, every=1, desc='', pbar=False, **kwargs):
+    """ Decorator for while loop with progress bar. 
+    
+    Assumes that
+    errorfn is a function of the loop variable and returns a scalar
+    that starts at a given value and decreases to tol as the loop progresses.
+    
+    Args:
+        errorfn: function of the while state that returns a scalar tracking the error (e.g. residual)
+        tol: tolerance for errorfn
+        every: update progress bar every this many iterations
+        desc: description for progress bar
+        pbar: whether to show progress bar
+        kwargs: additional info to pass to progress bar
+
+    Returns: (tuple) while_loop, info_dict
+        """
     info = {}
     def new_while(cond_fun, body_fun, init_val):
         info.update({'progval': 0, 'iterations': 0, 'errors': [], **kwargs})
