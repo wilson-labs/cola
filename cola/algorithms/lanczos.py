@@ -86,7 +86,7 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
     https://en.wikipedia.org/wiki/Lanczos_algorithm
     """
     xnp = A.ops
-
+    max_iters = min(max_iters, A.shape[0])
     def body_fun(state):
         i, vec, beta, alpha = state
         update = xnp.norm(vec[..., i], axis=-1, keepdims=True)
@@ -108,7 +108,7 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
 
     def error(state):
         i,*_, alpha = state
-        return xnp.max(alpha[..., i - 1].real)
+        return xnp.max(alpha[..., i - 1].real) + (i <= 1)*1.
 
     def cond_fun(state):
         i, *_, alpha = state

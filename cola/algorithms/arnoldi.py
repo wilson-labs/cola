@@ -149,7 +149,7 @@ def initialize_householder_arnoldi(xnp, rhs, max_iters, dtype):
 def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float,
                        pbar: bool):
     xnp = A.ops
-
+    max_iters = min(max_iters, A.shape[0])
     def cond_fun(state):
         idx, *_, norm = state
         is_not_max = idx < max_iters
