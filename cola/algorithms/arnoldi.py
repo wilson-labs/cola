@@ -23,7 +23,7 @@ def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7
             - eigvectors (Array): eigenvectors of shape (n, max_iters).
     """
     Q, H, info = arnoldi(A=A, start_vector=rhs, max_iters=max_iters, tol=tol,
-                   use_householder=use_householder, pbar=pbar)
+                         use_householder=use_householder, pbar=pbar)
     xnp = A.ops
     eigvals, eigvectors = xnp.eig(H)
     return eigvals, xnp.cast(Q, dtype=eigvectors.dtype) @ eigvectors
@@ -49,26 +49,29 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1
     xnp = A.ops
     xnp = A.ops
     if start_vector is None:
-        start_vector = xnp.fixed_normal_samples((A.shape[-1],1))
+        start_vector = xnp.fixed_normal_samples((A.shape[-1], 1))
     if use_householder:
         Q, H, infodict = run_householder_arnoldi(A=A, rhs=start_vector, max_iters=max_iters)
     else:
-        Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
-        #fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3, 4))
-        #Q, H, _, infodict = fn(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
+        Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=start_vector, max_iters=max_iters, tol=tol,
+                                               pbar=pbar)
+        # fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3, 4))
+        # Q, H, _, infodict = fn(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
         H, Q = H[:-1, :], Q[:, :-1]
     return Q, H, infodict
 
+
 @export
-def ArnoldiDecomposition(A: LinearOperator, start_vector=None,
-     max_iters=100, tol=1e-7, use_householder=False, pbar=False):
+def ArnoldiDecomposition(A: LinearOperator, start_vector=None, max_iters=100, tol=1e-7,
+                         use_householder=False, pbar=False):
     """ Provides the Lanczos decomposition of a matrix A = Q H Q^H. LinearOperator form of arnoldi,
         see arnoldi for arguments."""
-    Q,H,info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters,
-         tol=tol, use_householder=use_householder, pbar=pbar)
-    A_approx = cola.UnitaryDecomposition(Q,H)
+    Q, H, info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
+                         use_householder=use_householder, pbar=pbar)
+    A_approx = cola.UnitaryDecomposition(Q, H)
     A_approx.info = info
     return A_approx
+
 
 def get_householder_vec_simple(x, idx, xnp):
     indices = xnp.arange(x.shape[0])
@@ -146,10 +149,10 @@ def initialize_householder_arnoldi(xnp, rhs, max_iters, dtype):
     return Q, H, zj
 
 
-def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float,
-                       pbar: bool):
+def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pbar: bool):
     xnp = A.ops
     max_iters = min(max_iters, A.shape[0])
+
     def cond_fun(state):
         idx, *_, norm = state
         is_not_max = idx < max_iters
@@ -185,7 +188,7 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
     init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
     # state = xnp.while_loop(cond_fun, body_fun, init_val)
     while_fn, info = xnp.while_loop_winfo(lambda s: s[-1], pbar=pbar, tol=tol)
-    #while_fn, info = xnp.while_loop, {}
+    # while_fn, info = xnp.while_loop, {}
     state = while_fn(cond_fun, body_fun, init_val)
     state = last_iter_fun(state)
     idx, Q, H, _ = state
@@ -198,5 +201,5 @@ def initialize_arnoldi(xnp, rhs, max_iters, dtype):
     Q = xnp.zeros(shape=(rhs.shape[-2], max_iters + 1), dtype=dtype)
     rhs = rhs / xnp.norm(rhs)
     Q = xnp.update_array(Q, xnp.copy(rhs[:, 0]), ..., 0)
-    norm = 1.#xnp.array(1., dtype=rhs.real.dtype)
+    norm = 1.  # xnp.array(1., dtype=rhs.real.dtype)
     return idx, Q, H, norm
