@@ -159,21 +159,27 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
         is_large = norm >= tol
         return is_not_max & is_large
 
-    @xnp.jit
     def body_fun(state):
         idx, Q, H, _ = state
         new_vec = A @ Q[..., [idx]]
-        h_vec = xnp.sum(xnp.conj(Q) * new_vec, axis=-2, keepdims=True)
-        new_vec = new_vec - xnp.sum(Q * h_vec, axis=-1, keepdims=True)
+        inner_state = (new_vec, xnp.zeros(shape=(max_iters + 1, ), dtype=new_vec.dtype))
+
+        def inner_loop(jdx, result):
+            new_vec, h_vec = result
+            angle = xnp.sum(xnp.conj(Q[..., [jdx]]) * new_vec)
+            h_vec = xnp.update_array(h_vec, angle, jdx)
+            new_vec = new_vec - h_vec[jdx] * Q[..., [jdx]]
+            return (new_vec, h_vec)
+
+        new_vec, h_vec = xnp.for_loop(0, max_iters, inner_loop, inner_state)
+
         norm = xnp.norm(new_vec)
         new_vec /= norm
-        h_vec = xnp.permute(h_vec, axes=(1, 0))
         h_vec = xnp.update_array(h_vec, norm, idx + 1)
         Q = xnp.update_array(Q, new_vec[..., 0], ..., idx + 1)
-        H = xnp.update_array(H, h_vec[..., 0], ..., idx)
+        H = xnp.update_array(H, h_vec, ..., idx)
         return idx + 1, Q, H, norm
 
-    @xnp.jit
     def last_iter_fun(state):
         idx, Q, H, _ = state
         new_vec = A @ Q[..., [idx]]
@@ -186,7 +192,6 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
         return idx + 1, Q, H, norm
 
     init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-    # state = xnp.while_loop(cond_fun, body_fun, init_val)
     while_fn, info = xnp.while_loop_winfo(lambda s: s[-1], pbar=pbar, tol=tol)
     # while_fn, info = xnp.while_loop, {}
     state = while_fn(cond_fun, body_fun, init_val)
