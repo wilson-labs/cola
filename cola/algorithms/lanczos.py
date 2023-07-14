@@ -62,6 +62,7 @@ def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7, pbar=Fal
     tol: float: tolerance criteria to stop lanczos
     pbar: bool: flag to print progress bar
     """
+    xnp = A.ops
     Q,T,info = lanczos(A=A, start_vector=rhs, max_iters=max_iters, tol=tol, pbar=pbar)
     eigvals, eigvectors = xnp.eigh(T)
     V = Q @ eigvectors
