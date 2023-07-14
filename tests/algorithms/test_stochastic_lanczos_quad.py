@@ -1,12 +1,35 @@
 from cola import jax_fns
 import numpy as np
 from cola import torch_fns
+from cola.ops import Diagonal
 from cola.algorithms.stochastic_lanczos_quad import stochastic_lanczos_quad
+from cola.algorithms.stochastic_lanczos_quad import slq_fwd
 from cola.fns import lazify
 from cola.utils_test import parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
 from jax.config import config
 config.update('jax_platform_name', 'cpu')
+
+
+# @parametrize([torch_fns, jax_fns])
+@parametrize([torch_fns])
+def test_slq_vjp(xnp):
+    dtype = xnp.float32
+    diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
+    _, unflatten = Diagonal(diag).flatten()
+
+    def f(theta):
+        A = unflatten([theta])
+        loss = slq_fwd(A, xnp.log, num_samples=10, max_iters=100, tol=1e-6, pbar=False)
+        return loss
+
+    out = f(diag)
+    if xnp.__name__.find("torch") >= 0:
+        out.backward()
+        approx = diag.grad.clone()
+    else:
+        approx = xnp.grad(f)(diag)
+    assert approx is not None
 
 
 @parametrize([torch_fns, jax_fns])
