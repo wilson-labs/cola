@@ -171,7 +171,7 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
             new_vec = new_vec - h_vec[jdx] * Q[..., [jdx]]
             return (new_vec, h_vec)
 
-        new_vec, h_vec = xnp.for_loop(0, max_iters, inner_loop, inner_state)
+        new_vec, h_vec = xnp.for_loop(0, idx + 1, inner_loop, inner_state)
 
         norm = xnp.norm(new_vec)
         new_vec /= norm
