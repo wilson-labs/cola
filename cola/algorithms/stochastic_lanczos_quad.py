@@ -38,7 +38,6 @@ def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int, 
 
 def slq_bwd(res, grads, unflatten, *args, **kwargs):
     op_args, *_ = res
-    breakpoint()
     num_samples = kwargs["num_samples"]
     A = unflatten(op_args)
     xnp = A.ops

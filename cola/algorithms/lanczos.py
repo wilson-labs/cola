@@ -38,7 +38,7 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
     xnp = A.ops
     if start_vector is None:
         start_vector = xnp.fixed_normal_samples((A.shape[0], 1))
-    alpha, beta, iters, vec, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters,
+    alpha, beta, vec, iters, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters,
                                                   tol=tol, pbar=pbar)
     alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
     Q = vec[0]
@@ -89,7 +89,7 @@ def lanczos_parts_bwd(res, grads, unflatten, *args, **kwargs):
         Aop = unflatten(theta)
         AQ = Aop @ Q[0]
         out_Q = AQ @ xnp.inv(T) / 2
-        out_T = Q[0].H @ AQ
+        out_T = xnp.conj(Q[0]) @ AQ
 
         # diag extraction here is equivalent to JVP or linear transpose of construct_tridiag
         out_alpha = xnp.diag(out_T, 1)  # should be the same as diag(out_T,-1)

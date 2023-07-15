@@ -7,6 +7,7 @@ from cola.algorithms.lanczos import construct_tridiagonal
 from cola.algorithms.lanczos import construct_tridiagonal_batched
 from cola.algorithms.lanczos import get_lanczos_coeffs
 from cola.algorithms.lanczos import lanczos_parts
+from cola.algorithms.lanczos import lanczos_eig
 from cola.algorithms.lanczos import lanczos_max_eig
 from cola.utils_test import parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
@@ -22,14 +23,24 @@ _tol = 1e-6
 def test_lanczos_vjp(xnp):
     dtype = xnp.float32
     diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
+    diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
     x0 = xnp.randn(diag.shape[0], 1)
     _, unflatten = Diagonal(diag).flatten()
 
     def f(theta):
-        A = unflatten([theta])
-        out = lanczos_parts(A, x0, max_iters=10, tol=1e-6, pbar=False)
-        alpha, beta, Q, *_ = out
-        loss = xnp.sum(alpha[0]) + xnp.sum(beta[0]) + xnp.sum(xnp.sum(Q[0]))
+        Aop = unflatten([theta])
+        # out = lanczos_parts(Aop, x0, max_iters=10, tol=1e-6, pbar=False)
+        # alpha, beta, Q, *_ = out
+        # loss = xnp.sum(alpha[0]) + xnp.sum(beta[0]) + xnp.sum(xnp.sum(Q[0]))
+        out = lanczos_eig(Aop, x0, max_iters=10, tol=1e-6, pbar=False)
+        eig_vals, eig_vecs = out
+        loss = xnp.sum(eig_vals) + xnp.sum(eig_vecs ** 2., axis=[0, 1])
+        return loss
+
+    def f_alt(theta):
+        X = xnp.diag(theta)
+        eig_vals, eig_vecs = xnp.eigh(X)
+        loss = xnp.sum(eig_vals) + xnp.sum(eig_vecs ** 2., axis=[0, 1])
         return loss
 
     out = f(diag)
@@ -39,6 +50,16 @@ def test_lanczos_vjp(xnp):
     else:
         approx = xnp.grad(f)(diag)
     assert approx is not None
+
+    out = f_alt(diag_soln)
+    if xnp.__name__.find("torch") >= 0:
+        out.backward()
+        soln = diag_soln.grad.clone()
+    else:
+        soln = xnp.grad(f_alt)(diag)
+
+    rel_error = relative_error(soln, approx)
+    assert rel_error < _tol * 10
 
 
 @parametrize([torch_fns, jax_fns])
