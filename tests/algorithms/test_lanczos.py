@@ -24,26 +24,40 @@ def test_lanczos_vjp(xnp):
     dtype = xnp.float32
     diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
     diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
-    import torch
-    torch.manual_seed(48)
     x0 = xnp.randn(diag.shape[0], 1)
     _, unflatten = Diagonal(diag).flatten()
 
     def f(theta):
         Aop = unflatten([theta])
-        out = lanczos_parts(Aop, x0, max_iters=10, tol=1e-6, pbar=False)
-        # eig_vals, eig_vecs = out
+        out = lanczos_eig(Aop, x0, max_iters=10, tol=1e-6, pbar=False)
+        eig_vals, eig_vecs = out
         # loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
-        alpha, beta, Q, *_ = out
-        loss = xnp.sum(alpha, axis=[0, 1]) + xnp.sum(beta, axis=[0, 1])
-        loss += xnp.sum(xnp.abs(Q), axis=[0, 1, 2])
+        loss = xnp.sum(eig_vals ** 2.)
+        return loss
+
+    def f_alt(theta):
+        A = xnp.diag(theta)
+        eig_vals, _ = xnp.eigh(A)
+        loss = xnp.sum(eig_vals ** 2.)
         return loss
 
     out = f(diag)
-    print(out)
+    if xnp.__name__.find("torch") >= 0:
+        out.backward()
+        approx = diag.grad.clone()
+    else:
+        approx = xnp.grad(f)(diag)
+    assert approx is not None
 
-    import torch
-    assert torch.autograd.gradcheck(f, diag_soln)
+    out = f_alt(diag_soln)
+    if xnp.__name__.find("torch") >= 0:
+        out.backward()
+        soln = diag_soln.grad.clone()
+    else:
+        soln = xnp.grad(f_alt)(diag)
+
+    rel_error = relative_error(soln, approx)
+    assert rel_error < _tol * 10
 
 
 @parametrize([torch_fns, jax_fns])

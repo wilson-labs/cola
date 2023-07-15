@@ -1,3 +1,4 @@
+from functools import partial
 from cola.ops import LinearOperator
 from cola.ops import Array
 from cola.ops import get_library_fns
@@ -19,6 +20,30 @@ def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 
     return eigvals[-1]
 
 
+def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
+    y_grads = grads[0]
+    op_args, (_, eig_vecs) = res
+    A = unflatten(op_args)
+    xnp = A.ops
+
+    def fun(*theta, loc):
+        Aop = unflatten(theta)
+        return Aop @ eig_vecs[:, loc]
+
+    # Still working on fixing this
+    d_params_list = []
+    for idx in range(eig_vecs.shape[-1]):
+        fn = partial(fun, loc=idx)
+        dlam = xnp.vjp_derivs(fn, op_args, y_grads * eig_vecs[:, idx])[0]
+        d_params_list.append(dlam)
+
+    aux = xnp.stack(d_params_list)
+    d_params = xnp.sum(aux, axis=0)
+    dA = unflatten([d_params])
+    return (dA, )
+
+
+@iterative_autograd(lanczos_eig_bwd)
 def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7, pbar=False):
     """
     Computes the eigenvalues and eigenvectors using lanczos
@@ -76,31 +101,6 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
     return Q, T, info
 
 
-def lanczos_parts_bwd(res, grads, unflatten, *args, **kwargs):
-    # assuming that lanczos parts outputs alpha, beta, Q without requiring modifications
-    dalpha, dbeta, dQ, *_ = grads
-    op_args, (alpha, beta, Q, idx, *_) = res
-    A = unflatten(op_args)
-    xnp = A.ops
-    T = construct_tridiagonal(alpha.T, beta.T, alpha.T)
-
-    def fun(*theta):
-        Aop = unflatten(theta)
-        AQ = Aop @ Q[0]
-        out_Q = AQ @ xnp.inv(T) / 2
-        out_T = xnp.conj(Q[0]) @ AQ
-
-        # diag extraction here is equivalent to JVP or linear transpose of construct_tridiag
-        out_alpha = xnp.diag(out_T, 1)  # should be the same as diag(out_T,-1)
-        out_beta = xnp.diag(out_T, 0)
-        return out_alpha[None], out_beta[None], out_Q[None]
-
-    d_params = xnp.vjp_derivs(fun, op_args, (dalpha, dbeta, dQ))
-    dA = unflatten(d_params)
-    return (dA, )
-
-
-@iterative_autograd(lanczos_parts_bwd)
 def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pbar: bool):
     """
     Runs lanczos and saves the tridiagional matrix diagonal (beta) and bands (alpha) as
@@ -122,7 +122,6 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
         update = xnp.norm(vec[..., i], axis=-1, keepdims=True)
         vec = xnp.update_array(vec, vec[..., i] / update, ..., i)
 
-        # new_vec = A @ vec[..., i]
         aux = xnp.permute(vec, axes=[1, 0, 2])
         new_vec = (A @ aux[..., i]).T
         update = xnp.sum(xnp.conj(new_vec) * vec[..., i], axis=-1)
@@ -148,12 +147,10 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
         return flag
 
     init_val = initialize_lanczos_vec(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-    # state = xnp.while_loop(cond_fun, body_fun, init_val)
     while_fn, info = xnp.while_loop_winfo(error, pbar=pbar, tol=tol)
-    # while_fn, info = xnp.while_loop_winfo(cond_fun, pbar=pbar, tol=tol)
     state = while_fn(cond_fun, body_fun, init_val)
     i, vec, beta, alpha = state
-    return alpha[..., 1:i - 1], beta[..., :i - 1], vec[..., 1:-1], i - 1, info
+    return alpha[..., 1:], beta, vec[..., 1:-1], i - 1, info
 
 
 def initialize_lanczos_vec(xnp, rhs, max_iters, dtype):
