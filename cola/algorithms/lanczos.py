@@ -19,43 +19,6 @@ def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 
     return eigvals[-1]
 
 
-@export
-def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7, pbar=False):
-    """Computes the Lanczos decomposition of a matrix A.
-
-    Args:
-        A (LinearOperator): The linear operator representing the matrix A.
-        start_vector (Array, optional): The initial vector to start the Lanczos process.
-            If not provided, a random vector will be used. Defaults to None.
-        max_iters (int, optional): The maximum number of iterations to run Lanczos. Defaults to 100.
-        tol (float, optional): The tolerance criteria to stop Lanczos. Defaults to 1e-7.
-
-    Returns:
-        Q (Array): The orthogonal matrix Q in the Lanczos decomposition A = Q T Q^H.
-        T (Array): The tridiagonal matrix T in the Lanczos decomposition A = Q T Q^H.
-        info (dict): A dictionary containing information about the Lanczos process.
-    """
-    xnp = A.ops
-    if start_vector is None:
-        start_vector = xnp.fixed_normal_samples((A.shape[0], 1))
-    alpha, beta, vec, iters, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters,
-                                                  tol=tol, pbar=pbar)
-    alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
-    Q = vec[0]
-    T = construct_tridiagonal_batched(alpha, beta, alpha)[0]
-    return Q, T, info
-
-
-@export
-def LanczosDecomposition(A: LinearOperator, start_vector=None, max_iters=100, tol=1e-7, pbar=False):
-    """ Provides the Lanczos decomposition of a matrix A = Q T Q^H. LinearOperator form of lanczos,
-        see lanczos for arguments."""
-    Q, T, info = lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
-    A_approx = cola.UnitaryDecomposition(Q, T)
-    A_approx.info = info
-    return A_approx
-
-
 def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7, pbar=False):
     """
     Computes the eigenvalues and eigenvectors using lanczos
@@ -77,13 +40,49 @@ def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7, pbar=Fal
     return eigvals, V
 
 
+@export
+def LanczosDecomposition(A: LinearOperator, start_vector=None, max_iters=100, tol=1e-7, pbar=False):
+    """ Provides the Lanczos decomposition of a matrix A = Q T Q^H. LinearOperator form of lanczos,
+        see lanczos for arguments."""
+    Q, T, info = lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
+    A_approx = cola.UnitaryDecomposition(Q, T)
+    A_approx.info = info
+    return A_approx
+
+
+@export
+def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7, pbar=False):
+    """Computes the Lanczos decomposition of a matrix A.
+
+    Args:
+        A (LinearOperator): The linear operator representing the matrix A.
+        start_vector (Array, optional): The initial vector to start the Lanczos process.
+            If not provided, a random vector will be used. Defaults to None.
+        max_iters (int, optional): The maximum number of iterations to run Lanczos. Defaults to 100.
+        tol (float, optional): The tolerance criteria to stop Lanczos. Defaults to 1e-7.
+
+    Returns:
+        Q (Array): The orthogonal matrix Q in the Lanczos decomposition A = Q T Q^H.
+        T (Array): The tridiagonal matrix T in the Lanczos decomposition A = Q T Q^H.
+        info (dict): A dictionary containing information about the Lanczos process.
+    """
+    xnp = A.ops
+    if start_vector is None:
+        start_vector = xnp.fixed_normal_samples((A.shape[0], 1))
+    alpha, beta, vec, iters, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters,
+                                                  tol=tol, pbar=pbar)
+    alpha, beta, Q = alpha[..., :iters - 1], beta[..., :iters], vec[0]
+    T = construct_tridiagonal_batched(alpha, beta, alpha)[0]
+    return Q, T, info
+
+
 def lanczos_parts_bwd(res, grads, unflatten, *args, **kwargs):
     # assuming that lanczos parts outputs alpha, beta, Q without requiring modifications
     dalpha, dbeta, dQ, *_ = grads
     op_args, (alpha, beta, Q, idx, *_) = res
     A = unflatten(op_args)
     xnp = A.ops
-    T = construct_tridiagonal(alpha[:, :idx - 1].T, beta[:, :idx].T, alpha[:, :idx - 1].T)
+    T = construct_tridiagonal(alpha.T, beta.T, alpha.T)
 
     def fun(*theta):
         Aop = unflatten(theta)
@@ -93,8 +92,6 @@ def lanczos_parts_bwd(res, grads, unflatten, *args, **kwargs):
 
         # diag extraction here is equivalent to JVP or linear transpose of construct_tridiag
         out_alpha = xnp.diag(out_T, 1)  # should be the same as diag(out_T,-1)
-        zeros = xnp.zeros((1,), dtype=out_alpha.dtype)
-        out_alpha = xnp.concat((out_alpha, zeros))
         out_beta = xnp.diag(out_T, 0)
         return out_alpha[None], out_beta[None], out_Q[None]
 
@@ -156,7 +153,7 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
     # while_fn, info = xnp.while_loop_winfo(cond_fun, pbar=pbar, tol=tol)
     state = while_fn(cond_fun, body_fun, init_val)
     i, vec, beta, alpha = state
-    return alpha[..., 1:], beta, vec[..., 1:-1], i - 1, info
+    return alpha[..., 1:i - 1], beta[..., :i - 1], vec[..., 1:-1], i - 1, info
 
 
 def initialize_lanczos_vec(xnp, rhs, max_iters, dtype):
