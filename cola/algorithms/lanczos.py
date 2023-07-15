@@ -2,7 +2,9 @@ from cola.ops import LinearOperator
 from cola.ops import Array
 from cola.ops import get_library_fns
 from cola.utils import export
+from cola.utils.custom_autodiff import iterative_autograd
 import cola
+
 
 def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7):
     """
@@ -35,19 +37,21 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
     """
     xnp = A.ops
     if start_vector is None:
-        start_vector = xnp.fixed_normal_samples((A.shape[0],1))
-    alpha, beta, iters, vec, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
+        start_vector = xnp.fixed_normal_samples((A.shape[0], 1))
+    alpha, beta, iters, vec, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters,
+                                                  tol=tol, pbar=pbar)
     alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
-    Q = vec[0, :, 1:-1]
+    Q = vec[0]
     T = construct_tridiagonal_batched(alpha, beta, alpha)[0]
     return Q, T, info
 
+
 @export
-def LanczosDecomposition(A: LinearOperator, start_vector= None, max_iters=100, tol=1e-7, pbar=False):
+def LanczosDecomposition(A: LinearOperator, start_vector=None, max_iters=100, tol=1e-7, pbar=False):
     """ Provides the Lanczos decomposition of a matrix A = Q T Q^H. LinearOperator form of lanczos,
         see lanczos for arguments."""
-    Q,T,info = lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
-    A_approx = cola.UnitaryDecomposition(Q,T)
+    Q, T, info = lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
+    A_approx = cola.UnitaryDecomposition(Q, T)
     A_approx.info = info
     return A_approx
 
@@ -63,7 +67,7 @@ def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7, pbar=Fal
     pbar: bool: flag to print progress bar
     """
     xnp = A.ops
-    Q,T,info = lanczos(A=A, start_vector=rhs, max_iters=max_iters, tol=tol, pbar=pbar)
+    Q, T, info = lanczos(A=A, start_vector=rhs, max_iters=max_iters, tol=tol, pbar=pbar)
     eigvals, eigvectors = xnp.eigh(T)
     V = Q @ eigvectors
     # sort the eigenvalues and eigenvectors
@@ -73,6 +77,33 @@ def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7, pbar=Fal
     return eigvals, V
 
 
+def lanczos_parts_bwd(res, grads, unflatten, *args, **kwargs):
+    # assuming that lanczos parts outputs alpha, beta, Q without requiring modifications
+    dalpha, dbeta, dQ, *_ = grads
+    op_args, (alpha, beta, Q, idx, *_) = res
+    A = unflatten(op_args)
+    xnp = A.ops
+    T = construct_tridiagonal(alpha[:, :idx - 1].T, beta[:, :idx].T, alpha[:, :idx - 1].T)
+
+    def fun(*theta):
+        Aop = unflatten(theta)
+        AQ = Aop @ Q[0]
+        out_Q = AQ @ xnp.inv(T) / 2
+        out_T = Q[0].H @ AQ
+
+        # diag extraction here is equivalent to JVP or linear transpose of construct_tridiag
+        out_alpha = xnp.diag(out_T, 1)  # should be the same as diag(out_T,-1)
+        zeros = xnp.zeros((1,), dtype=out_alpha.dtype)
+        out_alpha = xnp.concat((out_alpha, zeros))
+        out_beta = xnp.diag(out_T, 0)
+        return out_alpha[None], out_beta[None], out_Q[None]
+
+    d_params = xnp.vjp_derivs(fun, op_args, (dalpha, dbeta, dQ))
+    dA = unflatten(d_params)
+    return (dA, )
+
+
+@iterative_autograd(lanczos_parts_bwd)
 def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pbar: bool):
     """
     Runs lanczos and saves the tridiagional matrix diagonal (beta) and bands (alpha) as
@@ -88,6 +119,7 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
     """
     xnp = A.ops
     max_iters = min(max_iters, A.shape[0])
+
     def body_fun(state):
         i, vec, beta, alpha = state
         update = xnp.norm(vec[..., i], axis=-1, keepdims=True)
@@ -108,8 +140,8 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
         return i + 1, vec, beta, alpha
 
     def error(state):
-        i,*_, alpha = state
-        return xnp.max(alpha[..., i - 1].real) + (i <= 1)*1.
+        i, *_, alpha = state
+        return xnp.max(alpha[..., i - 1].real) + (i <= 1) * 1.
 
     def cond_fun(state):
         i, *_, alpha = state
@@ -121,10 +153,10 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
     init_val = initialize_lanczos_vec(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
     # state = xnp.while_loop(cond_fun, body_fun, init_val)
     while_fn, info = xnp.while_loop_winfo(error, pbar=pbar, tol=tol)
-    #while_fn, info = xnp.while_loop_winfo(cond_fun, pbar=pbar, tol=tol)
+    # while_fn, info = xnp.while_loop_winfo(cond_fun, pbar=pbar, tol=tol)
     state = while_fn(cond_fun, body_fun, init_val)
     i, vec, beta, alpha = state
-    return alpha[..., 1:], beta, i - 1, vec, info
+    return alpha[..., 1:], beta, vec[..., 1:-1], i - 1, info
 
 
 def initialize_lanczos_vec(xnp, rhs, max_iters, dtype):

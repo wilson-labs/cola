@@ -2,6 +2,7 @@ import numpy as np
 from cola import jax_fns
 from cola import torch_fns
 from cola.fns import lazify
+from cola.ops import Diagonal
 from cola.algorithms.lanczos import construct_tridiagonal
 from cola.algorithms.lanczos import construct_tridiagonal_batched
 from cola.algorithms.lanczos import get_lanczos_coeffs
@@ -14,6 +15,30 @@ from jax.config import config
 config.update('jax_platform_name', 'cpu')
 
 _tol = 1e-6
+
+
+# @parametrize([torch_fns, jax_fns])
+@parametrize([torch_fns])
+def test_lanczos_vjp(xnp):
+    dtype = xnp.float32
+    diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
+    x0 = xnp.randn(diag.shape[0], 1)
+    _, unflatten = Diagonal(diag).flatten()
+
+    def f(theta):
+        A = unflatten([theta])
+        out = lanczos_parts(A, x0, max_iters=10, tol=1e-6, pbar=False)
+        alpha, beta, Q, *_ = out
+        loss = xnp.sum(alpha[0]) + xnp.sum(beta[0]) + xnp.sum(xnp.sum(Q[0]))
+        return loss
+
+    out = f(diag)
+    if xnp.__name__.find("torch") >= 0:
+        out.backward()
+        approx = diag.grad.clone()
+    else:
+        approx = xnp.grad(f)(diag)
+    assert approx is not None
 
 
 @parametrize([torch_fns, jax_fns])
@@ -30,7 +55,7 @@ def test_lanczos_complex(xnp):
     fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
     pbar = False
     alpha, beta, idx, Q, _ = fn(B, rhs, max_iters, tolerance, pbar)
-    alpha, Q = alpha[..., :idx - 1], Q[0, :, 1:-1]
+    alpha, Q = alpha[..., :idx - 1], Q[0]
     T = construct_tridiagonal(alpha.T, beta.T, alpha.T)
 
     assert idx == idx_np
@@ -55,7 +80,7 @@ def test_lanczos_random(xnp):
     fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
     pbar = False
     alpha, beta, idx, Q, _ = fn(B, rhs, max_iters, tolerance, pbar)
-    alpha, Q = alpha[..., :idx - 1], Q[0, :, 1:-1]
+    alpha, Q = alpha[..., :idx - 1], Q[0]
     T = construct_tridiagonal(alpha.T, beta.T, alpha.T)
 
     max_eig = lanczos_max_eig(B, rhs, B.shape[-1])
@@ -81,7 +106,7 @@ def test_lanczos_manual(xnp):
         fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
         pbar = False
         alpha, beta, idx, Q, _ = fn(B, rhs, max_iters, tolerance, pbar)
-        Q = Q[0, :, 1:-1]
+        Q = Q[0]
 
         assert idx == idx_soln
         rel_error = relative_error(beta_soln, beta.T)
@@ -103,7 +128,7 @@ def test_lanczos_iter(xnp):
     pbar = False
     fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
     alpha, beta, idx, Q, _ = fn(B, rhs, max_iters, tolerance, pbar)
-    alpha, Q = alpha[..., :idx - 1], Q[..., 1:-1]
+    alpha, Q = alpha[..., :idx - 1], Q
     T = construct_tridiagonal_batched(alpha, beta, alpha)
     eigvals, _ = xnp.eigh(T)
 

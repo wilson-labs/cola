@@ -1,7 +1,7 @@
 from cola.ops import Array
 from cola.ops import LinearOperator
 from cola.ops import I_like
-from cola.utils.custom_autodiff import solver_autograd
+from cola.utils.custom_autodiff import iterative_autograd
 # from cola.utils.control_flow import while_loop
 from cola.utils import export
 
@@ -65,7 +65,7 @@ def cg_bwd(res, grads, unflatten, *args, **kwargs):
     return (dA, db)
 
 
-@solver_autograd(cg_bwd)
+@iterative_autograd(cg_bwd)
 def run_cg(A, b, x0, max_iters, tol, preconditioner, pbar):
     return run_batched_cg(A, b, x0, max_iters, tol, preconditioner, pbar)
 

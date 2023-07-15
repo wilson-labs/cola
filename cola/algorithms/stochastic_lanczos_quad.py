@@ -3,9 +3,8 @@ from cola.ops import LinearOperator
 from cola.algorithms.lanczos import lanczos_parts
 from cola.algorithms.lanczos import construct_tridiagonal_batched
 from cola.algorithms.cg import cg
-# from cola.algorithms.lanczos import construct_tridiagonal
 from cola.utils import export
-from cola.utils.custom_autodiff import slq_autograd
+from cola.utils.custom_autodiff import iterative_autograd
 
 
 @export
@@ -38,9 +37,10 @@ def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int, 
 
 
 def slq_bwd(res, grads, unflatten, *args, **kwargs):
-    op_args, = res[0]
+    op_args, *_ = res
+    breakpoint()
     num_samples = kwargs["num_samples"]
-    A = unflatten([op_args])
+    A = unflatten(op_args)
     xnp = A.ops
     probes = xnp.randn(A.shape[1], num_samples, dtype=A.dtype)
     probes_solves, _ = cg(A, probes, tol=1e-6, max_iters=100)
@@ -57,7 +57,7 @@ def slq_bwd(res, grads, unflatten, *args, **kwargs):
     return (dA, )
 
 
-@slq_autograd(slq_bwd)
+@iterative_autograd(slq_bwd)
 def slq_fwd(A, fun, num_samples, max_iters, tol, pbar):
     xnp = A.ops
     rhs = xnp.randn(A.shape[1], num_samples, dtype=A.dtype)

@@ -4,9 +4,7 @@ from cola import torch_fns
 from cola.fns import lazify
 from cola.ops import Identity
 from cola.ops import Diagonal
-from cola.ops import LinearOperator
 from cola.algorithms.preconditioners import NystromPrecond
-from cola.algorithms.cg import cg
 from cola.algorithms.cg import run_batched_cg
 from cola.algorithms.cg import run_batched_tracking_cg
 from cola.algorithms.cg import run_cg
