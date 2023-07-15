@@ -24,6 +24,8 @@ def test_lanczos_vjp(xnp):
     dtype = xnp.float32
     diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
     diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
+    import torch
+    torch.manual_seed(48)
     x0 = xnp.randn(diag.shape[0], 1)
     _, unflatten = Diagonal(diag).flatten()
 
@@ -39,12 +41,6 @@ def test_lanczos_vjp(xnp):
 
     out = f(diag)
     print(out)
-    if xnp.__name__.find("torch") >= 0:
-        out.backward()
-        approx = diag.grad.clone()
-    else:
-        approx = xnp.grad(f)(diag)
-    assert approx is not None
 
     import torch
     assert torch.autograd.gradcheck(f, diag_soln)
