@@ -34,9 +34,11 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
     d_params_vals = []
     for idx in range(eig_vecs.shape[-1]):
         fn = partial(fun, loc=idx)
-        dlam = xnp.vjp_derivs(fn, op_args, val_grads * eig_vecs[:, idx])[0]
-        d_params_vals.append(dlam)
-    d_vals = xnp.sum(xnp.stack(d_params_vals), axis=0)
+        dlam = xnp.vjp_derivs(fn, op_args, eig_vecs[:, idx])[0]
+        required_shape = dlam.shape
+        d_params_vals.append(dlam.reshape(-1))
+    d_vals = xnp.stack(d_params_vals)
+    d_vals = (val_grads @ d_vals).reshape(required_shape)
 
     # TODO: validate
     d_params_vecs = []

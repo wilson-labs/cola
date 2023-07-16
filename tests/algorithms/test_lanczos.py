@@ -3,6 +3,7 @@ from cola import jax_fns
 from cola import torch_fns
 from cola.fns import lazify
 from cola.ops import Diagonal
+from cola.ops import Dense
 from cola.algorithms.lanczos import construct_tridiagonal
 from cola.algorithms.lanczos import construct_tridiagonal_batched
 from cola.algorithms.lanczos import get_lanczos_coeffs
@@ -22,25 +23,32 @@ _tol = 1e-6
 @parametrize([torch_fns])
 def test_lanczos_vjp(xnp):
     dtype = xnp.float32
-    diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
-    diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
+    # diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
+    # diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
+    # _, unflatten = Diagonal(diag).flatten()
+    matrix = [[10., 2., 3.], [2., 14., 1.], [3., 1., 11.]]
+    diag = xnp.Parameter(xnp.array(matrix, dtype=dtype))
+    diag_soln = xnp.Parameter(xnp.array(matrix, dtype=dtype))
+    _, unflatten = Dense(diag).flatten()
     x0 = xnp.randn(diag.shape[0], 1)
-    _, unflatten = Diagonal(diag).flatten()
 
     def f(theta):
         Aop = unflatten([theta])
         out = lanczos_eig(Aop, x0, max_iters=10, tol=1e-6, pbar=False)
         eig_vals, eig_vecs = out
-        loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
+        # loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
+        loss = xnp.sum(eig_vals ** 2.)
         return loss
 
     def f_alt(theta):
-        A = xnp.diag(theta)
+        A = theta
         eig_vals, eig_vecs = xnp.eigh(A)
-        loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
+        # loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
+        loss = xnp.sum(eig_vals ** 2.)
         return loss
 
     out = f(diag)
+    print(out)
     if xnp.__name__.find("torch") >= 0:
         out.backward()
         approx = diag.grad.clone()
@@ -49,12 +57,15 @@ def test_lanczos_vjp(xnp):
     assert approx is not None
 
     out = f_alt(diag_soln)
+    print(out)
     if xnp.__name__.find("torch") >= 0:
         out.backward()
         soln = diag_soln.grad.clone()
     else:
         soln = xnp.grad(f_alt)(diag)
 
+    print(approx)
+    print(soln)
     rel_error = relative_error(soln, approx)
     assert rel_error < _tol * 10
 
