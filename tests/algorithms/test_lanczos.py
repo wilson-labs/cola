@@ -31,14 +31,13 @@ def test_lanczos_vjp(xnp):
         Aop = unflatten([theta])
         out = lanczos_eig(Aop, x0, max_iters=10, tol=1e-6, pbar=False)
         eig_vals, eig_vecs = out
-        # loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
-        loss = xnp.sum(eig_vals ** 2.)
+        loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
         return loss
 
     def f_alt(theta):
         A = xnp.diag(theta)
-        eig_vals, _ = xnp.eigh(A)
-        loss = xnp.sum(eig_vals ** 2.)
+        eig_vals, eig_vecs = xnp.eigh(A)
+        loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
         return loss
 
     out = f(diag)
@@ -73,7 +72,7 @@ def test_lanczos_complex(xnp):
     max_iters, tolerance = A.shape[0], 1e-7
     fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
     pbar = False
-    alpha, beta, idx, Q, _ = fn(B, rhs, max_iters, tolerance, pbar)
+    alpha, beta, Q, idx, _ = fn(B, rhs, max_iters, tolerance, pbar)
     alpha, Q = alpha[..., :idx - 1], Q[0]
     T = construct_tridiagonal(alpha.T, beta.T, alpha.T)
 
@@ -98,7 +97,7 @@ def test_lanczos_random(xnp):
     max_iters, tolerance = A.shape[0], 1e-7
     fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
     pbar = False
-    alpha, beta, idx, Q, _ = fn(B, rhs, max_iters, tolerance, pbar)
+    alpha, beta, Q, idx, _ = fn(B, rhs, max_iters, tolerance, pbar)
     alpha, Q = alpha[..., :idx - 1], Q[0]
     T = construct_tridiagonal(alpha.T, beta.T, alpha.T)
 
@@ -124,7 +123,7 @@ def test_lanczos_manual(xnp):
         max_iters, tolerance = A.shape[0], 1e-7
         fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
         pbar = False
-        alpha, beta, idx, Q, _ = fn(B, rhs, max_iters, tolerance, pbar)
+        alpha, beta, Q, idx, _ = fn(B, rhs, max_iters, tolerance, pbar)
         Q = Q[0]
 
         assert idx == idx_soln
@@ -146,7 +145,7 @@ def test_lanczos_iter(xnp):
     max_iters, tolerance = A.shape[0], 1e-7
     pbar = False
     fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
-    alpha, beta, idx, Q, _ = fn(B, rhs, max_iters, tolerance, pbar)
+    alpha, beta, Q, idx, _ = fn(B, rhs, max_iters, tolerance, pbar)
     alpha, Q = alpha[..., :idx - 1], Q
     T = construct_tridiagonal_batched(alpha, beta, alpha)
     eigvals, _ = xnp.eigh(T)

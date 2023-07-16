@@ -21,8 +21,8 @@ def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 
 
 
 def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
-    y_grads = grads[0]
-    op_args, (_, eig_vecs) = res
+    val_grads, eig_grads = grads
+    op_args, (eig_vals, eig_vecs) = res
     A = unflatten(op_args)
     xnp = A.ops
 
@@ -30,15 +30,28 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
         Aop = unflatten(theta)
         return Aop @ eig_vecs[:, loc]
 
-    # Still working on fixing this
-    d_params_list = []
+    # TODO: get rid of for loops
+    d_params_vals = []
     for idx in range(eig_vecs.shape[-1]):
         fn = partial(fun, loc=idx)
-        dlam = xnp.vjp_derivs(fn, op_args, y_grads * eig_vecs[:, idx])[0]
-        d_params_list.append(dlam)
+        dlam = xnp.vjp_derivs(fn, op_args, val_grads * eig_vecs[:, idx])[0]
+        d_params_vals.append(dlam)
+    d_vals = xnp.sum(xnp.stack(d_params_vals), axis=0)
 
-    aux = xnp.stack(d_params_list)
-    d_params = xnp.sum(aux, axis=0)
+    # TODO: validate
+    d_params_vecs = []
+    for idx in range(eig_vecs.shape[-1]):
+        fn = partial(fun, loc=idx)
+        op_diag = 1. / (eig_vals[idx] - eig_vals)
+        op_diag = xnp.nan_to_num(op_diag, nan=0., posinf=0., neginf=0.)
+        D = cola.ops.Diagonal(op_diag)
+        dlam = xnp.vjp_derivs(fn, op_args, eig_vecs[:, idx])[0]
+        out = eig_vecs @ D @ xnp.conj(eig_vecs) @ dlam
+        d_params_vecs.append(out)
+    d_vecs = xnp.stack(d_params_vecs)
+    d_vecs = xnp.sum(eig_grads * d_vecs, axis=[0, 1])
+
+    d_params = d_vals + d_vecs
     dA = unflatten([d_params])
     return (dA, )
 
