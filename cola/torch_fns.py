@@ -55,6 +55,7 @@ roll = torch.roll
 maximum = torch.maximum
 isreal = torch.isreal
 allclose = torch.allclose
+jacrev = torch.func.jacrev
 
 
 def get_device(array):

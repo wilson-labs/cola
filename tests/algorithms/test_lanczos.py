@@ -37,14 +37,17 @@ def test_lanczos_vjp(xnp):
         out = lanczos_eig(Aop, x0, max_iters=10, tol=1e-6, pbar=False)
         eig_vals, eig_vecs = out
         # loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
-        loss = xnp.sum(eig_vals ** 2.)
+        # loss = xnp.sum(eig_vals ** 2.)
+        loss = xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
         return loss
 
     def f_alt(theta):
+        # A = xnp.diag(theta)
         A = theta
         eig_vals, eig_vecs = xnp.eigh(A)
         # loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
-        loss = xnp.sum(eig_vals ** 2.)
+        # loss = xnp.sum(eig_vals ** 2.)
+        loss = xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
         return loss
 
     out = f(diag)
