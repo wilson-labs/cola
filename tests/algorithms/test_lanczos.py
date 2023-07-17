@@ -2,7 +2,6 @@ import numpy as np
 from cola import jax_fns
 from cola import torch_fns
 from cola.fns import lazify
-from cola.ops import Diagonal
 from cola.ops import Dense
 from cola.algorithms.lanczos import construct_tridiagonal
 from cola.algorithms.lanczos import construct_tridiagonal_batched

@@ -30,14 +30,6 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
         Aop = unflatten(theta)
         return Aop @ eig_vecs[:, loc]
 
-    def fun_eig(*theta, loc):
-        Aop = unflatten(theta)
-        op_diag = 1. / (eig_vals[loc] - eig_vals)
-        op_diag = xnp.nan_to_num(op_diag, nan=0., posinf=0., neginf=0.)
-        D = cola.ops.Diagonal(op_diag)
-        weights = eig_vecs @ D @ eig_vecs.T
-        return weights @ Aop @ eig_vecs[:, loc]
-
     d_params_vals = []
     for idx in range(eig_vecs.shape[-1]):
         fn = partial(fun, loc=idx)
@@ -46,6 +38,14 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
         d_params_vals.append(dlam.reshape(-1))
     d_vals = xnp.stack(d_params_vals)
     d_vals = (val_grads @ d_vals).reshape(required_shape)
+
+    def fun_eig(*theta, loc):
+        Aop = unflatten(theta)
+        op_diag = 1. / (eig_vals[loc] - eig_vals)
+        op_diag = xnp.nan_to_num(op_diag, nan=0., posinf=0., neginf=0.)
+        D = cola.ops.Diagonal(op_diag)
+        weights = eig_vecs @ D @ eig_vecs.T
+        return weights @ Aop @ eig_vecs[:, loc]
 
     d_params_vecs = []
     for idx in range(eig_vecs.shape[-1]):
