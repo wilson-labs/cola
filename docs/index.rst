@@ -85,21 +85,18 @@ Design Choices
    notebooks/About.ipynb
    notebooks/Quick_Start.ipynb
    notebooks/LinOpIntro.ipynb
+   notebooks/Examples_on_Basic_Functionality.ipynb
 
 .. toctree::
+   :glob:
    :maxdepth: 1
-   :caption: Linear Algebra
+   :caption: API Reference
 
-   notebooks/Linear_Solves.ipynb
-   notebooks/Eigendecomposition.ipynb
-   notebooks/SVD.ipynb
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Advanced Features
-
-   notebooks/Adding_Linear_Operators.ipynb
-   notebooks/Lower_Precision.ipynb
+   package/cola.linalg
+   package/cola.ops
+   package/cola.linear_operators
+   package/cola.fns
+   package/cola.algorithms
 
 .. toctree::
    :maxdepth: 1
@@ -114,20 +111,16 @@ Design Choices
 
 .. toctree::
    :maxdepth: 1
-   :caption: Exercise
+   :caption: Advanced Features
 
-   notebooks/07_worksheet.ipynb
+   notebooks/Adding_Linear_Operators.ipynb
+   notebooks/Lower_Precision.ipynb
 
 .. toctree::
-   :glob:
    :maxdepth: 1
-   :caption: API Reference
+   :caption: Exercises
 
-   package/cola.linear_operators
-   package/cola.ops
-   package/cola.linalg
-   package/cola.fns
-   package/cola.algorithms
+   notebooks/worksheet.ipynb
 
 .. toctree::
    :maxdepth: 1
