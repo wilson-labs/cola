@@ -1,20 +1,20 @@
+import numpy as np
 from plum import dispatch
 from cola.ops import LinearOperator
-from cola.annotations import Unitary
 from cola.ops import Diagonal
 from cola.ops import Identity
 from cola.ops import ScalarMul
 from cola.ops import BlockDiag
 from cola.ops import Kronecker, Sum
-# from cola.annotations import SelfAdjoint
 from cola.algorithms.cg import cg
 from cola.algorithms.gmres import gmres
 from cola.algorithms.svrg import solve_svrg_symmetric
-import numpy as np
 from cola.utils.dispatch import parametric
 from cola.utils import export
 from cola.fns import lazify
-import cola
+from cola.annotations import Unitary
+from cola import SelfAdjoint
+
 
 @parametric
 class IterativeInverse(LinearOperator):
@@ -76,7 +76,8 @@ def inverse(A: LinearOperator, **kwargs):
         x0 (array, optional): The initial guess for the solution
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
         max_iters (int, optional): The maximum number of iterations. Defaults to 5000.
-        method (str, optional): Method to use, defaults to 'auto', options are 'auto', 'dense', 'krylov', 'svrg'.
+        method (str, optional): Method to use, defaults to 'auto',
+         options are 'auto', 'dense', 'krylov', 'svrg'.
 
     Returns:
         Array: The inverse of the linear operator.
@@ -87,7 +88,7 @@ def inverse(A: LinearOperator, **kwargs):
 
     """
     kws = dict(tol=1e-6, P=None, x0=None, pbar=False, max_iters=5000)
-    assert not kwargs.keys()-kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
+    assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
@@ -96,9 +97,9 @@ def inverse(A: LinearOperator, **kwargs):
     #     return SymmetricSVRGInverse(A.A, **kws)
     elif issubclass(type(A), Sum) and (method == 'svrg' or (method == 'auto' and len(A.Ms) > 1e4)):
         return GenericSVRGInverse(A, **kws)
-    elif A.isa(cola.SelfAdjoint) and ((method == 'cg' or method=='krylov') or (method == 'auto' and np.prod(A.shape) > 1e6)):
+    elif A.isa(SelfAdjoint) and ((method == 'cg' or method == 'krylov') or (method == 'auto' and np.prod(A.shape) > 1e6)):
         return CGInverse(A, **kws)
-    elif (method == 'gmres' or method=='krylov') or (method == 'auto' and np.prod(A.shape) > 1e6):
+    elif (method == 'gmres' or method == 'krylov') or (method == 'auto' and np.prod(A.shape) > 1e6):
         return GMResInverse(A, **kws)
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
@@ -107,6 +108,7 @@ def inverse(A: LinearOperator, **kwargs):
 @dispatch
 def inverse(A: Identity, **kwargs):
     return A
+
 
 @dispatch
 def inverse(A: ScalarMul, **kwargs) -> ScalarMul:

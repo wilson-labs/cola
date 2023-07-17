@@ -4,6 +4,7 @@ from cola.ops import get_library_fns
 import numpy as np
 import itertools
 
+
 def strip_parens(string):
     return string.replace('(', '').replace(')', '')
 
@@ -11,14 +12,16 @@ def strip_parens(string):
 def parametrize(*cases, ids=None):
     """ Expands test cases with pytest.mark.parametrize but with argnames
         assumed and ids given by the ids=[str(case) for case in cases] """
-    if len(cases) >1:
+    if len(cases) > 1:
         all_cases = [tuple(elem) for elem in itertools.product(*cases)]
     else:
         all_cases = cases[0]
+
     def decorator(test_fn):
         argnames = ','.join(inspect.getfullargspec(test_fn).args)
         theids = [strip_parens(str(case)) for case in all_cases] if ids is None else ids
         return pytest.mark.parametrize(argnames, all_cases, ids=theids)(test_fn)
+
     return decorator
 
 
