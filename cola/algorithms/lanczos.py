@@ -35,10 +35,9 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
         op_diag = 1. / (eig_vals[loc] - eig_vals)
         op_diag = xnp.nan_to_num(op_diag, nan=0., posinf=0., neginf=0.)
         D = cola.ops.Diagonal(op_diag)
-        weights = eig_vecs @ D @ xnp.conj(eig_vecs).T
+        weights = eig_vecs @ D @ eig_vecs.T
         return weights @ Aop @ eig_vecs[:, loc]
 
-    # TODO: get rid of for loops
     d_params_vals = []
     for idx in range(eig_vecs.shape[-1]):
         fn = partial(fun, loc=idx)
@@ -48,17 +47,11 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
     d_vals = xnp.stack(d_params_vals)
     d_vals = (val_grads @ d_vals).reshape(required_shape)
 
-    # TODO: need to extract jacobian
     d_params_vecs = []
     for idx in range(eig_vecs.shape[-1]):
-        fn = partial(fun, loc=idx)
-        op_diag = 1. / (eig_vals[idx] - eig_vals)
-        op_diag = xnp.nan_to_num(op_diag, nan=0., posinf=0., neginf=0.)
-        D = cola.ops.Diagonal(op_diag)
+        fn = partial(fun_eig, loc=idx)
         dl_jac = xnp.jacrev(fn)(*op_args)
-        weights = eig_vecs @ D @ xnp.conj(eig_vecs).T
-        out = weights @ dl_jac
-        d_params_vecs.append(eig_grads[:, idx] @ out)
+        d_params_vecs.append(eig_grads[:, idx] @ dl_jac)
     d_vecs = xnp.stack(d_params_vecs)
     d_vecs = xnp.sum(d_vecs, axis=0)
 

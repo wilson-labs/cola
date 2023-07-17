@@ -22,14 +22,18 @@ _tol = 1e-6
 # @parametrize([torch_fns, jax_fns])
 @parametrize([torch_fns])
 def test_lanczos_vjp(xnp):
-    dtype = xnp.float32
+    dtype = xnp.float64
     # diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
     # diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
     # _, unflatten = Diagonal(diag).flatten()
     matrix = [[10., 2., 3.], [2., 14., 1.], [3., 1., 11.]]
+    # matrix = [[6., 2., 3.], [2., 3., 1.], [3., 1., 4.]]
+    # matrix = [[3., 0., 0.], [0., 4., 0.], [0., 0., 5.]]
     diag = xnp.Parameter(xnp.array(matrix, dtype=dtype))
     diag_soln = xnp.Parameter(xnp.array(matrix, dtype=dtype))
     _, unflatten = Dense(diag).flatten()
+    import torch
+    torch.manual_seed(seed=21)
     x0 = xnp.randn(diag.shape[0], 1)
 
     def f(theta):
@@ -37,8 +41,9 @@ def test_lanczos_vjp(xnp):
         out = lanczos_eig(Aop, x0, max_iters=10, tol=1e-6, pbar=False)
         eig_vals, eig_vecs = out
         # loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
-        # loss = xnp.sum(eig_vals ** 2.)
-        loss = xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
+        loss = xnp.sum(eig_vals ** 2.)
+        # loss = xnp.sum(eig_vecs ** 2., axis=[0, 1])
+        # loss = xnp.sum(eig_vecs, axis=[0, 1])
         return loss
 
     def f_alt(theta):
@@ -46,8 +51,9 @@ def test_lanczos_vjp(xnp):
         A = theta
         eig_vals, eig_vecs = xnp.eigh(A)
         # loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
-        # loss = xnp.sum(eig_vals ** 2.)
-        loss = xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
+        loss = xnp.sum(eig_vals ** 2.)
+        # loss = xnp.sum(eig_vecs ** 2., axis=[0, 1])
+        # loss = xnp.sum(eig_vecs, axis=[0, 1])
         return loss
 
     out = f(diag)
