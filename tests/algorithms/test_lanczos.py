@@ -25,8 +25,8 @@ def test_lanczos_vjp(xnp):
     # diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
     # diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
     # _, unflatten = Diagonal(diag).flatten()
-    matrix = [[10., 2., 3.], [2., 14., 1.], [3., 1., 11.]]
-    # matrix = [[6., 2., 3.], [2., 3., 1.], [3., 1., 4.]]
+    # matrix = [[10., 2., 3.], [2., 14., 1.], [3., 1., 11.]]
+    matrix = [[6., 2., 3.], [2., 3., 1.], [3., 1., 4.]]
     # matrix = [[3., 0., 0.], [0., 4., 0.], [0., 0., 5.]]
     diag = xnp.Parameter(xnp.array(matrix, dtype=dtype))
     diag_soln = xnp.Parameter(xnp.array(matrix, dtype=dtype))
@@ -74,8 +74,8 @@ def test_lanczos_vjp(xnp):
 
     print(approx)
     print(soln)
-    rel_error = relative_error(soln, approx)
-    assert rel_error < _tol * 10
+    abs_error = xnp.norm(soln - approx)
+    assert abs_error < _tol * 10
 
 
 @parametrize([torch_fns, jax_fns])

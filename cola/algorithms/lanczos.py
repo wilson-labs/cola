@@ -24,6 +24,7 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
     val_grads, eig_grads = grads
     op_args, (eig_vals, eig_vecs) = res
     A = unflatten(op_args)
+    N = A.shape[0]
     xnp = A.ops
 
     def fun(*theta, loc):
@@ -51,9 +52,10 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
     for idx in range(eig_vecs.shape[-1]):
         fn = partial(fun_eig, loc=idx)
         dl_jac = xnp.jacrev(fn)(*op_args)
-        d_params_vecs.append(eig_grads[:, idx] @ dl_jac)
+        dl_jac = dl_jac.reshape(N, N * N)
+        out = xnp.sum(eig_grads[:, idx] @ dl_jac)
+        d_params_vecs.append(out)
     d_vecs = xnp.stack(d_params_vecs)
-    d_vecs = xnp.sum(d_vecs, axis=0)
 
     d_params = d_vals + d_vecs
     dA = unflatten([d_params])
