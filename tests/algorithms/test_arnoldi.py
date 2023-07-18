@@ -63,20 +63,22 @@ def test_get_arnoldi_matrix(xnp):
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=20, dtype=np.float32) - 0.5
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)
     rhs = xnp.randn(A.shape[1], 1, dtype=dtype)
-    max_iter = A.shape[0] - 5
+    # max_iter = A.shape[0] - 5
+    max_iter = A.shape[0]
     A_np, rhs_np = np.array(A, dtype=np.complex128), np.array(rhs[:, 0], dtype=np.complex128)
     Q_sol, H_sol = run_arnoldi(A_np, rhs_np, max_iter=max_iter, tol=1e-7, dtype=np.complex128)
 
     fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3, 4))
     Q_approx, H_approx, *_ = fn(lazify(A), rhs, max_iter, tol=1e-12, pbar=False)
 
-    for soln, approx in ((Q_sol, Q_approx), (H_sol, H_approx)):
+    for soln, approx in ((Q_sol[:, :-1], Q_approx), (H_sol[:-1, :], H_approx)):
         rel_error = relative_error(xnp.array(soln, dtype=dtype), approx)
         assert rel_error < 1e-12
 
-    rel_error = relative_error(A @ Q_approx[:, :-1], Q_approx @ H_approx)
+    # Next test is only valid when full decomposition is ran
+    rel_error = relative_error(A @ Q_approx, Q_approx @ H_approx)
     assert rel_error < 1e-12
-    rel_error = relative_error(Q_approx[:, :-1].conj().T @ A @ Q_approx[:, :-1], H_approx[:-1, :])
+    rel_error = relative_error(Q_approx.conj().T @ A @ Q_approx, H_approx)
     assert rel_error < 1e-12
 
 
