@@ -37,18 +37,15 @@ def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=No
     else:
         Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=res, max_iters=max_iters, tol=tol,
                                                pbar=pbar)
-        Q = Q[:, :-1]
+        H, Q = H[:, :, 0], Q[:, :, 0]  # TODO: take this fix out
     beta = xnp.norm(res, axis=-2)
-    e1 = xnp.zeros(shape=(H.shape[0], 1), dtype=rhs.dtype)
+    e1 = xnp.zeros(shape=(H.shape[0], beta.shape[0]), dtype=rhs.dtype)
     e1 = xnp.update_array(e1, beta, 0)
 
     if use_triangular:
         R, Gs = get_hessenberg_triangular_qr(H, xnp=xnp)
         target = apply_givens_fwd(Gs, e1, xnp)
-        if use_householder:
-            y = xnp.solvetri(R, target, lower=False)
-        else:
-            y = xnp.solvetri(R[:-1, :], target[:-1, :], lower=False)
+        y = xnp.solvetri(R, target, lower=False)
     else:
         y = xnp.solve(H.T @ H, H.T @ e1)
     soln = x0 + Q @ y

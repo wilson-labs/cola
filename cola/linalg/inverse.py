@@ -43,7 +43,7 @@ class GMResInverse(IterativeInverse):
         self.info = {}
 
     def _matmat(self, X):
-        out = gmres(self.A, X, **self.kwargs)
+        out, self.info = gmres(self.A, X, **self.kwargs)
         return out
 
 
@@ -87,7 +87,7 @@ def inverse(A: LinearOperator, **kwargs):
         >>> x = cola.inverse(A) @ b
 
     """
-    kws = dict(tol=1e-6, P=None, x0=None, pbar=False, max_iters=5000)
+    kws = dict(method="dense", tol=1e-6, P=None, x0=None, pbar=False, max_iters=5000)
     assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
     method = kws.pop('method', 'auto')

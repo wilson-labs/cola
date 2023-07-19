@@ -40,20 +40,21 @@ def test_gmres_easy(xnp):
     fn = gmres
     x0 = xnp.zeros_like(rhs)
 
-    approx = fn(lazify(A), rhs, x0, max_iters, tolerance)
+    approx, _ = fn(lazify(A), rhs, x0, max_iters, tolerance)
     rel_error = relative_error(soln, approx)
     assert rel_error < 1e-7
 
-    approx = fn(lazify(A), rhs, x0, max_iters, tolerance, use_householder=False,
-                use_triangular=True)
+    approx, _ = fn(lazify(A), rhs, x0, max_iters, tolerance, use_householder=False,
+                   use_triangular=True)
     rel_error = relative_error(soln, approx)
     assert rel_error < 1e-7
 
-    approx = fn(lazify(A), rhs, x0, max_iters, tolerance, use_householder=True,
-                use_triangular=False)
+    approx, _ = fn(lazify(A), rhs, x0, max_iters, tolerance, use_householder=True,
+                   use_triangular=False)
     rel_error = relative_error(soln, approx)
     assert rel_error < 5e-7
 
-    approx = fn(lazify(A), rhs, x0, max_iters, tolerance, use_householder=True, use_triangular=True)
+    approx, _ = fn(lazify(A), rhs, x0, max_iters, tolerance, use_householder=True,
+                   use_triangular=True)
     rel_error = relative_error(soln, approx)
     assert rel_error < 5e-7
