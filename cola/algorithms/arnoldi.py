@@ -55,6 +55,7 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1
     else:
         Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=start_vector, max_iters=max_iters, tol=tol,
                                                pbar=pbar)
+        Q, H = Q[:, :, 0], H[:, :, 0]
     return Q, H, infodict
 
 
@@ -188,7 +189,7 @@ def initialize_arnoldi(xnp, rhs, max_iters, dtype):
     idx = xnp.array(0, dtype=xnp.int32)
     H = xnp.zeros(shape=(max_iters + 1, max_iters, rhs.shape[-1]), dtype=dtype)
     Q = xnp.zeros(shape=(rhs.shape[-2], max_iters + 1, rhs.shape[-1]), dtype=dtype)
-    rhs = rhs / xnp.norm(rhs)
-    Q = xnp.update_array(Q, xnp.copy(rhs[:, [0]]), ..., 0, slice(None, None, None))
-    norm = xnp.norm(rhs, axis=0)
+    rhs = rhs / xnp.norm(rhs, axis=-2)
+    Q = xnp.update_array(Q, xnp.copy(rhs), ..., 0, slice(None, None, None))
+    norm = xnp.norm(rhs, axis=-2)
     return Q, H, idx, norm

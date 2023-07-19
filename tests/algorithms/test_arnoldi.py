@@ -64,15 +64,18 @@ def test_get_arnoldi_matrix(xnp):
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)
     rhs = xnp.randn(A.shape[1], 1, dtype=dtype)
     rhs = xnp.concatenate((rhs, rhs), axis=-1)
-    # max_iter = A.shape[0] - 5
     max_iter = A.shape[0]
     A_np, rhs_np = np.array(A, dtype=np.complex128), np.array(rhs[:, 0], dtype=np.complex128)
     Q_sol, H_sol = run_arnoldi(A_np, rhs_np, max_iter=max_iter, tol=1e-7, dtype=np.complex128)
 
     fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3, 4))
     Q_approx, H_approx, *_ = fn(lazify(A), rhs, max_iter, tol=1e-12, pbar=False)
-    Q_approx, H_approx = Q_approx[:, :, 0], H_approx[:, :, 0]
 
+    rel_error = relative_error(Q_approx[:, :, 0], Q_approx[:, :, 1])
+    rel_error += relative_error(H_approx[:, :, 0], H_approx[:, :, 1])
+    assert rel_error < 1e-12
+
+    Q_approx, H_approx = Q_approx[:, :, 0], H_approx[:, :, 0]
     for soln, approx in ((Q_sol[:, :-1], Q_approx), (H_sol[:-1, :], H_approx)):
         rel_error = relative_error(xnp.array(soln, dtype=dtype), approx)
         assert rel_error < 1e-12
