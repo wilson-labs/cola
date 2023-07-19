@@ -30,7 +30,6 @@ class CGInverse(IterativeInverse):
         self.info = {}
 
     def _matmat(self, X):
-        # TODO: move this info handling to cg?
         out, self.info = cg(self.A, X, **self.kwargs)
         return out
 
@@ -55,7 +54,6 @@ class SymmetricSVRGInverse(IterativeInverse):
         self.info = {}
 
     def _matmat(self, X):
-        # TODO: move this info handling to cg?
         out, self.info = solve_svrg_symmetric(self.A, X, **self.kwargs)
         return out
 

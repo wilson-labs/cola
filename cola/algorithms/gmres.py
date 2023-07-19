@@ -37,18 +37,25 @@ def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=No
     else:
         Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=res, max_iters=max_iters, tol=tol,
                                                pbar=pbar)
-        H, Q = H[:, :, 0], Q[:, :, 0]  # TODO: take this fix out
     beta = xnp.norm(res, axis=-2)
     e1 = xnp.zeros(shape=(H.shape[0], beta.shape[0]), dtype=rhs.dtype)
     e1 = xnp.update_array(e1, beta, 0)
 
     if use_triangular:
-        R, Gs = get_hessenberg_triangular_qr(H, xnp=xnp)
+        R, Gs = get_hessenberg_triangular_qr(H[:, :, 0], xnp=xnp)
         target = apply_givens_fwd(Gs, e1, xnp)
         y = xnp.solvetri(R, target, lower=False)
+        pred = Q[:, :, 0] @ y
     else:
-        y = xnp.solve(H.T @ H, H.T @ e1)
-    soln = x0 + Q @ y
+        nH = xnp.permute(H, axes=[2, 0, 1])
+        nHT = xnp.permute(H, axes=[2, 1, 0])
+        ne1 = xnp.permute(e1[None], axes=[2, 1, 0])
+        nQ = xnp.permute(Q, axes=[2, 0, 1])
+
+        y = xnp.solve(nHT @ nH, nHT @ ne1)
+        pred = xnp.permute(nQ @ y, axes=[1, 0, 2])[:, :, 0]
+
+    soln = x0 + pred
     if is_vector:
         soln = soln[:, 0]
     return soln, infodict

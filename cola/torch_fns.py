@@ -58,6 +58,10 @@ allclose = torch.allclose
 jacrev = torch.func.jacrev
 
 
+def tensordot(a, b, axes=2):
+    return torch.tensordot(a, b, dims=axes)
+
+
 def get_device(array):
     return array.device
 
