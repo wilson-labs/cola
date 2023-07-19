@@ -172,7 +172,7 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
         new_vec, h_vec = xnp.for_loop(0, idx + 1, inner_loop, (new_vec, h_vec))
 
         norm = xnp.norm(new_vec, axis=-2)
-        new_vec /= norm
+        new_vec /= xnp.clip(norm, a_min=tol / 2.)
         h_vec = xnp.update_array(h_vec, norm, idx + 1)
         H = xnp.update_array(H, h_vec, ..., idx, slice(None, None, None))
         Q = xnp.update_array(Q, new_vec, ..., idx + 1, slice(None, None, None))
