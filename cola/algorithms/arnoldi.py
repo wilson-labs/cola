@@ -153,32 +153,32 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
     def cond_fun(state):
         *_, idx, norm = state
         is_not_max = idx < max_iters
-        is_large = norm >= tol
+        is_large = xnp.all(norm >= tol)
         return is_not_max & is_large
 
     def body_fun(state):
         Q, H, idx, _ = state
-        new_vec = A @ Q[..., [idx]]
-        inner_state = (new_vec, xnp.zeros(shape=(max_iters + 1, ), dtype=new_vec.dtype))
+        new_vec = A @ Q[..., idx, :]
+        h_vec = xnp.zeros(shape=(max_iters + 1, rhs.shape[-1]), dtype=new_vec.dtype)
 
         def inner_loop(jdx, result):
             new_vec, h_vec = result
-            angle = xnp.sum(xnp.conj(Q[..., [jdx]]) * new_vec)
+            angle = xnp.sum(xnp.conj(Q[..., jdx, :]) * new_vec, axis=-2)
             h_vec = xnp.update_array(h_vec, angle, jdx)
-            new_vec = new_vec - h_vec[jdx] * Q[..., [jdx]]
+            new_vec = new_vec - h_vec[jdx][None] * Q[..., jdx, :]
             return (new_vec, h_vec)
 
-        new_vec, h_vec = xnp.for_loop(0, idx + 1, inner_loop, inner_state)
+        new_vec, h_vec = xnp.for_loop(0, idx + 1, inner_loop, (new_vec, h_vec))
 
-        norm = xnp.norm(new_vec)
+        norm = xnp.norm(new_vec, axis=-2)
         new_vec /= norm
         h_vec = xnp.update_array(h_vec, norm, idx + 1)
-        Q = xnp.update_array(Q, new_vec[..., 0], ..., idx + 1)
-        H = xnp.update_array(H, h_vec, ..., idx)
+        H = xnp.update_array(H, h_vec, ..., idx, slice(None, None, None))
+        Q = xnp.update_array(Q, new_vec, ..., idx + 1, slice(None, None, None))
         return Q, H, idx + 1, norm
 
     init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-    while_fn, info = xnp.while_loop_winfo(lambda s: s[-1], pbar=pbar, tol=tol)
+    while_fn, info = xnp.while_loop_winfo(lambda s: s[-1][0], pbar=pbar, tol=tol)
     state = while_fn(cond_fun, body_fun, init_val)
     Q, H, idx, _ = state
     return Q[:, :-1], H[:-1, :], idx - 1, info
@@ -186,9 +186,9 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
 
 def initialize_arnoldi(xnp, rhs, max_iters, dtype):
     idx = xnp.array(0, dtype=xnp.int32)
-    H = xnp.zeros(shape=(max_iters + 1, max_iters), dtype=dtype)
-    Q = xnp.zeros(shape=(rhs.shape[-2], max_iters + 1), dtype=dtype)
+    H = xnp.zeros(shape=(max_iters + 1, max_iters, rhs.shape[-1]), dtype=dtype)
+    Q = xnp.zeros(shape=(rhs.shape[-2], max_iters + 1, rhs.shape[-1]), dtype=dtype)
     rhs = rhs / xnp.norm(rhs)
-    Q = xnp.update_array(Q, xnp.copy(rhs[:, 0]), ..., 0)
-    norm = 1.
+    Q = xnp.update_array(Q, xnp.copy(rhs[:, [0]]), ..., 0, slice(None, None, None))
+    norm = xnp.norm(rhs, axis=0)
     return Q, H, idx, norm
