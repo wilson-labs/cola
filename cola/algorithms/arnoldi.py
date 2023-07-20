@@ -6,8 +6,9 @@ from cola.utils import export
 import cola
 
 
-def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7,
-                use_householder=False, pbar=False):
+@export
+def arnoldi_eig(A: LinearOperator, rhs: Array = None, max_iters: int = 1000,
+                tol: float = 1e-7, use_householder=False, pbar=False):
     """Computes eigenvalues and eigenvectors using Arnoldi iteration.
 
     Args:
@@ -26,7 +27,10 @@ def arnoldi_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7
                          use_householder=use_householder, pbar=pbar)
     xnp = A.ops
     eigvals, eigvectors = xnp.eig(H)
-    return eigvals, xnp.cast(Q, dtype=eigvectors.dtype) @ eigvectors
+    eigvectors = xnp.cast(Q, dtype=eigvectors.dtype) @ eigvectors
+    eigvectors = xnp.cast(eigvectors, dtype=A.dtype)
+    eigvals = xnp.cast(eigvals, dtype=A.dtype)
+    return eigvals, eigvectors, info
 
 
 @export
