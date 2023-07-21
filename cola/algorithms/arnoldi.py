@@ -186,7 +186,7 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
     while_fn, info = xnp.while_loop_winfo(lambda s: s[-1][0], pbar=pbar, tol=tol)
     state = while_fn(cond_fun, body_fun, init_val)
     Q, H, idx, _ = state
-    return Q[:, :-1], H[:-1, :], idx - 1, info
+    return Q[:, :-1], H[:-1, :], idx, info
 
 
 def initialize_arnoldi(xnp, rhs, max_iters, dtype):
