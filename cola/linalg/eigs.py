@@ -2,6 +2,7 @@ from typing import Tuple
 from math import prod
 from plum import dispatch
 from cola import SelfAdjoint
+from cola import Unitary
 from cola.fns import lazify
 from cola.ops import LinearOperator
 from cola.ops import Array
@@ -52,7 +53,7 @@ def eig(A: LinearOperator, **kwargs) -> Tuple[Array, Array]:
     if A.isa(SelfAdjoint):
         if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
             eig_vals, eig_vecs = xnp.eigh(A.to_dense())
-            return eig_vals[eig_slice], lazify(eig_vecs[:, eig_slice])
+            return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
         elif method in ('lanczos', 'krylov') or (method == 'auto' and prod(A.shape) >= 1e6):
             return eig(LanczosDecomposition(A, **kws), eig_slice=eig_slice)
             # rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
@@ -62,7 +63,7 @@ def eig(A: LinearOperator, **kwargs) -> Tuple[Array, Array]:
             raise ValueError(f"Unknown method {method} for SelfAdjoint operator")
     elif method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
         eig_vals, eig_vecs = xnp.eig(A.to_dense())
-        return eig_vals[eig_slice], lazify(eig_vecs[:, eig_slice])
+        return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
     elif method in ('arnoldi', 'krylov') or (method == 'auto' and prod(A.shape) >= 1e6):
         return eig(ArnoldiDecomposition(A, **kws), eig_slice=eig_slice)
         # rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
