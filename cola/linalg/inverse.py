@@ -26,6 +26,7 @@ class CholeskyInverse(LinearOperator):
         super().__init__(A.dtype, A.shape)
         self.ops = A.ops
         self.L = self.ops.cholesky(A.to_dense())
+        self.info = {}
 
     def _matmat(self, X):
         Y = self.ops.solvetri(self.L, X, lower=True)
@@ -38,6 +39,7 @@ class LUInverse(LinearOperator):
         super().__init__(A.dtype, A.shape)
         self.ops = A.ops
         self.A = A.to_dense()
+        self.info = {}
 
     def _matmat(self, X):
         # TODO: see whether to call LU function from lax directly

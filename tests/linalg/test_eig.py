@@ -23,7 +23,7 @@ def test_general(xnp):
     A = lazify(A)
 
     eig_vals, eig_vecs = eig(A, eig_slice=slice(0, None, None), tol=1e-6)
-    eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs, dtype)
+    eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs.to_dense(), dtype)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
     rel_error = relative_error(soln_vals, xnp.sort(eig_vals))
     assert rel_error < _tol
@@ -37,7 +37,7 @@ def test_general(xnp):
 
     A.annotations = set()
     eig_vals, eig_vecs = eig(A, tol=1e-6, method="arnoldi", max_iters=A.shape[-1])
-    eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs, dtype)
+    eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs.to_dense(), dtype)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
     # approx = Q[:, :-1] @ eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T @ Q[:, :-1].T
     rel_error = relative_error(soln_vals, xnp.sort(eig_vals))
@@ -81,6 +81,7 @@ def test_diagonal(xnp):
     soln_vecs = [[1., 0., 0., 0.], [0., 0., 1., 0.], [0., 1., 0., 0.], [0., 0., 0., 1.]]
     soln_vecs = xnp.array(soln_vecs, dtype=dtype)
     eig_vals, eig_vecs = eig(Diagonal(diag=diag))
+    eig_vecs = eig_vecs.to_dense()
 
     rel_error = relative_error(xnp.sort(diag), eig_vals)
     assert rel_error < _tol
