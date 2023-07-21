@@ -23,7 +23,7 @@ def test_arnoldi_eig(xnp):
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=4, dtype=np.float32)
     A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype)
     rhs = xnp.cast(xnp.randn(A.shape[1], 1, dtype=xnp.float32), dtype=dtype)
-    eigvals, eigvecs = arnoldi_eig(lazify(A), rhs, max_iters=A.shape[-1])
+    eigvals, eigvecs, _ = arnoldi_eig(lazify(A), rhs, max_iters=A.shape[-1])
     approx = xnp.sort(xnp.cast(eigvals, xnp.float32))
     soln = xnp.sort(xnp.array(diag, xnp.float32))
 
