@@ -11,7 +11,6 @@ from cola.algorithms.gmres import gmres
 from cola.algorithms.svrg import solve_svrg_symmetric
 from cola.utils.dispatch import parametric
 from cola.utils import export
-from cola.fns import lazify
 from cola.annotations import Unitary
 from cola import SelfAdjoint
 
@@ -20,6 +19,18 @@ from cola import SelfAdjoint
 class IterativeInverse(LinearOperator):
     def __str__(self):
         return f"{str(self.A)}⁻¹"
+
+
+class LUOperator(LinearOperator):
+    def __init__(self, A, **kwargs):
+        super().__init__(A.dtype, A.shape)
+        self.ops = A.ops
+        self.A = A.to_dense()
+
+    def _matmat(self, X):
+        # TODO: see whether to call LU function from lax directly
+        soln = self.ops.lu_solve(self.A, X)
+        return soln
 
 
 class CGInverse(IterativeInverse):
@@ -90,7 +101,8 @@ def inverse(A: LinearOperator, **kwargs):
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
-        return lazify(A.ops.inv(A.to_dense()))
+        # return lazify(A.ops.inv(A.to_dense()))
+        return LUOperator(A)
     # elif issubclass(type(A), SelfAdjoint[Sum]) and (method == 'svrg' or (method == 'auto' and len(A.A.Ms) > 1e4)):
     #     return SymmetricSVRGInverse(A.A, **kws)
     elif issubclass(type(A), Sum) and (method == 'svrg' or (method == 'auto' and len(A.Ms) > 1e4)):

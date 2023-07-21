@@ -58,6 +58,10 @@ allclose = torch.allclose
 jacrev = torch.func.jacrev
 
 
+def lu_solve(a, b):
+    return solve(a, b)
+
+
 def tensordot(a, b, axes=2):
     return torch.tensordot(a, b, dims=axes)
 

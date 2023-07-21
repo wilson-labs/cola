@@ -86,6 +86,10 @@ allclose = jnp.allclose
 # convolve = jax.scipy.signal.convolve
 
 
+def lu_solve(a, b):
+    return solve(a, b)
+
+
 def get_device(array):
     if not isinstance(array, jax.core.Tracer):
         return array.device()
