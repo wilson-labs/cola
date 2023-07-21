@@ -26,7 +26,7 @@ def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int, 
     # TODO: how can we jit here given the iter shape change?
     xnp = A.ops
     rhs = xnp.randn(A.shape[1], num_samples, dtype=A.dtype)
-    alpha, beta, iters, *_ = lanczos_parts(A, rhs, max_iters, tol, pbar)
+    alpha, beta, _, iters, _ = lanczos_parts(A, rhs, max_iters, tol, pbar)
     alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
     T = construct_tridiagonal_batched(alpha, beta, alpha)
     eigvals, Q = xnp.eigh(T)
@@ -52,19 +52,10 @@ def slq_bwd(res, grads, unflatten, *args, **kwargs):
         return Aop @ probes
 
     d_params = xnp.vjp_derivs(fun=fun, primals=op_args, duals=d_solves)
-    dA = unflatten([d_params])
+    dA = unflatten(d_params)
     return (dA, )
 
 
 @iterative_autograd(slq_bwd)
 def slq_fwd(A, fun, num_samples, max_iters, tol, pbar):
-    xnp = A.ops
-    rhs = xnp.randn(A.shape[1], num_samples, dtype=A.dtype)
-    alpha, beta, iters, *_ = lanczos_parts(A, rhs, max_iters, tol, pbar)
-    alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
-    T = construct_tridiagonal_batched(alpha, beta, alpha)
-    eigvals, Q = xnp.eigh(T)
-    tau = Q[..., 0, :]
-    approx = xnp.sum(tau**2 * fun(eigvals), axis=-1)
-    estimate = A.shape[-2] * approx
-    return xnp.mean(estimate, axis=0)
+    return stochastic_lanczos_quad(A, fun, num_samples, max_iters, tol, pbar)

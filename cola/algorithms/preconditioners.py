@@ -78,7 +78,7 @@ def estimate_approx_error(A, Lambda, U, tol, max_iter):
         return A @ V - U @ (Diag * (U.T @ V))
 
     E = LinearOperator(dtype=A.dtype, shape=A.shape, matmat=matmat)
-    _, error = power_iteration(E, tol=tol, max_iter=max_iter)
+    _, error, _ = power_iteration(E, tol=tol, max_iter=max_iter)
     return xnp.abs(error)
 
 
