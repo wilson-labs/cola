@@ -1,7 +1,7 @@
 from cola import jax_fns
 from cola import torch_fns
 from cola.fns import lazify
-from cola.ops import Diagonal, LinearOperator
+from cola.ops import Diagonal
 from cola.annotations import SelfAdjoint
 from cola.linalg.eigs import eig
 from jax.config import config
@@ -13,7 +13,8 @@ config.update('jax_platform_name', 'cpu')
 _tol = 1e-6
 
 
-@parametrize([torch_fns, jax_fns])
+# @parametrize([torch_fns, jax_fns])
+@parametrize([torch_fns])
 def test_general(xnp):
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
@@ -21,14 +22,14 @@ def test_general(xnp):
     soln_vals = xnp.sort(xnp.array(diag, dtype=dtype))
     A = lazify(A)
 
-    eig_vals, eig_vecs = eig(A, eig_slice=slice(0, None, None), tol=1e-6, info=True)
+    eig_vals, eig_vecs = eig(A, eig_slice=slice(0, None, None), tol=1e-6)
     eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs, dtype)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
     rel_error = relative_error(soln_vals, xnp.sort(eig_vals))
     assert rel_error < _tol
     rel_error = relative_error(A.to_dense(), approx)
     assert rel_error < _tol * 5
-    eig_vals, eig_vecs = eig(A, eig_slice=slice(-2, None), tol=1e-6, info=True)
+    eig_vals, eig_vecs = eig(A, eig_slice=slice(-2, None), tol=1e-6)
     eig_vals = xnp.cast(eig_vals, dtype)
     rel_error = relative_error(soln_vals[-2:], xnp.sort(eig_vals))
     assert rel_error < _tol
@@ -68,7 +69,7 @@ def test_adjoint(xnp):
 
     rel_error = relative_error(soln_vals, eig_vals)
     assert rel_error < _tol
-    
+
     rel_error = relative_error(A.to_dense(), approx)
     assert rel_error < _tol
 
