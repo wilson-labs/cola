@@ -108,7 +108,7 @@ def eig(A: Diagonal, eig_slice=slice(0, None, None), **kwargs):
     sorted_ind = xnp.argsort(A.diag)
     eig_vals = A.diag[sorted_ind]
     eig_vecs = I_like(A).to_dense()[:, sorted_ind]
-    return eig_vals[eig_slice], lazify(eig_vecs[:, eig_slice])
+    return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
 
 
 def eigenvalues(A: LinearOperator, info=False, pbar=False):
