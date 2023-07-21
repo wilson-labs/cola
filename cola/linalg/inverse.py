@@ -11,7 +11,7 @@ from cola.algorithms.gmres import gmres
 from cola.algorithms.svrg import solve_svrg_symmetric
 from cola.utils.dispatch import parametric
 from cola.utils import export
-from cola.annotations import Unitary
+from cola.annotations import Unitary, PSD
 from cola import SelfAdjoint
 
 
@@ -21,7 +21,19 @@ class IterativeInverse(LinearOperator):
         return f"{str(self.A)}⁻¹"
 
 
-class LUOperator(LinearOperator):
+class CholeskyInverse(LinearOperator):
+    def __init__(self, A, **kwargs):
+        super().__init__(A.dtype, A.shape)
+        self.ops = A.ops
+        self.L = self.ops.cholesky(A.to_dense())
+
+    def _matmat(self, X):
+        Y = self.ops.solvetri(self.L, X, lower=True)
+        soln = self.ops.solvetri(self.L.T, Y, lower=False)
+        return soln
+
+
+class LUInverse(LinearOperator):
     def __init__(self, A, **kwargs):
         super().__init__(A.dtype, A.shape)
         self.ops = A.ops
@@ -102,7 +114,10 @@ def inverse(A: LinearOperator, **kwargs):
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
         # return lazify(A.ops.inv(A.to_dense()))
-        return LUOperator(A)
+        if A.isa(PSD):
+            return CholeskyInverse(A)
+        else:
+            return LUInverse(A)
     # elif issubclass(type(A), SelfAdjoint[Sum]) and (method == 'svrg' or (method == 'auto' and len(A.A.Ms) > 1e4)):
     #     return SymmetricSVRGInverse(A.A, **kws)
     elif issubclass(type(A), Sum) and (method == 'svrg' or (method == 'auto' and len(A.Ms) > 1e4)):

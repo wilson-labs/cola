@@ -5,6 +5,7 @@ import numpy as np
 from cola.utils.dispatch import parametric
 import cola
 
+
 class Dense(LinearOperator):
     """ LinearOperator wrapping of a dense matrix. O(n^2) memory and time mvms.
 
@@ -50,7 +51,6 @@ class Sparse(LinearOperator):
     def __init__(self, data, indices, indptr, shape):
         super().__init__(dtype=data.dtype, shape=shape)
         self.A = self.ops.sparse_csr(indptr, indices, data)
-        
 
     def _matmat(self, V):
         return self.A @ V
@@ -282,7 +282,6 @@ class Diagonal(LinearOperator):
     def __init__(self, diag):
         self.diag = diag
         super().__init__(dtype=diag.dtype, shape=(len(diag), ) * 2)
-        
 
     def _matmat(self, X: Array) -> Array:
         return self.diag[:, None] * X
@@ -310,7 +309,6 @@ class Tridiagonal(LinearOperator):
         gamma = ensure_vec_is_matrix(gamma)
         self.alpha, self.beta, self.gamma = alpha, beta, gamma
         super().__init__(dtype=beta.dtype, shape=(beta.shape[0], beta.shape[0]))
-        
 
     def _matmat(self, X: Array) -> Array:
         xnp = self.ops
@@ -341,7 +339,6 @@ class Transpose(LinearOperator):
     def __init__(self, A):
         self.A = A
         super().__init__(dtype=A.dtype, shape=(A.shape[1], A.shape[0]))
-        
 
     def _matmat(self, x):
         return self.A._rmatmat(x.T).T
@@ -359,7 +356,6 @@ class Adjoint(LinearOperator):
     def __init__(self, A):
         self.A = A
         super().__init__(dtype=A.dtype, shape=(A.shape[1], A.shape[0]))
-        
 
     def _matmat(self, x):
         return self.ops.conj(self.A._rmatmat(self.ops.conj(x).T)).T
@@ -434,7 +430,6 @@ class Jacobian(LinearOperator):
         return "J"
 
 
-
 class Hessian(LinearOperator):
     """ Hessian of a scalar function f: R^n -> R at point x.
         Matrix has shape (n, n)
@@ -459,7 +454,7 @@ class Hessian(LinearOperator):
         xnp = self.ops
         mvm = partial(xnp.jvp_derivs, xnp.grad(self.f), (self.x, ), create_graph=False)
         # hack to make it work with pytorch
-        if xnp.__name__=='cola.torch_fns':
+        if xnp.__name__ == 'cola.torch_fns':
             out = xnp.zeros((self.shape[-1], X.shape[-1]), dtype=self.dtype)
             for i in range(X.shape[1]):
                 out[:, i] = mvm(X[:, i])

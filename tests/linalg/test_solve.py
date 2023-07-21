@@ -14,6 +14,6 @@ def test_random_linear_system(xnp):
     rhs = xnp.ones(shape=(A.shape[0], 5), dtype=dtype)
     soln = xnp.solve(A, rhs)
 
-    approx = cola.solve(lazify(A), rhs)
+    approx = cola.solve(cola.PSD(lazify(A)), rhs)
     rel_error = relative_error(soln, approx)
     assert rel_error < 1e-6
