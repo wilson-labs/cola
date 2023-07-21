@@ -44,10 +44,11 @@ def get_test_operators(xnp, dtype):
 
     dense = Dense(M1)
 
-    M1 = xnp.array([[1, 2], [3, 4]], dtype=dtype)
-    M2 = xnp.array([[5, 6], [7, 8]], dtype=dtype)
-    blockdiag = BlockDiag(M1, M2, multiplicities=[2, 3])
+    M1 = Dense(xnp.array([[6., 2], [2, 4]], dtype=dtype))
+    M2 = Dense(xnp.array([[7, 6], [6, 8]], dtype=dtype))
 
+    blockdiag = BlockDiag(M1, M2, multiplicities=[2, 3])
+    prod = M1@M2
     # Jacobian
     def f1(x):
         return xnp.array([x[0]**2, x[1]**3, xnp.sin(x[2])])
@@ -64,9 +65,10 @@ def get_test_operators(xnp, dtype):
 
     # PSD
     psd_ops = [Diagonal(xnp.array([.1, .5, .22, 8.], dtype=dtype)), identity, scalarmul]
+    psd_ops += [blockdiag, prod]
     symmetric_ops = [hessian, Tridiagonal(alpha, beta, alpha)]
     square_ops = [
-        kronsum, tridiagonal, dense, kronecker, blockdiag, product, lowertriangular, jacobian
+        permutation, kronsum, tridiagonal, dense, kronecker, blockdiag, product, lowertriangular, jacobian
     ]
 
     # TODO: enable square ops

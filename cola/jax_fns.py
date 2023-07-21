@@ -86,6 +86,13 @@ allclose = jnp.allclose
 # convolve = jax.scipy.signal.convolve
 
 
+def move_to(arr, device, dtype):
+    if dtype is not None:
+        arr = arr.astype(dtype)
+    if device is not None:
+        arr = jax.device_put(arr,device)
+    return arr
+
 def lu_solve(a, b):
     return solve(a, b)
 

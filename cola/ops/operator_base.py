@@ -77,13 +77,16 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         if matmat is not None:
             self._matmat = matmat
         self.annotations = cola.annotations.get_annotations(self)
+        #TODO: reform matrices with the new annotations?
         self.annotations.update(annotations)
         device = find_device([self._args, self._kwargs], self.ops)
         self.device = device or self.ops.get_default_device()
 
     def to(self, dtype=None, device=None):
-        # returns a new linear operator.
-        raise NotImplementedError()
+        """ Returns a new linear operator with given device and dtype """
+        params, unflatten = self.flatten()
+        params = [self.ops.move_to(p,device,dtype) for p in params]
+        return unflatten(params)
 
     def isa(self, annotation) -> bool:
         """ Returns True if the LinearOperator has the given annotation. """

@@ -58,6 +58,9 @@ allclose = torch.allclose
 jacrev = torch.func.jacrev
 
 
+def move_to(arr, device, dtype):
+    return arr.to(device=device,dtype=dtype)
+
 def lu_solve(a, b):
     return solve(a, b)
 

@@ -1,11 +1,11 @@
 import numpy as np
 from plum import dispatch
 from cola.ops import LinearOperator
-from cola.ops import Diagonal
+from cola.ops import Diagonal, Permutation, Concatenated
 from cola.ops import Identity
 from cola.ops import ScalarMul
 from cola.ops import BlockDiag
-from cola.ops import Kronecker, Sum
+from cola.ops import Kronecker, Sum, Product
 from cola.algorithms.cg import cg
 from cola.algorithms.gmres import gmres
 from cola.algorithms.svrg import solve_svrg_symmetric
@@ -138,31 +138,34 @@ def inverse(A: Identity, **kwargs):
 
 
 @dispatch
-def inverse(A: ScalarMul, **kwargs) -> ScalarMul:
+def inverse(A: ScalarMul, **kwargs):
     return ScalarMul(1 / A.c, shape=A.shape, dtype=A.dtype)
 
+@dispatch
+def inverse(A: Permutation, **kwargs):
+    return Permutation(A.ops.argsort(A.perm),A.dtype)
 
-# @dispatch(lambda A, **kwargs: all([M.shape[-2] == M.shape[-1] for M in A.Ms]))
-# def inverse(A: Product, **kwargs) -> Product:
-#     output = [inverse(M, **kwargs) for M in A.Ms].reverse()
-#     return Product(*output)
+@dispatch(cond = lambda A, **kwargs: all([M.shape[-2] == M.shape[-1] for M in A.Ms]))
+def inverse(A: Product, **kwargs) -> Product:
+    output = reversed([inverse(M, **kwargs) for M in A.Ms])
+    return Product(*output)
 
 
 @dispatch
-def inverse(A: BlockDiag, **kwargs) -> BlockDiag:
+def inverse(A: BlockDiag, **kwargs):
     return BlockDiag(*[inverse(M, **kwargs) for M in A.Ms], multiplicities=A.multiplicities)
 
 
 @dispatch
-def inverse(A: Kronecker, **kwargs) -> Kronecker:
+def inverse(A: Kronecker, **kwargs):
     return Kronecker(*[inverse(M, **kwargs) for M in A.Ms])
 
 
 @dispatch
-def inverse(A: Diagonal, **kwargs) -> Diagonal:
+def inverse(A: Diagonal, **kwargs):
     return Diagonal(1. / A.diag)
 
 
-@dispatch
-def inverse(A: Unitary, **kwargs) -> Unitary:
-    return Unitary(A.H)
+# @dispatch(cond = lambda A, **kwargs: A.isa(Unitary), precedence=1)
+# def inverse(A: LinearOperator, **kwargs):
+#     return Unitary(A.H)
