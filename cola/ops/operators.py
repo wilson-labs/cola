@@ -423,7 +423,8 @@ class Jacobian(LinearOperator):
 
     def _matmat(self, X):
         # primals = self.x[:,None]+self.ops.zeros((1,X.shape[1],), dtype=self.x.dtype)
-        return self.ops.vmap(partial(self.ops.jvp_derivs, self.f, (self.x, )))((X.T, )).T
+        fn = partial(self.ops.jvp_derivs, self.f, (self.x, ))
+        return self.ops.vmap(fn)((X.T, )).T
 
     def _rmatmat(self, X):
         # primals = self.x[None,:]+self.ops.zeros((X.shape[0],1), dtype=self.x.dtype)
@@ -468,7 +469,9 @@ class Hessian(LinearOperator):
     def __str__(self):
         return "H"
 
+
 from .operator_base import get_library_fns
+
 
 class Permutation(LinearOperator):
     """ Permutation matrix.
@@ -486,9 +489,10 @@ class Permutation(LinearOperator):
         # Need to map dtype back to float
         dtype = fns.float32 if dtype is None else dtype
         super().__init__(dtype=dtype, shape=(len(perm), len(perm)))
-    
+
     def _matmat(self, v):
         return v[self.perm]
+
 
 @parametric
 class Concatenated(LinearOperator):
@@ -505,23 +509,23 @@ class Concatenated(LinearOperator):
         >>> A.shape
         >>> (2,4)
     """
-    def __init__(self,*Ms,axis=0):
+    def __init__(self, *Ms, axis=0):
         self.Ms = Ms
         assert all(M.shape[axis]==Ms[0].shape[axis] for M in Ms),\
              f"Trying to concatenate matrices of different sizes {[M.shape for M in Ms]}"
         concat_size = sum(M.shape[axis] for M in Ms)
-        shape = (Ms[0].shape[0],concat_size) if axis==1 else (concat_size,Ms[0].shape[1])
-        self.axis=axis
-        super().__init__(Ms[0].dtype,shape)
+        shape = (Ms[0].shape[0], concat_size) if axis == 1 else (concat_size, Ms[0].shape[1])
+        self.axis = axis
+        super().__init__(Ms[0].dtype, shape)
 
-    def _matmat(self,V):
-        return self.ops.concatenate([M@V for M in self.Ms],axis=self.axis)
+    def _matmat(self, V):
+        return self.ops.concatenate([M @ V for M in self.Ms], axis=self.axis)
 
 
 class ConvolveND(LinearOperator):
     """ n-Dimensional convolution Linear operator (only works in jax right now.) """
     def __init__(self, filter, array_shape, mode='same'):
-        assert filter.dtype in [np.float32,np.float64], "Only supporting jax right now"
+        assert filter.dtype in [np.float32, np.float64], "Only supporting jax right now"
         self.filter = filter
         self.array_shape = array_shape
         assert mode == 'same'

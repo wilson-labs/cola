@@ -14,6 +14,7 @@ from cola.ops import Product
 from cola.ops import Sliced
 from cola.ops import Householder
 from cola.ops import Sparse
+from cola.ops import Jacobian
 from cola.ops import LinearOperator
 from cola.algorithms.arnoldi import get_householder_vec
 from cola.utils_test import parametrize, relative_error
@@ -55,6 +56,18 @@ def test_sparse(xnp):
     x = xnp.array([0.29466099, 0.71853315, -0.06172857, -0.0432496, 0.44698924], dtype=dtype)
     rel_error = relative_error(A @ x, As @ x)
     assert rel_error < _tol
+
+
+@parametrize([jax_fns])
+def test_jacobian(xnp):
+    dtype = xnp.float32
+
+    def f1(x):
+        return xnp.array([x[0]**2, x[1]**3, xnp.sin(x[2])])
+
+    x = xnp.array([1, 2, 3], dtype=dtype)
+    A = Jacobian(f1, x)
+    assert xnp.norm(A @ x) is not None
 
 
 @parametrize([torch_fns, jax_fns])
