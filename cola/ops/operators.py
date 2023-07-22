@@ -26,6 +26,9 @@ class Dense(LinearOperator):
     def _rmatmat(self, X: Array) -> Array:
         return X @ self.A
 
+    def to_dense(self):
+        return self.A
+
 
 class LowerTriangular(Dense):
     """ Lower Triangular Linear Operator. (Wraps dense)"""

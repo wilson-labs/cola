@@ -1,4 +1,6 @@
 from functools import partial
+from cola import SelfAdjoint
+from cola.fns import lazify
 from cola.ops import LinearOperator
 from cola.ops import Array
 from cola.ops import get_library_fns
@@ -89,7 +91,7 @@ def LanczosDecomposition(A: LinearOperator, start_vector=None, max_iters=100, to
     """ Provides the Lanczos decomposition of a matrix A = Q T Q^H. LinearOperator form of lanczos,
         see lanczos for arguments."""
     Q, T, info = lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
-    A_approx = cola.UnitaryDecomposition(Q, T)
+    A_approx = cola.UnitaryDecomposition(lazify(Q), SelfAdjoint(lazify(T)))
     A_approx.info = info
     return A_approx
 

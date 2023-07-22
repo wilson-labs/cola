@@ -39,7 +39,14 @@ def test_general(xnp):
     eig_vals, eig_vecs = eig(A, tol=1e-6, method="arnoldi", max_iters=A.shape[-1])
     eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs.to_dense(), dtype)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
-    # approx = Q[:, :-1] @ eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T @ Q[:, :-1].T
+    rel_error = relative_error(soln_vals, xnp.sort(eig_vals))
+    assert rel_error < 5e-3
+    rel_error = relative_error(A.to_dense(), approx)
+    assert rel_error < 5e-2
+
+    eig_vals, eig_vecs = eig(SelfAdjoint(A), tol=1e-6, method="lanczos", max_iters=A.shape[-1])
+    eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs.to_dense(), dtype)
+    approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
     rel_error = relative_error(soln_vals, xnp.sort(eig_vals))
     assert rel_error < 5e-3
     rel_error = relative_error(A.to_dense(), approx)

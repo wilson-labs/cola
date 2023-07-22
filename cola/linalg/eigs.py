@@ -56,19 +56,15 @@ def eig(A: LinearOperator, **kwargs) -> Tuple[Array, Array]:
             return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
         elif method in ('lanczos', 'krylov') or (method == 'auto' and prod(A.shape) >= 1e6):
             return eig(LanczosDecomposition(A, **kws), eig_slice=eig_slice)
-            # rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
-            # eig_vals, eig_vecs = lanczos_eig(A, rhs, **kws)
-            # return eig_vals[eig_slice], eig_vecs[:, eig_slice]
         else:
             raise ValueError(f"Unknown method {method} for SelfAdjoint operator")
     elif method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
         eig_vals, eig_vecs = xnp.eig(A.to_dense())
         return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
     elif method in ('arnoldi', 'krylov') or (method == 'auto' and prod(A.shape) >= 1e6):
-        return eig(ArnoldiDecomposition(A, **kws), eig_slice=eig_slice)
-        # rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
-        # eig_vals, eig_vecs = arnoldi_eig(A=A, rhs=rhs, use_householder=True, **kws)
-        # return eig_vals[eig_slice], eig_vecs[:, eig_slice]
+        A_approx = ArnoldiDecomposition(A, **kws)
+        eig_vals, eig_vecs = eig(A_approx, **kws)
+        return eig_vals, eig_vecs
     else:
         raise ValueError(f"Unknown method {method}")
 
