@@ -34,7 +34,7 @@ def get_test_operators(xnp, dtype):
     indices = xnp.array([0, 2, 1, 0, 2, 1])
     indptr = xnp.array([0, 2, 4, 6])
     shape = (3, 3)
-    #sparse = Sparse(data, indices, indptr, shape)
+    # sparse = Sparse(data, indices, indptr, shape)
 
     lowertriangular = LowerTriangular(M1)
 
@@ -48,7 +48,8 @@ def get_test_operators(xnp, dtype):
     M2 = Dense(xnp.array([[7, 6], [6, 8]], dtype=dtype))
 
     blockdiag = BlockDiag(M1, M2, multiplicities=[2, 3])
-    prod = M1@M2
+    prod = M1 @ M2
+
     # Jacobian
     def f1(x):
         return xnp.array([x[0]**2, x[1]**3, xnp.sin(x[2])])
@@ -68,9 +69,9 @@ def get_test_operators(xnp, dtype):
     psd_ops += [blockdiag, prod]
     symmetric_ops = [hessian, Tridiagonal(alpha, beta, alpha)]
     square_ops = [
-        permutation, kronsum, tridiagonal, dense, kronecker, blockdiag, product, lowertriangular, jacobian
+        permutation, kronsum, tridiagonal, dense, kronecker, blockdiag, product, lowertriangular,
+        # jacobian
     ]
 
-    # TODO: enable square ops
-    return [PSD(op) for op in psd_ops] + [SelfAdjoint(op) for op in symmetric_ops]
-    # return [PSD(op) for op in psd_ops] + [SelfAdjoint(op) for op in symmetric_ops] + square_ops
+    # TODO: fix jacobian matmat
+    return [PSD(op) for op in psd_ops] + [SelfAdjoint(op) for op in symmetric_ops] + square_ops
