@@ -6,7 +6,7 @@ from cola import jax_fns
 from cola import torch_fns
 from cola.fns import lazify
 from cola.algorithms.arnoldi import get_arnoldi_matrix
-from cola.algorithms.arnoldi import arnoldi_eig
+from cola.algorithms.arnoldi import arnoldi
 from cola.algorithms.arnoldi import run_householder_arnoldi
 from cola.utils_test import parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
@@ -18,12 +18,12 @@ config.update('jax_platform_name', 'cpu')
 
 
 @parametrize([torch_fns, jax_fns])
-def test_arnoldi_eig(xnp):
+def test_arnoldi(xnp):
     dtype = xnp.complex64
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=4, dtype=np.float32)
     A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype)
     rhs = xnp.cast(xnp.randn(A.shape[1], 1, dtype=xnp.float32), dtype=dtype)
-    eigvals, eigvecs, _ = arnoldi_eig(lazify(A), rhs, max_iters=A.shape[-1])
+    eigvals, eigvecs, _ = arnoldi(lazify(A), rhs, max_iters=A.shape[-1])
     approx = xnp.sort(xnp.cast(eigvals, xnp.float32))
     soln = xnp.sort(xnp.array(diag, xnp.float32))
 
@@ -35,10 +35,9 @@ def test_arnoldi_eig(xnp):
     assert rel_error < 1e-3
 
 
-# @parametrize([torch_fns, jax_fns])
 # @parametrize([torch_fns])
 @parametrize([jax_fns])
-def test_householder_arnoldi_matrix(xnp):
+def test_householder_arnoldi_decomp(xnp):
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np.float32) - 0.5
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)

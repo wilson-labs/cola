@@ -7,24 +7,27 @@ import cola
 
 
 @export
-def arnoldi_eig(A: LinearOperator, rhs: Array = None, max_iters: int = 1000,
-                tol: float = 1e-7, use_householder=False, pbar=False):
-    """Computes eigenvalues and eigenvectors using Arnoldi iteration.
+def arnoldi(A: LinearOperator, start_vector: Array = None, max_iters: int = 1000, tol: float = 1e-7,
+            use_householder=False, pbar=False):
+    """Computes eigenvalues and eigenvectors using Arnoldi.
 
     Args:
-        A (LinearOperator): The linear operator representing the matrix A.
-        rhs (Array): The right-hand side vector.
-        max_iters (int): The maximum number of iterations.
+        A (LinearOperator): A linear operator of size (n, n).
+        start_vector (Array, optional): An initial vector to start Arnoldi of size (n, ).
+         Defaults to None.
+        max_iters (int): The maximum number of iterations to run.
         tol (float, optional): The tolerance criteria. Defaults to 1e-7.
-        use_householder (bool, optional): Use Householder Arnoldi iteration. Defaults to False.
+        use_householder (bool, optional): Use Householder Arnoldi variant. Defaults to False.
+        pbar (bool, optional): Show a progress bar. Defaults to False.
 
     Returns:
-        Tuple: A tuple containing the eigenvalues and eigenvectors.
+        tuple:
             - eigvals (Array): eigenvalues of shape (max_iters,).
-            - eigvectors (Array): eigenvectors of shape (n, max_iters).
+            - eigvectors (LinearOperator): eigenvectors of shape (n, max_iters).
+            - info (dict): general information about the iterative procedure.
     """
-    Q, H, info = arnoldi(A=A, start_vector=rhs, max_iters=max_iters, tol=tol,
-                         use_householder=use_householder, pbar=pbar)
+    Q, H, info = arnoldi_decomp(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
+                                use_householder=use_householder, pbar=pbar)
     xnp = A.ops
     eigvals, eigvectors = xnp.eig(H)
     eigvectors = xnp.cast(Q, dtype=eigvectors.dtype) @ eigvectors
@@ -34,21 +37,24 @@ def arnoldi_eig(A: LinearOperator, rhs: Array = None, max_iters: int = 1000,
 
 
 @export
-def arnoldi(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1e-7,
-            use_householder: bool = False, pbar: bool = False):
-    """Computes the Arnoldi decomposition of the matrix A = QHQ^*.
+def arnoldi_decomp(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1e-7,
+                   use_householder: bool = False, pbar: bool = False):
+    """Computes the Arnoldi decomposition of the linear operator A = QHQ^*.
 
     Args:
-        A (LinearOperator): The linear operator representing the matrix A.
-        start_vector (Array, optional): The vector to start the arnoldi iterations.
-        max_iters (int): The maximum number of iterations.
+        A (LinearOperator): A linear operator of size (n, n).
+        start_vector (Array, optional): An initial vector to start Arnoldi of size (n, ).
+         Defaults to None.
+        max_iters (int): The maximum number of iterations to run.
         tol (float, optional): The tolerance criteria. Defaults to 1e-7.
         use_householder (bool, optional): Use Householder Arnoldi iteration. Defaults to False.
-        pbar (bool, optional): show a progress bar. Defaults to False.
+        pbar (bool, optional): Show a progress bar. Defaults to False.
 
     Returns:
-        Q (Array): The orthogonal matrix Q.
-        H (Array): The upper hessenberg matrix H.
+        tuple:
+            - Q (Array): Unitary matrix of size (N, max_iters)
+            - H (Array): The upper Hessenberg matrix of size (max_iters, max_iters)
+            - info (dict): general information about the iterative procedure.
     """
     xnp = A.ops
     xnp = A.ops
@@ -63,13 +69,12 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1
     return Q, H, infodict
 
 
-@export
 def ArnoldiDecomposition(A: LinearOperator, start_vector=None, max_iters=100, tol=1e-7,
                          use_householder=False, pbar=False):
     """ Provides the Arnoldi decomposition of a matrix A = Q H Q^H. LinearOperator form of arnoldi,
         see arnoldi for arguments."""
-    Q, H, info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
-                         use_householder=use_householder, pbar=pbar)
+    Q, H, info = arnoldi_decomp(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
+                                use_householder=use_householder, pbar=pbar)
     A_approx = cola.UnitaryDecomposition(Q, H)
     A_approx.info = info
     return A_approx
