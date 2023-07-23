@@ -1,4 +1,4 @@
-Algorithms (lower level interface)
+Algorithms (low-level interface)
 ==================================
 
 .. automodule:: cola.algorithms

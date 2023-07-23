@@ -7,7 +7,7 @@ from cola.algorithms.lanczos import construct_tridiagonal
 from cola.algorithms.lanczos import construct_tridiagonal_batched
 from cola.algorithms.lanczos import get_lanczos_coeffs
 from cola.algorithms.lanczos import lanczos_parts
-from cola.algorithms.lanczos import lanczos_eig
+from cola.algorithms.lanczos import lanczos
 from cola.algorithms.lanczos import lanczos_max_eig
 from cola.utils_test import parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
@@ -37,8 +37,8 @@ def test_lanczos_vjp(xnp):
 
     def f(theta):
         Aop = unflatten([theta])
-        out = lanczos_eig(Aop, x0, max_iters=10, tol=1e-6, pbar=False)
-        eig_vals, eig_vecs = out
+        out = lanczos(Aop, x0, max_iters=10, tol=1e-6, pbar=False)
+        eig_vals, eig_vecs, _ = out
         # loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
         loss = xnp.sum(eig_vals ** 2.)
         # loss = xnp.sum(eig_vecs ** 2., axis=[0, 1])

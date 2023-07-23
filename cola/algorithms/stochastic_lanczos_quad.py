@@ -10,15 +10,17 @@ from cola.utils.custom_autodiff import iterative_autograd
 @export
 def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int, max_iters: int,
                             tol: float = 1e-7, pbar: bool = False):
-    """Approximates trace(f(A)) for a positive definite operator A.
+    """
+    Approximates trace(f(A)) for a positive definite operator A and a given function
+    f().
 
     Args:
-        A (LinearOperator): The linear operator representing the matrix A.
+        A (LinearOperator): A symmetric linear operator of size (n, n).
         fun (Callable): The function to apply to the eigenvalues.
         num_samples (int): The number of samples to use for the approximation.
         max_iters (int): The maximum number of iterations to run Lanczos.
-        tol (float, optional): The tolerance criteria to stop Lanczos. Defaults to 1e-7.
-        pbar (bool, optional): flag to print progress bar
+        tol (float, optional): Lanczos stopping criteria.
+        pbar (bool, optional): Show a progress bar.
 
     Returns:
         float: The approximate value of trace(f(A)).

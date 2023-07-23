@@ -84,7 +84,22 @@ def estimate_approx_error(A, Lambda, U, tol, max_iter):
 
 @export
 class NystromPrecond(LinearOperator):
-    """ TODO Andres: docstring"""
+    """
+    Constructs the Nystrom Preconditioner of a linear operator A.
+
+    Args:
+        A (LinearOperator): A positive definite linear operator of size (n, n).
+        rank (int): The rank of the Nystrom approximation.
+        mu (float): Regularization of the linear system (A + mu)x = b.
+         Usually, this preconditioner is used to solve linear systems and
+         therefore its construction accomodates for the regularization.
+        eps (float): Shift used when constructing the preconditioner.
+        adjust_mu (bool, optional): Whether to adjust the regularization with the
+         estimatted dominant eigenvalue.
+
+    Returns:
+        LinearOperator: Nystrom Preconditioner.
+    """
     def __init__(self, A, rank, mu=1e-7, eps=1e-8, adjust_mu=True):
         super().__init__(dtype=A.dtype, shape=A.shape)
         Omega = self.ops.randn(*(A.shape[0], rank), dtype=A.dtype)

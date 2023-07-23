@@ -18,13 +18,13 @@ def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 
     max_iters: int maximum number of iters to run lanczos
     tol: float: tolerance criteria to stop lanczos
     """
-    eigvals, _ = lanczos_eig(A=A, rhs=rhs, max_iters=max_iters, tol=tol)
+    eigvals, *_ = lanczos(A=A, start_vector=rhs, max_iters=max_iters, tol=tol)
     return eigvals[-1]
 
 
 def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
-    val_grads, eig_grads = grads
-    op_args, (eig_vals, eig_vecs) = res
+    val_grads, eig_grads, _ = grads
+    op_args, (eig_vals, eig_vecs, _) = res
     A = unflatten(op_args)
     N = A.shape[0]
     xnp = A.ops
@@ -64,53 +64,67 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
     return (dA, )
 
 
+@export
 @iterative_autograd(lanczos_eig_bwd)
-def lanczos_eig(A: LinearOperator, rhs: Array, max_iters=100, tol=1e-7, pbar=False):
+def lanczos(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7,
+            pbar: bool = False):
     """
-    Computes the eigenvalues and eigenvectors using lanczos
+    Computes the eigenvalues and eigenvectors using Lanczos.
 
-    A: LinearOperator (n, n) positive definite
-    rhs: Array (n, b) multiple right hands or (n,) single vector (usually randomly sampled)
-    max_iters: int maximum number of iters to run lanczos
-    tol: float: tolerance criteria to stop lanczos
-    pbar: bool: flag to print progress bar
+    Args:
+        A (LinearOperator): A symmetric linear operator of size (n, n).
+        start_vector (Array, optional): An initial vector to start Lanczos of size (n, ).
+         Defaults to a random probe.
+        max_iters (int): The maximum number of iterations to run.
+        tol (float, optional): Stopping criteria.
+        pbar (bool, optional): Show a progress bar.
+
+    Returns:
+        tuple:
+            - eigvals (Array): eigenvalues of shape (max_iters,).
+            - eigvectors (LinearOperator): eigenvectors of shape (n, max_iters).
+            - info (dict): General information about the iterative procedure.
+
     """
     xnp = A.ops
-    Q, T, info = lanczos(A=A, start_vector=rhs, max_iters=max_iters, tol=tol, pbar=pbar)
+    Q, T, info = lanczos_decomp(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
+                                pbar=pbar)
     eigvals, eigvectors = xnp.eigh(T)
     V = Q @ eigvectors
-    # sort the eigenvalues and eigenvectors
     idx = xnp.argsort(eigvals, axis=-1)
     eigvals = eigvals[..., idx]
     V = V[..., idx]
-    return eigvals, V
+    return eigvals, V, info
 
 
-@export
 def LanczosDecomposition(A: LinearOperator, start_vector=None, max_iters=100, tol=1e-7, pbar=False):
-    """ Provides the Lanczos decomposition of a matrix A = Q T Q^H. LinearOperator form of lanczos,
-        see lanczos for arguments."""
-    Q, T, info = lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
+    """ Provides the Lanczos decomposition of a matrix A = Q T Q^*.
+    LinearOperator form of lanczos, see lanczos for arguments."""
+    Q, T, info = lanczos_decomp(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
+                                pbar=pbar)
     A_approx = cola.UnitaryDecomposition(lazify(Q), SelfAdjoint(lazify(T)))
     A_approx.info = info
     return A_approx
 
 
 @export
-def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7, pbar=False):
-    """Computes the Lanczos decomposition of a matrix A.
+def lanczos_decomp(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7,
+                   pbar=False):
+    """
+    Computes the Lanczos decomposition of a the operator A, A = Q T Q^*.
 
     Args:
-        A (LinearOperator): The linear operator representing the matrix A.
-        start_vector (Array, optional): The initial vector to start the Lanczos process.
-            If not provided, a random vector will be used. Defaults to None.
-        max_iters (int, optional): The maximum number of iterations to run Lanczos. Defaults to 100.
-        tol (float, optional): The tolerance criteria to stop Lanczos. Defaults to 1e-7.
+        A (LinearOperator): A symmetric linear operator of size (n, n).
+        start_vector (Array, optional): An initial vector to start Lanczos of size (n, ).
+         Defaults to a random probe.
+        max_iters (int, optional): The maximum number of iterations to run.
+        tol (float, optional): Stopping criteria.
 
     Returns:
-        Q (Array): The orthogonal matrix Q in the Lanczos decomposition A = Q T Q^H.
-        T (Array): The tridiagonal matrix T in the Lanczos decomposition A = Q T Q^H.
-        info (dict): A dictionary containing information about the Lanczos process.
+        tuple:
+            - Q (Array): Orthogonal matrix of size (n, max_iters).
+            - T (Array): Tridiagonal matrix of size (max_iters, max_iters).
+            - info (dict): General information about the iterative procedure.
     """
     xnp = A.ops
     if start_vector is None:

@@ -4,17 +4,22 @@ from cola.ops import LinearOperator
 
 @export
 def power_iteration(A: LinearOperator, tol=1e-7, max_iter=1000, pbar=False, momentum=None):
-    """Performs power iteration to compute the dominant eigenvector and eigenvalue of a matrix A.
+    """
+    Performs power iteration to compute the dominant eigenvector and eigenvalue
+    of the operator.
 
     Args:
-        A (LinearOperator): The linear operator representing the matrix A.
-        tol (float, optional): The tolerance criteria for convergence. Defaults to 1e-7.
-        max_iter (int, optional): The maximum number of iterations. Defaults to 1000.
+        A (LinearOperator): A linear operator of size (n, n).
+        tol (float, optional): Stopping criteria.
+        max_iters (int, optional): The maximum number of iterations to run.
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
-        momentum (float, optional): The momentum parameter for accelerated power iteration. Defaults to None.
+        pbar (bool, optional): Show a progress bar.
 
     Returns:
-        Tuple: (v, emax, infodict).
+        tuple:
+            - v (Array): dominant eigenvector (n,).
+            - eigmax (Array): dominant eigenvalue (1,).
+            - info (dict): General information about the iterative procedure.
     """
     xnp = A.ops
     v = xnp.fixed_normal_samples(A.shape[-1:], A.dtype)
@@ -37,6 +42,6 @@ def power_iteration(A: LinearOperator, tol=1e-7, max_iter=1000, pbar=False, mome
         i = state[0]
         return (i < max_iter) & (err(state) > tol)
 
-    while_loop, infos = xnp.while_loop_winfo(err, tol, pbar=pbar)
+    while_loop, infodict = xnp.while_loop_winfo(err, tol, pbar=pbar)
     _, v, _, emax, _ = while_loop(cond, body, (0, v, v, 10., 1.))
-    return (v, emax, infos)
+    return v, emax, infodict

@@ -11,19 +11,22 @@ _small_value = 1e-40
 @export
 def cg(A: LinearOperator, rhs: Array, x0=None, P=None, tol=1e-6, max_iters=5000, pbar=False):
     """
-    Solves Ax=b using CG (conjugate gradients).
+    Solves Ax=b or AX=B using conjugate gradients (CG).
 
     Args:
-        A (LinearOperator): (n, n) positive definite.
-        rhs (Array): (n, b) multiple right hands or (n,) single vector.
-        x0 (Array, optional): (n, b) or (n,) initial solution guess (default zero).
-        P (LinearOperator, optional): Preconditioner (default identity).
+        A (LinearOperator): A positive definite linear operator of size (n, n).
+        rhs (Array): A single right hand side (n,) or multiple right hand sides (n, b).
+        x0 (Array, optional): (n,) or (n, b) initial solution guess.
+         Defaults to the zero vector.
+        P (LinearOperator, optional): Preconditioner. Defaults to the identity.
         tol (float, optional): Stopping criteria.
-        max_iters (int, optional): Maximum number of iterations.
-        pbar (bool, optional): Flag for showing progress bar.
+        max_iters (int, optional): The maximum number of iterations to run.
+        pbar (bool, optional): Show a progress bar.
 
     Returns:
-        tuple: Solution array and info dictionary if info is True.
+        tuple:
+            - soln (Array): solution to the linear system,  either (n,) or (n, b)
+            - info (dict): General information about the iterative procedure.
     """
     xnp = A.ops
     is_vector = len(rhs.shape) == 1

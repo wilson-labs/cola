@@ -8,21 +8,25 @@ from cola.utils import export
 @export
 def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=None,
           use_householder=False, use_triangular=False, pbar=False):
-    """Solves a linear system Ax = rhs using the GMRES method.
+    """
+    Solves Ax=b or AX=B using GMRES.
 
     Args:
-        A (LinearOperator): The linear operator representing the matrix A.
-        rhs (Array): The right-hand side vector.
-        x0 (Array, optional): The initial guess for the solution. Defaults to None.
-        max_iters (int, optional): The maximum number of iterations. Defaults to None.
-        tol (float, optional): The tolerance for convergence. Defaults to 1e-7.
-        P (array, optional): Preconditioner. Defaults to None.
-        use_householder (bool, optional): Use Householder Arnoldi iteration. Defaults to False.
-        use_triangular (bool, optional): Use triangular QR factorization. Defaults to False.
-        pbar (bool, optional): show a progress bar. Defaults to False.
+        A (LinearOperator): A linear operator of size (n, n).
+        rhs (Array): A single right hand side (n,) or multiple right hand sides (n, b).
+        x0 (Array, optional): (n,) or (n, b) initial solution guess.
+         Defaults to the zero vector.
+        max_iters (int, optional): The maximum number of iterations to run.
+        tol (float, optional): The tolerance for convergence.
+        P (array, optional): Preconditioner. Defaults to the Identity.
+        use_householder (bool, optional): Use Householder Arnoldi variatnt
+        use_triangular (bool, optional): Use triangular QR factorization.
+        pbar (bool, optional): show a progress bar.
 
     Returns:
-        (tuple): (x, info) The solution vector x, satisfying Ax = rhs and the info dictionary.
+        tuple:
+            - soln (Array): solution to the linear system,  either (n,) or (n, b)
+            - info (dict): general information about the iterative procedure.
     """
     xnp = A.ops
     is_vector = len(rhs.shape) == 1

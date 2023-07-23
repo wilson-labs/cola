@@ -8,23 +8,24 @@ import cola
 
 @export
 def arnoldi(A: LinearOperator, start_vector: Array = None, max_iters: int = 1000, tol: float = 1e-7,
-            use_householder=False, pbar=False):
-    """Computes eigenvalues and eigenvectors using Arnoldi.
+            use_householder: bool = False, pbar: bool = False):
+    """
+    Computes eigenvalues and eigenvectors using Arnoldi.
 
     Args:
         A (LinearOperator): A linear operator of size (n, n).
         start_vector (Array, optional): An initial vector to start Arnoldi of size (n, ).
-         Defaults to None.
+         Defaults to a random probe.
         max_iters (int): The maximum number of iterations to run.
-        tol (float, optional): The tolerance criteria. Defaults to 1e-7.
-        use_householder (bool, optional): Use Householder Arnoldi variant. Defaults to False.
-        pbar (bool, optional): Show a progress bar. Defaults to False.
+        tol (float, optional): Stopping criteria.
+        use_householder (bool, optional): Use Householder Arnoldi variant.
+        pbar (bool, optional): Show a progress bar.
 
     Returns:
         tuple:
             - eigvals (Array): eigenvalues of shape (max_iters,).
             - eigvectors (LinearOperator): eigenvectors of shape (n, max_iters).
-            - info (dict): general information about the iterative procedure.
+            - info (dict): General information about the iterative procedure.
     """
     Q, H, info = arnoldi_decomp(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
                                 use_householder=use_householder, pbar=pbar)
@@ -37,24 +38,25 @@ def arnoldi(A: LinearOperator, start_vector: Array = None, max_iters: int = 1000
 
 
 @export
-def arnoldi_decomp(A: LinearOperator, start_vector=None, max_iters=1000, tol: float = 1e-7,
+def arnoldi_decomp(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7,
                    use_householder: bool = False, pbar: bool = False):
-    """Computes the Arnoldi decomposition of the linear operator A = QHQ^*.
+    """
+    Computes the Arnoldi decomposition of the linear operator A, A = QHQ^*.
 
     Args:
         A (LinearOperator): A linear operator of size (n, n).
         start_vector (Array, optional): An initial vector to start Arnoldi of size (n, ).
-         Defaults to None.
+         Defaults to a random probe.
         max_iters (int): The maximum number of iterations to run.
-        tol (float, optional): The tolerance criteria. Defaults to 1e-7.
-        use_householder (bool, optional): Use Householder Arnoldi iteration. Defaults to False.
-        pbar (bool, optional): Show a progress bar. Defaults to False.
+        tol (float, optional): Stopping criteria.
+        use_householder (bool, optional): Use Householder Arnoldi iteration.
+        pbar (bool, optional): Show a progress bar.
 
     Returns:
         tuple:
-            - Q (Array): Unitary matrix of size (N, max_iters)
-            - H (Array): The upper Hessenberg matrix of size (max_iters, max_iters)
-            - info (dict): general information about the iterative procedure.
+            - Q (Array): Unitary matrix of size (n, max_iters).
+            - H (Array): The upper Hessenberg matrix of size (max_iters, max_iters).
+            - info (dict): General information about the iterative procedure.
     """
     xnp = A.ops
     xnp = A.ops
