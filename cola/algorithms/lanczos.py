@@ -131,7 +131,7 @@ def lanczos_decomp(A: LinearOperator, start_vector: Array = None, max_iters=100,
         start_vector = xnp.fixed_normal_samples((A.shape[0], 1))
     alpha, beta, vec, iters, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters,
                                                   tol=tol, pbar=pbar)
-    alpha, beta, Q = alpha[..., :iters - 1], beta[..., :iters], vec[0]
+    alpha, beta, Q = alpha[..., :iters - 1], beta[..., :iters], vec[0, :, :iters]
     T = construct_tridiagonal_batched(alpha, beta, alpha)[0]
     return Q, T, info
 
