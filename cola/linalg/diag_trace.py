@@ -4,8 +4,9 @@ from cola.ops import Kronecker, KronSum
 from cola.algorithms import exact_diag,approx_diag
 import numpy as np
 
-@export
+
 @dispatch
+@export
 def diag(v: Array, k=0, **kwargs):
     """ Return a diagonal matrix with the given vector on the diagonal. """
     assert k == 0, "Off diagonal diag not yet supported"
@@ -40,36 +41,36 @@ def diag(A: Identity, k=0, **kwargs):
 
 @dispatch
 def diag(A: Sum, k=0, **kwargs):
-    return sum(diag(M) for M in A.Ms)
+    return sum(diag(M, **kwargs) for M in A.Ms)
 
 
 @dispatch
-def diag(A: BlockDiag, k=0):
+def diag(A: BlockDiag, k=0, **kwargs):
     assert k == 0, "Havent filled this case yet, need to pad with 0s"
-    return A.ops.concatenate([diag(M) for M in A.Ms])
+    return A.ops.concatenate([diag(M, **kwargs) for M in A.Ms])
 
 
 @dispatch
-def diag(A: ScalarMul, k=0):
-    return A.c * diag(I_like(A), k=k)
+def diag(A: ScalarMul, k=0, **kwargs):
+    return A.c * diag(I_like(A), k=k, **kwargs)
 
 from functools import reduce
 def product(c):
     return reduce(lambda a, b: a * b, c)
 
 @dispatch
-def diag(A: Kronecker, k=0):
+def diag(A: Kronecker, k=0, **kwargs):
     assert k==0, "Need to verify correctness of rule for off diagonal case"
-    ds = [diag(M) for M in A.Ms]
+    ds = [diag(M, **kwargs) for M in A.Ms]
     # compute outer product of the diagonals
     slices = [[None]*i + [slice(None)] + [None] * (len(ds) - i - 1) for i in range(len(ds))]
     return product([d[tuple(s)] for d, s in zip(ds, slices)]).reshape(-1)
 
 
 @dispatch
-def diag(A: KronSum, k=0):
+def diag(A: KronSum, k=0, **kwargs):
     assert k==0, "Need to verify correctness of rule for off diagonal case"
-    ds = [diag(M) for M in A.Ms]
+    ds = [diag(M, **kwargs) for M in A.Ms]
     # compute outer product of the diagonals
     slices = [[None]*i + [slice(None)] + [None] * (len(ds) - i - 1) for i in range(len(ds))]
     return sum([d[tuple(s)] for d, s in zip(ds, slices)]).reshape(-1)
@@ -82,4 +83,4 @@ def trace(A: LinearOperator, **kwargs):
 
 @dispatch
 def trace(A: Kronecker, **kwargs):
-    return product([trace(M) for M in A.Ms])
+    return product([trace(M, **kwargs) for M in A.Ms])
