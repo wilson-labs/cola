@@ -8,7 +8,7 @@ from cola.linalg.sqrt import sqrt
 from cola.linalg.eigs import eig
 from cola.linalg.logdet import logdet
 from cola.algorithms.cg import run_batched_cg
-from cola.algorithms.stochastic_lanczos_quad import stochastic_lanczos_quad
+from cola.algorithms import stochastic_lanczos_quad
 from torch.autograd import Function
 
 

@@ -16,7 +16,7 @@ def iterative_autograd(iterative_bwd):
             def bwd(res, d_ouputs):  # dy -> dparams
                 # TODO: gradients for all of solver
                 dA, *_ = iterative_bwd(res, d_ouputs, unflatten, *args, **kwargs)
-                return tuple(dA.flatten()[0])
+                return (type(par)(dA.flatten()[0]),)
 
             if A.ops.__name__.find('torch') >= 0:
                 from torch.autograd import Function
@@ -30,7 +30,7 @@ def iterative_autograd(iterative_bwd):
 
                     @staticmethod
                     def backward(ctx, *grads):
-                        return bwd(ctx.res, grads)
+                        return tuple(bwd(ctx.res, grads)[0])
 
                 return Iterative.apply(*par)
             elif A.ops.__name__.find('jax') >= 0:
@@ -39,7 +39,7 @@ def iterative_autograd(iterative_bwd):
                 @custom_vjp
                 def iterative(params):  # params -> y and has autograd
                     return fwd(params)[0]
-
+                #jax_bwd = lambda *args,**kwargs: ((bwd(*args,**kwargs)),)
                 iterative.defvjp(fwd, bwd)
 
                 return iterative(par)

@@ -49,7 +49,7 @@ class LUInverse(LinearOperator):
 
 class CGInverse(IterativeInverse):
     def __init__(self, A, **kwargs):
-        super().__init__(A.dtype, A.shape)
+        super().__init__(A.dtype, A.shape, annotations={PSD})
         self.A = A
         self.kwargs = kwargs
         self.info = {}
