@@ -5,6 +5,7 @@ from torch.nn import Parameter
 from torch._vmap_internals import vmap as _vmap
 import logging
 
+logdet = torch.logdet
 exp = torch.exp
 cos = torch.cos
 sin = torch.sin
