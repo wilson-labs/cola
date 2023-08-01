@@ -13,7 +13,8 @@ from cola.utils.dispatch import parametric
 from cola.utils import export
 from cola.annotations import Unitary, PSD
 from cola import SelfAdjoint
-
+import cola
+#from cola.decompositions import lu_decomposed, cholesky_decomposed
 
 @parametric
 class IterativeInverse(LinearOperator):
@@ -72,14 +73,7 @@ class TriangularInverse(LinearOperator):
     def _rmatmat(self,X):
         return self.ops.solvetri(self.A.T, X.T, lower=not self.lower).T
 
-def cholesky_decomposed(A: LinearOperator):
-    L = Triangular(A.ops.cholesky(A.to_dense()), lower=True)
-    return L@L.H
 
-def lu_decomposed(A: LinearOperator):
-    p, L, U = A.ops.lu(A.to_dense())
-    P, L, U = Permutation(p), Triangular(L,lower=True), Triangular(U, lower=False)
-    return P@L@U
 
 @dispatch
 @export
@@ -109,7 +103,7 @@ def inverse(A: LinearOperator, **kwargs):
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
-        return inverse(lu_decomposed(A))
+        return inverse(cola.decompositions.lu_decomposed(A))
     elif method == 'iterative' or (method == 'auto' and np.prod(A.shape) > 1e6):
         return GMResInverse(A, **kws)
     else:
@@ -122,7 +116,7 @@ def inverse(A: LinearOperator, **kwargs):
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
-        return inverse(cholesky_decomposed(A))
+        return inverse(cola.decompositions.cholesky_decomposed(A))
     if method == 'iterative' or (method == 'auto' and np.prod(A.shape) > 1e6):
         return CGInverse(A, **kws)
     else:

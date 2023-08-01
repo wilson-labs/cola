@@ -18,10 +18,7 @@ def logdet(A: LinearOperator, **kwargs) -> Array:
     trace_log_A = stochastic_lanczos_quad(A, xnp.log, **kwargs)
     return trace_log_A
 
-def square_and_self_adjoint(A):
-    return (A.shape[-2] == A.shape[-1]) and A.isa(SelfAdjoint)
-
-@dispatch(cond = lambda A, **kwargs: all([square_and_self_adjoint(Ai) for Ai in A.Ms]))
+@dispatch(cond = lambda A, **kwargs: all([(Ai.shape[-2] == Ai.shape[-1]) for Ai in A.Ms]))
 def logdet(A: Product, **kwargs) -> Array:
     return sum(logdet(Ai) for Ai in A.Ms)
 

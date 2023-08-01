@@ -3,9 +3,26 @@ import cola
 from cola import Unitary
 from cola.fns import lazify
 from cola.ops.operator_base import LinearOperator
+from cola.ops import Triangular, Permutation
 from cola.utils import export
 from cola.linalg import inverse, eig, trace, apply_unary
 
+@export
+def cholesky_decomposed(A: LinearOperator):
+    """ Performs a cholesky decomposition A=LL* of a linear operator A.
+        The returned operator LL* is the same as A, but represented using
+        the triangular structure """
+    L = Triangular(A.ops.cholesky(A.to_dense()), lower=True)
+    return L@L.H
+
+@export
+def lu_decomposed(A: LinearOperator):
+    """ Performs a cholesky decomposition A=PLU of a linear operator A.
+        The returned operator PLU is the same as A, but represented using
+        the triangular (and permutation) structure """
+    p, L, U = A.ops.lu(A.to_dense())
+    P, L, U = Permutation(p), Triangular(L,lower=True), Triangular(U, lower=False)
+    return P@L@U
 
 @export
 class UnitaryDecomposition(LinearOperator):
