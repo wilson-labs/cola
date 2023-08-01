@@ -1,6 +1,6 @@
 from plum import dispatch
 from cola.ops import Array
-from cola.ops import LinearOperator
+from cola.ops import LinearOperator, Triangular
 from cola.ops import Diagonal, Kronecker, BlockDiag, Product
 from cola.utils import export
 from cola.annotations import SelfAdjoint
@@ -39,3 +39,8 @@ def logdet(A: Kronecker, **kwargs) -> Array:
 def logdet(A: BlockDiag, **kwargs) -> Array:
     # logdet(\bigoplus A_i) = log \prod det(A_i) = sum_i logdet(A_i)
     return sum(logdet(A.Ai) for Ai in A.Ms)
+
+@dispatch
+def logdet(A: Triangular, **kwargs) -> Array:
+    xnp = A.ops
+    return xnp.sum(xnp.log(xnp.diag(A.A)))
