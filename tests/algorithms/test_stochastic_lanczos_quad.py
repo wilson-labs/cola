@@ -15,11 +15,17 @@ config.update('jax_platform_name', 'cpu')
 def test_slq_vjp(xnp):
     dtype = xnp.float32
     diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
+    diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
     _, unflatten = Diagonal(diag).flatten()
 
     def f(theta):
         A = unflatten([theta])
-        loss = stochastic_lanczos_quad(A, xnp.log, num_samples=10, max_iters=100, tol=1e-6, pbar=False)
+        loss = stochastic_lanczos_quad(A, xnp.log, num_samples=100, max_iters=100, tol=1e-6, pbar=False)
+        return loss
+
+    def f_alt(theta):
+        X = xnp.diag(theta)
+        loss = xnp.logdet(X)
         return loss
 
     out = f(diag)
@@ -29,6 +35,16 @@ def test_slq_vjp(xnp):
     else:
         approx = xnp.grad(f)(diag)
     assert approx is not None
+
+    out = f_alt(diag_soln)
+    if xnp.__name__.find("torch") >= 0:
+        out.backward()
+        soln = diag_soln.grad.clone()
+    else:
+        soln = xnp.grad(f_alt)(diag)
+
+    rel_error = relative_error(soln, approx)
+    assert rel_error < 1e-1
 
 
 @parametrize([torch_fns, jax_fns])
