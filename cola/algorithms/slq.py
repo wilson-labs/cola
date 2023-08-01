@@ -10,13 +10,17 @@ from cola.utils.custom_autodiff import iterative_autograd
 def slq_bwd(res, grads, unflatten, *args, **kwargs):
     op_args, *_ = res
     num_samples = kwargs["num_samples"]
+    
     A = unflatten(op_args)
     xnp = A.ops
-    probes = xnp.randn(A.shape[1], num_samples, dtype=A.dtype)
+    key = kwargs.get("key", xnp.PRNGKey(0))
+    key = xnp.PRNGKey(0) if key is None else key
+    probes = xnp.randn(A.shape[1], num_samples, dtype=A.dtype,key=key)
     probes_solves, _ = cg(A, probes, tol=1e-6, max_iters=100)
 
     coef = 1.0 / probes.shape[-1]
-    d_solves = coef * grads[0] * probes_solves
+    g = grads[0] if (isinstance(grads,(tuple, list)) or len(grads.shape)>0) else grads
+    d_solves = coef * g * probes_solves
 
     def fun(*theta):
         Aop = unflatten(theta)
@@ -30,11 +34,15 @@ def slq_bwd(res, grads, unflatten, *args, **kwargs):
 
 
 @iterative_autograd(slq_bwd)
-def slq_fwd(A, fun, num_samples, max_iters, tol, pbar):
+def slq_fwd(A, fun, num_samples, max_iters, tol, pbar, key):
     xnp = A.ops
-    rhs = xnp.randn(A.shape[1], num_samples, dtype=A.dtype)
+    rhs = xnp.randn(A.shape[1], num_samples, dtype=A.dtype, key=key)
     alpha, beta, _, iters, _ = lanczos_parts(A, rhs, max_iters, tol, pbar)
-    alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
+    if xnp.__name__.find("torch") >= 0:
+        alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
+    #REMOVED by marc due to it breaking jit compilation
+    else:
+        alpha = alpha[..., :-1]
     T = construct_tridiagonal_batched(alpha, beta, alpha)
     eigvals, Q = xnp.eigh(T)
     tau = Q[..., 0, :]
@@ -44,7 +52,7 @@ def slq_fwd(A, fun, num_samples, max_iters, tol, pbar):
 
 @export
 def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int=30, max_iters: int=100,
-                            tol: float = 1e-7, pbar: bool = False):
+                            tol: float = 1e-7, pbar: bool = False, key=None):
     """
     Approximates trace(f(A)) for a positive definite operator A and a given function
     f().
@@ -61,4 +69,4 @@ def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int=3
         float: The approximate value of trace(f(A)).
     """
     # TODO: how can we jit here given the iter shape change?
-    return slq_fwd(A, fun, num_samples=num_samples, max_iters=max_iters, tol=tol, pbar=pbar)
+    return slq_fwd(A, fun, num_samples=num_samples, max_iters=max_iters, tol=tol, pbar=pbar, key=key)

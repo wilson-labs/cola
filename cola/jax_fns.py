@@ -157,6 +157,8 @@ def permute(array, axes):
 def expand(array, axis):
     return expand_dims(array, dimensions=(axis, ))
 
+def next_key(key):
+    return jax.random.split(key)[0]
 
 def randn(*shape, dtype=None, key=None):
     if key is None:
@@ -168,8 +170,7 @@ def randn(*shape, dtype=None, key=None):
         return out
     else:
         z = normal(key, shape, dtype=dtype)
-        newkey = jax.random.split(key)[0]
-        return z, newkey
+        return z
 
 
 def fixed_normal_samples(shape, dtype=None):

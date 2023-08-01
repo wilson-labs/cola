@@ -13,14 +13,14 @@ config.update('jax_platform_name', 'cpu')
 _tol = 1e-6
 
 
-# @parametrize([torch_fns, jax_fns])
-@parametrize([torch_fns])
+@parametrize([torch_fns, jax_fns])
+#@parametrize([torch_fns])
 def test_general(xnp):
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)
     soln_vals = xnp.sort(xnp.array(diag, dtype=dtype))
-    A = lazify(A)
+    A = SelfAdjoint(lazify(A))
 
     eig_vals, eig_vecs = eig(A, eig_slice=slice(0, None, None), tol=1e-6)
     eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs.to_dense(), dtype)
@@ -48,6 +48,7 @@ def test_general(xnp):
     eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs.to_dense(), dtype)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
     rel_error = relative_error(soln_vals, xnp.sort(eig_vals))
+    
     assert rel_error < 5e-3
     rel_error = relative_error(A.to_dense(), approx)
     assert rel_error < 5e-2

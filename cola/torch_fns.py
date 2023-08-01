@@ -87,7 +87,7 @@ def device(device_name):
 
 
 def PRNGKey(x):
-    return x
+    return sha_hash(x)
 
 
 def vmap(fun, in_axes=0, out_axes=0):
@@ -153,13 +153,28 @@ def sort(array):
     sorted, _ = torch.sort(array)
     return sorted
 
+def next_key(key):
+    return sha_hash(key)
+
+import hashlib
+
+def sha_hash(n):
+    n_bytes = n.to_bytes((n.bit_length() + 7) // 8, 'big')
+    hash_bytes = hashlib.sha256(n_bytes).digest()
+    hash_integer = int.from_bytes(hash_bytes, 'big')
+    return int(hash_integer%(2**32-1))
+
 
 def randn(*shape, dtype=None, key=None):
     if key is None:
         print('Non keyed randn used. To be deprecated soon.')
         logging.warning('Non keyed randn used. To be deprecated soon.')
+        key = PRNGKey(0)
+    old_state= torch.random.get_rng_state()
+    torch.random.manual_seed(key)
     z = torch.randn(*shape, dtype=dtype)
-    return z if key is None else (z, key)
+    torch.random.set_rng_state(old_state)
+    return z
 
 
 def fixed_normal_samples(shape, dtype=None):

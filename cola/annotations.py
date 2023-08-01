@@ -108,11 +108,11 @@ def get_annotations(A: Permutation):
     return {Unitary}
 
 
-@dispatch
-def get_annotations(A: Dense):
-    xnp = A.ops
-    sym = A.shape[0] == A.shape[-1] and xnp.allclose(A.A, xnp.conj(A.A.T))
-    return {SelfAdjoint} if sym else set()
+# @dispatch
+# def get_annotations(A: Dense):
+#     xnp = A.ops
+#     sym = A.shape[0] == A.shape[-1] and xnp.allclose(A.A, xnp.conj(A.A.T))
+#     return {SelfAdjoint} if sym else set()
 
 
 @dispatch

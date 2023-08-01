@@ -80,7 +80,8 @@ def approx_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False,
     def body(state):
         #TODO: fix randomness when using with jax
         i, diag_sum, diag_sumsq, key = state
-        z, key = xnp.randn(A.shape[0],bs,dtype=A.dtype,key=key)
+        key = xnp.next_key(key)
+        z = xnp.randn(A.shape[0],bs,dtype=A.dtype,key=key)
         z2 = xnp.roll(z,-k,0)
         z2 = xnp.update_array(z2, 0, slice(0,abs(k)) if k<=0 else slice(-abs(k),None))
         slc = slice(abs(k),None) if -k>0 else slice(None,-abs(k) or None)

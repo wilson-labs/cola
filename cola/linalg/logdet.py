@@ -19,7 +19,7 @@ def logdet(A: LinearOperator, **kwargs) -> Array:
     return trace_log_A
 
 def square_and_self_adjoint(A):
-   return  (A.shape[-2] == A.shape[-1]) and A.isa(SelfAdjoint)
+    return (A.shape[-2] == A.shape[-1]) and A.isa(SelfAdjoint)
 
 @dispatch(cond = lambda A, **kwargs: all([square_and_self_adjoint(Ai) for Ai in A.Ms]))
 def logdet(A: Product, **kwargs) -> Array:
