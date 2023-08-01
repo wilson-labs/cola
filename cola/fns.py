@@ -10,7 +10,7 @@ from cola.ops import Dense
 from cola.ops import Kronecker, Product, KronSum, Sum
 from cola.ops import ScalarMul, Transpose, Adjoint
 from cola.ops import BlockDiag, Identity, Diagonal, I_like
-from cola.ops import Diagonal
+from cola.ops import Diagonal, Triangular
 from cola.utils import export
 # import reduce
 from functools import reduce
@@ -96,9 +96,13 @@ def transpose(A: LinearOperator):
     return Transpose(A)
 
 
-# @dispatch
-# def transpose(A: Transpose):
-#     return A.A
+@dispatch
+def transpose(A: Transpose):
+    return A.A
+
+@dispatch
+def transpose(A: Triangular):
+    return Triangular(A.A.T, lower=not A.lower)
 
 
 @dispatch
@@ -106,9 +110,13 @@ def adjoint(A: LinearOperator):
     return Adjoint(A)
 
 
-# @dispatch
-# def adjoint(A: Adjoint):
-#     return A.A
+@dispatch
+def adjoint(A: Adjoint):
+    return A.A
+
+@dispatch
+def adjoint(A: Triangular):
+    return Triangular(A.ops.conj(A.A.T), lower=not A.lower)
 
 
 @dispatch

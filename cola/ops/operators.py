@@ -30,9 +30,11 @@ class Dense(LinearOperator):
         return self.A
 
 
-class LowerTriangular(Dense):
-    """ Lower Triangular Linear Operator. (Wraps dense)"""
-    pass
+class Triangular(Dense):
+    """ Triangular Linear Operator."""
+    def __init__(self, A: Array, lower=True):
+        super().__init__(A)
+        self.lower = lower
 
 
 class Sparse(LinearOperator):

@@ -23,7 +23,7 @@ def nullspace(C: LinearOperator, tol=1e-5, pbar=True, info=False, method='auto')
         tol (float, optional): Tolerance for the computation. Default is 1e-5.
         pbar (bool, optional): Whether to display a progress bar. Default is True.
         info (bool, optional): Whether to return additional information. Default is False.
-        method (str, optional): Method to use for computation. Options are 'dense', 'krylov' and 'auto'. 'auto' chooses based on the C matrix size. Default is 'auto'.
+        method (str, optional): Method to use for computation. Options are 'dense', 'iterative' and 'auto'. 'auto' chooses based on the C matrix size. Default is 'auto'.
 
     Returns:
         Array: The nullspace of C, shape (C.shape[1], rank(C)).
@@ -38,7 +38,7 @@ def nullspace(C: LinearOperator, tol=1e-5, pbar=True, info=False, method='auto')
     if method == 'dense' or (method == 'auto' and np.prod(C.shape) < 3e7):
         Q = orthogonal_complement(C.to_dense(), tol=tol)
         return Q
-    if method == 'krylov' or (method == 'auto' and np.prod(C.shape) > 3e7):
+    if method == 'iterative' or (method == 'auto' and np.prod(C.shape) > 3e7):
         Q, inf = krylov_constraint_solve(C, tol=tol, pbar=pbar, info=True)
         Q.info = inf
         return Q

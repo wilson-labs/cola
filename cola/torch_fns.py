@@ -58,6 +58,10 @@ isreal = torch.isreal
 allclose = torch.allclose
 jacrev = torch.func.jacrev
 
+def lu(a):
+    P,L,U = torch.linalg.lu(a)
+    p_ids = (P@torch.arange(P.shape[-1]).to(P.device, P.dtype)).to(torch.long)
+    return p_ids, L, U
 
 def move_to(arr, device, dtype):
     return arr.to(device=device, dtype=dtype)

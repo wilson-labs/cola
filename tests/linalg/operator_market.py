@@ -2,7 +2,7 @@ from cola import jax_fns
 from cola.fns import lazify
 from cola.ops import Tridiagonal, Diagonal, Identity
 from cola.ops import KronSum, Product, Sliced
-from cola.ops import LowerTriangular, Kronecker, Permutation
+from cola.ops import Triangular, Kronecker, Permutation
 from cola.ops import Dense, BlockDiag, Jacobian, Hessian
 from cola.annotations import SelfAdjoint
 from cola.annotations import PSD
@@ -20,7 +20,7 @@ def get_test_operators(xnp, dtype):
     dtype = xnp.float64
     identity = Identity(shape, dtype)
 
-    M1 = xnp.array([[1, 2], [3, 4]], dtype=dtype)
+    M1 = xnp.array([[1, 0], [3, 4]], dtype=dtype)
     M2 = xnp.array([[5, 6], [7, 8]], dtype=dtype)
     kronsum = KronSum(lazify(M1), lazify(M2))
 
@@ -36,7 +36,7 @@ def get_test_operators(xnp, dtype):
     shape = (3, 3)
     # sparse = Sparse(data, indices, indptr, shape)
 
-    lowertriangular = LowerTriangular(M1)
+    lowertriangular = Triangular(M1)
 
     kronecker = Kronecker(M1, M2)
 

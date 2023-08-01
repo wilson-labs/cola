@@ -15,7 +15,7 @@ def test_inverse(operator):
     A2 = LinearOperator(A.dtype, A.shape, A._matmat)
     Ainv = inverse(A, tol=1e-4)
     Ainv2 = inverse(A2, tol=1e-4, method='dense')
-    Ainv3 = inverse(A2, tol=1e-4, method='krylov')
+    Ainv3 = inverse(A2, tol=1e-4, method='iterative')
     B = xnp.array(xnp.fixed_normal_samples((A.shape[-1], 10)), dtype=dtype)
     X = Ainv @ B
     rel_error = relative_error(A @ X, B)

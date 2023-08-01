@@ -17,6 +17,7 @@ from cola.utils.jax_tqdm import pbar_while, while_loop_winfo
 from jax.lax.linalg import cholesky
 from jax.lax.linalg import svd
 from jax.lax.linalg import qr
+from jax.scipy.linalg import lu as lu_lax
 from jax.scipy.linalg import solve_triangular as solvetri
 import numpy as np
 import logging
@@ -85,6 +86,10 @@ isreal = jnp.isreal
 allclose = jnp.allclose
 # convolve = jax.scipy.signal.convolve
 
+def lu(a):
+    P,L,U = lu_lax(a)
+    p_ids = (P@jnp.arange(P.shape[-1],dtype=P.dtype)).astype(jnp.int32)
+    return p_ids, L, U
 
 def move_to(arr, device, dtype):
     if dtype is not None:

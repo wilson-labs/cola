@@ -4,7 +4,7 @@ from cola.ops import LinearOperator
 from cola.ops import Diagonal, Permutation, Concatenated
 from cola.ops import Identity
 from cola.ops import ScalarMul
-from cola.ops import BlockDiag
+from cola.ops import BlockDiag, Triangular
 from cola.ops import Kronecker, Sum, Product
 from cola.algorithms.cg import cg
 from cola.algorithms.gmres import gmres
@@ -19,33 +19,6 @@ from cola import SelfAdjoint
 class IterativeInverse(LinearOperator):
     def __str__(self):
         return f"{str(self.A)}⁻¹"
-
-
-class CholeskyInverse(LinearOperator):
-    def __init__(self, A, **kwargs):
-        super().__init__(A.dtype, A.shape)
-        self.ops = A.ops
-        self.L = self.ops.cholesky(A.to_dense())
-        self.info = {}
-
-    def _matmat(self, X):
-        Y = self.ops.solvetri(self.L, X, lower=True)
-        soln = self.ops.solvetri(self.L.T, Y, lower=False)
-        return soln
-
-
-class LUInverse(LinearOperator):
-    def __init__(self, A, **kwargs):
-        super().__init__(A.dtype, A.shape)
-        self.ops = A.ops
-        self.A = A.to_dense()
-        self.info = {}
-
-    def _matmat(self, X):
-        # TODO: see whether to call LU function from lax directly
-        soln = self.ops.lu_solve(self.A, X)
-        return soln
-
 
 class CGInverse(IterativeInverse):
     def __init__(self, A, **kwargs):
@@ -86,6 +59,27 @@ class SymmetricSVRGInverse(IterativeInverse):
 class GenericSVRGInverse(IterativeInverse):
     pass
 
+@parametric
+class TriangularInverse(LinearOperator):
+    def __init__(self, A: Triangular):
+        super().__init__(A.dtype, A.shape)
+        self.A = A.to_dense()
+        self.lower = A.lower
+
+    def _matmat(self, X):
+        return self.ops.solvetri(self.A, X, lower=self.lower)
+
+    def _rmatmat(self,X):
+        return self.ops.solvetri(self.A.T, X.T, lower=not self.lower).T
+
+def cholesky_decomposed(A: LinearOperator):
+    L = Triangular(A.ops.cholesky(A.to_dense()), lower=True)
+    return L@L.H
+
+def lu_decomposed(A: LinearOperator):
+    p, L, U = A.ops.lu(A.to_dense())
+    P, L, U = Permutation(p), Triangular(L,lower=True), Triangular(U, lower=False)
+    return P@L@U
 
 @dispatch
 @export
@@ -100,7 +94,7 @@ def inverse(A: LinearOperator, **kwargs):
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
         max_iters (int, optional): The maximum number of iterations. Defaults to 5000.
         method (str, optional): Method to use, defaults to 'auto',
-         options are 'auto', 'dense', 'krylov', 'svrg'.
+         options are 'auto', 'dense', 'iterative', 'svrg'.
 
     Returns:
         Array: The inverse of the linear operator.
@@ -115,22 +109,24 @@ def inverse(A: LinearOperator, **kwargs):
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
-        # return lazify(A.ops.inv(A.to_dense()))
-        if A.isa(PSD):
-            return CholeskyInverse(A)
-        else:
-            return LUInverse(A)
-    # elif issubclass(type(A), SelfAdjoint[Sum]) and (method == 'svrg' or (method == 'auto' and len(A.A.Ms) > 1e4)):
-    #     return SymmetricSVRGInverse(A.A, **kws)
-    elif issubclass(type(A), Sum) and (method == 'svrg' or (method == 'auto' and len(A.Ms) > 1e4)):
-        return GenericSVRGInverse(A, **kws)
-    elif A.isa(SelfAdjoint) and ((method == 'cg' or method == 'krylov') or (method == 'auto' and np.prod(A.shape) > 1e6)):
-        return CGInverse(A, **kws)
-    elif (method == 'gmres' or method == 'krylov') or (method == 'auto' and np.prod(A.shape) > 1e6):
+        return inverse(lu_decomposed(A))
+    elif method == 'iterative' or (method == 'auto' and np.prod(A.shape) > 1e6):
         return GMResInverse(A, **kws)
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 
+@dispatch(cond = lambda A, **kwargs: A.isa(PSD))
+def inverse(A: LinearOperator, **kwargs):
+    kws = dict(method="auto", tol=1e-6, P=None, x0=None, pbar=False, max_iters=5000)
+    assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
+    kws.update(kwargs)
+    method = kws.pop('method', 'auto')
+    if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
+        return inverse(cholesky_decomposed(A))
+    if method == 'iterative' or (method == 'auto' and np.prod(A.shape) > 1e6):
+        return CGInverse(A, **kws)
+    else:
+        raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 
 @dispatch
 def inverse(A: Identity, **kwargs):
@@ -165,6 +161,9 @@ def inverse(A: Kronecker, **kwargs):
 def inverse(A: Diagonal, **kwargs):
     return Diagonal(1. / A.diag)
 
+@dispatch
+def inverse(A: Triangular, **kwargs):
+    return TriangularInverse(A)
 
 # @dispatch(cond = lambda A, **kwargs: A.isa(Unitary), precedence=1)
 # def inverse(A: LinearOperator, **kwargs):

@@ -96,6 +96,6 @@ def ignore_test_nullspace(xnp):
     B = U @ xnp.diag(S) @ VT
     C = kron(A, B)
     assert C.dtype == dtype
-    Q, _ = nullspace(C, pbar=True, info=True, tol=tol, method='krylov')
+    Q, _ = nullspace(C, pbar=True, info=True, tol=tol, method='iterative')
     Q2 = nullspace(C, pbar=True, tol=tol, method='svd')
     assert xnp.norm(Q @ Q.T - Q2 @ Q2.T) < tol, "Krylov and SVD nullspaces differ"

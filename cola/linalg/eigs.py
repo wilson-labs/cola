@@ -29,7 +29,7 @@ def eig(A: LinearOperator, **kwargs) -> Tuple[Array, Array]:
          Default is False.
         method (str): Optional. Method to use for computation.
          'dense' computes eigenvalues and eigenvectors using dense matrix operations.
-         'krylov' computes using lanczos or arnoldi iteration. 'auto' automatically selects the
+         'iterative' computes using lanczos or arnoldi iteration. 'auto' automatically selects the
           method based on the size of the linear operator. Default is 'auto'.
         max_iters (int): Optional. Maximum number of iterations for Arnoldi method. Default is 1000.
 
@@ -54,7 +54,7 @@ def eig(A: LinearOperator, **kwargs) -> Tuple[Array, Array]:
         if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
             eig_vals, eig_vecs = xnp.eigh(A.to_dense())
             return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
-        elif method in ('lanczos', 'krylov') or (method == 'auto' and prod(A.shape) >= 1e6):
+        elif method in ('lanczos', 'iterative') or (method == 'auto' and prod(A.shape) >= 1e6):
             eig_vals, eig_vecs = eig(LanczosDecomposition(A, **kws), eig_slice=eig_slice)
             return eig_vals, eig_vecs
         else:
@@ -62,7 +62,7 @@ def eig(A: LinearOperator, **kwargs) -> Tuple[Array, Array]:
     elif method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
         eig_vals, eig_vecs = xnp.eig(A.to_dense())
         return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
-    elif method in ('arnoldi', 'krylov') or (method == 'auto' and prod(A.shape) >= 1e6):
+    elif method in ('arnoldi', 'iterative') or (method == 'auto' and prod(A.shape) >= 1e6):
         eig_vals, eig_vecs = eig(ArnoldiDecomposition(A, **kws), eig_slice=eig_slice)
         return eig_vals, eig_vecs
     else:

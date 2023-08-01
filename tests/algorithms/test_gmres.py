@@ -20,7 +20,7 @@ def test_gmres_random(xnp):
     soln = xnp.solve(A, rhs)
 
     max_iters, tol = A.shape[0] - 5, 1e-8
-    A_inv = inverse(lazify(A), max_iters=max_iters, tol=tol, method="gmres")
+    A_inv = inverse(lazify(A), max_iters=max_iters, tol=tol, method="iterative")
     approx = A_inv @ rhs
 
     rel_error = relative_error(soln, approx)

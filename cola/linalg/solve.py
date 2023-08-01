@@ -18,7 +18,7 @@ def solve(A: LinearOperator, rhs, **kwargs):
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
         max_iters (int, optional): The maximum number of iterations. Defaults to 5000.
         method (str, optional): Method to use, defaults to 'auto',
-         options are 'auto', 'dense', 'krylov', 'svrg'.
+         options are 'auto', 'dense', 'iterative', 'svrg'.
 
     Returns:
         Array: The solution to the linear system.
