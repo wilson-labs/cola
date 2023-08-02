@@ -141,8 +141,8 @@ Linear Algebra Operations
 - [x] diag
 - [x] trace
 - [ ] exp
-- [ ] logdet
-- [ ] $f(A)$
+- [x] logdet
+- [x] $f(A)$
 - [ ] SVD
 - [ ] pseudoinverse
       
@@ -155,13 +155,13 @@ Linear ops
 - [x] Jacobian
 - [x] Hessian
 - [ ] Fisher
-- [ ] Concatenated
+- [x] Concatenated
 - [x] Triangular
 - [ ] FFT
-- [ ] Tridiagonal
-- [ ] CholeskyDecomposition
-- [ ] LUDecomposition
-- [ ] EigenDecomposition
+- [x] Tridiagonal
+- [x] CholeskyDecomposition
+- [x] LUDecomposition
+- [x] EigenDecomposition
       
 Annotations
 - [x] SelfAdjoint
