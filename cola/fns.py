@@ -73,7 +73,8 @@ def add(A: LinearOperator, B: Sum) -> Sum:
 
 @dispatch
 def mul(A: LinearOperator, c: Scalar) -> LinearOperator:
-    return Product(*[ScalarMul(c, (A.shape[-2], A.shape[-2]), A.dtype), A])
+    S = ScalarMul(c, (A.shape[-2], A.shape[-2]), A.dtype)
+    return Product(*[S, A])
 
 
 @dispatch

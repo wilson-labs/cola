@@ -1,6 +1,5 @@
 from abc import abstractmethod
 from typing import Union, Tuple, Any, List, Callable
-# import cola.fns  # import dot, add, mul
 import cola
 import numpy as np
 from cola.utils import export
@@ -22,8 +21,10 @@ def get_library_fns(dtype: Dtype):
         pass
     try:
         import torch
-        if dtype in [torch.float32, torch.float64, torch.complex64, torch.complex128,
-                     torch.int32, torch.int64]:
+        if dtype in [
+                torch.float32, torch.float64, torch.complex64, torch.complex128, torch.int32,
+                torch.int64
+        ]:
             import cola.torch_fns as fns
             return fns
     except ImportError:
@@ -102,10 +103,9 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         """ Defines multiplication XA of the LinearOperator A with a dense array X (k,d)
             where A (self) is shape (d,c). By default uses jvp to compute the transpose."""
         XT = X.T
-        primals = self.ops.zeros(
-            shape=(self.shape[1], XT.shape[1]), dtype=XT.dtype, device=X.device)
-        out = self.ops.linear_transpose(
-            self._matmat, primals=primals, duals=XT)
+        primals = self.ops.zeros(shape=(self.shape[1], XT.shape[1]), dtype=XT.dtype,
+                                 device=X.device)
+        out = self.ops.linear_transpose(self._matmat, primals=primals, duals=XT)
         return out.T
 
     def to_dense(self) -> Array:
@@ -113,8 +113,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         if 3 * self.shape[-2] < self.shape[-1]:
             return self.ops.eye(self.shape[-2], dtype=self.dtype, device=self.device) @ self
         else:
-            return self @ self.ops.eye(self.shape[-1], dtype=self.dtype,
-                                       device=self.device)
+            return self @ self.ops.eye(self.shape[-1], dtype=self.dtype, device=self.device)
 
     @property
     def T(self):
@@ -203,16 +202,13 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         xnp = self.ops
         match ids:
             case int(i), int(j):
-                ej = xnp.canonical(loc=j, shape=(
-                    self.A.shape[-1], ), dtype=self.dtype)
+                ej = xnp.canonical(loc=j, shape=(self.A.shape[-1], ), dtype=self.dtype)
                 return (self @ ej)[i]
             case int(i), slice() as s:
-                ei = xnp.canonical(loc=i, shape=(
-                    self.A.shape[-1], ), dtype=self.dtype)
+                ei = xnp.canonical(loc=i, shape=(self.A.shape[-1], ), dtype=self.dtype)
                 return (self.T @ ei)[s]
             case slice() as s, int(j):
-                ej = xnp.canonical(loc=j, shape=(
-                    self.A.shape[-1], ), dtype=self.dtype)
+                ej = xnp.canonical(loc=j, shape=(self.A.shape[-1], ), dtype=self.dtype)
                 return (self @ ej)[s]
             case (slice() | xnp.ndarray() | np.ndarray()) as s_i,  \
                  (slice() | xnp.ndarray() | np.ndarray()) as s_j:
@@ -222,13 +218,11 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
                 out = []
                 for idx, jdx in zip(li, lj):
                     # TODO: batch jdx
-                    ej = xnp.canonical(loc=jdx, shape=(
-                        self.A.shape[-1], ), dtype=self.dtype)
+                    ej = xnp.canonical(loc=jdx, shape=(self.A.shape[-1], ), dtype=self.dtype)
                     out.append((self.A @ ej)[idx])
                 return xnp.stack(out)
             case _:
-                raise NotImplementedError(
-                    f"__getitem__ not implemented for this case {type(ids)}")
+                raise NotImplementedError(f"__getitem__ not implemented for this case {type(ids)}")
 
     def tree_flatten(self):
         # write a routine that sorts args and kwargs into
@@ -240,6 +234,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
 
         def is_leaf(x):
             return not isinstance(x, (tuple, list, dict, set))
+
         flat_args, uf = jax.tree_util.tree_flatten(self._args, is_leaf)
         return flat_args, (self._kwargs, uf)
 
@@ -255,18 +250,19 @@ def flatten_function(obj) -> Tuple[List[Array], Callable]:
         return [obj], lambda x: x[0]
 
     elif isinstance(obj, LinearOperator):
-        flat, unflatten = flatten_function((obj._args,obj._kwargs))
+        flat, unflatten = flatten_function((obj._args, obj._kwargs))
+
         def unflatten_op(params):
             args, kwargs = unflatten(params)
             return obj.__class__(*args, **kwargs)
+
         return flat, unflatten_op
 
     elif isinstance(obj, (tuple, list)):  # TODO add dict?
         unflatten_fns, flat, slices = [], [], [slice(-1, 0)]
         for arg in obj:
             params, unflatten = flatten_function(arg)
-            slices.append(
-                slice(slices[-1].stop, slices[-1].stop + len(params)))
+            slices.append(slice(slices[-1].stop, slices[-1].stop + len(params)))
             unflatten_fns.append(unflatten)
             flat.extend(params)
 
@@ -275,22 +271,23 @@ def flatten_function(obj) -> Tuple[List[Array], Callable]:
             for slc, unflatten in zip(slices[1:], unflatten_fns):
                 new_params.append(unflatten(params[slc]))
             return obj.__class__(new_params)
+
         return flat, unflatten
 
     elif isinstance(obj, dict):
         unflatten_fns, flat, slices = [], [], [slice(-1, 0)]
         for key, val in obj.items():
             params, unflatten = flatten_function(val)
-            slices.append(
-                slice(slices[-1].stop, slices[-1].stop + len(params)))
+            slices.append(slice(slices[-1].stop, slices[-1].stop + len(params)))
             unflatten_fns.append(unflatten)
             flat.extend(params)
-        
+
         def unflatten(params):
             new_params = {}
             for key, slc, unflatten in zip(obj.keys(), slices[1:], unflatten_fns):
                 new_params[key] = unflatten(params[slc])
             return new_params
+
         return flat, unflatten
     else:
         return [], lambda x: obj

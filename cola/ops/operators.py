@@ -64,8 +64,13 @@ class Sparse(LinearOperator):
 class ScalarMul(LinearOperator):
     """ Linear Operator representing scalar multiplication"""
     def __init__(self, c, shape, dtype=None):
-        self.c = c
         super().__init__(dtype=dtype or type(c), shape=shape)
+        self.c = self.ops.array(c, dtype=dtype)
+        self.ensure_const_register_as_array()
+
+    def ensure_const_register_as_array(self):
+        self._args = (self.c, )
+        self._kwargs = {"dtype": self.dtype, "shape": self.shape}
 
     def _matmat(self, v):
         return self.c * v
@@ -74,7 +79,7 @@ class ScalarMul(LinearOperator):
         return f"{self.c}*"
 
 
-class Identity(ScalarMul):
+class Identity(LinearOperator):
     """ Linear Operator representing the identity matrix. Can also be created from I_like(A)
 
         Args:
@@ -87,7 +92,10 @@ class Identity(ScalarMul):
             >>> op = Identity(shape, dtype)
     """
     def __init__(self, shape, dtype):
-        super().__init__(1, shape, dtype)
+        super().__init__(dtype=dtype, shape=shape)
+
+    def _matmat(self, X):
+        return X
 
 
 def I_like(A: LinearOperator) -> Identity:
@@ -426,7 +434,7 @@ class Jacobian(LinearOperator):
     def _matmat(self, X):
         # primals = self.x[:,None]+self.ops.zeros((1,X.shape[1],), dtype=self.x.dtype)
         if self.ops.__name__ == 'cola.torch_fns':
-            expanded_x = self.x[None, :]+self.ops.zeros((X.shape[-1], 1), dtype=self.x.dtype)
+            expanded_x = self.x[None, :] + self.ops.zeros((X.shape[-1], 1), dtype=self.x.dtype)
             fn = partial(self.ops.jvp_derivs, self.ops.vmap(self.f), (expanded_x, ))
         else:
             fn = self.ops.vmap(partial(self.ops.jvp_derivs, self.f, (self.x, )))
@@ -435,7 +443,7 @@ class Jacobian(LinearOperator):
     def _rmatmat(self, X):
         # primals = self.x[None,:]+self.ops.zeros((X.shape[0],1), dtype=self.x.dtype)
         if self.ops.__name__ == 'cola.torch_fns':
-            expanded_x = self.x[None, :]+self.ops.zeros((X.shape[0], 1), dtype=self.x.dtype)
+            expanded_x = self.x[None, :] + self.ops.zeros((X.shape[0], 1), dtype=self.x.dtype)
             fn = partial(self.ops.vjp_derivs, self.ops.vmap(self.f), (expanded_x, ))
             out = fn((X, ))
         else:
