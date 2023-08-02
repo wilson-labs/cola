@@ -103,7 +103,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
             where A (self) is shape (d,c). By default uses jvp to compute the transpose."""
         XT = X.T
         primals = self.ops.zeros(
-            shape=(self.shape[1], XT.shape[1]), dtype=XT.dtype)
+            shape=(self.shape[1], XT.shape[1]), dtype=XT.dtype, device=X.device)
         out = self.ops.linear_transpose(
             self._matmat, primals=primals, duals=XT)
         return out.T
@@ -111,9 +111,10 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     def to_dense(self) -> Array:
         """ Produces a dense array representation of the linear operator. """
         if 3 * self.shape[-2] < self.shape[-1]:
-            return self.ops.eye(self.shape[-2], dtype=self.dtype) @ self
+            return self.ops.eye(self.shape[-2], dtype=self.dtype, device=self.device) @ self
         else:
-            return self @ self.ops.eye(self.shape[-1], dtype=self.dtype)
+            return self @ self.ops.eye(self.shape[-1], dtype=self.dtype,
+                                       device=self.device)
 
     @property
     def T(self):

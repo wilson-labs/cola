@@ -254,8 +254,8 @@ def where(condition, x, y):
     return torch.where(condition, x, y)
 
 
-def zeros(shape, dtype):
-    return torch.zeros(size=shape, dtype=dtype)
+def zeros(shape, dtype, device=None):
+    return torch.zeros(size=shape, dtype=dtype, device=device)
 
 
 def array(arr, dtype=None):
