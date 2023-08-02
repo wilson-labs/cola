@@ -1,3 +1,4 @@
+import hashlib
 import torch
 from torch.autograd.functional import vjp, jvp
 from cola.utils.torch_tqdm import while_loop_winfo
@@ -58,10 +59,12 @@ isreal = torch.isreal
 allclose = torch.allclose
 jacrev = torch.func.jacrev
 
+
 def lu(a):
-    P,L,U = torch.linalg.lu(a)
-    p_ids = (P@torch.arange(P.shape[-1]).to(P.device, P.dtype)).to(torch.long)
+    P, L, U = torch.linalg.lu(a)
+    p_ids = (P @ torch.arange(P.shape[-1]).to(P.device, P.dtype)).to(torch.long)
     return p_ids, L, U
+
 
 def move_to(arr, device, dtype):
     return arr.to(device=device, dtype=dtype)
@@ -157,16 +160,16 @@ def sort(array):
     sorted, _ = torch.sort(array)
     return sorted
 
+
 def next_key(key):
     return sha_hash(key)
 
-import hashlib
 
 def sha_hash(n):
     n_bytes = n.to_bytes((n.bit_length() + 7) // 8, 'big')
     hash_bytes = hashlib.sha256(n_bytes).digest()
     hash_integer = int.from_bytes(hash_bytes, 'big')
-    return int(hash_integer%(2**32-1))
+    return int(hash_integer % (2**32 - 1))
 
 
 def randn(*shape, dtype=None, key=None):
@@ -174,7 +177,7 @@ def randn(*shape, dtype=None, key=None):
         print('Non keyed randn used. To be deprecated soon.')
         logging.warning('Non keyed randn used. To be deprecated soon.')
         key = PRNGKey(0)
-    old_state= torch.random.get_rng_state()
+    old_state = torch.random.get_rng_state()
     torch.random.manual_seed(key)
     z = torch.randn(*shape, dtype=dtype)
     torch.random.set_rng_state(old_state)

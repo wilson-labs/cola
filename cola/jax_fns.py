@@ -47,7 +47,6 @@ complex64 = jnp.complex64
 long = jnp.int64
 reshape = jnp.reshape
 kron = jnp.kron
-eye = jnp.eye
 moveaxis = jnp.moveaxis
 concatenate = jnp.concatenate
 block_diag = block_diag
@@ -86,17 +85,25 @@ isreal = jnp.isreal
 allclose = jnp.allclose
 # convolve = jax.scipy.signal.convolve
 
+
+def eye(n, m=None, dtype=None, device=None):
+    del device
+    return jnp.eye(N=n, M=m, dtype=dtype)
+
+
 def lu(a):
-    P,L,U = lu_lax(a)
-    p_ids = (P@jnp.arange(P.shape[-1],dtype=P.dtype)).astype(jnp.int32)
+    P, L, U = lu_lax(a)
+    p_ids = (P @ jnp.arange(P.shape[-1], dtype=P.dtype)).astype(jnp.int32)
     return p_ids, L, U
+
 
 def move_to(arr, device, dtype):
     if dtype is not None:
         arr = arr.astype(dtype)
     if device is not None:
-        arr = jax.device_put(arr,device)
+        arr = jax.device_put(arr, device)
     return arr
+
 
 def lu_solve(a, b):
     return solve(a, b)
@@ -162,8 +169,10 @@ def permute(array, axes):
 def expand(array, axis):
     return expand_dims(array, dimensions=(axis, ))
 
+
 def next_key(key):
     return jax.random.split(key)[0]
+
 
 def randn(*shape, dtype=None, key=None):
     if key is None:
@@ -198,7 +207,8 @@ def linear_transpose(fun, primals, duals):
     return jax.linear_transpose(fun, primals)(duals)[0]
 
 
-def zeros(shape, dtype):
+def zeros(shape, dtype, device=None):
+    del device
     return jnp.zeros(shape=shape, dtype=dtype)
 
 
