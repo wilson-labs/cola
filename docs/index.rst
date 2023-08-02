@@ -101,6 +101,7 @@ Design Choices
    package/cola.linear_operators
    package/cola.fns
    package/cola.algorithms
+   package/cola.decompositions
 
 .. toctree::
    :maxdepth: 1
@@ -109,6 +110,7 @@ Design Choices
    notebooks/01_PCA.ipynb
    notebooks/02_Linear_Regression.ipynb
    notebooks/03_GPs.ipynb
+   notebooks/07_second_order_optimization.ipynb
    notebooks/04_Spectral_Clustering.ipynb
    notebooks/05_Boundary_Value_PDEs.ipynb
    notebooks/06_PDE_Eigenvalue_Problems.ipynb
