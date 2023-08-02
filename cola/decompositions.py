@@ -26,27 +26,27 @@ def lu_decomposed(A: LinearOperator):
 
 @export
 class UnitaryDecomposition(LinearOperator):
-    """ Decomposition of form Q A Q^H.
+    """ Decomposition of form A = Q M Q^H.
 
     Convenient for computing inverses, eigs, traces, determinants.
     Assumes Q is unitary (or more precisely a Stiefel matrix): Q.H@Q = I,
     but not necessarily Q@Q.H = I and Q need not be square.
     """
-    def __init__(self, Q, HH):
-        super().__init__(HH.dtype, HH.shape)
+    def __init__(self, Q, M):
+        super().__init__(M.dtype, (Q.shape[0],Q.shape[0]))
         self.Q = cola.fns.lazify(Q)
-        self.HH = cola.fns.lazify(HH)
+        self.M = cola.fns.lazify(M)
 
 
 @inverse.dispatch
 def inverse(A: UnitaryDecomposition, **kwargs):
-    Q, A = A.Q, A.A
-    return Q @ inverse(A, **kwargs) @ Q.H
+    Q, M = A.Q, A.M
+    return Q @ inverse(M, **kwargs) @ Q.H
 
 
 @eig.dispatch
 def eig(QH: UnitaryDecomposition, **kwargs):
-    Q, H, xnp = QH.Q, QH.HH, QH.ops
+    Q, H, xnp = QH.Q, QH.M, QH.ops
     eig_vals, eig_vecs = eig(H, **kwargs)
     eig_vecs = xnp.cast(Q.to_dense(), dtype=eig_vecs.dtype) @ eig_vecs.to_dense()
     eig_vecs = Unitary(lazify(eig_vecs))
@@ -55,12 +55,12 @@ def eig(QH: UnitaryDecomposition, **kwargs):
 
 @trace.dispatch
 def trace(A: UnitaryDecomposition, **kwargs):
-    Q, A = A.Q, A.A
-    return trace(A, **kwargs)
+    Q, M = A.Q, A.M
+    return trace(M, **kwargs)
 
 
 @apply_unary.dispatch
 def apply_unary(fn: Callable, A: UnitaryDecomposition, **kwargs):
     # Need to think carefully about the case where Q is not full rank
-    Q, A = A.Q, A.A
-    return Q @ apply_unary(fn, A, **kwargs) @ Q.H
+    Q, M = A.Q, A.M
+    return Q @ apply_unary(fn, M, **kwargs) @ Q.H
