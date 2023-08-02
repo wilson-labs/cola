@@ -1,5 +1,5 @@
 from typing import Tuple
-from cola.ops import LinearOperator
+from cola.ops import LinearOperator, I_like
 from cola.ops import Array
 from plum import dispatch
 from cola.utils import export
@@ -25,10 +25,12 @@ def pinv(A: LinearOperator, **kwargs):
         A = LinearOperator((3, 5), jnp.float32, lambda x: x[:3])
         A_pinv = pinv(A, tol=1e-4, max_iters=1000)
     """
-    kws = dict(tol=1e-6, P=None, x0=None, pbar=False, info=False, max_iters=5000)
+    kws = dict(tol=1e-6, P=None, x0=None, pbar=False, max_iters=5000)
     kws.update(kwargs)
     n,m = A.shape
     if n > m:
-        return inverse(A.H@A, **kws)@A.H
+        M = A.H@A
+        return inverse(cola.PSD(M+kws['tol']*I_like(M)/10), **kws)@A.H
     else:
-        return A.H@inverse(A@A.H, **kws)
+        M = A@A.H
+        return A.H@inverse(cola.PSD(M+kws['tol']*I_like(M)/10), **kws)

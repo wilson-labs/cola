@@ -6,7 +6,7 @@ from cola.utils import export
 
 
 @export
-def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=None, tol=1e-7, P=None,
+def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=100, tol=1e-7, P=None,
           use_householder=False, use_triangular=False, pbar=False):
     """
     Solves Ax=b or AX=B using GMRES.

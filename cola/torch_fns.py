@@ -213,7 +213,11 @@ def jvp_derivs(fun, primals, tangents, create_graph=True):
     else:
         conj_tangents = torch.conj(tangents)
     _, output = jvp(fun, inputs=conj_primals, v=conj_tangents, create_graph=create_graph)
-    return torch.conj(output)
+    if isinstance(output, (list, tuple)):
+        conj_output = type(output)((torch.conj(primal) for primal in output))
+    else:
+        conj_output = torch.conj(output)
+    return conj_output
 
 
 def grad(fn):

@@ -7,7 +7,7 @@ import cola
 
 
 @export
-def arnoldi(A: LinearOperator, start_vector: Array = None, max_iters: int = 1000, tol: float = 1e-7,
+def arnoldi(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7,
             use_householder: bool = False, pbar: bool = False):
     """
     Computes eigenvalues and eigenvectors using Arnoldi.

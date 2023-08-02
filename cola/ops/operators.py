@@ -425,12 +425,23 @@ class Jacobian(LinearOperator):
 
     def _matmat(self, X):
         # primals = self.x[:,None]+self.ops.zeros((1,X.shape[1],), dtype=self.x.dtype)
-        fn = partial(self.ops.jvp_derivs, self.f, (self.x, ))
-        return self.ops.vmap(fn)((X.T, )).T
+        if self.ops.__name__ == 'cola.torch_fns':
+            expanded_x = self.x[None, :]+self.ops.zeros((X.shape[-1], 1), dtype=self.x.dtype)
+            fn = partial(self.ops.jvp_derivs, self.ops.vmap(self.f), (expanded_x, ))
+        else:
+            fn = self.ops.vmap(partial(self.ops.jvp_derivs, self.f, (self.x, )))
+        return fn((X.T, )).T
 
     def _rmatmat(self, X):
         # primals = self.x[None,:]+self.ops.zeros((X.shape[0],1), dtype=self.x.dtype)
-        return self.ops.vmap(partial(self.ops.vjp_derivs, self.f, (self.x, )))((X, ))
+        if self.ops.__name__ == 'cola.torch_fns':
+            expanded_x = self.x[None, :]+self.ops.zeros((X.shape[0], 1), dtype=self.x.dtype)
+            fn = partial(self.ops.vjp_derivs, self.ops.vmap(self.f), (expanded_x, ))
+            out = fn((X, ))
+        else:
+            fn = self.ops.vmap(partial(self.ops.vjp_derivs, self.f, (self.x, )))
+            out = fn((X, ))
+        return out[0]
 
     def __str__(self):
         return "J"
@@ -467,6 +478,9 @@ class Hessian(LinearOperator):
             return out
         else:
             return xnp.vmap(mvm)((X.T, )).T
+
+    def _rmatmat(self, X):
+        return self._matmat(X.T).T
 
     def __str__(self):
         return "H"

@@ -117,8 +117,14 @@ def get_annotations(A: Permutation):
 
 @dispatch
 def get_annotations(A: Sliced):
-    if A.slices[0] == A.slices[1]:
-        return get_annotations(A.M) - {Unitary, Stiefel}
+    symmetric=False
+    if isinstance(A.slices[0], slice) and isinstance(A.slices[0], slice):
+        if A.slices[0] == A.slices[1]:
+            symmetric=True
+    elif (A.slices[0] == A.slices[1]).all():
+        symmetric=True
+    if symmetric:
+        return A.A.annotations - {Unitary, Stiefel}
     # TODO: perhaps add case of slicing a unitary matrix
     return set()
 
