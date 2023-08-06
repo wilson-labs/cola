@@ -118,11 +118,15 @@ def test_flatten(xnp):
     Bop = Diagonal(diag2)
     Cop = KronSum(Aop, Bop)
     diag3 = xnp.array([1., 2., 3., 4], dtype=dtype)
+    const = 3.
     Dop = Diagonal(diag3)
     Fop = Sum(Cop, Dop)
+    Fop *= const
+
     flattened, _ = Fop.flatten()
-    soln = [diag1, diag2, diag3]
-    assert flattened == soln
+    soln = [xnp.array(const, dtype=dtype), diag1, diag2, diag3]
+    for par1, par2 in zip(flattened, soln):
+        assert relative_error(par1, par2) < 1e-12
 
 
 @parametrize([torch_fns, jax_fns])
@@ -209,7 +213,7 @@ def test_sum_and_scalar_op(xnp):
     soln = (A + B) @ rhs
     C = Sum(lazify(A), lazify(B))
     approx = C @ rhs
-    D = ScalarMul(c=-5., shape=C.shape, dtype=dtype)
+    D = ScalarMul(-5., shape=C.shape, dtype=dtype)
 
     print(str(C))
     print(str(D))

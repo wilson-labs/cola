@@ -22,6 +22,7 @@ def lu_decomposed(A: LinearOperator):
         the triangular (and permutation) structure """
     p, L, U = A.ops.lu(A.to_dense())
     P, L, U = Permutation(p), Triangular(L,lower=True), Triangular(U, lower=False)
+    P, L, U = P.to(A.device), L.to(A.device), U.to(A.device)
     return P@L@U
 
 @export
