@@ -29,7 +29,7 @@ def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):
     return chunk, shifted_chunk
 
 @export
-def exact_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False,info=False):
+def exact_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False):
     """Extracts the (kth) diagonal of a linear operator.
 
     Args:
@@ -39,10 +39,10 @@ def exact_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False,i
         tol (float, optional): (doesn't do anything)
         max_iters (int, optional): (doesn't do anything).
         pbar (bool, optional): Flag for showing progress bar.
-        info (bool, optional): Flag for returning info.
 
     Returns:
         Array: Extracted diagonal elements.
+        Info: Dictionary with information about the method used.
     """
     bs = min(100,A.shape[0])
     # lazily create chunks of the identity matrix of size bs
@@ -52,12 +52,13 @@ def exact_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False,i
         chunk, shifted_chunk = get_I_chunk_like(A,i,bs,k)
         diag_sum += ((A @ chunk)*shifted_chunk).sum(-1)
     if k <= 0:
-        return diag_sum[abs(k):]
+        out = diag_sum[abs(k):]
     else:
-        return diag_sum[:(-k or None)]
+        out =  diag_sum[:(-k or None)]
+    return out, {'method':'exact'}
 
 @export
-def approx_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False,info=False):
+def approx_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False):
     """ Extract the (kth) diagonal of a linear operator using stochastic estimation
     
     Args:
@@ -67,10 +68,11 @@ def approx_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False,
         tol (float, optional): Tolerance (default 3e-2).
         max_iters (int, optional): Maximum number of iterations (default 10000).
         pbar (bool, optional): Flag for showing progress bar.
-        info (bool, optional): Flag for returning info.
 
     Returns:
-        Array: Extracted diagonal elements."""
+        Array: Extracted diagonal elements.
+        Info: Dictionary with information about the method used.
+    """
     bs = min(100,A.shape[0])
     # lazily create chunks of the identity matrix of size bs
     xnp = A.ops
@@ -102,7 +104,7 @@ def approx_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False,
     zeros = xnp.zeros((A.shape[0]-abs(k),),dtype=A.dtype)
     n,diag_sum,*_ =state= while_loop(cond, body, (0, zeros, zeros,xnp.PRNGKey(42)))
     mean = diag_sum/(n*bs)
-    return mean
+    return mean, infos
 
         
 

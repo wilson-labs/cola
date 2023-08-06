@@ -14,7 +14,7 @@ config.update('jax_platform_name', 'cpu')
 def test_exact_diag(xnp):
     A = Dense(xnp.array([[1, 2, 3], [4, 5, 6], [7, 8, 9.]], dtype=xnp.float32))
     for u in [-2, -1, 0, 1, 2]:
-        d1 = exact_diag(A, u)
+        d1,info = exact_diag(A, u)
         d2 = xnp.diag(A.to_dense(), u)
         assert relative_error(d1, d2) < 1e-5
 
@@ -23,7 +23,7 @@ def test_exact_diag(xnp):
 def test_approx_diag(xnp):
     A = Dense(xnp.array([[1, 2, 3], [4, 5, 6], [7, 8, 9.]], dtype=xnp.float32))
     for u in [-2, -1, 0, 1, 2]:
-        d1 = approx_diag(A, u, tol=5e-2)
+        d1,info = approx_diag(A, u, tol=5e-2)
         d2 = xnp.diag(A.to_dense(), u)
         assert relative_error(d1, d2) < 9e-1
 

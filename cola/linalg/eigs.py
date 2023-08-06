@@ -16,7 +16,7 @@ from cola.utils import export
 
 @dispatch
 @export
-def eig(A: LinearOperator, **kwargs) -> Tuple[Array, Array]:
+def eig(A: LinearOperator, **kwargs):
     """
     Computes eigenvalues and eigenvectors of a linear operator.
 

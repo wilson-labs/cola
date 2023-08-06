@@ -17,13 +17,15 @@ def diag(v: Array, k=0, **kwargs):
 def diag(A: LinearOperator, k=0, **kwargs):
     """ Extract the (kth) diagonal of a linear operator. 
         Method options: auto, exact, approx"""
-    kws = dict(tol=1e-1, pbar=False, max_iters=5000, method='auto', info=False)
+    kws = dict(tol=1e-1, pbar=False, max_iters=5000, method='auto')
     kws.update(kwargs)
     method = kws.pop('method')
     if method == 'exact' or (method == 'auto' and (np.prod(A.shape) <= 1e6 or kws['tol']<3e-2)):
-        return exact_diag(A, k=k, **kws)
+        out, info = exact_diag(A, k=k, **kws)
     elif method == 'approx' or (method == 'auto' and (np.prod(A.shape) > 1e6 and kws['tol']>=3e-2)):
-        return approx_diag(A, k=k, **kws)
+        out, info = approx_diag(A, k=k, **kws)
+    out.info = info
+    return out
 
 @dispatch
 def diag(A: Dense, k=0, **kwargs):
@@ -41,7 +43,9 @@ def diag(A: Identity, k=0, **kwargs):
 
 @dispatch
 def diag(A: Sum, k=0, **kwargs):
-    return sum(diag(M, **kwargs) for M in A.Ms)
+    out = sum(diag(M, **kwargs) for M in A.Ms)
+    #out.info = {'sum': [(M.info if hasattr(M,'info') else {}) for M in A.Ms]}
+    return out
 
 
 @dispatch

@@ -1,12 +1,12 @@
 from functools import reduce
-from typing import Set
+from typing import Set, Union
 from collections.abc import Iterable
 from plum import dispatch
 from cola.ops import LinearOperator, Array
 from cola.ops import Dense
 from cola.ops import Kronecker, Product, Sum
 from cola.ops import Transpose, Adjoint
-from cola.ops import BlockDiag, Identity, Diagonal
+from cola.ops import BlockDiag, Identity, Diagonal, ScalarMul
 from cola.ops import Hessian, Permutation, Sliced
 from cola.utils import export
 
@@ -69,9 +69,34 @@ def get_annotations(A: Kronecker):
     return intersect_annotations(A.Ms)
 
 
+inferred_self_adjoint_types = Union[Product[LinearOperator, Union[Transpose[LinearOperator],Adjoint[LinearOperator]]],
+                                    Product[Union[Transpose[LinearOperator],Adjoint[LinearOperator]], LinearOperator]]
+def are_the_same(A1,A1T):
+    if isinstance(A1T, Adjoint):
+        return A1 is A1T.A
+    elif isinstance(A1T, Transpose):
+        return A1 is A1T.A
+    elif isinstance(A1, Adjoint):
+        return A1.A is A1T
+    elif isinstance(A1, Transpose):
+        return A1.A is A1T
+    else:
+        return False
+
 @dispatch
 def get_annotations(A: Product):
+    if issubclass(type(A), inferred_self_adjoint_types) and are_the_same(A.Ms[0], A.Ms[1]):
+        return (intersect_annotations(A.Ms) & {Unitary, Stiefel}) | {PSD}
+    not_commuting = [M for M in A.Ms if not isinstance(M, ScalarMul)]
+    if len(not_commuting)==1:
+        return not_commuting[0].annotations
     return intersect_annotations(A.Ms) & {Unitary, Stiefel}
+
+
+# @dispatch(cond= lambda A: are_the_same(A.Ms[0], A.Ms[1]))
+# def get_annotations(A: inferred_self_adjoint_types):
+#     # TODO: doesn't work properly at the moment due to challenges with parametric types in plum
+#     return intersect_annotations(A.Ms) | {SelfAdjoint}
 
 
 @dispatch
@@ -84,13 +109,13 @@ def get_annotations(A: BlockDiag):
     return intersect_annotations(A.Ms)
 
 
-@dispatch
-def get_annotations(A: Diagonal):
-    if A.ops.isreal(A.diag).all():
-        if all(A.diag >= 0):
-            return {PSD}
-        return {SelfAdjoint}
-    return set()
+# @dispatch
+# def get_annotations(A: Diagonal):
+#     if A.ops.isreal(A.diag).all():
+#         if all(A.diag >= 0):
+#             return {PSD}
+#         return {SelfAdjoint}
+#     return set()
 
 
 @dispatch
