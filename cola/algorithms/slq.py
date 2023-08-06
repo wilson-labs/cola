@@ -52,7 +52,7 @@ def slq_fwd(A, fun, num_samples, max_iters, tol, pbar, key):
 
 @export
 def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int=30, max_iters: int=100,
-                            tol: float = 1e-7, pbar: bool = False, key=None):
+                            tol: float = 1e-3, pbar: bool = False, key=None):
     """
     Approximates trace(f(A)) for a positive definite operator A and a given function
     f().
@@ -69,4 +69,5 @@ def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int=3
         float: The approximate value of trace(f(A)).
     """
     # TODO: how can we jit here given the iter shape change?
-    return slq_fwd(A, fun, num_samples=num_samples, max_iters=max_iters, tol=tol, pbar=pbar, key=key)
+    # tol sets the tolerance for the entire process, use stricter tol for lanczos
+    return slq_fwd(A, fun, num_samples=num_samples, max_iters=max_iters, tol=tol/(10*num_samples), pbar=pbar, key=key)

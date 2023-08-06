@@ -46,20 +46,10 @@ def eig(A: LinearOperator, **kwargs):
     assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
     # make sure no extra kwargs
-
     method = kws.pop('method')
     eig_slice = kws.pop('eig_slice')
     xnp = A.ops
-    if A.isa(SelfAdjoint):
-        if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
-            eig_vals, eig_vecs = xnp.eigh(A.to_dense())
-            return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
-        elif method in ('lanczos', 'iterative') or (method == 'auto' and prod(A.shape) >= 1e6):
-            eig_vals, eig_vecs = eig(LanczosDecomposition(A, **kws), eig_slice=eig_slice)
-            return eig_vals, eig_vecs
-        else:
-            raise ValueError(f"Unknown method {method} for SelfAdjoint operator")
-    elif method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
+    if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
         eig_vals, eig_vecs = xnp.eig(A.to_dense())
         return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
     elif method in ('arnoldi', 'iterative') or (method == 'auto' and prod(A.shape) >= 1e6):
@@ -69,25 +59,25 @@ def eig(A: LinearOperator, **kwargs):
         raise ValueError(f"Unknown method {method}")
 
 
-# @dispatch
-# def eig(A: SelfAdjoint, eig_slice=slice(0, None, None), tol=1e-6, pbar=False, method='auto',
-#         info=False, max_iters=1000) -> Tuple[Array, Array]:
-#     """ More efficient implementation of eig for self-adjoint operators.
+@dispatch(cond = lambda A, **kwargs: A.isa(SelfAdjoint))
+def eig(A: LinearOperator, **kwargs):
+    kws = dict(eig_slice=slice(0, None, None), tol=1e-6, pbar=False, method='auto', max_iters=1000)
+    assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
+    kws.update(kwargs)
+    # make sure no extra kwargs
+    method = kws.pop('method')
+    eig_slice = kws.pop('eig_slice')
+    xnp = A.ops
+    if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
+        eig_vals, eig_vecs = xnp.eigh(A.to_dense())
+        return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
+    elif method in ('lanczos', 'iterative') or (method == 'auto' and prod(A.shape) >= 1e6):
+        eig_vals, eig_vecs = eig(LanczosDecomposition(A, **kws), eig_slice=eig_slice)
+        return eig_vals, eig_vecs
+    else:
+        raise ValueError(f"Unknown method {method} for SelfAdjoint operator")
 
-#     Example:
-#         A = cola.SelfAdjoint(MyLinearOperator())
-#         eig_vals, eig_vecs = eig(A, tol=1e-4)
-#     """
-#     xnp = A.ops
-#     if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
-#         eig_vals, eig_vecs = xnp.eigh(A.to_dense())
-#     elif method == 'lanczos' or (method == 'auto' and prod(A.shape) >= 1e6):
-#         rhs = xnp.randn(A.shape[1], 1, dtype=A.dtype)
-#         eig_vals, eig_vecs = lanczos_eig(A, rhs, max_iters=max_iters, tol=tol)
-#     else:
-#         raise ValueError(f"Unknown method {method}")
-#     return eig_vals[eig_slice], eig_vecs[:, eig_slice]
-
+    
 # @dispatch
 # def eig(A: LowerTriangular, **kwargs):
 #     xnp = A.ops
@@ -107,8 +97,8 @@ def eig(A: Diagonal, eig_slice=slice(0, None, None), **kwargs):
     return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
 
 
-def eigenvalues(A: LinearOperator, info=False, pbar=False):
-    pass
+# def eigenvalues(A: LinearOperator, info=False, pbar=False):
+#     pass
 
 
 @export
