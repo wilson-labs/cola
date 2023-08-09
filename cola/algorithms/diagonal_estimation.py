@@ -1,6 +1,8 @@
 import cola
 from cola.utils import export
 from cola.ops import I_like,LinearOperator
+
+from cola.utils.custom_autodiff import iterative_autograd
 import numpy as np
 
 def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):
@@ -28,6 +30,49 @@ def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):
         shifted_chunk = padded_chunk[:,:bs]
     return chunk, shifted_chunk
 
+def exact_diag_bwd(res, grads, unflatten, *args, **kwargs):
+    v = grads[0] if isinstance(grads,(tuple, list)) else grads
+    op_args, _ = res
+    A = unflatten(op_args)
+    xnp = A.ops
+    #k, bs, tol, max_iters, pbar = args[1:]
+    k = kwargs.get('k')
+    bs = kwargs.get('bs')
+
+    def fun(theta, C,shifted_C):
+        Aop = unflatten(theta)
+        out = ((Aop @ C)*shifted_C).sum(-1)
+        return out[abs(k):] if k<=0 else out[:(-k or None)]
+
+    def d_params(C, shifted_C):
+        d_params, _, _ = xnp.vjp_derivs(fun, (op_args,C,shifted_C), v)
+        return d_params
+
+    d_p = type(op_args)([0.*arg for arg in op_args])
+    for i in range(0, A.shape[0], bs):
+        chunk, shifted_chunk = get_I_chunk_like(A,i,bs,k)
+        dp_all = d_params(chunk,shifted_chunk)
+        for i in range(len(d_p)):
+            d_p[i] += dp_all[i]
+    dA = unflatten(d_p)
+    # print(dA)
+    # print(args,kwargs)
+    return (dA,)
+
+@iterative_autograd(exact_diag_bwd)
+def exact_diag_fwd(A, k, bs ,tol, max_iters, pbar):
+    bs = min(100,A.shape[0])
+    # lazily create chunks of the identity matrix of size bs
+    diag_sum = 0.
+    for i in range(0, A.shape[0], bs):
+        chunk, shifted_chunk = get_I_chunk_like(A,i,bs,k)
+        diag_sum += ((A @ chunk)*shifted_chunk).sum(-1)
+    if k <= 0:
+        out = diag_sum[abs(k):]
+    else:
+        out =  diag_sum[:(-k or None)]
+    return out
+
 @export
 def exact_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False):
     """Extracts the (kth) diagonal of a linear operator.
@@ -44,18 +89,7 @@ def exact_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False):
         Array: Extracted diagonal elements.
         Info: Dictionary with information about the method used.
     """
-    bs = min(100,A.shape[0])
-    # lazily create chunks of the identity matrix of size bs
-    diag_sum = 0
-    xnp = A.ops
-    for i in range(0, A.shape[0], bs):
-        chunk, shifted_chunk = get_I_chunk_like(A,i,bs,k)
-        diag_sum += ((A @ chunk)*shifted_chunk).sum(-1)
-    if k <= 0:
-        out = diag_sum[abs(k):]
-    else:
-        out =  diag_sum[:(-k or None)]
-    return out, {'method':'exact'}
+    return exact_diag_fwd(A, k=k, bs=bs, tol=tol, max_iters=max_iters, pbar=pbar), {'method':'exact'}
 
 @export
 def approx_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False):
