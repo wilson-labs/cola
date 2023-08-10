@@ -70,4 +70,4 @@ def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int=3
     """
     # TODO: how can we jit here given the iter shape change?
     # tol sets the tolerance for the entire process, use stricter tol for lanczos
-    return slq_fwd(A, fun, num_samples=num_samples, max_iters=max_iters, tol=tol/(10*num_samples), pbar=pbar, key=key)
+    return slq_fwd(A, fun, num_samples=num_samples, max_iters=max_iters, tol=tol/(100*num_samples), pbar=pbar, key=key)

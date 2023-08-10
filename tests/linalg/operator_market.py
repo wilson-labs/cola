@@ -49,7 +49,7 @@ def get_test_operators(xnp, dtype):
     M2 = Dense(xnp.array([[7, 6], [6, 8]], dtype=dtype))
 
     blockdiag = BlockDiag(M1, M2, multiplicities=[2, 3])
-    prod = M1 @ M2
+    prod = M1 @ M1.T
 
     # Jacobian
     def f1(x):
