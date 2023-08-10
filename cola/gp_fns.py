@@ -40,7 +40,7 @@ class InvQuad(Function):
         inv_quad_rhs, cg_args, *op_args = args
         A = unflatten(op_args)
         inv_quad_solves, *_ = run_batched_cg(A, inv_quad_rhs, *cg_args)
-        # inv_quad_solves = A.ops.solve(A.to_dense(), inv_quad_rhs)
+        # inv_quad_solves = A.xnp.solve(A.to_dense(), inv_quad_rhs)
         inv_quad_term = (inv_quad_solves * inv_quad_rhs).sum(-2)
 
         ctx.A = A
@@ -55,7 +55,7 @@ class InvQuad(Function):
         soln, A = ctx.soln, ctx.A
         grad_vec = -(grads * soln)
         # soln_grad, *_ = run_batched_cg(A, grad_vec, *ctx.cg_args)
-        # soln_grad = A.ops.solve(A.to_dense(), grad_vec)
+        # soln_grad = A.xnp.solve(A.to_dense(), grad_vec)
         dA = A._bilinear_derivative(grad_vec, soln)
         matrix_args_grads = [None] * 3
         out_grads = tuple(matrix_args_grads + list(dA))
@@ -67,7 +67,7 @@ class LogDet(Function):
     def forward(ctx, unflatten, *args):
         cg_args, *op_args = args
         A = unflatten(op_args)
-        xnp = A.ops
+        xnp = A.xnp
         dtype = A.dtype
 
         probes = xnp.randn(A.shape[1], 10, dtype=dtype)
@@ -106,7 +106,7 @@ def bilinear_derivative(A, dual, primal):
     params = A.flatten()[0]
     params_with_grads = tuple(arg for arg in params if arg.requires_grad)
 
-    xnp = A.ops
+    xnp = A.xnp
     with xnp.autograd.enable_grad():
         loss = (dual * (A @ primal)).sum()
         actual_grads = deque(xnp.autograd.grad(loss, params_with_grads, allow_unused=True))

@@ -55,7 +55,7 @@ class Sparse(LinearOperator):
     """
     def __init__(self, data, indices, indptr, shape):
         super().__init__(dtype=data.dtype, shape=shape)
-        self.A = self.ops.sparse_csr(indptr, indices, data)
+        self.A = self.xnp.sparse_csr(indptr, indices, data)
 
     def _matmat(self, V):
         return self.A @ V
@@ -65,7 +65,7 @@ class ScalarMul(LinearOperator):
     """ Linear Operator representing scalar multiplication"""
     def __init__(self, c, shape, dtype=None):
         super().__init__(dtype=dtype or type(c), shape=shape)
-        self.c = self.ops.array(c, dtype=dtype)
+        self.c = self.xnp.array(c, dtype=dtype)
         self.ensure_const_register_as_array()
 
     def ensure_const_register_as_array(self):
@@ -179,15 +179,15 @@ class Kronecker(LinearOperator):
     def _matmat(self, v):
         ev = v.reshape(*[Mi.shape[-1] for Mi in self.Ms], -1)
         for i, M in enumerate(self.Ms):
-            ev_front = self.ops.moveaxis(ev, i, 0)
+            ev_front = self.xnp.moveaxis(ev, i, 0)
             shape = M.shape[0], *ev_front.shape[1:]
             Mev_front = (M @ ev_front.reshape(M.shape[-1], -1)).reshape(shape)
-            ev = self.ops.moveaxis(Mev_front, 0, i)
+            ev = self.xnp.moveaxis(Mev_front, 0, i)
         return ev.reshape(self.shape[-2], ev.shape[-1])
 
     def to_dense(self):
         Ms = [M.to_dense() if isinstance(M, LinearOperator) else M for M in self.Ms]
-        return reduce(self.ops.kron, Ms)
+        return reduce(self.xnp.kron, Ms)
 
     def __str__(self):
         return "⊗".join(str(M) for M in self.Ms)
@@ -221,7 +221,7 @@ class KronSum(LinearOperator):
     def _matmat(self, v):
         ev = v.reshape(*[Mi.shape[-1] for Mi in self.Ms], -1)
         out = 0 * ev
-        xnp = self.ops
+        xnp = self.xnp
         for i, M in enumerate(self.Ms):
             ev_front = xnp.moveaxis(ev, i, 0)
             Mev_front = (M @ ev_front.reshape(M.shape[-1], -1)).reshape(
@@ -268,13 +268,13 @@ class BlockDiag(LinearOperator):
             elems = M @ v[i:i_end].T.reshape(k * multiplicity, M.shape[-1]).T
             y.append(elems.T.reshape(k, multiplicity * M.shape[0]).T)
             i = i_end
-        y = self.ops.concatenate(y, axis=0)  # concatenate over rep axis
+        y = self.xnp.concatenate(y, axis=0)  # concatenate over rep axis
         return y
 
     def to_dense(self):
         Ms_all = [M for M, c in zip(self.Ms, self.multiplicities) for _ in range(c)]
         Ms_all = [Mi.to_dense() if isinstance(Mi, LinearOperator) else Mi for Mi in Ms_all]
-        return self.ops.block_diag(*Ms_all)
+        return self.xnp.block_diag(*Ms_all)
 
     def __str__(self):
         if len(self.Ms) > 5:
@@ -303,7 +303,7 @@ class Diagonal(LinearOperator):
         return self.diag[None, :] * X
 
     def to_dense(self):
-        return self.ops.diag(self.diag)
+        return self.xnp.diag(self.diag)
 
     def __str__(self):
         return f"diag({self.diag})"
@@ -324,7 +324,7 @@ class Tridiagonal(LinearOperator):
         super().__init__(dtype=beta.dtype, shape=(beta.shape[0], beta.shape[0]))
 
     def _matmat(self, X: Array) -> Array:
-        xnp = self.ops
+        xnp = self.xnp
         aux_alpha = xnp.zeros(shape=X.shape, dtype=X.dtype)
         aux_gamma = xnp.zeros(shape=X.shape, dtype=X.dtype)
 
@@ -371,10 +371,10 @@ class Adjoint(LinearOperator):
         super().__init__(dtype=A.dtype, shape=(A.shape[1], A.shape[0]))
 
     def _matmat(self, x):
-        return self.ops.conj(self.A._rmatmat(self.ops.conj(x).T)).T
+        return self.xnp.conj(self.A._rmatmat(self.xnp.conj(x).T)).T
 
     def _rmatmat(self, x):
-        return self.ops.conj(self.A._matmat(self.ops.conj(x).T)).T
+        return self.xnp.conj(self.A._matmat(self.xnp.conj(x).T)).T
 
     def __str__(self):
         return f"{str(self)}*"
@@ -391,7 +391,7 @@ class Sliced(LinearOperator):
         super().__init__(dtype=A.dtype, shape=new_shape)
 
     def _matmat(self, X: Array) -> Array:
-        xnp = self.ops
+        xnp = self.xnp
         start_slices, end_slices = self.slices
         Y = xnp.zeros(shape=(self.A.shape[-1], X.shape[-1]), dtype=self.dtype)
         Y = xnp.update_array(Y, X, end_slices)
@@ -432,22 +432,22 @@ class Jacobian(LinearOperator):
         super().__init__(dtype=x.dtype, shape=(y_shape[0], x.shape[0]))
 
     def _matmat(self, X):
-        # primals = self.x[:,None]+self.ops.zeros((1,X.shape[1],), dtype=self.x.dtype)
-        if self.ops.__name__ == 'cola.torch_fns':
-            expanded_x = self.x[None, :] + self.ops.zeros((X.shape[-1], 1), dtype=self.x.dtype)
-            fn = partial(self.ops.jvp_derivs, self.ops.vmap(self.f), (expanded_x, ))
+        # primals = self.x[:,None]+self.xnp.zeros((1,X.shape[1],), dtype=self.x.dtype)
+        if self.xnp.__name__ == 'cola.torch_fns':
+            expanded_x = self.x[None, :] + self.xnp.zeros((X.shape[-1], 1), dtype=self.x.dtype)
+            fn = partial(self.xnp.jvp_derivs, self.xnp.vmap(self.f), (expanded_x, ))
         else:
-            fn = self.ops.vmap(partial(self.ops.jvp_derivs, self.f, (self.x, )))
+            fn = self.xnp.vmap(partial(self.xnp.jvp_derivs, self.f, (self.x, )))
         return fn((X.T, )).T
 
     def _rmatmat(self, X):
-        # primals = self.x[None,:]+self.ops.zeros((X.shape[0],1), dtype=self.x.dtype)
-        if self.ops.__name__ == 'cola.torch_fns':
-            expanded_x = self.x[None, :] + self.ops.zeros((X.shape[0], 1), dtype=self.x.dtype)
-            fn = partial(self.ops.vjp_derivs, self.ops.vmap(self.f), (expanded_x, ))
+        # primals = self.x[None,:]+self.xnp.zeros((X.shape[0],1), dtype=self.x.dtype)
+        if self.xnp.__name__ == 'cola.torch_fns':
+            expanded_x = self.x[None, :] + self.xnp.zeros((X.shape[0], 1), dtype=self.x.dtype)
+            fn = partial(self.xnp.vjp_derivs, self.xnp.vmap(self.f), (expanded_x, ))
             out = fn((X, ))
         else:
-            fn = self.ops.vmap(partial(self.ops.vjp_derivs, self.f, (self.x, )))
+            fn = self.xnp.vmap(partial(self.xnp.vjp_derivs, self.f, (self.x, )))
             out = fn((X, ))
         return out[0]
 
@@ -476,7 +476,7 @@ class Hessian(LinearOperator):
         super().__init__(dtype=x.dtype, shape=(x.shape[0], x.shape[0]))
 
     def _matmat(self, X):
-        xnp = self.ops
+        xnp = self.xnp
         mvm = partial(xnp.jvp_derivs, xnp.grad(self.f), (self.x, ), create_graph=False)
         # hack to make it work with pytorch
         if xnp.__name__ == 'cola.torch_fns':
@@ -543,7 +543,7 @@ class Concatenated(LinearOperator):
         super().__init__(Ms[0].dtype, shape)
 
     def _matmat(self, V):
-        return self.ops.concatenate([M @ V for M in self.Ms], axis=self.axis)
+        return self.xnp.concatenate([M @ V for M in self.Ms], axis=self.axis)
 
 
 class ConvolveND(LinearOperator):
@@ -555,7 +555,7 @@ class ConvolveND(LinearOperator):
         assert mode == 'same'
         import jax.numpy as jnp
         super().__init__(dtype=filter.dtype, shape=(np.prod(array_shape), jnp.prod(array_shape)))
-        self.conv = self.ops.vmap(partial(self.ops.convolve, in2=filter, mode=mode))
+        self.conv = self.xnp.vmap(partial(self.xnp.convolve, in2=filter, mode=mode))
 
     def _matmat(self, X):
         Z = X.T.reshape(X.shape[-1], *self.array_shape)
@@ -567,10 +567,10 @@ class Householder(LinearOperator):
     def __init__(self, vec, beta=2.):
         super().__init__(shape=(vec.shape[-2], vec.shape[-2]), dtype=vec.dtype)
         self.vec = vec
-        self.beta = self.ops.array(beta, dtype=vec.dtype)
+        self.beta = self.xnp.array(beta, dtype=vec.dtype)
 
     def _matmat(self, X: Array) -> Array:
-        xnp = self.ops
+        xnp = self.xnp
         # angle = xnp.sum(X * xnp.conj(self.vec), axis=-2, keepdims=True)
         angle = xnp.sum(X * self.vec, axis=-2, keepdims=True)
         out = X - self.beta * angle * self.vec

@@ -111,7 +111,7 @@ def get_annotations(A: BlockDiag):
 
 # @dispatch
 # def get_annotations(A: Diagonal):
-#     if A.ops.isreal(A.diag).all():
+#     if A.xnp.isreal(A.diag).all():
 #         if all(A.diag >= 0):
 #             return {PSD}
 #         return {SelfAdjoint}
@@ -135,7 +135,7 @@ def get_annotations(A: Permutation):
 
 # @dispatch
 # def get_annotations(A: Dense):
-#     xnp = A.ops
+#     xnp = A.xnp
 #     sym = A.shape[0] == A.shape[-1] and xnp.allclose(A.A, xnp.conj(A.A.T))
 #     return {SelfAdjoint} if sym else set()
 

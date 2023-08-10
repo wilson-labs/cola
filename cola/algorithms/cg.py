@@ -28,7 +28,7 @@ def cg(A: LinearOperator, rhs: Array, x0=None, P=None, tol=1e-6, max_iters=5000,
             - soln (Array): solution to the linear system,  either (n,) or (n, b)
             - info (dict): General information about the iterative procedure.
     """
-    xnp = A.ops
+    xnp = A.xnp
     is_vector = len(rhs.shape) == 1
     if x0 is None:
         x0 = xnp.zeros_like(rhs)
@@ -56,7 +56,7 @@ def cg_bwd(res, grads, unflatten, *args, **kwargs):
     op_args, output = res
     soln = output[0]
     A = unflatten(op_args)
-    xnp = A.ops
+    xnp = A.xnp
     db, *_ = run_batched_cg(A, y_grads, *args[1:], **kwargs)
 
     def fun(*theta):
@@ -74,7 +74,7 @@ def run_cg(A, b, x0, max_iters, tol, preconditioner, pbar):
 
 
 def run_batched_cg(A, b, x0, max_iters, tol, preconditioner, pbar):
-    xnp = A.ops
+    xnp = A.xnp
     mult = xnp.norm(b, axis=-2, keepdims=True)
     b_norm = do_safe_div(b, mult, xnp=xnp)
     init_val = initialize(A=A, b=b_norm, preconditioner=preconditioner, x0=x0, xnp=xnp)
@@ -156,7 +156,7 @@ def do_safe_div(num, denom, xnp):
 
 
 def run_batched_tracking_cg(A, b, x0, max_iters, tol, preconditioner):
-    xnp = A.ops
+    xnp = A.xnp
     mult = xnp.norm(b, axis=-2, keepdims=True)
     b_norm = do_safe_div(b, mult, xnp=xnp)
     init_val = initialize_track(A=A, b=b_norm, preconditioner=preconditioner, x0=x0,

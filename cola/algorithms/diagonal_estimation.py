@@ -6,7 +6,7 @@ from cola.utils.custom_autodiff import iterative_autograd
 import numpy as np
 
 def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):
-    xnp = A.ops
+    xnp = A.xnp
     k=  shift
     I = I_like(A)
     if k==0:
@@ -16,14 +16,14 @@ def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):
     elif k<=0:
         k = abs(k)
         I_chunk = I[:,i:i+bs+k].to_dense()
-        padded_chunk = A.ops.zeros((A.shape[0],bs+k),dtype=A.dtype)
+        padded_chunk = A.xnp.zeros((A.shape[0],bs+k),dtype=A.dtype)
         slc = np.s_[:I_chunk.shape[-1]]
         padded_chunk = xnp.update_array(padded_chunk, I_chunk, slice(0,None),slc)
         chunk = I_chunk[:,:bs]
         shifted_chunk = padded_chunk[:,k:k+bs]
     else:
         I_chunk = I[:,max(i-k,0):i+bs].to_dense()
-        padded_chunk = A.ops.zeros((A.shape[0],bs+k),dtype=A.dtype)
+        padded_chunk = A.xnp.zeros((A.shape[0],bs+k),dtype=A.dtype)
         slc = np.s_[-I_chunk.shape[-1]:]
         padded_chunk = xnp.update_array(padded_chunk, I_chunk, slice(0,None),slc)
         chunk = I_chunk[:,-bs:]
@@ -34,7 +34,7 @@ def exact_diag_bwd(res, grads, unflatten, *args, **kwargs):
     v = grads[0] if isinstance(grads,(tuple, list)) else grads
     op_args, _ = res
     A = unflatten(op_args)
-    xnp = A.ops
+    xnp = A.xnp
     #k, bs, tol, max_iters, pbar = args[1:]
     k = kwargs.get('k')
     bs = kwargs.get('bs')
@@ -109,7 +109,7 @@ def approx_diag(A:LinearOperator,k=0,bs=100,tol=3e-2,max_iters=10000,pbar=False)
     """
     bs = min(100,A.shape[0])
     # lazily create chunks of the identity matrix of size bs
-    xnp = A.ops
+    xnp = A.xnp
     assert tol > 1e-3, "tolerance chosen too high for stochastic diagonal estimation"
 
     @xnp.jit

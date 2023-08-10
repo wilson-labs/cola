@@ -31,7 +31,7 @@ def logdet(A: LinearOperator, **kwargs) -> Array:
     if method in ('dense','exact') or (method == 'auto' and (np.prod(A.shape) <= 1e6 or kws['tol']<3e-2)):
         return logdet(cola.decompositions.cholesky_decomposed(A))
     elif method == ('iterative', 'approx') or (method == 'auto' and (np.prod(A.shape) > 1e6 and kws['tol']>=3e-2)):
-        return stochastic_lanczos_quad(A, A.ops.log, **kwargs)
+        return stochastic_lanczos_quad(A, A.xnp.log, **kwargs)
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 
@@ -41,7 +41,7 @@ def logdet(A: Product, **kwargs) -> Array:
 
 @dispatch
 def logdet(A: Diagonal, **kwargs) -> Array:
-    xnp = A.ops
+    xnp = A.xnp
     out = xnp.sum(xnp.log(A.diag))
     return out
 
@@ -58,7 +58,7 @@ def logdet(A: BlockDiag, **kwargs) -> Array:
 
 @dispatch
 def logdet(A: Triangular, **kwargs) -> Array:
-    xnp = A.ops
+    xnp = A.xnp
     return xnp.sum(xnp.log(xnp.diag(A.A)))
 
 @dispatch

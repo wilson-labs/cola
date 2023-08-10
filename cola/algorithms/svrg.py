@@ -43,7 +43,7 @@ def solve_svrg_symmetric(A: Sum, b, tol=1e-6, P=None, x0=None, pbar=False, info=
     # mult = jnp.linalg.norm(b, axis=0)
     # b_norm = do_safe_div(b, mult)
     assert isinstance(A, Sum), f"A (of type {type(A)}) must be directly a Sum"
-    xnp = A.ops
+    xnp = A.xnp
     if x0 is None:
         x0 = xnp.zeros_like(b)
     if P is None:
@@ -135,11 +135,11 @@ def svrg_eigh_max(A: Product[Dense, Dense], k=1, tol=1e-6, pbar=False, info=Fals
         Returns:
             (eigvals, V), info
     """
-    x0 = A.ops.randn(A.shape[1], k, dtype=A.dtype)
+    x0 = A.xnp.randn(A.shape[1], k, dtype=A.dtype)
     out, info = solve_svrg_generic(A, oja_svrg_fns(), tol=tol, pbar=pbar, info=info,
                                    max_iters=max_iters, bs=bs, lr_scale=lr_scale, x0=x0)
-    eigvals = A.ops.vmap(lambda v: v.T @ v)(out.T)
-    V = A.ops.vmap(lambda v: v / A.ops.sqrt(v.T @ v))(out.T).T
+    eigvals = A.xnp.vmap(lambda v: v.T @ v)(out.T)
+    V = A.xnp.vmap(lambda v: v / A.xnp.sqrt(v.T @ v))(out.T).T
     return (eigvals, V), info
 
 
@@ -152,8 +152,8 @@ def svrg_solveh(A: Product[Dense, Dense], b, tol=1e-6, pbar=False, info=False, m
         Returns:
             x, info
     """
-    # x0 = A.ops.randn(A.shape[1], k, dtype=A.dtype)
-    x0 = A.ops.randn(A.shape[1], b.shape[1], dtype=A.dtype)
+    # x0 = A.xnp.randn(A.shape[1], k, dtype=A.dtype)
+    x0 = A.xnp.randn(A.shape[1], b.shape[1], dtype=A.dtype)
     out, info = solve_svrg_generic(A, cg_svrg_fns(b), tol=tol, pbar=pbar, info=info,
                                    max_iters=max_iters, bs=bs, lr_scale=lr_scale, x0=x0)
     return out, info
@@ -164,7 +164,7 @@ def solve_svrg_generic(A: Product[Dense, Dense], grad_fns, x0, tol=1e-6, P=None,
     import jax # TODO: enable support for pytorch
     gradients, vrdiffs = grad_fns
     # assert isinstance(A, Sum), f"A (of type {type(A)}) must be directly a Sum"
-    xnp = A.ops
+    xnp = A.xnp
 
     if P is None:
         P = I_like(A)
@@ -219,10 +219,10 @@ def solve_svrg_generic(A: Product[Dense, Dense], grad_fns, x0, tol=1e-6, P=None,
 
 
 def solve_svrg_rff(A, rhs, tol=1e-6, P=None, pbar=False, info=False, max_iters=5000, bs=50, lr_scale=1.):
-    xnp = A.ops
+    xnp = A.xnp
     x0 = xnp.randn(A.shape[1], rhs.shape[1], dtype=A.dtype)
     x0 /= xnp.norm(x0)
-    xnp = A.ops
+    xnp = A.xnp
     if P is None:
         P = I_like(A)
     lr, beta = get_optimal_learning_rate(A, P, bs=bs, stochastic=True)

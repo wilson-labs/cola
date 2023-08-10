@@ -117,7 +117,7 @@ def adjoint(A: Adjoint):
 
 @dispatch
 def adjoint(A: Triangular):
-    return Triangular(A.ops.conj(A.A.T), lower=not A.lower)
+    return Triangular(A.xnp.conj(A.A.T), lower=not A.lower)
 
 
 @dispatch

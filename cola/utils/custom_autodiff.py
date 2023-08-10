@@ -39,7 +39,7 @@ def iterative_autograd(iterative_bwd):
                 dA, *_ = iterative_bwd(res, d_ouputs, unflatten, *args, **kwargs)
                 return (type(par)(dA.flatten()[0]),)
 
-            if A.ops.__name__.find('torch') >= 0:
+            if A.xnp.__name__.find('torch') >= 0:
                 from torch.autograd import Function
 
                 class Iterative(Function):
@@ -54,7 +54,7 @@ def iterative_autograd(iterative_bwd):
                         return tuple(bwd(ctx.res, grads)[0])
 
                 return Iterative.apply(*par)
-            elif A.ops.__name__.find('jax') >= 0:
+            elif A.xnp.__name__.find('jax') >= 0:
                 from jax import custom_vjp
 
                 @custom_vjp

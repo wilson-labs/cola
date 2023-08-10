@@ -12,7 +12,7 @@ from cola.utils import export
 def sqrt(A: LinearOperator):
     """ Matrix sqrt of a Linear operator. If S=Sqrt(A), then S@S = A."""
     if A.isa(SelfAdjoint):
-        xnp = A.ops
+        xnp = A.xnp
         eig_vals, eig_vecs = xnp.eigh(A.to_dense())
         Lambda = Diagonal(xnp.sqrt(eig_vals))
         Q = lazify(eig_vecs)
@@ -23,7 +23,7 @@ def sqrt(A: LinearOperator):
 
 @dispatch
 def sqrt(A: Diagonal) -> Diagonal:
-    xnp = A.ops
+    xnp = A.xnp
     return Diagonal(xnp.sqrt(A.diag))
 
 

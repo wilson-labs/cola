@@ -27,7 +27,7 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
     op_args, (eig_vals, eig_vecs, _) = res
     A = unflatten(op_args)
     N = A.shape[0]
-    xnp = A.ops
+    xnp = A.xnp
 
     def fun(*theta, loc):
         Aop = unflatten(theta)
@@ -86,7 +86,7 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters: int = 100,
             - info (dict): General information about the iterative procedure.
 
     """
-    xnp = A.ops
+    xnp = A.xnp
     Q, T, info = lanczos_decomp(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
                                 pbar=pbar)
     eigvals, eigvectors = xnp.eigh(T)
@@ -126,7 +126,7 @@ def lanczos_decomp(A: LinearOperator, start_vector: Array = None, max_iters=100,
             - T (Array): Tridiagonal matrix of size (max_iters, max_iters).
             - info (dict): General information about the iterative procedure.
     """
-    xnp = A.ops
+    xnp = A.xnp
     if start_vector is None:
         start_vector = xnp.fixed_normal_samples((A.shape[0], 1))
     alpha, beta, vec, iters, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters,
@@ -149,7 +149,7 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
 
     https://en.wikipedia.org/wiki/Lanczos_algorithm
     """
-    xnp = A.ops
+    xnp = A.xnp
     max_iters = min(max_iters, A.shape[0])
 
     def body_fun(state):
@@ -211,7 +211,7 @@ def do_gram(vec, new_vec, xnp):
 
 
 def get_lanczos_coeffs(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7):
-    xnp = A.ops
+    xnp = A.xnp
 
     def body_fun(state):
         i, vec, vec_prev, beta, alpha = state
@@ -268,7 +268,7 @@ def construct_tridiagonal_batched(alpha: Array, beta: Array, gamma: Array) -> Ar
 
 
 def get_lu_from_tridiagonal(A: LinearOperator) -> Array:
-    xnp = A.ops
+    xnp = A.xnp
     eigenvals = xnp.zeros(shape=(A.shape[0], ), dtype=A.dtype)
     eigenvals = xnp.update_array(eigenvals, A.beta[0, 0], 0)
 

@@ -8,7 +8,7 @@ from cola.utils import export
 class AdaNysPrecond(LinearOperator):
     def __init__(self, A, rank, bounds, mult=1.5, mu=1e-7, eps=1e-8, adjust_mu=True):
         super().__init__(dtype=A.dtype, shape=A.shape)
-        xnp = A.ops
+        xnp = A.xnp
         Omega = xnp.randn(*(A.shape[0], rank), dtype=A.dtype)
         Lambda, self.U = get_nys_approx(A=A, Omega=Omega, eps=eps)
         self.error = estimate_approx_error(A, Lambda, self.U, tol=1e-7, max_iter=1000)
@@ -29,7 +29,7 @@ class AdaNysPrecond(LinearOperator):
         self._add_placeholders(Lambda, mu=mu, adjust_mu=adjust_mu)
 
     def _add_placeholders(self, Lambda, mu, adjust_mu):
-        xnp = self.ops
+        xnp = self.xnp
         self.adjusted_mu = amu = mu * xnp.max(Lambda) if adjust_mu else mu
         self.subspace_scaling = (xnp.min(Lambda) + amu) / (Lambda + amu) - 1
         self.subspace_scaling = self.subspace_scaling[:, None]
@@ -42,7 +42,7 @@ class AdaNysPrecond(LinearOperator):
 
 
 def select_rank_adaptively(A, rank_init, rank_max, tol, mult=2):
-    xnp = A.ops
+    xnp = A.xnp
 
     def cond_fun(state):
         _, error, *_, rank = state
@@ -71,7 +71,7 @@ def select_rank_adaptively(A, rank_init, rank_max, tol, mult=2):
 
 
 def estimate_approx_error(A, Lambda, U, tol, max_iter):
-    xnp = A.ops
+    xnp = A.xnp
     Diag = Lambda[:, None]
 
     def matmat(V):
@@ -102,11 +102,11 @@ class NystromPrecond(LinearOperator):
     """
     def __init__(self, A, rank, mu=1e-7, eps=1e-8, adjust_mu=True):
         super().__init__(dtype=A.dtype, shape=A.shape)
-        Omega = self.ops.randn(*(A.shape[0], rank), dtype=A.dtype)
+        Omega = self.xnp.randn(*(A.shape[0], rank), dtype=A.dtype)
         self._create_approx(A=A, Omega=Omega, mu=mu, eps=eps, adjust_mu=adjust_mu)
 
     def _create_approx(self, A, Omega, mu, eps, adjust_mu):
-        xnp = self.ops
+        xnp = self.xnp
         self.Lambda, self.U = get_nys_approx(A=A, Omega=Omega, eps=eps)
         self.adjusted_mu = amu = mu * xnp.max(self.Lambda) if adjust_mu else mu
         # Num and denom help for defining inverse and sqrt
@@ -137,7 +137,7 @@ class NystromPrecondLazy(LinearOperator):
 
 
 def get_nys_approx(A, Omega, eps):
-    xnp = A.ops
+    xnp = A.xnp
     Omega, _ = xnp.qr(Omega, full_matrices=False)
     Y = A @ Omega
     # Y = xnp.array(Y, dtype=xnp.float64)
@@ -153,7 +153,7 @@ def get_nys_approx(A, Omega, eps):
 
 @dispatch
 def sqrt(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
-    xnp = A.ops
+    xnp = A.xnp
     subspace_num = xnp.sqrt(xnp.copy(A.subspace_num))
     subspace_denom = xnp.sqrt(xnp.copy(A.subspace_denom))
     B = NystromPrecondLazy(A.dtype, A.shape, xnp.copy(A.U), subspace_num, subspace_denom)
@@ -162,7 +162,7 @@ def sqrt(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
 
 @dispatch
 def inverse(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
-    xnp = A.ops
+    xnp = A.xnp
     subspace_num, subspace_denom = xnp.copy(A.subspace_denom), xnp.copy(A.subspace_num)
     B = NystromPrecondLazy(A.dtype, A.shape, xnp.copy(A.U), subspace_num, subspace_denom)
     return B

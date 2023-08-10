@@ -28,7 +28,7 @@ def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=100, tol=1e-7, P=Non
             - soln (Array): solution to the linear system,  either (n,) or (n, b)
             - info (dict): general information about the iterative procedure.
     """
-    xnp = A.ops
+    xnp = A.xnp
     is_vector = len(rhs.shape) == 1
     if x0 is None:
         x0 = xnp.zeros_like(rhs)

@@ -29,7 +29,7 @@ def arnoldi(A: LinearOperator, start_vector: Array = None, max_iters: int = 100,
     """
     Q, H, info = arnoldi_decomp(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
                                 use_householder=use_householder, pbar=pbar)
-    xnp = A.ops
+    xnp = A.xnp
     eigvals, eigvectors = xnp.eig(H)
     eigvectors = xnp.cast(Q, dtype=eigvectors.dtype) @ eigvectors
     eigvectors = xnp.cast(eigvectors, dtype=A.dtype)
@@ -58,8 +58,8 @@ def arnoldi_decomp(A: LinearOperator, start_vector=None, max_iters=100, tol: flo
             - H (Array): The upper Hessenberg matrix of size (max_iters, max_iters).
             - info (dict): General information about the iterative procedure.
     """
-    xnp = A.ops
-    xnp = A.ops
+    xnp = A.xnp
+    xnp = A.xnp
     if start_vector is None:
         start_vector = xnp.fixed_normal_samples((A.shape[-1], 1))
     if use_householder:
@@ -115,7 +115,7 @@ def get_householder_vec(x, idx, xnp):
 
 
 def run_householder_arnoldi(A: LinearOperator, rhs: Array, max_iters: int):
-    xnp = A.ops
+    xnp = A.xnp
     dtype = A.dtype
     Ps = [Householder(xnp.zeros((rhs.shape[-2], 1), dtype=dtype)) for _ in range(max_iters + 2)]
 
@@ -159,7 +159,7 @@ def initialize_householder_arnoldi(xnp, rhs, max_iters, dtype):
 
 
 def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pbar: bool):
-    xnp = A.ops
+    xnp = A.xnp
     max_iters = min(max_iters, A.shape[0])
 
     def cond_fun(state):

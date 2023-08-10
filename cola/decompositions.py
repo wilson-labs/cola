@@ -12,7 +12,7 @@ def cholesky_decomposed(A: LinearOperator):
     """ Performs a cholesky decomposition A=LL* of a linear operator A.
         The returned operator LL* is the same as A, but represented using
         the triangular structure """
-    L = Triangular(A.ops.cholesky(A.to_dense()), lower=True)
+    L = Triangular(A.xnp.cholesky(A.to_dense()), lower=True)
     return L@L.H
 
 @export
@@ -20,7 +20,7 @@ def lu_decomposed(A: LinearOperator):
     """ Performs a cholesky decomposition A=PLU of a linear operator A.
         The returned operator PLU is the same as A, but represented using
         the triangular (and permutation) structure """
-    p, L, U = A.ops.lu(A.to_dense())
+    p, L, U = A.xnp.lu(A.to_dense())
     P, L, U = Permutation(p), Triangular(L,lower=True), Triangular(U, lower=False)
     P, L, U = P.to(A.device), L.to(A.device), U.to(A.device)
     return P@L@U
@@ -47,7 +47,7 @@ def inverse(A: UnitaryDecomposition, **kwargs):
 
 @eig.dispatch
 def eig(QH: UnitaryDecomposition, **kwargs):
-    Q, H, xnp = QH.Q, QH.M, QH.ops
+    Q, H, xnp = QH.Q, QH.M, QH.xnp
     eig_vals, eig_vecs = eig(H, **kwargs)
     eig_vecs = xnp.cast(Q.to_dense(), dtype=eig_vecs.dtype) @ eig_vecs.to_dense()
     eig_vecs = Unitary(lazify(eig_vecs))

@@ -48,7 +48,7 @@ def eig(A: LinearOperator, **kwargs):
     # make sure no extra kwargs
     method = kws.pop('method')
     eig_slice = kws.pop('eig_slice')
-    xnp = A.ops
+    xnp = A.xnp
     if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
         eig_vals, eig_vecs = xnp.eig(A.to_dense())
         return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
@@ -67,7 +67,7 @@ def eig(A: LinearOperator, **kwargs):
     # make sure no extra kwargs
     method = kws.pop('method')
     eig_slice = kws.pop('eig_slice')
-    xnp = A.ops
+    xnp = A.xnp
     if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
         eig_vals, eig_vecs = xnp.eigh(A.to_dense())
         return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
@@ -80,7 +80,7 @@ def eig(A: LinearOperator, **kwargs):
     
 # @dispatch
 # def eig(A: LowerTriangular, **kwargs):
-#     xnp = A.ops
+#     xnp = A.xnp
 #     eig_vals = diag(A.A)[eig_slice]
 #         eig_vecs = xnp.eye(eig_vals.shape[0], eig_vals.shape[0])
 #         return eig_vals, eig_vecs
@@ -90,7 +90,7 @@ def eig(A: LinearOperator, **kwargs):
 
 @dispatch
 def eig(A: Diagonal, eig_slice=slice(0, None, None), **kwargs):
-    xnp = A.ops
+    xnp = A.xnp
     sorted_ind = xnp.argsort(A.diag)
     eig_vals = A.diag[sorted_ind]
     eig_vecs = I_like(A).to_dense()[:, sorted_ind]

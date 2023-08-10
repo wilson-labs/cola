@@ -74,19 +74,19 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     def __init__(self, dtype: Dtype, shape: Tuple, matmat=None, annotations={}):
         self.dtype = dtype
         self.shape = shape
-        self.ops = get_library_fns(dtype)
+        self.xnp = get_library_fns(dtype)
         if matmat is not None:
             self._matmat = matmat
         self.annotations = cola.annotations.get_annotations(self)
         # TODO: reform matrices with the new annotations?
         self.annotations.update(annotations)
-        device = find_device([self._args, self._kwargs], self.ops)
-        self.device = device or self.ops.get_default_device()
+        device = find_device([self._args, self._kwargs], self.xnp)
+        self.device = device or self.xnp.get_default_device()
 
     def to(self, device, dtype=None):
         """ Returns a new linear operator with given device and dtype """
         params, unflatten = self.flatten()
-        params = [self.ops.move_to(p, device=device, dtype=dtype) for p in params]
+        params = [self.xnp.move_to(p, device=device, dtype=dtype) for p in params]
         return unflatten(params)
 
     def isa(self, annotation) -> bool:
@@ -103,17 +103,17 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         """ Defines multiplication XA of the LinearOperator A with a dense array X (k,d)
             where A (self) is shape (d,c). By default uses jvp to compute the transpose."""
         XT = X.T
-        primals = self.ops.zeros(shape=(self.shape[1], XT.shape[1]), dtype=XT.dtype,
+        primals = self.xnp.zeros(shape=(self.shape[1], XT.shape[1]), dtype=XT.dtype,
                                  device=X.device)
-        out = self.ops.linear_transpose(self._matmat, primals=primals, duals=XT)
+        out = self.xnp.linear_transpose(self._matmat, primals=primals, duals=XT)
         return out.T
 
     def to_dense(self) -> Array:
         """ Produces a dense array representation of the linear operator. """
         if 3 * self.shape[-2] < self.shape[-1]:
-            return self.ops.eye(self.shape[-2], dtype=self.dtype, device=self.device) @ self
+            return self.xnp.eye(self.shape[-2], dtype=self.dtype, device=self.device) @ self
         else:
-            return self @ self.ops.eye(self.shape[-1], dtype=self.dtype, device=self.device)
+            return self @ self.xnp.eye(self.shape[-1], dtype=self.dtype, device=self.device)
 
     @property
     def T(self):
@@ -199,7 +199,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         # check if first element is ellipsis
         if ids[0] is Ellipsis:
             ids = ids[1:]
-        xnp = self.ops
+        xnp = self.xnp
         match ids:
             case int(i), int(j):
                 ej = xnp.canonical(loc=j, shape=(self.A.shape[-1], ), dtype=self.dtype)

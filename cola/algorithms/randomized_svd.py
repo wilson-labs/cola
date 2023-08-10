@@ -19,7 +19,7 @@ def randomized_svd(A: LinearOperator, rank: int):
             - V (Array): Right matrix of the decomposition of size (n, r).
 
     """
-    xnp = A.ops
+    xnp = A.xnp
     Omega = xnp.randn(*(A.shape[0], rank), dtype=A.dtype)
     Y = A @ Omega
     Q, _ = xnp.qr(Y, full_matrices=False)

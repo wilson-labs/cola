@@ -21,7 +21,7 @@ def power_iteration(A: LinearOperator, tol=1e-7, max_iter=1000, pbar=False, mome
             - eigmax (Array): dominant eigenvalue (1,).
             - info (dict): General information about the iterative procedure.
     """
-    xnp = A.ops
+    xnp = A.xnp
     v = xnp.fixed_normal_samples(A.shape[-1:], A.dtype)
 
     @xnp.jit

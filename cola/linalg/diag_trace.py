@@ -29,16 +29,16 @@ def diag(A: LinearOperator, k=0, **kwargs):
 
 @dispatch
 def diag(A: Dense, k=0, **kwargs):
-    xnp = A.ops
+    xnp = A.xnp
     return xnp.diag(A.A, diagonal=k)
 
 
 @dispatch
 def diag(A: Identity, k=0, **kwargs):
     if k == 0:
-        return A.ops.ones(A.shape[0], A.dtype)
+        return A.xnp.ones(A.shape[0], A.dtype)
     else:
-        return A.ops.zeros(A.shape[0] - k, A.dtype)
+        return A.xnp.zeros(A.shape[0] - k, A.dtype)
 
 
 @dispatch
@@ -51,7 +51,7 @@ def diag(A: Sum, k=0, **kwargs):
 @dispatch
 def diag(A: BlockDiag, k=0, **kwargs):
     assert k == 0, "Havent filled this case yet, need to pad with 0s"
-    return A.ops.concatenate([diag(M, **kwargs) for M in A.Ms])
+    return A.xnp.concatenate([diag(M, **kwargs) for M in A.Ms])
 
 
 @dispatch

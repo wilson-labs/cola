@@ -68,10 +68,10 @@ class TriangularInverse(LinearOperator):
         self.lower = A.lower
 
     def _matmat(self, X):
-        return self.ops.solvetri(self.A, X, lower=self.lower)
+        return self.xnp.solvetri(self.A, X, lower=self.lower)
 
     def _rmatmat(self,X):
-        return self.ops.solvetri(self.A.T, X.T, lower=not self.lower).T
+        return self.xnp.solvetri(self.A.T, X.T, lower=not self.lower).T
 
 
 
@@ -133,7 +133,7 @@ def inverse(A: ScalarMul, **kwargs):
 
 @dispatch
 def inverse(A: Permutation, **kwargs):
-    return Permutation(A.ops.argsort(A.perm),A.dtype)
+    return Permutation(A.xnp.argsort(A.perm),A.dtype)
 
 @dispatch(cond = lambda A, **kwargs: all([M.shape[-2] == M.shape[-1] for M in A.Ms]))
 def inverse(A: Product, **kwargs) -> Product:
