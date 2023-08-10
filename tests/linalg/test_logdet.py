@@ -18,12 +18,14 @@ def test_logdet(operator):
     l0 = xnp.slogdet(A.to_dense())[1]
     l1 = logdet(A, tol=tol, method='dense')
     e1 = relative_error(l0, l1)
+    print(f"l1: {l1}, l0: {l0}")
     assert e1 < tol, f"Dispatch rules failed on {type(A)} with error {e1}"
-    A3 = cola.SelfAdjoint(A2) if  A.isa(cola.SelfAdjoint) else A2
+    A3 = cola.PSD(A2) if  A.isa(cola.PSD) else A2
     l2 = logdet(A3, tol=tol, method='dense')
+    print(f"l2: {l2}, l0: {l0}")
     e2 = relative_error(l0, l2) 
     assert e2 < tol, f"Dense logdet failed on {type(A)} with error {e2}"
-    if A.isa(cola.SelfAdjoint):
+    if A3.isa(cola.PSD):
         l3 = logdet(A3, tol=tol, method='iterative', num_samples=100)
         e3 = relative_error(l0, l3)
         assert e3 < 1e-1, f"SLQ logdet failed on {type(A)} with error {e3}"

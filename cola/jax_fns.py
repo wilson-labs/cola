@@ -85,7 +85,7 @@ isreal = jnp.isreal
 allclose = jnp.allclose
 slogdet = jnp.linalg.slogdet
 # convolve = jax.scipy.signal.convolve
-
+prod = jnp.prod
 
 def eye(n, m=None, dtype=None, device=None):
     del device
@@ -217,7 +217,7 @@ def ones(shape, dtype):
     return jnp.ones(shape=shape, dtype=dtype)
 
 
-def array(arr, dtype=None):
+def array(arr, dtype=None,device=None):
     return jnp.array(arr, dtype=dtype)
 
 

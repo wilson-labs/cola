@@ -59,6 +59,7 @@ isreal = torch.isreal
 allclose = torch.allclose
 jacrev = torch.func.jacrev
 slogdet = torch.linalg.slogdet
+prod = torch.prod
 
 def lu(a):
     P, L, U = torch.linalg.lu(a)
@@ -261,8 +262,8 @@ def zeros(shape, dtype, device=None):
     return torch.zeros(size=shape, dtype=dtype, device=device)
 
 
-def array(arr, dtype=None):
-    return torch.tensor(arr, dtype=dtype)
+def array(arr, dtype=None, device=None):
+    return torch.tensor(arr, dtype=dtype, device=device)
 
 
 def update_array(array, update, *slices):

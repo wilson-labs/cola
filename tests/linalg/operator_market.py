@@ -11,13 +11,14 @@ xnp = jax_fns
 
 
 def get_test_operators(xnp, dtype):
+    dtype = xnp.float32
     alpha = xnp.array([1, 2, 3], dtype=dtype)[:2]
     beta = xnp.array([4, 5, 6], dtype=dtype)
     gamma = xnp.array([7, 8, 9], dtype=dtype)[:2]
     tridiagonal = Tridiagonal(alpha, beta, gamma)
 
     shape = (3, 3)
-    dtype = xnp.float64
+    
     identity = Identity(shape, dtype)
 
     M1 = xnp.array([[1, 0], [3, 4]], dtype=dtype)
@@ -26,7 +27,7 @@ def get_test_operators(xnp, dtype):
 
     scalarmul = 2. * identity
 
-    product = Product(M1, M2)
+    product = Product(Dense(M1), Dense(M2))
 
     sliced = Sliced(M1, (slice(0, 1), slice(0, 2)))
 
@@ -38,7 +39,7 @@ def get_test_operators(xnp, dtype):
 
     lowertriangular = Triangular(M1)
 
-    kronecker = Kronecker(M1, M2)
+    kronecker = Kronecker(Dense(M1), Dense(M2))
 
     permutation = Permutation(xnp.array([1, 0, 2, 3, 6, 5, 4]))
 
