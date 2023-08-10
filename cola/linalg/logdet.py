@@ -16,8 +16,8 @@ def logdet(A: LinearOperator, **kwargs) -> Array:
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method in ('dense','exact') or (method == 'auto' and (np.prod(A.shape) <= 1e6 or kws['tol']<3e-2)):
-        return logdet(cola.decompositions.lu_decomposed(A))
-    elif method == ('iterative', 'approx') or (method == 'auto' and (np.prod(A.shape) > 1e6 and kws['tol']>=3e-2)):
+        return logdet(cola.decompositions.lu_decomposed(A), **kws)
+    elif method in ('iterative', 'approx') or (method == 'auto' and (np.prod(A.shape) > 1e6 and kws['tol']>=3e-2)):
         raise NotImplementedError("Approximate logdet not implemented yet for non self adjoint matrices")
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
@@ -25,13 +25,13 @@ def logdet(A: LinearOperator, **kwargs) -> Array:
 @dispatch(cond=lambda A: A.isa(SelfAdjoint))
 def logdet(A: LinearOperator, **kwargs) -> Array:
     kws = dict(method="auto", tol=1e-2, pbar=False, max_iters=5000)
-    assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
+    #assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method in ('dense','exact') or (method == 'auto' and (np.prod(A.shape) <= 1e6 or kws['tol']<3e-2)):
-        return logdet(cola.decompositions.cholesky_decomposed(A))
-    elif method == ('iterative', 'approx') or (method == 'auto' and (np.prod(A.shape) > 1e6 and kws['tol']>=3e-2)):
-        return stochastic_lanczos_quad(A, A.xnp.log, **kwargs)
+        return logdet(cola.decompositions.cholesky_decomposed(A), **kws)
+    elif method in ('iterative', 'approx') or (method == 'auto' and (np.prod(A.shape) > 1e6 and kws['tol']>=3e-2)):
+        return stochastic_lanczos_quad(A, A.xnp.log, **kws)
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 
@@ -48,13 +48,13 @@ def logdet(A: Diagonal, **kwargs) -> Array:
 @dispatch
 def logdet(A: Kronecker, **kwargs) -> Array:
     # logdet(Pi A_i \otimes I) = sum_i logdet(A_i)
-    return sum(logdet(A.Ai) for Ai in A.Ms)
+    return sum(logdet(Ai) for Ai in A.Ms)
 
 
 @dispatch
 def logdet(A: BlockDiag, **kwargs) -> Array:
     # logdet(\bigoplus A_i) = log \prod det(A_i) = sum_i logdet(A_i)
-    return sum(logdet(A.Ai) for Ai in A.Ms)
+    return sum(logdet(Ai) for Ai in A.Ms)
 
 @dispatch
 def logdet(A: Triangular, **kwargs) -> Array:

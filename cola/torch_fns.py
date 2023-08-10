@@ -58,7 +58,7 @@ maximum = torch.maximum
 isreal = torch.isreal
 allclose = torch.allclose
 jacrev = torch.func.jacrev
-
+slogdet = torch.linalg.slogdet
 
 def lu(a):
     P, L, U = torch.linalg.lu(a)

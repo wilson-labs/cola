@@ -83,6 +83,7 @@ maximum = jnp.maximum
 PRNGKey = PRNGKey
 isreal = jnp.isreal
 allclose = jnp.allclose
+slogdet = jnp.linalg.slogdet
 # convolve = jax.scipy.signal.convolve
 
 
