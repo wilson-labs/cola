@@ -47,9 +47,9 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
 @dispatch(cond = lambda A, **kwargs: all([(Ai.shape[-2] == Ai.shape[-1]) for Ai in A.Ms]))
 def slogdet(A: Product, **kwargs) -> Array:
     signs, logdets = zip(*[slogdet(Ai) for Ai in A.Ms])
-    print(signs, logdets)
-    print([A.xnp.slogdet(Ai.to_dense()) for Ai in A.Ms])
-    print(A.xnp.slogdet(A.to_dense()))
+    # print(signs, logdets)
+    # print([A.xnp.slogdet(Ai.to_dense()) for Ai in A.Ms])
+    # print(A.xnp.slogdet(A.to_dense()))
     return product(signs), sum(logdets)
 
 @dispatch
