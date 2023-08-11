@@ -140,8 +140,9 @@ Linear Algebra Operations
 - [x] eig: $U \Lambda U^{-1}$
 - [x] diag
 - [x] trace
-- [ ] exp
 - [x] logdet
+- [x] exp
+- [x] sqrt
 - [x] $f(A)$
 - [ ] SVD
 - [ ] pseudoinverse

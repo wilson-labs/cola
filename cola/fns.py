@@ -40,7 +40,6 @@ def densify(A: Union[LinearOperator, Array]) -> Array:
 def dot(A: LinearOperator, B: LinearOperator) -> Product:
     return Product(A, B)
 
-
 @dispatch
 def dot(A: Product, B: LinearOperator) -> Product:
     return Product(*(A.Ms + (B, )))
@@ -50,6 +49,9 @@ def dot(A: Product, B: LinearOperator) -> Product:
 def dot(A: LinearOperator, B: Product) -> Product:
     return Product(*((A, ) + B.Ms))
 
+@dispatch
+def dot(A: Product, B: Product) -> Product:
+    return Product(*(A.Ms + B.Ms))
 
 @dispatch
 def add(A: Any, B: Any) -> Sum:
@@ -70,6 +72,9 @@ def add(A: Sum, B: LinearOperator) -> Sum:
 def add(A: LinearOperator, B: Sum) -> Sum:
     return Sum(*((A, ) + B.Ms))
 
+@dispatch
+def add(A: Sum, B: Sum) -> Sum:
+    return Sum(*(A.Ms + B.Ms))
 
 @dispatch
 def mul(A: LinearOperator, c: Scalar) -> LinearOperator:

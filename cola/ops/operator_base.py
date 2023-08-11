@@ -14,7 +14,7 @@ def get_library_fns(dtype: Dtype):
         namespace for standard array functionality (either torch_fns or jax_fns)."""
     try:
         from jax import numpy as jnp
-        if dtype in [jnp.float32, jnp.float64, jnp.complex64, jnp.int32, jnp.int64]:
+        if dtype in [jnp.float32, jnp.float64, jnp.complex64, jnp.complex128, jnp.int32, jnp.int64]:
             import cola.jax_fns as fns
             return fns
     except ImportError:

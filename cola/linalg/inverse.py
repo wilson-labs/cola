@@ -91,7 +91,7 @@ def inverse(A: LinearOperator, **kwargs):
          options are 'auto', 'dense', 'iterative', 'svrg'.
 
     Returns:
-        Array: The inverse of the linear operator.
+        LinearOperator: The inverse of the linear operator.
 
     Example:
         >>> A = MyLinearOperator()

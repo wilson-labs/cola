@@ -14,13 +14,38 @@ def product(xs):
 
 @export
 def logdet(A: LinearOperator, **kwargs) -> Array:
+    """ Computes logdet of a linear operator.
+    Args:
+        A (LinearOperator): The linear operator to compute the logdet of.
+        tol (float, optional): The tolerance criteria. Defaults to 1e-6.
+        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
+        max_iters (int, optional): The maximum number of iterations. Defaults to 300.
+        method (str, optional): Method to use, defaults to 'auto',
+         options are 'auto', 'dense', 'iterative'.
+    
+    Returns:
+        Array: logdet
+    """
     s, l = slogdet(A, **kwargs)
     return l
 
 @dispatch
 @export
 def slogdet(A: LinearOperator, **kwargs) -> Array:
-    kws = dict(method="auto", tol=1e-2, pbar=False, max_iters=5000)
+    """ Computes sign and logdet of a linear operator. such that det(A) = sign(A) exp(logdet(A))
+    
+     Args:
+        A (LinearOperator): The linear operator to compute the logdet of.
+        tol (float, optional): The tolerance criteria. Defaults to 1e-6.
+        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
+        max_iters (int, optional): The maximum number of iterations. Defaults to 300.
+        method (str, optional): Method to use, defaults to 'auto',
+         options are 'auto', 'dense', 'iterative'.
+    
+    Returns:
+        Tuple[Array,Array]: sign, logdet
+    """
+    kws = dict(method="auto", tol=1e-2, pbar=False, max_iters=300)
     assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
@@ -33,7 +58,7 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
 
 @dispatch(cond=lambda A: A.isa(PSD))
 def slogdet(A: LinearOperator, **kwargs) -> Array:
-    kws = dict(method="auto", tol=1e-2, pbar=False, max_iters=5000)
+    kws = dict(method="auto", tol=1e-2, pbar=False, max_iters=300)
     #assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
     method = kws.pop('method', 'auto')

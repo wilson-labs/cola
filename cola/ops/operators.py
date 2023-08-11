@@ -76,7 +76,7 @@ class ScalarMul(LinearOperator):
         return self.c * v
 
     def __str__(self):
-        return f"{self.c}*"
+        return f"{self.c}"
 
 
 class Identity(LinearOperator):
@@ -93,6 +93,9 @@ class Identity(LinearOperator):
     """
     def __init__(self, shape, dtype):
         super().__init__(dtype=dtype, shape=shape)
+    
+    def __str__(self):
+        return "I"
 
     def _matmat(self, X):
         return X
@@ -377,7 +380,7 @@ class Adjoint(LinearOperator):
         return self.xnp.conj(self.A._matmat(self.xnp.conj(x).T)).T
 
     def __str__(self):
-        return f"{str(self)}*"
+        return f"{str(self.A)}*"
 
 
 @parametric
