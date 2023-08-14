@@ -1,19 +1,15 @@
 """ Functional interface. Different functions for combining operators and convenience functions.
-Like with linalg, these functions have dispatch rules and should be used in favor of the 
+Like with linalg, these functions have dispatch rules and should be used in favor of the
 LinearOperator constructors when possible. """
 
-from typing import List, Union, Any, Set
-from collections.abc import Iterable
+from typing import List, Union, Any
 from plum import dispatch
 from cola.ops import LinearOperator, Array
 from cola.ops import Dense
 from cola.ops import Kronecker, Product, KronSum, Sum
 from cola.ops import ScalarMul, Transpose, Adjoint
-from cola.ops import BlockDiag, Identity, Diagonal, I_like
-from cola.ops import Diagonal, Triangular
+from cola.ops import BlockDiag, Diagonal, Triangular
 from cola.utils import export
-# import reduce
-from functools import reduce
 
 Scalar = Array
 
@@ -40,6 +36,7 @@ def densify(A: Union[LinearOperator, Array]) -> Array:
 def dot(A: LinearOperator, B: LinearOperator) -> Product:
     return Product(A, B)
 
+
 @dispatch
 def dot(A: Product, B: LinearOperator) -> Product:
     return Product(*(A.Ms + (B, )))
@@ -49,9 +46,11 @@ def dot(A: Product, B: LinearOperator) -> Product:
 def dot(A: LinearOperator, B: Product) -> Product:
     return Product(*((A, ) + B.Ms))
 
+
 @dispatch
 def dot(A: Product, B: Product) -> Product:
     return Product(*(A.Ms + B.Ms))
+
 
 @dispatch
 def add(A: Any, B: Any) -> Sum:
@@ -72,9 +71,11 @@ def add(A: Sum, B: LinearOperator) -> Sum:
 def add(A: LinearOperator, B: Sum) -> Sum:
     return Sum(*((A, ) + B.Ms))
 
+
 @dispatch
 def add(A: Sum, B: Sum) -> Sum:
     return Sum(*(A.Ms + B.Ms))
+
 
 @dispatch
 def mul(A: LinearOperator, c: Scalar) -> LinearOperator:
@@ -106,6 +107,7 @@ def transpose(A: LinearOperator):
 def transpose(A: Transpose):
     return A.A
 
+
 @dispatch
 def transpose(A: Triangular):
     return Triangular(A.A.T, lower=not A.lower)
@@ -119,6 +121,7 @@ def adjoint(A: LinearOperator):
 @dispatch
 def adjoint(A: Adjoint):
     return A.A
+
 
 @dispatch
 def adjoint(A: Triangular):

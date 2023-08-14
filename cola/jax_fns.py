@@ -85,15 +85,16 @@ allclose = jnp.allclose
 slogdet = jnp.linalg.slogdet
 # convolve = jax.scipy.signal.convolve
 prod = jnp.prod
-moveaxis=jnp.moveaxis
+moveaxis = jnp.moveaxis
+
 
 def eig(A):
     # if GPU, convert to CPU first since jax doesn't support it
     device = A.device_buffer.device()
-    if str(device)[:3]!='cpu':
-        A = jax.device_put(A,jax.devices("cpu")[0])
+    if str(device)[:3] != 'cpu':
+        A = jax.device_put(A, jax.devices("cpu")[0])
     w, v = jnp.linalg.eig(A)
-    return jax.device_put(w,device), jax.device_put(v,device)
+    return jax.device_put(w, device), jax.device_put(v, device)
 
 
 def eye(n, m=None, dtype=None, device=None):
@@ -226,7 +227,7 @@ def ones(shape, dtype):
     return jnp.ones(shape=shape, dtype=dtype)
 
 
-def array(arr, dtype=None,device=None):
+def array(arr, dtype=None, device=None):
     return jnp.array(arr, dtype=dtype)
 
 

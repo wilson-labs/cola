@@ -1,25 +1,25 @@
 import numpy as np
 from plum import dispatch
 from cola.ops import LinearOperator
-from cola.ops import Diagonal, Permutation, Concatenated
+from cola.ops import Diagonal, Permutation
 from cola.ops import Identity
 from cola.ops import ScalarMul
 from cola.ops import BlockDiag, Triangular
-from cola.ops import Kronecker, Sum, Product
+from cola.ops import Kronecker, Product
 from cola.algorithms.cg import cg
 from cola.algorithms.gmres import gmres
 from cola.algorithms.svrg import solve_svrg_symmetric
 from cola.utils.dispatch import parametric
 from cola.utils import export
-from cola.annotations import Unitary, PSD
-from cola import SelfAdjoint
+from cola.annotations import PSD
 import cola
-#from cola.decompositions import lu_decomposed, cholesky_decomposed
+
 
 @parametric
 class IterativeInverse(LinearOperator):
     def __str__(self):
         return f"{str(self.A)}⁻¹"
+
 
 class CGInverse(IterativeInverse):
     def __init__(self, A, **kwargs):
@@ -60,6 +60,7 @@ class SymmetricSVRGInverse(IterativeInverse):
 class GenericSVRGInverse(IterativeInverse):
     pass
 
+
 @parametric
 class TriangularInverse(LinearOperator):
     def __init__(self, A: Triangular):
@@ -70,9 +71,8 @@ class TriangularInverse(LinearOperator):
     def _matmat(self, X):
         return self.xnp.solvetri(self.A, X, lower=self.lower)
 
-    def _rmatmat(self,X):
+    def _rmatmat(self, X):
         return self.xnp.solvetri(self.A.T, X.T, lower=not self.lower).T
-
 
 
 @dispatch
@@ -109,7 +109,8 @@ def inverse(A: LinearOperator, **kwargs):
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 
-@dispatch(cond = lambda A, **kwargs: A.isa(PSD))
+
+@dispatch(cond=lambda A, **kwargs: A.isa(PSD))
 def inverse(A: LinearOperator, **kwargs):
     kws = dict(method="auto", tol=1e-6, P=None, x0=None, pbar=False, max_iters=5000)
     assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
@@ -122,6 +123,7 @@ def inverse(A: LinearOperator, **kwargs):
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 
+
 @dispatch
 def inverse(A: Identity, **kwargs):
     return A
@@ -131,11 +133,13 @@ def inverse(A: Identity, **kwargs):
 def inverse(A: ScalarMul, **kwargs):
     return ScalarMul(1 / A.c, shape=A.shape, dtype=A.dtype)
 
+
 @dispatch
 def inverse(A: Permutation, **kwargs):
-    return Permutation(A.xnp.argsort(A.perm),A.dtype)
+    return Permutation(A.xnp.argsort(A.perm), A.dtype)
 
-@dispatch(cond = lambda A, **kwargs: all([M.shape[-2] == M.shape[-1] for M in A.Ms]))
+
+@dispatch(cond=lambda A, **kwargs: all([M.shape[-2] == M.shape[-1] for M in A.Ms]))
 def inverse(A: Product, **kwargs) -> Product:
     output = reversed([inverse(M, **kwargs) for M in A.Ms])
     return Product(*output)
@@ -155,9 +159,11 @@ def inverse(A: Kronecker, **kwargs):
 def inverse(A: Diagonal, **kwargs):
     return Diagonal(1. / A.diag)
 
+
 @dispatch
 def inverse(A: Triangular, **kwargs):
     return TriangularInverse(A)
+
 
 # @dispatch(cond = lambda A, **kwargs: A.isa(Unitary), precedence=1)
 # def inverse(A: LinearOperator, **kwargs):

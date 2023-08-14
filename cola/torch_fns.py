@@ -60,7 +60,8 @@ allclose = torch.allclose
 jacrev = torch.func.jacrev
 slogdet = torch.linalg.slogdet
 prod = torch.prod
-moveaxis=torch.moveaxis
+moveaxis = torch.moveaxis
+
 
 def lu(a):
     P, L, U = torch.linalg.lu(a)

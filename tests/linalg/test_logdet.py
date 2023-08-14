@@ -13,22 +13,22 @@ torch_test_ops = get_test_operators(torch_fns, torch_fns.float64)
 
 @parametrize(torch_test_ops + jax_test_ops)
 def test_logdet(operator):
-    A, dtype, xnp = operator, operator.dtype, operator.xnp
+    A, _, xnp = operator, operator.dtype, operator.xnp
     A2 = LinearOperator(A.dtype, A.shape, A._matmat)
     tol = 1e-4
     Adense = A.to_dense()
     l0 = xnp.slogdet(Adense)[1]
     l1 = logdet(A, tol=tol)
     e1 = relative_error(l0, l1)
-    assert e1 < 3*tol, f"Dispatch rules failed on {type(A)} with error {e1}"
+    assert e1 < 3 * tol, f"Dispatch rules failed on {type(A)} with error {e1}"
     if np.prod(A.shape) < 1000:
-        A3 = cola.PSD(A2) if  A.isa(cola.PSD) else A2
+        A3 = cola.PSD(A2) if A.isa(cola.PSD) else A2
         l2 = logdet(A3, tol=tol, method='dense')
         e2 = relative_error(l0, l2)
-        assert e2 < 3*tol, f"Dense logdet failed on {type(A)} with error {e2}"
+        assert e2 < 3 * tol, f"Dense logdet failed on {type(A)} with error {e2}"
     diag = xnp.diag(Adense)
-    not_scalarmul = relative_error(xnp.diag(diag.mean()+0.*diag),Adense) >1e-5
-    A3 = cola.PSD(A2) if  A.isa(cola.PSD) else A2
+    not_scalarmul = relative_error(xnp.diag(diag.mean() + 0. * diag), Adense) > 1e-5
+    A3 = cola.PSD(A2) if A.isa(cola.PSD) else A2
     if A.isa(cola.PSD) and not_scalarmul:
         l3 = logdet(A3, tol=tol, method='iterative', num_samples=100)
         e3 = relative_error(l0, l3)

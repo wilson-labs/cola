@@ -1,9 +1,9 @@
 from functools import reduce, partial
 from cola.ops.operator_base import LinearOperator
 from cola.ops.operator_base import Array, get_library_fns
-import numpy as np
 from cola.utils.dispatch import parametric
 import cola
+import numpy as np
 
 
 class Dense(LinearOperator):
@@ -93,7 +93,7 @@ class Identity(LinearOperator):
     """
     def __init__(self, shape, dtype):
         super().__init__(dtype=dtype, shape=shape)
-    
+
     def __str__(self):
         return "I"
 
@@ -497,9 +497,6 @@ class Hessian(LinearOperator):
         return "H"
 
 
-from .operator_base import get_library_fns
-
-
 class Permutation(LinearOperator):
     """ Permutation matrix.
 
@@ -524,8 +521,8 @@ class Permutation(LinearOperator):
 @parametric
 class Concatenated(LinearOperator):
     """ Produces a linear operator equivalent to concatenating
-        a collection of matrices Ms along specified axis 
-        
+        a collection of matrices Ms along specified axis
+
     Args:
         *Ms (array_like): Sequence of matrices representing the blocks.
         axis (int, optional): specify which axis to concatenate on (0 or 1)
@@ -538,8 +535,8 @@ class Concatenated(LinearOperator):
     """
     def __init__(self, *Ms, axis=0):
         self.Ms = Ms
-        assert all(M.shape[axis]==Ms[0].shape[axis] for M in Ms),\
-             f"Trying to concatenate matrices of different sizes {[M.shape for M in Ms]}"
+        assert all(M.shape[axis] == Ms[0].shape[axis] for M in Ms),\
+               f"Trying to concatenate matrices of different sizes {[M.shape for M in Ms]}"
         concat_size = sum(M.shape[axis] for M in Ms)
         shape = (Ms[0].shape[0], concat_size) if axis == 1 else (concat_size, Ms[0].shape[1])
         self.axis = axis

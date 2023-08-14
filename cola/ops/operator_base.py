@@ -276,7 +276,7 @@ def flatten_function(obj) -> Tuple[List[Array], Callable]:
 
     elif isinstance(obj, dict):
         unflatten_fns, flat, slices = [], [], [slice(-1, 0)]
-        for key, val in obj.items():
+        for _, val in obj.items():
             params, unflatten = flatten_function(val)
             slices.append(slice(slices[-1].stop, slices[-1].stop + len(params)))
             unflatten_fns.append(unflatten)
@@ -290,7 +290,7 @@ def flatten_function(obj) -> Tuple[List[Array], Callable]:
 
         return flat, unflatten
     else:
-        return [], lambda x: obj
+        return [], lambda _: obj
 
 
 def is_array(obj):

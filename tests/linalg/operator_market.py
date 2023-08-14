@@ -1,5 +1,5 @@
 from cola import jax_fns
-from cola.fns import lazify, kron
+from cola.fns import lazify
 from cola.ops import Tridiagonal, Diagonal, Identity
 from cola.ops import KronSum, Product, Sliced
 from cola.ops import Triangular, Kronecker, Permutation
@@ -8,6 +8,7 @@ from cola.annotations import SelfAdjoint
 from cola.annotations import PSD
 from functools import reduce
 import cola
+
 xnp = jax_fns
 
 
@@ -19,7 +20,7 @@ def get_test_operators(xnp, dtype):
     tridiagonal = Tridiagonal(alpha, beta, gamma)
 
     shape = (3, 3)
-    
+
     identity = Identity(shape, dtype)
 
     M1 = xnp.array([[1, 0], [3, 4]], dtype=dtype)
@@ -67,20 +68,27 @@ def get_test_operators(xnp, dtype):
     hessian = Hessian(f2, x)
 
     # big
-    dtype2 = (x+1j).dtype
-    M1 = Dense(xnp.array([[1, 0, 0], [3, 4+.1j, 2j], [0, 0, .1]], dtype=dtype2))
+    dtype2 = (x + 1j).dtype
+    M1 = Dense(xnp.array([[1, 0, 0], [3, 4 + .1j, 2j], [0, 0, .1]], dtype=dtype2))
     M2 = Dense(xnp.array([[5, 2, 0], [3., 8, 0], [0, 0, -.5]], dtype=dtype2))
-    big = reduce(cola.kron,[M1,M2,M1@M1,M2,Identity((10,10),dtype=dtype2)])
-    big = big+0.5*cola.ops.I_like(big)
+    big = reduce(cola.kron, [M1, M2, M1 @ M1, M2, Identity((10, 10), dtype=dtype2)])
+    big = big + 0.5 * cola.ops.I_like(big)
 
-    big_psd = reduce(cola.kron,[M1.H@M1,M2.H@M2,M2.H@M2,Identity((15,15),dtype=dtype2)])
-    big_psd = big_psd+0.04*cola.ops.I_like(big_psd)
+    big_psd = reduce(cola.kron, [M1.H @ M1, M2.H @ M2, M2.H @ M2, Identity((15, 15), dtype=dtype2)])
+    big_psd = big_psd + 0.04 * cola.ops.I_like(big_psd)
     # PSD
     psd_ops = [Diagonal(xnp.array([.1, .5, .22, 8.], dtype=dtype)), identity, scalarmul]
     psd_ops += [blockdiag, prod, big_psd]
     symmetric_ops = [hessian, Tridiagonal(alpha, beta, alpha)]
     square_ops = [
-        permutation, kronsum, tridiagonal, dense, kronecker, blockdiag, product, lowertriangular,
+        permutation,
+        kronsum,
+        tridiagonal,
+        dense,
+        kronecker,
+        blockdiag,
+        product,
+        lowertriangular,
         big,
         # jacobian
     ]

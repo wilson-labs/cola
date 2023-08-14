@@ -15,7 +15,8 @@ setup(
         'pytest', 'tqdm>=4.38', 'matplotlib',
         # 'plum-dispatch @ git+ssh://git@github.com/beartype/plum.git',
         # 'plum-dispatch @ git+https://github.com/beartype/plum',
-        'plum-dispatch @ git+https://github.com/mfinzi/plum#537534597f0061ea38e499d5127e2fe78463cdfb',
+        'plum-dispatch @ git+https://github.com/mfinzi/plum'\
+                '#537534597f0061ea38e499d5127e2fe78463cdfb',
     ],
     packages=find_packages(),
     # long_description=open('../README.md').read(),
