@@ -8,7 +8,15 @@ from cola.utils.dispatch import parametric
 from cola.algorithms.lanczos import lanczos_parts, construct_tridiagonal_batched
 from cola.algorithms.arnoldi import get_arnoldi_matrix
 import cola
+from plum import dispatch
+from cola.fns import lazify
+from cola.annotations import SelfAdjoint
+from cola.ops import Diagonal, Permutation, Identity, ScalarMul, Triangular
+from cola.ops import BlockDiag, Kronecker, KronSum, I_like, Transpose, Adjoint
+from functools import reduce
 
+def product(As):
+    return reduce(lambda x,y: x@y, As)
 
 @parametric
 class LanczosUnary(LinearOperator):
@@ -101,6 +109,32 @@ def apply_unary(f: Callable, A: LinearOperator, **kwargs):
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 
 
+@dispatch
+def apply_unary(f: Callable, A: Diagonal, **kwargs):
+    return Diagonal(f(A.diag))
+
+@dispatch
+def apply_unary(f: Callable, A: BlockDiag, **kwargs):
+    fAs = [apply_unary(f, a, **kwargs) for a in A.blocks]
+    return BlockDiag(*fAs, multiplicities=A.multiplicities)
+
+@dispatch
+def apply_unary(f: Callable, A: Identity, **kwargs):
+    return f(1.)*A
+
+@dispatch
+def apply_unary(f: Callable, A: ScalarMul, **kwargs):
+    return f(A.c)*I_like(A)
+
+@dispatch
+def apply_unary(f: Callable, A: Transpose, **kwargs):
+    return Transpose(apply_unary(f, A.A, **kwargs))
+
+@dispatch
+def apply_unary(f: Callable, A: Adjoint, **kwargs):
+    return Adjoint(apply_unary(f, A.A, **kwargs))
+
+@dispatch
 @export
 def exp(A: LinearOperator, **kwargs):
     """ Computes the matrix exponential exp(A) of a matrix A.
@@ -118,14 +152,20 @@ def exp(A: LinearOperator, **kwargs):
     """
     return apply_unary(A.xnp.exp, A, **kwargs)
 
+@dispatch
+def exp(A: KronSum, **kwargs):
+    return Kronecker(*[exp(a, **kwargs) for a in A.Ms])
 
+from numbers import Number
+
+@dispatch
 @export
-def sqrt(A: LinearOperator, **kwargs):
-    """ Computes the matrix sqrt sqrt(A) of a matrix A using the principal branch,
-        with sqrt(A)@sqrt(A) = A.
+def pow(A: LinearOperator, alpha: Number, **kwargs):
+    """ Computes the matrix power A^alpha of a matrix A.
 
      Args:
-        A (LinearOperator): The linear operator to compute the sqrt of.
+        A (LinearOperator): The linear operator to compute the power of.
+        alpha (float): The power to compute.
         tol (float, optional): The tolerance criteria. Defaults to 1e-6.
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
         max_iters (int, optional): The maximum number of iterations. Defaults to 300.
@@ -133,6 +173,32 @@ def sqrt(A: LinearOperator, **kwargs):
          options are 'auto', 'dense', 'iterative'.
 
     Returns:
-        LinearOperator: the lazily implemented sqrtm(A)
+        LinearOperator: the lazily implemented A^alpha
     """
-    return apply_unary(A.xnp.sqrt, A, **kwargs)
+    # check if alpha is close to an integer
+    if np.isclose(alpha, (k:=int(np.round(alpha)))):
+        if k==0: return I_like(A)
+        if k>0 and k<10: return product([A]*k)
+        if k==-1: return cola.inverse(A)
+
+    return apply_unary(lambda x: x**alpha, A, **kwargs)
+
+@dispatch
+def pow(A: Kronecker, alpha: Number, **kwargs):
+    return Kronecker(*[pow(a, alpha, **kwargs) for a in A.Ms])
+
+
+@export
+def sqrt(A: LinearOperator, **kwargs):
+    """ Computes the matrix sqrt A^{1/2} of a matrix A using the principal branch.
+    """
+    return pow(A, 0.5, **kwargs)
+
+@dexport
+def isqrt(A: LinearOperator, **kwargs):
+    """ Computes the matrix inverse sqrt A^{-1/2} of a matrix A using the principal branch.
+    """
+    return pow(A, -0.5, **kwargs)
+
+
+
