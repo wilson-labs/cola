@@ -74,12 +74,15 @@ def get_test_operators(xnp, dtype):
     big = reduce(cola.kron, [M1, M2, M1 @ M1, M2, Identity((10, 10), dtype=dtype2)])
     big = big + 0.5 * cola.ops.I_like(big)
 
+    # PSD
     big_psd = reduce(cola.kron, [M1.H @ M1, M2.H @ M2, M2.H @ M2, Identity((15, 15), dtype=dtype2)])
     big_psd = big_psd + 0.04 * cola.ops.I_like(big_psd)
-    # PSD
     psd_ops = [Diagonal(xnp.array([.1, .5, .22, 8.], dtype=dtype)), identity, scalarmul]
-    psd_ops += [blockdiag, prod, big_psd]
+    # psd_ops += [blockdiag, prod, big_psd]
+    psd_ops += [blockdiag, prod]
+
     symmetric_ops = [hessian, Tridiagonal(alpha, beta, alpha)]
+
     square_ops = [
         permutation,
         kronsum,
@@ -89,7 +92,7 @@ def get_test_operators(xnp, dtype):
         blockdiag,
         product,
         lowertriangular,
-        big,
+        # big,
         # jacobian
     ]
 

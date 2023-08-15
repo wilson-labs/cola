@@ -11,7 +11,7 @@ torch_test_ops = get_test_operators(torch_fns, torch_fns.float64)
 
 @parametrize(torch_test_ops + jax_test_ops)
 def test_inverse(operator):
-    tol = 1e-4
+    tol = 1e-5
     A, dtype, xnp = operator, operator.dtype, operator.xnp
     A2 = LinearOperator(A.dtype, A.shape, A._matmat)
     Ainv = inverse(A, tol=tol)

@@ -1,11 +1,11 @@
+import numpy as np
 from operator_market import get_test_operators
+import cola
 from cola.linalg import logdet
 from cola.ops import LinearOperator
-import cola
 from cola import jax_fns
 from cola import torch_fns
 from cola.utils_test import parametrize, relative_error
-import numpy as np
 
 jax_test_ops = get_test_operators(jax_fns, jax_fns.float64)
 torch_test_ops = get_test_operators(torch_fns, torch_fns.float64)
@@ -30,6 +30,6 @@ def test_logdet(operator):
     not_scalarmul = relative_error(xnp.diag(diag.mean() + 0. * diag), Adense) > 1e-5
     A3 = cola.PSD(A2) if A.isa(cola.PSD) else A2
     if A.isa(cola.PSD) and not_scalarmul:
-        l3 = logdet(A3, tol=tol, method='iterative', num_samples=100)
+        l3 = logdet(A3, tol=tol, method='iterative', num_samples=500)
         e3 = relative_error(l0, l3)
         assert e3 < 3e-1, f"SLQ logdet failed on {type(A)} with error {e3}"
