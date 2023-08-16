@@ -3,6 +3,7 @@ from cola.ops import Array
 from cola.algorithms.arnoldi import run_householder_arnoldi
 from cola.algorithms.arnoldi import get_arnoldi_matrix
 from cola.utils import export
+from cola.utils.custom_autodiff import iterative_autograd
 
 
 @export
@@ -35,6 +36,34 @@ def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=100, tol=1e-7, P=Non
     if is_vector:
         rhs = rhs[..., None]
         x0 = x0[..., None]
+    soln, infodict = gmres_fwd(A=A, rhs=rhs, x0=x0, max_iters=max_iters, tol=tol, P=P,
+                               use_householder=use_householder, use_triangular=use_triangular,
+                               pbar=pbar)
+    if is_vector:
+        soln = soln[:, 0]
+    return soln, infodict
+
+
+def gmres_bwd(res, grads, unflatten, *args, **kwargs):
+    y_grads = grads[0]
+    op_args, output = res
+    soln = output[0]
+    A = unflatten(op_args)
+    xnp = A.xnp
+    db, _ = gmres_fwd(A, y_grads, *args[1:], **kwargs)
+
+    def fun(*theta):
+        Aop = unflatten(theta)
+        return Aop @ soln
+
+    d_params = xnp.vjp_derivs(fun, op_args, -db)
+    dA = unflatten(d_params)
+    return (dA, db)
+
+
+@iterative_autograd(gmres_bwd)
+def gmres_fwd(A, rhs, x0, max_iters, tol, P, use_householder, use_triangular, pbar):
+    xnp = A.xnp
     res = rhs - A @ x0
     if use_householder:
         Q, H, infodict = run_householder_arnoldi(A=A, rhs=res, max_iters=max_iters)
@@ -61,8 +90,6 @@ def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=100, tol=1e-7, P=Non
         pred = xnp.permute(nQ @ y, axes=[1, 0, 2])[:, :, 0]
 
     soln = x0 + pred
-    if is_vector:
-        soln = soln[:, 0]
     return soln, infodict
 
 
