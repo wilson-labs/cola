@@ -8,8 +8,8 @@ from cola.utils_test import parametrize, relative_error
 from scipy.linalg import sqrtm, expm
 import numpy as np
 
-jax_test_ops = get_test_operators(jax_fns, jax_fns.float64)
-torch_test_ops = get_test_operators(torch_fns, torch_fns.float64)
+torch_test_ops = get_test_operators(torch_fns, torch_fns.float32)
+jax_test_ops = get_test_operators(jax_fns, jax_fns.float32)
 ops = jax_test_ops + torch_test_ops
 
 

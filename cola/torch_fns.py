@@ -1,9 +1,12 @@
 import hashlib
 import torch
-from torch.autograd.functional import vjp, jvp
+#from torch.autograd.functional import vjp, jvp
 from cola.utils.torch_tqdm import while_loop_winfo
 from torch.nn import Parameter
-from torch._vmap_internals import vmap as _vmap
+#from torch._vmap_internals import vmap as _vmap
+from torch.func import vjp, jvp
+from torch.func import vmap as _vmap
+from torch.func import grad as _grad
 import logging
 
 logdet = torch.logdet
@@ -62,6 +65,18 @@ slogdet = torch.linalg.slogdet
 prod = torch.prod
 moveaxis = torch.moveaxis
 
+
+# def eig(a):
+#     w, v = torch.linalg.eig(a)
+#     #w = w.to(dtype=a.dtype)
+#     #v = v.to(dtype=a.dtype)
+#     return w,v
+
+# def eigh(a):
+#     w, v = torch.linalg.eigh(a)
+#     w = w.to(dtype=a.dtype) # by default casts to float64 which we don't want
+#     v = v.to(dtype=a.dtype)
+#     return w,v
 
 def lu(a):
     P, L, U = torch.linalg.lu(a)
@@ -201,7 +216,9 @@ def vjp_derivs(fun, primals, duals, create_graph=True):
         conj_duals = type(duals)((torch.conj(primal) for primal in duals))
     else:
         conj_duals = torch.conj(duals)
-    _, output = vjp(fun, inputs=conj_primals, v=conj_duals, create_graph=create_graph)
+    _, vjpfun = vjp(fun, *conj_primals)
+    output = vjpfun(conj_duals)
+    #_, output = vjp(fun, conj_primals, conj_duals)
     if isinstance(output, (list, tuple)):
         conj_output = type(output)((torch.conj(primal) for primal in output))
     else:
@@ -218,7 +235,7 @@ def jvp_derivs(fun, primals, tangents, create_graph=True):
         conj_tangents = type(tangents)((torch.conj(primal) for primal in tangents))
     else:
         conj_tangents = torch.conj(tangents)
-    _, output = jvp(fun, inputs=conj_primals, v=conj_tangents, create_graph=create_graph)
+    _, output = jvp(fun, conj_primals, conj_tangents)
     if isinstance(output, (list, tuple)):
         conj_output = type(output)((torch.conj(primal) for primal in output))
     else:
@@ -227,11 +244,13 @@ def jvp_derivs(fun, primals, tangents, create_graph=True):
 
 
 def grad(fn):
-    return lambda x: torch.autograd.grad([fn(x)], x, create_graph=True)[0]
+    return _grad(fn)
+    #return lambda x: torch.autograd.grad([fn(x)], x, create_graph=True)[0]
 
 
 def linear_transpose(fun, primals, duals):
-    return vjp_derivs(fun, primals, duals)
+    # primals and duals should not be lists or tuples but single elements
+    return vjp_derivs(fun, (primals,), duals)[0]
 
 
 def concatenate(arrays, axis=0):

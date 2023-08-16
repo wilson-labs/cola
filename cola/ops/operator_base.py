@@ -103,6 +103,8 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         """ Defines multiplication XA of the LinearOperator A with a dense array X (k,d)
             where A (self) is shape (d,c). By default uses jvp to compute the transpose."""
         XT = X.T
+        if self.isa(cola.annotations.SelfAdjoint):
+            return self.xnp.conj(self._matmat(self.xnp.conj(XT)).T)
         primals = self.xnp.zeros(shape=(self.shape[1], XT.shape[1]), dtype=XT.dtype,
                                  device=X.device)
         out = self.xnp.linear_transpose(self._matmat, primals=primals, duals=XT)
@@ -110,7 +112,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
 
     def to_dense(self) -> Array:
         """ Produces a dense array representation of the linear operator. """
-        if 3 * self.shape[-2] < self.shape[-1]:
+        if 8 * self.shape[-2] < self.shape[-1]:
             return self.xnp.eye(self.shape[-2], dtype=self.dtype, device=self.device) @ self
         else:
             return self @ self.xnp.eye(self.shape[-1], dtype=self.dtype, device=self.device)
@@ -141,8 +143,6 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
 
     def __rmatmul__(self, X: Array) -> Array:
         assert X.shape[-1] == self.shape[-2], f"dimension mismatch {self.shape} vs {X.shape}"
-        if self.isa(cola.annotations.SelfAdjoint):
-            return self.__matmul__(X.T).T
         if isinstance(X, LinearOperator):
             return cola.fns.dot(X, self)
         elif len(X.shape) == 1:

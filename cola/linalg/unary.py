@@ -84,9 +84,11 @@ def apply_unary(f: Callable, A: LinearOperator, **kwargs):
     method = kws.pop('method', 'auto')
     xnp = A.xnp
     if method == 'dense' or (method == 'auto' and (np.prod(A.shape) <= 1e6)):
-        eigs, V = xnp.eig(A.to_dense())
-        V = Dense(V)
-        return V @ cola.diag(f(eigs)) @ cola.inverse(V)
+        Adense = A.to_dense()
+        eigs, V = xnp.eig(Adense)
+        V = cola.lazify(V)
+        D = cola.diag(f(eigs))
+        return V @ D @ cola.inverse(V)
     elif method == 'iterative' or (method == 'auto' and (np.prod(A.shape) > 1e6)):
         return ArnoldiUnary(A, f, **kws)
     else:
@@ -100,9 +102,11 @@ def apply_unary(f: Callable, A: LinearOperator, **kwargs):
     method = kws.pop('method', 'auto')
     xnp = A.xnp
     if method == 'dense' or (method == 'auto' and (np.prod(A.shape) <= 1e6)):
+        Adense = A.to_dense()
         eigs, V = xnp.eigh(A.to_dense())
-        V = Dense(V)
-        return V @ cola.diag(f(eigs)) @ V.H
+        V = cola.lazify(V)
+        D = cola.diag(f(eigs))
+        return V @ D @ V.H
     elif method == 'iterative' or (method == 'auto' and (np.prod(A.shape) > 1e6)):
         return LanczosUnary(A, f, **kws)
     else:

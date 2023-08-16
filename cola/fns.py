@@ -8,9 +8,9 @@ from cola.ops import LinearOperator, Array
 from cola.ops import Dense
 from cola.ops import Kronecker, Product, KronSum, Sum
 from cola.ops import ScalarMul, Transpose, Adjoint
-from cola.ops import BlockDiag, Diagonal, Triangular
+from cola.ops import BlockDiag, Diagonal, Triangular, Identity
 from cola.utils import export
-
+import cola
 Scalar = Array
 
 
@@ -51,11 +51,17 @@ def dot(A: LinearOperator, B: Product) -> Product:
 def dot(A: Product, B: Product) -> Product:
     return Product(*(A.Ms + B.Ms))
 
+@dispatch
+def dot(A: Any, B:Identity):
+    return A
+
+@dispatch
+def dot(A: Identity, B:Any):
+    return B
 
 @dispatch
 def add(A: Any, B: Any) -> Sum:
     return add(lazify(A), lazify(B))
-
 
 @dispatch
 def add(A: LinearOperator, B: LinearOperator) -> Sum:
@@ -107,6 +113,10 @@ def transpose(A: LinearOperator):
 def transpose(A: Transpose):
     return A.A
 
+@dispatch(cond=lambda A:A.isa(cola.SelfAdjoint))
+def transpose(A: LinearOperator):
+    # dangerous, TODO: fix when A is complex or unify transpose and adjoint
+    return A
 
 @dispatch
 def transpose(A: Triangular):
@@ -117,6 +127,9 @@ def transpose(A: Triangular):
 def adjoint(A: LinearOperator):
     return Adjoint(A)
 
+@dispatch(cond=lambda A:A.isa(cola.SelfAdjoint))
+def adjoint(A: LinearOperator):
+    return A
 
 @dispatch
 def adjoint(A: Adjoint):

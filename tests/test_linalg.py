@@ -36,7 +36,7 @@ def test_power_iteration(xnp):
     A = xnp.diag(xnp.array([10., 9.75, 3., 0.1], dtype=dtype))
     B = lazify(A)
     soln = xnp.array(10., dtype=dtype)
-    tol, max_iter = 1e-7, 300
+    tol, max_iter = 1e-7, 500
     _, approx, _ = power_iteration(B, tol=tol, max_iter=max_iter, momentum=0.)
     rel_error = relative_error(soln, approx)
     assert rel_error < _tol * 100

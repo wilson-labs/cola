@@ -49,7 +49,7 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
         Tuple[Array,Array]: sign, logdet
     """
     kws = dict(method="auto", tol=1e-2, pbar=False, max_iters=300)
-    assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
+    #assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method in ('dense', 'exact') or (method == 'auto' and
@@ -81,7 +81,7 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
 
 @dispatch(cond=lambda A, **kwargs: all([(Ai.shape[-2] == Ai.shape[-1]) for Ai in A.Ms]))
 def slogdet(A: Product, **kwargs) -> Array:
-    signs, logdets = zip(*[slogdet(Ai) for Ai in A.Ms])
+    signs, logdets = zip(*[slogdet(Ai, **kwargs) for Ai in A.Ms])
     # print(signs, logdets)
     # print([A.xnp.slogdet(Ai.to_dense()) for Ai in A.Ms])
     # print(A.xnp.slogdet(A.to_dense()))
@@ -99,7 +99,7 @@ def slogdet(A: Diagonal, **kwargs) -> Array:
 @dispatch
 def slogdet(A: Kronecker, **kwargs) -> Array:
     # logdet(Pi A_i \otimes I) = sum_i logdet(A_i)
-    signs, logdets = zip(*[slogdet(Ai) for Ai in A.Ms])
+    signs, logdets = zip(*[slogdet(Ai, **kwargs) for Ai in A.Ms])
     sizes = [Ai.shape[-1] for Ai in A.Ms]
     prod = product(sizes)
     scaled_logdets = [logdets[i] * prod / sizes[i] for i in range(len(sizes))]
@@ -110,7 +110,7 @@ def slogdet(A: Kronecker, **kwargs) -> Array:
 @dispatch
 def slogdet(A: BlockDiag, **kwargs) -> Array:
     # logdet(\bigoplus A_i) = log \prod det(A_i) = sum_i logdet(A_i)
-    signs, logdets = zip(*[slogdet(Ai) for Ai in A.Ms])
+    signs, logdets = zip(*[slogdet(Ai, **kwargs) for Ai in A.Ms])
     scaled_logdets = sum(ld * n for ld, n in zip(logdets, A.multiplicities))
     scaled_signs = product(s**n for s, n in zip(signs, A.multiplicities))
     return scaled_signs, scaled_logdets

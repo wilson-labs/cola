@@ -13,7 +13,6 @@ xnp = jax_fns
 
 
 def get_test_operators(xnp, dtype):
-    dtype = xnp.float32
     alpha = xnp.array([1, 2, 3], dtype=dtype)[:2]
     beta = xnp.array([4, 5, 6], dtype=dtype)
     gamma = xnp.array([7, 8, 9], dtype=dtype)[:2]
@@ -55,7 +54,7 @@ def get_test_operators(xnp, dtype):
 
     # Jacobian
     def f1(x):
-        return xnp.array([x[0]**2, x[1]**3, xnp.sin(x[2])])
+        return xnp.array([x[0]**2, x[1]**3, xnp.sin(x[2])],dtype=dtype)
 
     x = xnp.array([1, 2, 3], dtype=dtype)
     jacobian = Jacobian(f1, x)
@@ -64,9 +63,10 @@ def get_test_operators(xnp, dtype):
     def f2(x):
         return (x[1] - .1)**3 + xnp.cos(x[2]) + (x[0] + .2)**2
 
-    x = xnp.array([1, 2, 3], dtype=dtype)
+    x = xnp.array([1., 2., 3.], dtype=dtype)
     hessian = Hessian(f2, x)
-
+    # print(hessian.dtype, dtype)
+    # assert False, (hessian.dtype, dtype)
     # big
     dtype2 = (x + 1j).dtype
     M1 = Dense(xnp.array([[1, 0, 0], [3, 4 + .1j, 2j], [0, 0, .1]], dtype=dtype2))
@@ -80,6 +80,8 @@ def get_test_operators(xnp, dtype):
     psd_ops = [Diagonal(xnp.array([.1, .5, .22, 8.], dtype=dtype)), identity, scalarmul]
     # psd_ops += [blockdiag, prod, big_psd]
     psd_ops += [blockdiag, prod]
+    # JTJ = jacobian.T @ jacobian
+    # psd_ops += [JTJ+0.1*cola.ops.I_like(JTJ)]
 
     symmetric_ops = [hessian, Tridiagonal(alpha, beta, alpha)]
 
@@ -93,7 +95,7 @@ def get_test_operators(xnp, dtype):
         product,
         lowertriangular,
         # big,
-        # jacobian
+        #jacobian
     ]
 
     # TODO: fix jacobian matmat

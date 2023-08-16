@@ -24,6 +24,7 @@ class WrapMeta(type):
         new_obj = obj.__class__(*obj._args, **obj._kwargs)
         new_obj.annotations = obj.annotations | {self}
         # possible issues with pytrees and immutability?
+        #TODO: recreate object with annotation
         return new_obj
 
 
