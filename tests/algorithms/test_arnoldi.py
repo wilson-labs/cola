@@ -1,6 +1,7 @@
 import numpy as np
 from cola.ops import Householder
 from cola.ops import Product
+from cola.ops import Dense
 from cola.algorithms.arnoldi import get_householder_vec
 from cola import jax_fns
 from cola import torch_fns
@@ -15,6 +16,52 @@ from jax.config import config
 
 config.update('jax_platform_name', 'cpu')
 # config.update("jax_enable_x64", True)
+
+
+@parametrize([torch_fns])
+def test_arnoldi_vjp(xnp):
+    dtype = xnp.float64
+    matrix = [[6., 2., 3.], [2., 3., 1.], [3., 1., 4.]]
+    diag = xnp.Parameter(xnp.array(matrix, dtype=dtype))
+    diag_soln = xnp.Parameter(xnp.array(matrix, dtype=dtype))
+    _, unflatten = Dense(diag).flatten()
+    import torch
+    torch.manual_seed(seed=21)
+    x0 = xnp.randn(diag.shape[0], 1)
+
+    def f(theta):
+        Aop = unflatten([theta])
+        eig_vals, *_ = arnoldi_eigs(Aop, x0, max_iters=10, tol=1e-6, pbar=False)
+        loss = xnp.sum(eig_vals**2.)
+        return loss
+
+    def f_alt(theta):
+        A = theta
+        eig_vals, _ = xnp.eigh(A)
+        loss = xnp.sum(eig_vals**2.)
+        return loss
+
+    out = f(diag)
+    print(out)
+    if xnp.__name__.find("torch") >= 0:
+        out.backward()
+        approx = diag.grad.clone()
+    else:
+        approx = xnp.grad(f)(diag)
+    assert approx is not None
+
+    out = f_alt(diag_soln)
+    print(out)
+    if xnp.__name__.find("torch") >= 0:
+        out.backward()
+        soln = diag_soln.grad.clone()
+    else:
+        soln = xnp.grad(f_alt)(diag)
+
+    print(approx)
+    print(soln)
+    abs_error = xnp.norm(soln - approx)
+    assert abs_error < 1e-5
 
 
 @parametrize([torch_fns, jax_fns])

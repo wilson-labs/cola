@@ -1,12 +1,57 @@
+from functools import partial
 from cola.ops import LinearOperator
 from cola.ops import Array
 from cola.ops import Householder, Product
 from cola.utils.control_flow import for_loop
 from cola.utils import export
+from cola.utils.custom_autodiff import iterative_autograd
 import cola
 
 
+def arnoldi_eigs_bwd(res, grads, unflatten, *args, **kwargs):
+    val_grads, eig_grads, _ = grads
+    op_args, (eig_vals, eig_vecs, _) = res
+    A = unflatten(op_args)
+    N = A.shape[0]
+    xnp = A.xnp
+
+    def fun(*theta, loc):
+        Aop = unflatten(theta)
+        return Aop @ eig_vecs[:, loc]
+
+    d_params_vals = []
+    for idx in range(eig_vecs.shape[-1]):
+        fn = partial(fun, loc=idx)
+        dlam = xnp.vjp_derivs(fn, op_args, eig_vecs[:, idx])[0]
+        required_shape = dlam.shape
+        d_params_vals.append(dlam.reshape(-1))
+    d_vals = xnp.stack(d_params_vals)
+    d_vals = (val_grads @ d_vals).reshape(required_shape)
+
+    def fun_eig(*theta, loc):
+        Aop = unflatten(theta)
+        op_diag = 1. / (eig_vals[loc] - eig_vals)
+        op_diag = xnp.nan_to_num(op_diag, nan=0., posinf=0., neginf=0.)
+        D = cola.ops.Diagonal(op_diag)
+        weights = eig_vecs @ D @ eig_vecs.T
+        return weights @ Aop @ eig_vecs[:, loc]
+
+    d_params_vecs = []
+    for idx in range(eig_vecs.shape[-1]):
+        fn = partial(fun_eig, loc=idx)
+        dl_jac = xnp.jacrev(fn)(*op_args)
+        dl_jac = dl_jac.reshape(N, N * N)
+        out = xnp.sum(eig_grads[:, idx] @ dl_jac)
+        d_params_vecs.append(out)
+    d_vecs = xnp.stack(d_params_vecs)
+
+    d_params = d_vals + d_vecs
+    dA = unflatten([d_params])
+    return (dA, )
+
+
 @export
+@iterative_autograd(arnoldi_eigs_bwd)
 def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int = 100,
                  tol: float = 1e-7, use_householder: bool = False, pbar: bool = False):
     """
