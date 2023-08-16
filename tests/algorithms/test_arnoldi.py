@@ -1,12 +1,13 @@
 import numpy as np
 from cola.ops import Householder
 from cola.ops import Product
+from cola.ops import Dense
 from cola.algorithms.arnoldi import get_householder_vec
 from cola import jax_fns
 from cola import torch_fns
 from cola.fns import lazify
 from cola.algorithms.arnoldi import get_arnoldi_matrix
-from cola.algorithms.arnoldi import arnoldi
+from cola.algorithms.arnoldi import arnoldi_eigs
 from cola.algorithms.arnoldi import run_householder_arnoldi
 from cola.utils_test import parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
@@ -17,13 +18,59 @@ config.update('jax_platform_name', 'cpu')
 # config.update("jax_enable_x64", True)
 
 
+@parametrize([torch_fns])
+def test_arnoldi_vjp(xnp):
+    dtype = xnp.float64
+    matrix = [[6., 2., 3.], [2., 3., 1.], [3., 1., 4.]]
+    diag = xnp.Parameter(xnp.array(matrix, dtype=dtype))
+    diag_soln = xnp.Parameter(xnp.array(matrix, dtype=dtype))
+    _, unflatten = Dense(diag).flatten()
+    import torch
+    torch.manual_seed(seed=21)
+    x0 = xnp.randn(diag.shape[0], 1)
+
+    def f(theta):
+        Aop = unflatten([theta])
+        eig_vals, *_ = arnoldi_eigs(Aop, x0, max_iters=10, tol=1e-6, pbar=False)
+        loss = xnp.sum(eig_vals**2.)
+        return loss
+
+    def f_alt(theta):
+        A = theta
+        eig_vals, _ = xnp.eigh(A)
+        loss = xnp.sum(eig_vals**2.)
+        return loss
+
+    out = f(diag)
+    print(out)
+    if xnp.__name__.find("torch") >= 0:
+        out.backward()
+        approx = diag.grad.clone()
+    else:
+        approx = xnp.grad(f)(diag)
+    assert approx is not None
+
+    out = f_alt(diag_soln)
+    print(out)
+    if xnp.__name__.find("torch") >= 0:
+        out.backward()
+        soln = diag_soln.grad.clone()
+    else:
+        soln = xnp.grad(f_alt)(diag)
+
+    print(approx)
+    print(soln)
+    abs_error = xnp.norm(soln - approx)
+    assert abs_error < 1e-5
+
+
 @parametrize([torch_fns, jax_fns])
 def test_arnoldi(xnp):
     dtype = xnp.complex64
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=4, dtype=np.float32)
     A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype)
     rhs = xnp.cast(xnp.randn(A.shape[1], 1, dtype=xnp.float32), dtype=dtype)
-    eigvals, eigvecs, _ = arnoldi(lazify(A), rhs, max_iters=A.shape[-1])
+    eigvals, eigvecs, _ = arnoldi_eigs(lazify(A), rhs, max_iters=A.shape[-1])
     approx = xnp.sort(xnp.cast(eigvals, xnp.float32))
     soln = xnp.sort(xnp.array(diag, xnp.float32))
 

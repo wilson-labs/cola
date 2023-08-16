@@ -57,7 +57,7 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
         return slogdet(cola.decompositions.lu_decomposed(A), **kws)
     elif method in ('iterative', 'approx') or (method == 'auto' and
                                                (np.prod(A.shape) > 1e6 and kws['tol'] >= 3e-2)):
-        return ValueError("Unknown phase"), logdet(PSD(A.H@A), **kws)/2.
+        return ValueError("Unknown phase"), logdet(PSD(A.H @ A), **kws) / 2.
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 
