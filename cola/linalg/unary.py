@@ -1,22 +1,22 @@
 from plum import dispatch
-from cola.ops import LinearOperator, Dense
+import numpy as np
+from numbers import Number
 from typing import Callable
+from functools import reduce
+import cola
+from cola.ops import LinearOperator, Dense
 from cola.utils import export
 from cola.annotations import SelfAdjoint
-import numpy as np
 from cola.utils.dispatch import parametric
 from cola.algorithms.lanczos import lanczos_parts, construct_tridiagonal_batched
 from cola.algorithms.arnoldi import get_arnoldi_matrix
-import cola
-from plum import dispatch
-from cola.fns import lazify
-from cola.annotations import SelfAdjoint
-from cola.ops import Diagonal, Permutation, Identity, ScalarMul, Triangular
+from cola.ops import Diagonal, Identity, ScalarMul
 from cola.ops import BlockDiag, Kronecker, KronSum, I_like, Transpose, Adjoint
-from functools import reduce
+
 
 def product(As):
-    return reduce(lambda x,y: x@y, As)
+    return reduce(lambda x, y: x @ y, As)
+
 
 @parametric
 class LanczosUnary(LinearOperator):
@@ -113,27 +113,33 @@ def apply_unary(f: Callable, A: LinearOperator, **kwargs):
 def apply_unary(f: Callable, A: Diagonal, **kwargs):
     return Diagonal(f(A.diag))
 
+
 @dispatch
 def apply_unary(f: Callable, A: BlockDiag, **kwargs):
     fAs = [apply_unary(f, a, **kwargs) for a in A.Ms]
     return BlockDiag(*fAs, multiplicities=A.multiplicities)
 
+
 @dispatch
 def apply_unary(f: Callable, A: Identity, **kwargs):
     one = A.xnp.array(1., dtype=A.dtype, device=A.device)
-    return f(one)*A
+    return f(one) * A
+
 
 @dispatch
 def apply_unary(f: Callable, A: ScalarMul, **kwargs):
-    return f(A.c)*I_like(A)
+    return f(A.c) * I_like(A)
+
 
 @dispatch
 def apply_unary(f: Callable, A: Transpose, **kwargs):
     return Transpose(apply_unary(f, A.A, **kwargs))
 
+
 @dispatch
 def apply_unary(f: Callable, A: Adjoint, **kwargs):
     return Adjoint(apply_unary(f, A.A, **kwargs))
+
 
 @dispatch
 @export
@@ -153,11 +159,11 @@ def exp(A: LinearOperator, **kwargs):
     """
     return apply_unary(A.xnp.exp, A, **kwargs)
 
+
 @dispatch
 def exp(A: KronSum, **kwargs):
     return Kronecker(*[exp(a, **kwargs) for a in A.Ms])
 
-from numbers import Number
 
 @dispatch
 @export
@@ -177,12 +183,16 @@ def pow(A: LinearOperator, alpha: Number, **kwargs):
         LinearOperator: the lazily implemented A^alpha
     """
     # check if alpha is close to an integer
-    if np.isclose(alpha, (k:=int(np.round(alpha)))):
-        if k==0: return I_like(A)
-        if k>0 and k<10: return product([A]*k)
-        if k==-1: return cola.inverse(A)
+    if np.isclose(alpha, (k := int(np.round(alpha)))):
+        if k == 0:
+            return I_like(A)
+        if k > 0 and k < 10:
+            return product([A] * k)
+        if k == -1:
+            return cola.inverse(A)
 
     return apply_unary(lambda x: x**alpha, A, **kwargs)
+
 
 @dispatch
 def pow(A: Kronecker, alpha: Number, **kwargs):
@@ -195,11 +205,9 @@ def sqrt(A: LinearOperator, **kwargs):
     """
     return pow(A, 0.5, **kwargs)
 
+
 @export
 def isqrt(A: LinearOperator, **kwargs):
     """ Computes the matrix inverse sqrt A^{-1/2} of a matrix A using the principal branch.
     """
     return pow(A, -0.5, **kwargs)
-
-
-
