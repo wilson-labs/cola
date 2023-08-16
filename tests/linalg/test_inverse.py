@@ -4,6 +4,7 @@ from cola.ops import LinearOperator
 from cola import jax_fns
 from cola import torch_fns
 from cola.utils_test import parametrize, relative_error
+import cola
 
 jax_test_ops = get_test_operators(jax_fns, jax_fns.float64)
 torch_test_ops = get_test_operators(torch_fns, torch_fns.float64)
@@ -15,8 +16,10 @@ def test_inverse(operator):
     A, dtype, xnp = operator, operator.dtype, operator.xnp
     A2 = LinearOperator(A.dtype, A.shape, A._matmat)
     Ainv = inverse(A, tol=tol)
-    Ainv2 = inverse(A2, tol=tol, method='dense')
-    Ainv3 = inverse(A2, tol=tol, method='iterative')
+    A3 = cola.PSD(A2) if A.isa(cola.PSD) else A2
+    Ainv2 = inverse(A3, tol=tol, method='dense')
+
+    Ainv3 = inverse(A3, tol=tol, method='iterative')
     B = xnp.array(xnp.fixed_normal_samples((A.shape[-1], 10)), dtype=dtype)
     X = Ainv @ B
     rel_error = relative_error(A @ X, B)
