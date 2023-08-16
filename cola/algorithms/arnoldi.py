@@ -7,8 +7,8 @@ import cola
 
 
 @export
-def arnoldi(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7,
-            use_householder: bool = False, pbar: bool = False):
+def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int = 100,
+                 tol: float = 1e-7, use_householder: bool = False, pbar: bool = False):
     """
     Computes eigenvalues and eigenvectors using Arnoldi.
 
@@ -27,8 +27,8 @@ def arnoldi(A: LinearOperator, start_vector: Array = None, max_iters: int = 100,
             - eigvectors (LinearOperator): eigenvectors of shape (n, max_iters).
             - info (dict): General information about the iterative procedure.
     """
-    Q, H, info = arnoldi_decomp(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
-                                use_householder=use_householder, pbar=pbar)
+    Q, H, info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
+                         use_householder=use_householder, pbar=pbar)
     xnp = A.xnp
     eigvals, eigvectors = xnp.eig(H)
     eigvectors = xnp.cast(Q, dtype=eigvectors.dtype) @ eigvectors
@@ -38,8 +38,8 @@ def arnoldi(A: LinearOperator, start_vector: Array = None, max_iters: int = 100,
 
 
 @export
-def arnoldi_decomp(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7,
-                   use_householder: bool = False, pbar: bool = False):
+def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7,
+            use_householder: bool = False, pbar: bool = False):
     """
     Computes the Arnoldi decomposition of the linear operator A, A = QHQ^*.
 
@@ -75,8 +75,8 @@ def ArnoldiDecomposition(A: LinearOperator, start_vector=None, max_iters=100, to
                          use_householder=False, pbar=False):
     """ Provides the Arnoldi decomposition of a matrix A = Q H Q^H. LinearOperator form of arnoldi,
         see arnoldi for arguments."""
-    Q, H, info = arnoldi_decomp(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
-                                use_householder=use_householder, pbar=pbar)
+    Q, H, info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
+                         use_householder=use_householder, pbar=pbar)
     A_approx = cola.UnitaryDecomposition(Q, H)
     A_approx.info = info
     return A_approx
