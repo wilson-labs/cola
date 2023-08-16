@@ -2,7 +2,7 @@ from cola import jax_fns
 from cola import torch_fns
 from cola.fns import kron
 from cola.fns import lazify
-from cola.linalg.sqrt import sqrt
+from cola.linalg import sqrt
 from cola.ops import Diagonal
 from cola.annotations import SelfAdjoint
 from cola.utils_test import parametrize, relative_error

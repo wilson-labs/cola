@@ -194,7 +194,7 @@ def sqrt(A: LinearOperator, **kwargs):
     """
     return pow(A, 0.5, **kwargs)
 
-@dexport
+@export
 def isqrt(A: LinearOperator, **kwargs):
     """ Computes the matrix inverse sqrt A^{-1/2} of a matrix A using the principal branch.
     """
