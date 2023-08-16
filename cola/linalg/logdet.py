@@ -73,7 +73,8 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
         return slogdet(cola.decompositions.cholesky_decomposed(A), **kws)
     elif method in ('iterative', 'approx') or (method == 'auto' and
                                                (np.prod(A.shape) > 1e6 and kws['tol'] >= 3e-2)):
-        return 1., stochastic_lanczos_quad(A, A.xnp.log, **kws)
+        one = A.xnp.array(1., dtype=A.dtype, device=A.device)
+        return one, stochastic_lanczos_quad(A, A.xnp.log, **kws)
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 

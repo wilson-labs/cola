@@ -40,6 +40,12 @@ def diag(A: Identity, k=0, **kwargs):
     else:
         return A.xnp.zeros(A.shape[0] - k, A.dtype)
 
+@dispatch
+def diag(A: Diagonal, k=0, **kwargs):
+    if k == 0:
+        return A.v
+    else:
+        return A.xnp.zeros(A.shape[0] - k, A.dtype)
 
 @dispatch
 def diag(A: Sum, k=0, **kwargs):

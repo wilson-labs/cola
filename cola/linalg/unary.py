@@ -115,12 +115,13 @@ def apply_unary(f: Callable, A: Diagonal, **kwargs):
 
 @dispatch
 def apply_unary(f: Callable, A: BlockDiag, **kwargs):
-    fAs = [apply_unary(f, a, **kwargs) for a in A.blocks]
+    fAs = [apply_unary(f, a, **kwargs) for a in A.Ms]
     return BlockDiag(*fAs, multiplicities=A.multiplicities)
 
 @dispatch
 def apply_unary(f: Callable, A: Identity, **kwargs):
-    return f(1.)*A
+    one = A.xnp.array(1., dtype=A.dtype, device=A.device)
+    return f(one)*A
 
 @dispatch
 def apply_unary(f: Callable, A: ScalarMul, **kwargs):
