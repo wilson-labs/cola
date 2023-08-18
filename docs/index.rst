@@ -84,7 +84,7 @@ Design Choices
 
 .. toctree::
    :maxdepth: 1
-   :caption: Getting Started
+   :caption: 🌱 Getting Started
 
    notebooks/About.ipynb
    notebooks/Quick_Start.ipynb
@@ -94,7 +94,7 @@ Design Choices
 .. toctree::
    :glob:
    :maxdepth: 1
-   :caption: API Reference
+   :caption: 📚 API Reference
 
    package/cola.linalg
    package/cola.ops
@@ -105,43 +105,44 @@ Design Choices
 
 .. toctree::
    :maxdepth: 1
-   :caption: Example Applications
+   :caption: 💡 Example Applications
 
-   notebooks/01_PCA.ipynb
-   notebooks/02_Linear_Regression.ipynb
    notebooks/03_GPs.ipynb
    notebooks/07_second_order_optimization.ipynb
-   notebooks/04_Spectral_Clustering.ipynb
    notebooks/05_Boundary_Value_PDEs.ipynb
    notebooks/06_PDE_Eigenvalue_Problems.ipynb
+   notebooks/04_Spectral_Clustering.ipynb
+   notebooks/01_PCA.ipynb
+   notebooks/02_Linear_Regression.ipynb
+   
 
 .. toctree::
    :maxdepth: 1
-   :caption: Advanced Features
+   :caption: 🧙‍♂️ Advanced Features
 
    notebooks/Adding_Linear_Operators.ipynb
    notebooks/Lower_Precision.ipynb
 
 .. toctree::
    :maxdepth: 1
-   :caption: Exercises
+   :caption: 🔪 Sharp Bits
 
-   notebooks/worksheet.ipynb
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Research Highlight
+   notebooks/sharp_bits.ipynb
 
 .. toctree::
    :maxdepth: 1
-   :caption: Notes
+   :caption: ✨ Research Highlight
+
+.. toctree::
+   :maxdepth: 1
+   :caption: 📝 Notes
 
    testing.md
    CHANGELOG.md
 
 .. toctree::
    :maxdepth: 2
-   :caption: Developer Documentation
+   :caption: 👩‍💻 Developer Documentation
 
    documentation.md
 
