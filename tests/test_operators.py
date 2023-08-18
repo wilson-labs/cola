@@ -136,8 +136,8 @@ def test_get_item(xnp):
     A = np.random.normal(size=(5, 4))
     A = xnp.array(A, dtype=dtype)
     B = lazify(A)
-    approx = B[..., 0, 2]
-    soln = A[..., 0, 2]
+    approx = B[0, 2]
+    soln = A[0, 2]
     rel_error = relative_error(soln, approx)
     assert rel_error < _tol
 
