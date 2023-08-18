@@ -37,6 +37,13 @@ extensions = [
     'sphinx.ext.autosectionlabel',
     # 'sphinx_rtd_dark_mode',
 ]
+html_theme = 'sphinx_rtd_theme'
+html_static_path = ['_static']
+html_logo = '_static/logo.svg'
+html_theme_options = {
+    'logo_only': True,
+    'display_version': False,
+}
 
 templates_path = ['_templates']
 exclude_patterns = [
@@ -53,11 +60,12 @@ intersphinx_mapping = {
 source_suffix = ['.rst', '.md']
 main_doc = 'index'
 
-html_theme = 'sphinx_rtd_theme'
+
 autodoc_default_options = {'autosummary': True}
 autodoc_member_order = 'bysource'
 # html_theme = 'sphinx_rtd_theme_dark_mode'
 # html_static_path = ['_static']
+
 autosummary_generate = True
 napolean_use_rtype = False
 nbsphinx_execute = 'never'

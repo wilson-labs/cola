@@ -144,6 +144,7 @@ Design Choices
    :maxdepth: 2
    :caption: 👩‍💻 Developer Documentation
 
+   contributing.md
    documentation.md
 
 Indices and tables

@@ -6,9 +6,9 @@
 # Compositional Linear Algebra (CoLA)
 
 [![Documentation](https://readthedocs.org/projects/cola/badge/)](https://cola.readthedocs.io/en/latest/)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wilson-labs/cola/blob/master/docs/notebooks/colabs/all.ipynb)
 [![tests](https://github.com/wilson-labs/cola/actions/workflows/python-package.yml/badge.svg)](https://github.com/wilson-labs/cola/actions/workflows/python-package.yml)
 [![codecov](https://codecov.io/gh/wilson-labs/cola/branch/main/graph/badge.svg?token=bBnkfHv30C)](https://codecov.io/gh/wilson-labs/cola)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wilson-labs/cola/blob/master/docs/notebooks/colabs/all.ipynb)
 
 CoLA is a framework for scalable linear algebra, automatically exploiting the structure often found in machine learning problems and beyond. 
 CoLA supports both PyTorch and JAX.
@@ -19,14 +19,12 @@ pip install git+https://github.com/wilson-labs/cola.git
 ```
 
 ## Features in CoLA
-* Provides several compositional rules to exploit problem structure through multiple dispatch.
-* Works with PyTorch and JAX
-* Supports hardware acceleration through GPU and TPU (JAX).
-* Supports different types of numerical precision.
-* Has memory-efficient Autograd routines for different iterative algorithms.
-* Provides operations for both symmetric and non-symmetric matrices.
-* Runs with real and complex numbers.
-* Contains several randomized linear algebra algorithms.
+* Large scale linear algebra routines for `solve(A,b)`, `eig(A)`, `logdet(A)`, `exp(A)`, `trace(A)`, `diag(A)`, `sqrt(A)`
+* Provides (user extendible) compositional rules to exploit structure through multiple dispatch.
+* Has memory-efficient autodiff rules for iterative algorithms.
+* Works with PyTorch or JAX, supporting GPU hardware acceleration ✅
+* Supports operators with complex numbers and low precision ✅
+* Provides linear algebra operations for both symmetric and non-symmetric matrices ✅
 
 ## Citing us
 If you use CoLA, please cite the following paper:
@@ -147,7 +145,7 @@ Linear Algebra Operations
 - [ ] SVD
 - [ ] pseudoinverse
       
-Linear ops
+Linear Operators implemented
 - [x] Diag
 - [x] BlockDiag
 - [x] Kronecker
@@ -160,17 +158,14 @@ Linear ops
 - [x] Triangular
 - [ ] FFT
 - [x] Tridiagonal
-- [x] CholeskyDecomposition
-- [x] LUDecomposition
-- [x] EigenDecomposition
       
-Annotations
+Attribute Annotations
 - [x] SelfAdjoint
 - [x] PSD
 - [x] Unitary
 
 ## Contributing
-See the contributing guidelines `CONTRIBUTING.md` for information on submitting issues
+See the contributing guidelines `[docs/CONTRIBUTING.md](https://cola.readthedocs.io/en/latest/contributing.html)` for information on submitting issues
 and pull requests.
 
 <!--
@@ -184,4 +179,4 @@ This work is supported by XXX.
 CoLA is Apache 2.0 licensed.
 
 ## Support and contact
-Please raise an issue if you find a bug or inadequate performance when using CoLA.
+Please raise an issue if you find a bug or slow performance when using CoLA.
