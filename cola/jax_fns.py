@@ -167,7 +167,7 @@ def convolve(in1, in2, mode='same'):
     return out  # ,boundary='symm')
 
 
-def canonical(loc, shape, dtype):
+def canonical(loc, shape, dtype, device=None):
     vec = jnp.zeros(shape=shape, dtype=dtype)
     vec = vec.at[loc].set(1.)
     return vec

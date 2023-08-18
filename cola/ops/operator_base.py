@@ -192,24 +192,22 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         dt = 'dtype=' + str(self.dtype)
         return '<%dx%d %s with %s>' % (M, N, self.__class__.__name__, dt)
 
-    def __getitem__(self, ids: Union[Tuple[int, ...], Tuple[slice, ...]]):
+    def __getitem__(self, ids: Union[Tuple[int, ...], Tuple[slice, ...]])->Union[Array, 'LinearOperator']:
         # TODO: add Tuple[List[int],...] and List[Tuple[int,int]] cases
         # print(type(ids))
         # print(type(ids[0]), type(ids[1]))
         # check if first element is ellipsis
-        if ids[0] is Ellipsis:
-            ids = ids[1:]
         xnp = self.xnp
         match ids:
-            case int(i), int(j):
-                ej = xnp.canonical(loc=j, shape=(self.A.shape[-1], ), dtype=self.dtype)
-                return (self @ ej)[i]
-            case int(i), slice() as s:
-                ei = xnp.canonical(loc=i, shape=(self.A.shape[-1], ), dtype=self.dtype)
-                return (self.T @ ei)[s]
-            case slice() as s, int(j):
-                ej = xnp.canonical(loc=j, shape=(self.A.shape[-1], ), dtype=self.dtype)
-                return (self @ ej)[s]
+            case int(i):
+                ei = xnp.canonical(loc=i, shape=(self.shape[-1], ), dtype=self.dtype, device=self.device)
+                return (self.T @ ei)
+            case b, int(j):
+                ej = xnp.canonical(loc=j, shape=(self.shape[-1], ), dtype=self.dtype, device=self.device)
+                return (self @ ej)[b]
+            case int(i), b:
+                ei = xnp.canonical(loc=i, shape=(self.shape[-1], ), dtype=self.dtype, device=self.device)
+                return (self.T @ ei)[b]
             case (slice() | xnp.ndarray() | np.ndarray()) as s_i,  \
                  (slice() | xnp.ndarray() | np.ndarray()) as s_j:
                 from cola.ops import Sliced
@@ -218,7 +216,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
                 out = []
                 for idx, jdx in zip(li, lj):
                     # TODO: batch jdx
-                    ej = xnp.canonical(loc=jdx, shape=(self.A.shape[-1], ), dtype=self.dtype)
+                    ej = xnp.canonical(loc=jdx, shape=(self.A.shape[-1], ), dtype=self.dtype, device=self.device)
                     out.append((self.A @ ej)[idx])
                 return xnp.stack(out)
             case _:

@@ -127,8 +127,8 @@ def stop_gradients(x):
     return x.detach()
 
 
-def canonical(loc, shape, dtype):
-    vec = torch.zeros(shape, dtype=dtype)
+def canonical(loc, shape, dtype, device=None):
+    vec = torch.zeros(shape, dtype=dtype, device=device)
     vec[loc] = 1.
     return vec
 
