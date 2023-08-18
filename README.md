@@ -26,21 +26,7 @@ pip install git+https://github.com/wilson-labs/cola.git
 * Supports operators with complex numbers and low precision ✅
 * Provides linear algebra operations for both symmetric and non-symmetric matrices ✅
 
-## Citing us
-If you use CoLA, please cite the following paper:
-
-<!-- > [Andres Potapczynski, Marc Finzi, Geoff Pleiss, and Andrew Gordon Wilson. "Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra." Pre-print (2023).]()
--->
-> Andres Potapczynski, Marc Finzi, Geoff Pleiss, and Andrew Gordon Wilson. "Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra." Pre-print (2023).
-Link to be added soon.
-```
-@article{potapczynski2023cola,
-  title={{Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra}},
-  author={Andres Potapczynski and Marc Finzi and Geoff Pleiss and Andrew Gordon Wilson},
-  journal={Pre-print},
-  year={2023}
-}
-```
+See https://cola.readthedocs.io/en/latest/ for our full documentation and many examples.
 
 
 ## Quick start guide
@@ -127,10 +113,21 @@ print(g)
 [-0.06611571 -0.12499995]
 ```
 
-See https://cola.readthedocs.io/en/latest/ for our full documentation and many examples.
+## Citing us
+If you use CoLA, please cite the following paper:
 
-## Use cases and examples
-See our examples and tutorials on how to use CoLA for different problems.
+<!-- > [Andres Potapczynski, Marc Finzi, Geoff Pleiss, and Andrew Gordon Wilson. "Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra." Pre-print (2023).]()
+-->
+> Andres Potapczynski, Marc Finzi, Geoff Pleiss, and Andrew Gordon Wilson. "Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra." Pre-print (2023).
+Link to be added soon.
+```
+@article{potapczynski2023cola,
+  title={{Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra}},
+  author={Andres Potapczynski and Marc Finzi and Geoff Pleiss and Andrew Gordon Wilson},
+  journal={Pre-print},
+  year={2023}
+}
+```
 
 ### Features being added
 Linear Algebra Operations
