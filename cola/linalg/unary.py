@@ -35,7 +35,8 @@ class LanczosUnary(LinearOperator):
         eigvals, P = self.xnp.eigh(T)
         norms = self.xnp.norm(V, axis=0)
         out = self.A.xnp.conj(P)[:, 0, :] * norms[:, None]  # (bs,k)
-        return (Q @ P @ (self.f(eigvals) * out)[..., None])[..., 0]
+        out = (Q @ P @ (self.f(eigvals) * out)[..., None])[..., 0]
+        return out.T
 
 
 @parametric
@@ -47,7 +48,7 @@ class ArnoldiUnary(LinearOperator):
         self.kwargs = kwargs
         self.info = {}
 
-    def _matmat(self, V):
+    def _matmat(self, V): #(n,bs)
         Q, H, _, info = get_arnoldi_matrix(A=self.A, rhs=V, **self.kwargs)
         Q = self.xnp.moveaxis(Q, 2, 0)
         H = self.xnp.moveaxis(H, 2, 0)
@@ -56,10 +57,12 @@ class ArnoldiUnary(LinearOperator):
         eigvals, P = self.xnp.eig(H)
         norms = self.xnp.norm(V, axis=0)
         e0 = self.xnp.canonical(0, (P.shape[1], V.shape[-1]), dtype=P.dtype)
-        Pinv0 = self.xnp.solve(P, e0.T)
-        out = Pinv0 * norms[:, None]  # (bs,k)
-        Q = self.xnp.cast(Q, dtype=P.dtype)
-        return (Q @ P @ (self.f(eigvals) * out)[..., None])[..., 0]
+        Pinv0 = self.xnp.solve(P, e0.T) # (bs, m, m) vs (bs, m)
+        out = Pinv0 * norms[:, None]  # (bs, m)
+        Q = self.xnp.cast(Q, dtype=P.dtype) # (bs, n, m)
+        # (bs,n,m) @ (bs,m,m) @ (bs, m) -> (bs, n)
+        out = (Q @ P @ (self.f(eigvals) * out)[..., None])[..., 0]
+        return out.T
 
 @dispatch
 @export
