@@ -10,7 +10,7 @@ from cola.algorithms import exact_diag, approx_diag
 @dispatch
 @export
 def diag(v: Array, k=0, **kwargs):
-    """ Return a diagonal matrix with the given vector on the diagonal. """
+    """ Constructs a diagonal matrix with the given vector on the diagonal. """
     assert k == 0, "Off diagonal diag not yet supported"
     assert len(v.shape) == 1, f"Unknown input {v.shape}"
     return Diagonal(v)
@@ -19,14 +19,31 @@ def diag(v: Array, k=0, **kwargs):
 @dispatch
 def diag(A: LinearOperator, k=0, **kwargs):
     """ Extract the (kth) diagonal of a linear operator.
-        Method options: auto, exact, approx"""
-    kws = dict(tol=1e-1, pbar=False, max_iters=5000, method='auto')
+        
+    Uses either \(O(\tfrac{1}{\delta^2})\) time stochastic estimation (Hutchinson estimator)
+    or a deterministic \(O(n)\) time algorithm if \(\delta < 1/\sqrt{10n}\), where 
+    \(\delta=\) tol is the standard deviation of the estimate. If you unly need unbiased estimates,
+    set tol to be very high.
+
+    Args:
+        A (LinearOperator): The linear operator to compute the logdet of.
+        tol (float, optional): Tolerance for the variance (std) of the solution,
+         returns a stochastic estimate if large enough to save a substantial computation.
+         If you want the stochastic estimate, you will need to choose fairly large values,
+         e.g. 1e-2. Default: 1e-6.
+        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
+        method (str, optional): Directly specify method, defaults to 'auto',
+         options are 'auto', 'exact', 'approx'.
+
+    Returns:
+        Tuple[Array, Array]: sign, logdet"""
+    kws = dict(tol=1e-6, pbar=False, max_iters=5000, method='auto')
     kws.update(kwargs)
     method = kws.pop('method')
-    if method == 'exact' or (method == 'auto' and (np.prod(A.shape) <= 1e6 or kws['tol'] < 3e-2)):
+    exact_faster = (tol < 1/np.sqrt(10*A.shape[-1]))
+    if method == 'exact' or (method == 'auto' and exact_faster):
         out, info = exact_diag(A, k=k, **kws)
-    elif method == 'approx' or (method == 'auto' and
-                                (np.prod(A.shape) > 1e6 and kws['tol'] >= 3e-2)):
+    elif method == 'approx' or (method == 'auto' and exact_faster):
         out, info = approx_diag(A, k=k, **kws)
     out.info = info
     return out

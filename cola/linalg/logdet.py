@@ -16,10 +16,18 @@ def product(xs):
 
 @export
 def logdet(A: LinearOperator, **kwargs) -> Array:
-    """ Computes logdet of a linear operator.
+    """ Computes logdet of a linear operator. 
+    
+    For large inputs (or with method='iterative'),
+    uses either \(O(\tfrac{1}{\delta^2}\log(1/\epsilon))\) time stochastic algorithm (SLQ)
+    where \(\epsilon=\) tol is the bias and \(\delta=\) vtol is the standard deviation of the estimate,
+    or a deterministic \(O(n\log(1/\epsilon))\) time algorithm if \(\delta < 1/\sqrt{n}\).
+
     Args:
         A (LinearOperator): The linear operator to compute the logdet of.
-        tol (float, optional): The tolerance criteria. Defaults to 1e-6.
+        tol (float, optional): Tolerance for the bias of the solution. Defaults to 1e-6.
+        vtol (float, optional): Tolerance for the variance (std) of the solution,
+         returns a stochastic estimate if large that saves considerable computation. . Default: 1e-6
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
         max_iters (int, optional): The maximum number of iterations. Defaults to 300.
         method (str, optional): Method to use, defaults to 'auto',
@@ -37,16 +45,23 @@ def logdet(A: LinearOperator, **kwargs) -> Array:
 def slogdet(A: LinearOperator, **kwargs) -> Array:
     """ Computes sign and logdet of a linear operator. such that det(A) = sign(A) exp(logdet(A))
 
-     Args:
+    For large inputs (or with method='iterative'),
+    uses either \(O(\tfrac{1}{\delta^2}\log(1/\epsilon))\) time stochastic algorithm (SLQ)
+    where \(\epsilon=\) tol is the bias and \(\delta=\) vtol is the standard deviation of the estimate,
+    or a deterministic \(O(n\log(1/\epsilon))\) time algorithm if \(\delta < 1/\sqrt{10n}\).
+
+    Args:
         A (LinearOperator): The linear operator to compute the logdet of.
-        tol (float, optional): The tolerance criteria. Defaults to 1e-6.
+        tol (float, optional): Tolerance for the bias of the solution. Defaults to 1e-6.
+        vtol (float, optional): Tolerance for the variance (std) of the solution,
+         returns a stochastic estimate if large that saves considerable computation. Default: 1e-6
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
         max_iters (int, optional): The maximum number of iterations. Defaults to 300.
         method (str, optional): Method to use, defaults to 'auto',
          options are 'auto', 'dense', 'iterative'.
 
     Returns:
-        Tuple[Array,Array]: sign, logdet
+        Tuple[Array, Array]: sign, logdet
     """
     kws = dict(method="auto", tol=1e-2, pbar=False, max_iters=300)
     #assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
@@ -82,9 +97,6 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
 @dispatch(cond=lambda A, **kwargs: all([(Ai.shape[-2] == Ai.shape[-1]) for Ai in A.Ms]))
 def slogdet(A: Product, **kwargs) -> Array:
     signs, logdets = zip(*[slogdet(Ai, **kwargs) for Ai in A.Ms])
-    # print(signs, logdets)
-    # print([A.xnp.slogdet(Ai.to_dense()) for Ai in A.Ms])
-    # print(A.xnp.slogdet(A.to_dense()))
     return product(signs), sum(logdets)
 
 

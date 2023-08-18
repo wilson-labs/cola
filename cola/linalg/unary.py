@@ -150,7 +150,7 @@ def apply_unary(f: Callable, A: Adjoint, **kwargs):
 def exp(A: LinearOperator, **kwargs):
     """ Computes the matrix exponential exp(A) of a matrix A.
 
-     Args:
+    Args:
         A (LinearOperator): The linear operator to compute the exp of.
         tol (float, optional): The tolerance criteria. Defaults to 1e-6.
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
@@ -174,7 +174,7 @@ def exp(A: KronSum, **kwargs):
 def pow(A: LinearOperator, alpha: Number, **kwargs):
     """ Computes the matrix power A^alpha of a matrix A.
 
-     Args:
+    Args:
         A (LinearOperator): The linear operator to compute the power of.
         alpha (float): The power to compute.
         tol (float, optional): The tolerance criteria. Defaults to 1e-6.
