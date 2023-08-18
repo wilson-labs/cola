@@ -12,12 +12,15 @@ setup(
     license='MIT',
     python_requires='>=3.10',
     install_requires=[
-        'pytest', 'tqdm>=4.38', 'matplotlib',
+        'scipy', 'tqdm>=4.38',
         # 'plum-dispatch @ git+ssh://git@github.com/beartype/plum.git',
         # 'plum-dispatch @ git+https://github.com/beartype/plum',
         'plum-dispatch @ git+https://github.com/mfinzi/plum'\
                 '#537534597f0061ea38e499d5127e2fe78463cdfb',
     ],
+    extras_require={
+        'dev': ['pytest'],
+    },
     packages=find_packages(),
     # long_description=open('../README.md').read(),
     long_description=open('README.md').read(),
