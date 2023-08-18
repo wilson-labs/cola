@@ -198,10 +198,13 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         # print(type(ids[0]), type(ids[1]))
         # check if first element is ellipsis
         xnp = self.xnp
+        from cola.ops import Sliced
         match ids:
             case int(i):
                 ei = xnp.canonical(loc=i, shape=(self.shape[-1], ), dtype=self.dtype, device=self.device)
                 return (self.T @ ei)
+            case (slice() | xnp.ndarray() | np.ndarray()) as s_i:
+                return Sliced(A=self, slices=(s_i, slice(None)))
             case b, int(j):
                 ej = xnp.canonical(loc=j, shape=(self.shape[-1], ), dtype=self.dtype, device=self.device)
                 return (self @ ej)[b]
@@ -210,7 +213,6 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
                 return (self.T @ ei)[b]
             case (slice() | xnp.ndarray() | np.ndarray()) as s_i,  \
                  (slice() | xnp.ndarray() | np.ndarray()) as s_j:
-                from cola.ops import Sliced
                 return Sliced(A=self, slices=(s_i, s_j))
             case list(li), list(lj):
                 out = []
