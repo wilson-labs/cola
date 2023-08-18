@@ -90,7 +90,7 @@ For many of these functions, if we know additional information about the matrice
 to enable the algorithms to run faster.
 
 ```python
-Qs = cola.Symmetric(Q)
+Qs = cola.SelfAdjoint(Q)
 %timeit cola.linalg.inverse(Q)@v
 %timeit cola.linalg.inverse(Qs)@v
 ```

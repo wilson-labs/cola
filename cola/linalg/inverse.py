@@ -11,7 +11,7 @@ from cola.algorithms.gmres import gmres
 from cola.algorithms.svrg import solve_svrg_symmetric
 from cola.utils.dispatch import parametric
 from cola.utils import export
-from cola.annotations import PSD
+from cola.annotations import PSD, Unitary
 import cola
 
 
@@ -123,6 +123,9 @@ def inverse(A: LinearOperator, **kwargs):
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 
+@dispatch(cond=lambda A, **kwargs: A.isa(Unitary))
+def inverse(A: LinearOperator, **kwargs):
+    return Unitary(A.H)
 
 @dispatch
 def inverse(A: Identity, **kwargs):
@@ -163,8 +166,3 @@ def inverse(A: Diagonal, **kwargs):
 @dispatch
 def inverse(A: Triangular, **kwargs):
     return TriangularInverse(A)
-
-
-# @dispatch(cond = lambda A, **kwargs: A.isa(Unitary), precedence=1)
-# def inverse(A: LinearOperator, **kwargs):
-#     return Unitary(A.H)

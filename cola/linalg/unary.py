@@ -6,7 +6,7 @@ from functools import reduce
 import cola
 from cola.ops import LinearOperator, Dense
 from cola.utils import export
-from cola.annotations import SelfAdjoint
+from cola.annotations import SelfAdjoint, PSD
 from cola.utils.dispatch import parametric
 from cola.algorithms.lanczos import lanczos_parts, construct_tridiagonal_batched
 from cola.algorithms.arnoldi import get_arnoldi_matrix
@@ -61,7 +61,6 @@ class ArnoldiUnary(LinearOperator):
         Q = self.xnp.cast(Q, dtype=P.dtype)
         return (Q @ P @ (self.f(eigvals) * out)[..., None])[..., 0]
 
-
 @dispatch
 @export
 def apply_unary(f: Callable, A: LinearOperator, **kwargs):
@@ -74,11 +73,10 @@ def apply_unary(f: Callable, A: LinearOperator, **kwargs):
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
         max_iters (int, optional): The maximum number of iterations. Defaults to 300.
         method (str, optional): Method to use, defaults to 'auto',
-         options are 'auto', 'dense', 'iterative'.
+            options are 'auto', 'dense', 'iterative'.
 
     Returns:
-        LinearOperator: the lazily implemented f(A)
-    """
+        LinearOperator: the lazily implemented f(A)"""
     kws = dict(method="auto", tol=1e-6, pbar=False, max_iters=300)
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
@@ -151,15 +149,16 @@ def exp(A: LinearOperator, **kwargs):
     """ Computes the matrix exponential exp(A) of a matrix A.
 
     Args:
-        A (LinearOperator): The linear operator to compute the exp of.
+        f (Callable): The function to apply.
+        A (LinearOperator): The linear operator to compute f(A) with.
         tol (float, optional): The tolerance criteria. Defaults to 1e-6.
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
         max_iters (int, optional): The maximum number of iterations. Defaults to 300.
         method (str, optional): Method to use, defaults to 'auto',
-         options are 'auto', 'dense', 'iterative'.
+            options are 'auto', 'dense', 'iterative'.
 
     Returns:
-        LinearOperator: the lazily implemented expm(A)
+        LinearOperator: the lazily implemented exp(A)
     """
     return apply_unary(A.xnp.exp, A, **kwargs)
 
@@ -168,6 +167,25 @@ def exp(A: LinearOperator, **kwargs):
 def exp(A: KronSum, **kwargs):
     return Kronecker(*[exp(a, **kwargs) for a in A.Ms])
 
+@dispatch(cond=lambda A: A.isa(PSD))
+@export
+def log(A: LinearOperator, **kwargs):
+    """ Computes the matrix logarithm log(A) of PSD matrix A
+    
+    Args:
+        f (Callable): The function to apply.
+        A (LinearOperator): The linear operator to compute f(A) with.
+        tol (float, optional): The tolerance criteria. Defaults to 1e-6.
+        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
+        max_iters (int, optional): The maximum number of iterations. Defaults to 300.
+        method (str, optional): Method to use, defaults to 'auto',
+            options are 'auto', 'dense', 'iterative'.
+
+    Returns:
+        LinearOperator: the lazily implemented log(A)
+    """
+    return apply_unary(A.xnp.log, A, **kwargs)
+
 
 @dispatch
 @export
@@ -175,13 +193,13 @@ def pow(A: LinearOperator, alpha: Number, **kwargs):
     """ Computes the matrix power A^alpha of a matrix A.
 
     Args:
-        A (LinearOperator): The linear operator to compute the power of.
-        alpha (float): The power to compute.
+        f (Callable): The function to apply.
+        A (LinearOperator): The linear operator to compute f(A) with.
         tol (float, optional): The tolerance criteria. Defaults to 1e-6.
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
         max_iters (int, optional): The maximum number of iterations. Defaults to 300.
         method (str, optional): Method to use, defaults to 'auto',
-         options are 'auto', 'dense', 'iterative'.
+            options are 'auto', 'dense', 'iterative'.
 
     Returns:
         LinearOperator: the lazily implemented A^alpha
@@ -206,6 +224,17 @@ def pow(A: Kronecker, alpha: Number, **kwargs):
 @export
 def sqrt(A: LinearOperator, **kwargs):
     """ Computes the matrix sqrt A^{1/2} of a matrix A using the principal branch.
+
+    Args:
+        f (Callable): The function to apply.
+        A (LinearOperator): The linear operator to compute f(A) with.
+        tol (float, optional): The tolerance criteria. Defaults to 1e-6.
+        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
+        max_iters (int, optional): The maximum number of iterations. Defaults to 300.
+        method (str, optional): Method to use, defaults to 'auto',
+            options are 'auto', 'dense', 'iterative'.
+
+    Returns: LinearOperator: the lazily implemented sqrt(A)
     """
     return pow(A, 0.5, **kwargs)
 
@@ -213,5 +242,16 @@ def sqrt(A: LinearOperator, **kwargs):
 @export
 def isqrt(A: LinearOperator, **kwargs):
     """ Computes the matrix inverse sqrt A^{-1/2} of a matrix A using the principal branch.
+
+    Args:
+        f (Callable): The function to apply.
+        A (LinearOperator): The linear operator to compute f(A) with.
+        tol (float, optional): The tolerance criteria. Defaults to 1e-6.
+        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
+        max_iters (int, optional): The maximum number of iterations. Defaults to 300.
+        method (str, optional): Method to use, defaults to 'auto',
+            options are 'auto', 'dense', 'iterative'.
+
+    Returns: LinearOperator: the lazily implemented A^{-1/2}
     """
     return pow(A, -0.5, **kwargs)

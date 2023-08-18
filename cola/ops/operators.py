@@ -5,7 +5,6 @@ from cola.utils.dispatch import parametric
 import cola
 import numpy as np
 
-
 class Dense(LinearOperator):
     """ LinearOperator wrapping of a dense matrix. O(n^2) memory and time mvms.
 
@@ -429,29 +428,18 @@ class Jacobian(LinearOperator):
         super().__init__(dtype=x.dtype, shape=(y_shape[0], x.shape[0]))
 
     def _matmat(self, X):
-        # primals = self.x[:,None]+self.xnp.zeros((1,X.shape[1],), dtype=self.x.dtype)
-        if self.xnp.__name__ == 'cola.torch_fns' and False:
-            expanded_x = self.x[None, :] + self.xnp.zeros((X.shape[-1], 1), dtype=self.x.dtype)
-            fn = partial(self.xnp.jvp_derivs, self.xnp.vmap(self.f), (expanded_x, ))
-        else:
-            fn = self.xnp.vmap(partial(self.xnp.jvp_derivs, self.f, (self.x, )))
-            out = fn((X.T, )).T
-            if self.xnp.__name__ == 'cola.torch_fns': # pytorch converts to double silently
-                out = out.to(dtype=self.dtype)
+        fn = self.xnp.vmap(partial(self.xnp.jvp_derivs, self.f, (self.x, )))
+        out = fn((X.T, )).T
+        if self.xnp.__name__ == 'cola.torch_fns': # pytorch converts to double silently
+            out = out.to(dtype=self.dtype)
         return out
 
     def _rmatmat(self, X):
-        # primals = self.x[None,:]+self.xnp.zeros((X.shape[0],1), dtype=self.x.dtype)
-        if self.xnp.__name__ == 'cola.torch_fns' and False:
-            expanded_x = self.x[None, :] + self.xnp.zeros((X.shape[0], 1), dtype=self.x.dtype)
-            fn = partial(self.xnp.vjp_derivs, self.xnp.vmap(self.f), (expanded_x, ))
-            out = fn((X, ))[0]
-        else:
-            vjp = lambda v: self.xnp.vjp_derivs(self.f, (self.x, ), v)
-            fn = self.xnp.vmap(vjp)
-            out = fn(X)[0]
-            if self.xnp.__name__ == 'cola.torch_fns': # pytorch converts to double silently
-                out = out.to(dtype=self.dtype)
+        vjp = lambda v: self.xnp.vjp_derivs(self.f, (self.x, ), v)
+        fn = self.xnp.vmap(vjp)
+        out = fn(X)[0]
+        if self.xnp.__name__ == 'cola.torch_fns': # pytorch converts to double silently
+            out = out.to(dtype=self.dtype)
         return out
 
     def __str__(self):
@@ -491,9 +479,6 @@ class Hessian(LinearOperator):
             if xnp.__name__ == 'cola.torch_fns': # pytorch converts to double silently
                 out = out.to(dtype=self.dtype)
             return out
-
-    def _rmatmat(self, X):
-        return self._matmat(X.T).T
 
     def __str__(self):
         return "H"

@@ -17,7 +17,7 @@ def slq_bwd(res, grads, unflatten, *args, **kwargs):
     key = xnp.PRNGKey(0) if key is None else key
     probes = xnp.randn(A.shape[1], num_samples, dtype=A.dtype,key=key)
     probes_solves, _ = cg(A, probes, tol=1e-6, max_iters=100)
-
+    # problem here. Assumes f is log. Need to generalize, or specialize outer level function
     coef = 1.0 / probes.shape[-1]
     g = grads[0] if (isinstance(grads,(tuple, list)) or len(grads.shape)>0) else grads
     d_solves = coef * g * probes_solves
@@ -51,8 +51,8 @@ def slq_fwd(A, fun, num_samples, max_iters, tol, pbar, key):
     return xnp.mean(estimate, axis=0)
 
 @export
-def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int=30, max_iters: int=100,
-                            tol: float = 1e-3, pbar: bool = False, key=None):
+def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, max_iters: int=100,
+                            tol: float = 1e-5, vtol=0.1, pbar: bool = False, key=None):
     """
     Approximates trace(f(A)) for a positive definite operator A and a given function
     f().
@@ -60,14 +60,14 @@ def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, num_samples: int=3
     Args:
         A (LinearOperator): A symmetric linear operator of size (n, n).
         fun (Callable): The function to apply to the eigenvalues.
-        num_samples (int): The number of samples to use for the approximation.
         max_iters (int): The maximum number of iterations to run Lanczos.
-        tol (float, optional): Lanczos stopping criteria.
+        tol (float, optional): Lanczos stopping criteria. (Bias tolerance)
+        vtol (float, optional): Variance tolerance for the stochastic estimate.
         pbar (bool, optional): Show a progress bar.
 
     Returns:
         float: The approximate value of trace(f(A)).
     """
-    # TODO: how can we jit here given the iter shape change?
-    # tol sets the tolerance for the entire process, use stricter tol for lanczos
-    return slq_fwd(A, fun, num_samples=num_samples, max_iters=max_iters, tol=tol/(100*num_samples), pbar=pbar, key=key)
+    #TODO: bwds has a bug because it assumes f is log
+    num_samples = max(int(1/vtol**2),1)
+    return slq_fwd(A, fun, num_samples=num_samples, max_iters=max_iters, tol=tol, pbar=pbar, key=key)

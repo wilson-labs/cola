@@ -51,6 +51,7 @@ def iterative_autograd(iterative_bwd):
 
                     @staticmethod
                     def backward(ctx, *grads):
+                        #return bwd(ctx.res, grads)
                         return tuple(bwd(ctx.res, grads)[0])
 
                 return Iterative.apply(*par)

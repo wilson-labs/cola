@@ -20,7 +20,7 @@ def test_slq_vjp(xnp):
 
     def f(theta):
         A = unflatten([theta])
-        loss = stochastic_lanczos_quad(A, xnp.log, num_samples=100, max_iters=100, tol=1e-6, pbar=False)
+        loss = stochastic_lanczos_quad(A, xnp.log, vtol=1/10, max_iters=100, tol=1e-6, pbar=False)
         return loss
 
     def f_alt(theta):
@@ -57,8 +57,8 @@ def test_stochastic_lanczos_quad_random(xnp):
         return xnp.log(x)
 
     soln = xnp.sum(fun(xnp.array(diag, dtype=dtype)))
-    num_samples, max_iters, tol = 70, A.shape[0], 1e-7
-    approx = stochastic_lanczos_quad(lazify(A), fun, num_samples, max_iters, tol)
+    vtol, max_iters, tol = 1/np.sqrt(70), A.shape[0], 1e-7
+    approx = stochastic_lanczos_quad(lazify(A), fun, max_iters= max_iters, tol=tol,vtol=vtol)
 
     rel_error = relative_error(soln, approx)
     assert rel_error < 1e-1

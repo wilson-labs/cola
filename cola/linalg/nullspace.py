@@ -33,6 +33,8 @@ def nullspace(C: LinearOperator, tol=1e-5, pbar=True, info=False, method='auto')
         >>> Q = nullspace(C, method='auto', pbar=False)
         >>> C@Q # should be zero
 
+    .. warning:: 
+        This function is not yet well tested and does not yet include composition rules.
     """
 
     if method == 'dense' or (method == 'auto' and np.prod(C.shape) < 3e7):

@@ -30,6 +30,9 @@ def test_logdet(operator):
     not_scalarmul = relative_error(xnp.diag(diag.mean() + 0. * diag), Adense) > 1e-5
     A3 = cola.PSD(A2) if A.isa(cola.PSD) else A2
     if not_scalarmul:
-        l3 = logdet(A3, tol=tol, method='iterative', num_samples=500)
+        l3 = logdet(A3, tol=tol, method='iterative-stochastic', vtol=3e-2)
         e3 = relative_error(l0, l3)
         assert e3 < 3e-1, f"SLQ logdet failed on {type(A)} with error {e3}"
+        l4 = logdet(A3, tol=tol, method='iterative', vtol=tol)
+        e4 = relative_error(l0, l4)
+        assert e4 < 3 * tol, f"SLQ logdet failed on {type(A)} with error {e4}"

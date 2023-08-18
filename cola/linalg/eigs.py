@@ -13,7 +13,6 @@ from cola.algorithms.lanczos import LanczosDecomposition
 from cola.algorithms.arnoldi import ArnoldiDecomposition
 from cola.utils import export
 
-
 @dispatch
 @export
 def eig(A: LinearOperator, **kwargs):

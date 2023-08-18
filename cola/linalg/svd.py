@@ -19,6 +19,9 @@ def svd(X: LinearOperator, rank= None, top=True, tol=1e-7, method='auto') -> Tup
         method: The method to use for the svd (auto, dense, lanczos)
 
     Returns: A tuple of (U, S, VH) where U is shape (m, k), S is shape (k, k), and VH is shape (k, n)
+
+    .. warning:: 
+        This function is not yet well tested and does not yet include composition rules.
     """
     # kws = dict(k: int, top=True, tol=1e-7, method='auto')
     # kws.update(kwargs)
@@ -32,7 +35,7 @@ def svd(X: LinearOperator, rank= None, top=True, tol=1e-7, method='auto') -> Tup
     elif method == 'lanczos' or (method == 'auto' and np.prod(X.shape) > 1e6):
         Cov = X.H@X/X.shape[0]
         slc = slice(0,k) if not top else slice(-k,None)
-        eigs, V = cola.eig(cola.Symmetric(Cov),slc)#,slice(0,k))
+        eigs, V = cola.eig(cola.SelfAdjoint(Cov),slc)#,slice(0,k))
         #TODO: reverse order if other side is bigger
         U = X@V # shape (n, k)
         # singular values are the norms

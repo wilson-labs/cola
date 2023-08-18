@@ -16,12 +16,12 @@ def product(xs):
 
 @export
 def logdet(A: LinearOperator, **kwargs) -> Array:
-    """ Computes logdet of a linear operator. 
+    r""" Computes logdet of a linear operator. 
     
     For large inputs (or with method='iterative'),
-    uses either \(O(\tfrac{1}{\delta^2}\log(1/\epsilon))\) time stochastic algorithm (SLQ)
-    where \(\epsilon=\) tol is the bias and \(\delta=\) vtol is the standard deviation of the estimate,
-    or a deterministic \(O(n\log(1/\epsilon))\) time algorithm if \(\delta < 1/\sqrt{n}\).
+    uses either :math:`O(\tfrac{1}{\delta^2}\log(1/\epsilon))` time stochastic algorithm (SLQ)
+    where :math:`\epsilon=` tol is the bias and :math:`\delta=` vtol is the standard deviation of the estimate,
+    or a deterministic :math:`O(n\log(1/\epsilon))` time algorithm if :math:`\delta < 1/\sqrt{10n}`.
 
     Args:
         A (LinearOperator): The linear operator to compute the logdet of.
@@ -43,12 +43,12 @@ def logdet(A: LinearOperator, **kwargs) -> Array:
 @dispatch
 @export
 def slogdet(A: LinearOperator, **kwargs) -> Array:
-    """ Computes sign and logdet of a linear operator. such that det(A) = sign(A) exp(logdet(A))
+    r""" Computes sign and logdet of a linear operator. such that det(A) = sign(A) exp(logdet(A))
 
     For large inputs (or with method='iterative'),
-    uses either \(O(\tfrac{1}{\delta^2}\log(1/\epsilon))\) time stochastic algorithm (SLQ)
-    where \(\epsilon=\) tol is the bias and \(\delta=\) vtol is the standard deviation of the estimate,
-    or a deterministic \(O(n\log(1/\epsilon))\) time algorithm if \(\delta < 1/\sqrt{10n}\).
+    uses either :math:`O(\tfrac{1}{\delta^2}\log(1/\epsilon))` time stochastic algorithm (SLQ)
+    where :math:`\epsilon=` tol is the bias and :math:`\delta=` vtol is the standard deviation of the estimate,
+    or a deterministic :math:`O(n\log(1/\epsilon))` time algorithm if :math:`\delta < 1/\sqrt{10n}`.
 
     Args:
         A (LinearOperator): The linear operator to compute the logdet of.
@@ -58,19 +58,19 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
         max_iters (int, optional): The maximum number of iterations. Defaults to 300.
         method (str, optional): Method to use, defaults to 'auto',
-         options are 'auto', 'dense', 'iterative'.
+         options are 'auto', 'dense', 'iterative', 'iterative-exact', 'iterative-stochastic'
 
     Returns:
         Tuple[Array, Array]: sign, logdet
     """
-    kws = dict(method="auto", tol=1e-2, pbar=False, max_iters=300)
+    kws = dict(method="auto", tol=1e-6, vtol=1e-6, pbar=False, max_iters=300)
     #assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
-    if method in ('dense', 'exact') or (method == 'auto' and
+    if method =='dense' or (method == 'auto' and
                                         (np.prod(A.shape) <= 1e6 or kws['tol'] < 3e-2)):
         return slogdet(cola.decompositions.lu_decomposed(A), **kws)
-    elif method in ('iterative', 'approx') or (method == 'auto' and
+    elif 'iterative' in method or (method == 'auto' and
                                                (np.prod(A.shape) > 1e6 and kws['tol'] >= 3e-2)):
         return ValueError("Unknown phase"), logdet(PSD(A.H @ A), **kws) / 2.
     else:
@@ -79,17 +79,22 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
 
 @dispatch(cond=lambda A: A.isa(PSD))
 def slogdet(A: LinearOperator, **kwargs) -> Array:
-    kws = dict(method="auto", tol=1e-2, pbar=False, max_iters=300)
+    kws = dict(method="auto", tol=1e-6, vtol=1e-6, pbar=False, max_iters=300)
     # assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
-    if method in ('dense', 'exact') or (method == 'auto' and
-                                        (np.prod(A.shape) <= 1e6 or kws['tol'] < 3e-2)):
+    if method =='dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
         return slogdet(cola.decompositions.cholesky_decomposed(A), **kws)
-    elif method in ('iterative', 'approx') or (method == 'auto' and
-                                               (np.prod(A.shape) > 1e6 and kws['tol'] >= 3e-2)):
+    elif 'iterative' in method or (method == 'auto' and np.prod(A.shape) > 1e6):
+        tol, vtol = kws.pop('tol'), kws.pop('vtol')
+        if (vtol < 1/np.sqrt(10*A.shape[-1])) or 'stochastic' in method:
+            logA =cola.linalg.log(A, tol=tol, **kws)
+            trlogA  = cola.linalg.trace(logA, method='exact', **kws)
+            #TODO: autograd rule for this case?
+        else:
+            trlogA = stochastic_lanczos_quad(A, A.xnp.log, tol=tol,vtol=vtol,**kws)
         one = A.xnp.array(1., dtype=A.dtype, device=A.device)
-        return one, stochastic_lanczos_quad(A, A.xnp.log, **kws)
+        return one, trlogA
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 

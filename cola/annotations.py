@@ -24,7 +24,10 @@ class WrapMeta(type):
         new_obj = obj.__class__(*obj._args, **obj._kwargs)
         new_obj.annotations = obj.annotations | {self}
         # possible issues with pytrees and immutability?
-        #TODO: recreate object with annotation
+        #TODO: recreate object with annotation.
+        # How to do this? Note, annotations may not be in the top level __init__
+        # and we wouldn't necessarily want to require that from our users
+        # Would have to be in calling the LinearOperator base class constructor I think
         return new_obj
 
 
@@ -44,14 +47,14 @@ class SelfAdjoint(Annotation):
     pass
 
 
-Symmetric = Hermitian = SelfAdjoint
+Hermitian = SelfAdjoint
 
 
 class PSD(SelfAdjoint):
     pass
 
 
-[export(a) for a in [Stiefel, Unitary, SelfAdjoint, Symmetric, Hermitian, PSD]]
+[export(a) for a in [Stiefel, Unitary, SelfAdjoint, Hermitian, PSD]]
 
 
 @dispatch

@@ -24,6 +24,9 @@ def pinv(A: LinearOperator, **kwargs):
     Example:
         A = LinearOperator((3, 5), jnp.float32, lambda x: x[:3])
         A_pinv = pinv(A, tol=1e-4, max_iters=1000)
+
+    .. warning:: 
+        This function is not yet well tested and does not yet include composition rules.
     """
     kws = dict(tol=1e-6, P=None, x0=None, pbar=False, max_iters=5000)
     kws.update(kwargs)
