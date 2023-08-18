@@ -165,7 +165,7 @@ Attribute Annotations
 - [x] Unitary
 
 ## Contributing
-See the contributing guidelines `[docs/CONTRIBUTING.md](https://cola.readthedocs.io/en/latest/contributing.html)` for information on submitting issues
+See the contributing guidelines [docs/CONTRIBUTING.md](https://cola.readthedocs.io/en/latest/contributing.html) for information on submitting issues
 and pull requests.
 
 <!--
