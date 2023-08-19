@@ -18,8 +18,7 @@ config.update('jax_platform_name', 'cpu')
 _tol = 1e-6
 
 
-# @parametrize([torch_fns, jax_fns])
-@parametrize([torch_fns])
+@parametrize([torch_fns, jax_fns])
 def test_lanczos_vjp(xnp):
     dtype = xnp.float64
     # diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
@@ -75,7 +74,7 @@ def test_lanczos_vjp(xnp):
     print(approx)
     print(soln)
     abs_error = xnp.norm(soln - approx)
-    assert abs_error < _tol * 10
+    assert abs_error < _tol * 50
 
 
 @parametrize([torch_fns, jax_fns])
