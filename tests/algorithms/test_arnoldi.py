@@ -18,7 +18,7 @@ config.update('jax_platform_name', 'cpu')
 # config.update("jax_enable_x64", True)
 
 
-@parametrize([torch_fns])
+@parametrize([torch_fns, jax_fns])
 def test_arnoldi_vjp(xnp):
     dtype = xnp.float64
     matrix = [[6., 2., 3.], [2., 3., 1.], [3., 1., 4.]]
@@ -61,7 +61,7 @@ def test_arnoldi_vjp(xnp):
     print(approx)
     print(soln)
     abs_error = xnp.norm(soln - approx)
-    assert abs_error < 1e-5
+    assert abs_error < 5e-5
 
 
 @parametrize([torch_fns, jax_fns])

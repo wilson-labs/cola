@@ -1,4 +1,3 @@
-from functools import partial
 from cola import SelfAdjoint
 from cola.fns import lazify
 from cola.ops import LinearOperator
