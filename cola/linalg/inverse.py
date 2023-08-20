@@ -123,9 +123,11 @@ def inverse(A: LinearOperator, **kwargs):
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 
+
 @dispatch(cond=lambda A, **kwargs: A.isa(Unitary))
 def inverse(A: LinearOperator, **kwargs):
     return Unitary(A.H)
+
 
 @dispatch
 def inverse(A: Identity, **kwargs):

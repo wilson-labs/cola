@@ -5,6 +5,7 @@ from cola.utils.dispatch import parametric
 import cola
 import numpy as np
 
+
 class Dense(LinearOperator):
     """ LinearOperator wrapping of a dense matrix. O(n^2) memory and time mvms.
 
@@ -333,7 +334,7 @@ class Tridiagonal(LinearOperator):
         output = self.beta * X
         aux_gamma = xnp.update_array(aux_gamma, self.gamma * X[1:], np.s_[:-1])
         aux_alpha = xnp.update_array(aux_alpha, self.alpha * X[:-1], np.s_[1:])
-        return output+aux_alpha+aux_gamma
+        return output + aux_alpha + aux_gamma
 
 
 def ensure_vec_is_matrix(vec):
@@ -430,15 +431,17 @@ class Jacobian(LinearOperator):
     def _matmat(self, X):
         fn = self.xnp.vmap(partial(self.xnp.jvp_derivs, self.f, (self.x, )))
         out = fn((X.T, )).T
-        if self.xnp.__name__ == 'cola.torch_fns': # pytorch converts to double silently
+        if self.xnp.__name__ == 'cola.torch_fns':  # pytorch converts to double silently
             out = out.to(dtype=self.dtype)
         return out
 
     def _rmatmat(self, X):
-        vjp = lambda v: self.xnp.vjp_derivs(self.f, (self.x, ), v)
+        def vjp(v):
+            return self.xnp.vjp_derivs(self.f, (self.x, ), v)
+
         fn = self.xnp.vmap(vjp)
         out = fn(X)[0]
-        if self.xnp.__name__ == 'cola.torch_fns': # pytorch converts to double silently
+        if self.xnp.__name__ == 'cola.torch_fns':  # pytorch converts to double silently
             out = out.to(dtype=self.dtype)
         return out
 
@@ -476,7 +479,7 @@ class Hessian(LinearOperator):
         else:
             mvm = partial(xnp.jvp_derivs, xnp.grad(self.f), (self.x, ), create_graph=False)
             out = xnp.vmap(mvm)((X.T, )).T
-            if xnp.__name__ == 'cola.torch_fns': # pytorch converts to double silently
+            if xnp.__name__ == 'cola.torch_fns':  # pytorch converts to double silently
                 out = out.to(dtype=self.dtype)
             return out
 
@@ -522,8 +525,8 @@ class Concatenated(LinearOperator):
     """
     def __init__(self, *Ms, axis=0):
         self.Ms = Ms
-        assert all(M.shape[axis] == Ms[0].shape[axis] for M in Ms),\
-               f"Trying to concatenate matrices of different sizes {[M.shape for M in Ms]}"
+        assert all(M.shape[axis] == Ms[0].shape[axis] for M in Ms), \
+            f"Trying to concatenate matrices of different sizes {[M.shape for M in Ms]}"
         concat_size = sum(M.shape[axis] for M in Ms)
         shape = (Ms[0].shape[0], concat_size) if axis == 1 else (concat_size, Ms[0].shape[1])
         self.axis = axis

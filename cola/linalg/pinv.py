@@ -30,10 +30,10 @@ def pinv(A: LinearOperator, **kwargs):
     """
     kws = dict(tol=1e-6, P=None, x0=None, pbar=False, max_iters=5000)
     kws.update(kwargs)
-    n,m = A.shape
+    n, m = A.shape
     if n > m:
-        M = A.H@A
-        return inverse(cola.PSD(M+kws['tol']*I_like(M)/10), **kws)@A.H
+        M = A.H @ A
+        return inverse(cola.PSD(M + kws['tol'] * I_like(M) / 10), **kws) @ A.H
     else:
-        M = A@A.H
-        return A.H@inverse(cola.PSD(M+kws['tol']*I_like(M)/10), **kws)
+        M = A @ A.H
+        return A.H @ inverse(cola.PSD(M + kws['tol'] * I_like(M) / 10), **kws)

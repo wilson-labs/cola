@@ -19,7 +19,7 @@ def diag(v: Array, k=0, **kwargs):
 @dispatch
 def diag(A: LinearOperator, k=0, **kwargs):
     r""" Extract the (kth) diagonal of a linear operator.
-        
+
     Uses either :math:`O(\tfrac{1}{\delta^2})` time stochastic estimation (Hutchinson estimator)
     or a deterministic :math:`O(n)` time algorithm if :math:`\delta < 1/\sqrt{10n}`, where 
     :math:`\delta=` tol is the standard deviation of the estimate. If you unly need unbiased estimates,
@@ -40,7 +40,7 @@ def diag(A: LinearOperator, k=0, **kwargs):
     kws = dict(tol=1e-6, pbar=False, max_iters=5000, method='auto')
     kws.update(kwargs)
     method = kws.pop('method')
-    exact_faster = (kws['tol'] < 1/np.sqrt(10*A.shape[-1]))
+    exact_faster = (kws['tol'] < 1 / np.sqrt(10 * A.shape[-1]))
     if method == 'exact' or (method == 'auto' and exact_faster):
         out, info = exact_diag(A, k=k, **kws)
     elif method == 'approx' or (method == 'auto' and exact_faster):
@@ -115,7 +115,7 @@ def diag(A: KronSum, k=0, **kwargs):
 @export
 def trace(A: LinearOperator, **kwargs):
     r""" Compute the trace of a linear operator tr(A).
-        
+
     Uses either :math:`O(\tfrac{1}{\delta^2})` time stochastic estimation (Hutchinson estimator)
     or a deterministic :math:`O(n)` time algorithm if :math:`\delta < 1/\sqrt{10n}`, where 
     :math:`\delta=` tol is the standard deviation of the estimate. If you unly need unbiased estimates,

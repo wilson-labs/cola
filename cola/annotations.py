@@ -24,7 +24,7 @@ class WrapMeta(type):
         new_obj = obj.__class__(*obj._args, **obj._kwargs)
         new_obj.annotations = obj.annotations | {self}
         # possible issues with pytrees and immutability?
-        #TODO: recreate object with annotation.
+        # TODO: recreate object with annotation.
         # How to do this? Note, annotations may not be in the top level __init__
         # and we wouldn't necessarily want to require that from our users
         # Would have to be in calling the LinearOperator base class constructor I think
@@ -73,9 +73,13 @@ def get_annotations(A: Kronecker):
     return intersect_annotations(A.Ms)
 
 
-inferred_self_adjoint_types = Union[Product[LinearOperator, Union[Transpose[LinearOperator],Adjoint[LinearOperator]]],
-                                    Product[Union[Transpose[LinearOperator],Adjoint[LinearOperator]], LinearOperator]]
-def are_the_same(A1,A1T):
+inferred_self_adjoint_types = Union[Product[LinearOperator, Union[Transpose[LinearOperator],
+                                                                  Adjoint[LinearOperator]]],
+                                    Product[Union[Transpose[LinearOperator],
+                                                  Adjoint[LinearOperator]], LinearOperator]]
+
+
+def are_the_same(A1, A1T):
     if isinstance(A1T, Adjoint):
         return A1 is A1T.A
     elif isinstance(A1T, Transpose):
@@ -87,12 +91,13 @@ def are_the_same(A1,A1T):
     else:
         return False
 
+
 @dispatch
 def get_annotations(A: Product):
     if issubclass(type(A), inferred_self_adjoint_types) and are_the_same(A.Ms[0], A.Ms[1]):
         return (intersect_annotations(A.Ms) & {Unitary, Stiefel}) | {PSD}
     not_commuting = [M for M in A.Ms if not isinstance(M, ScalarMul)]
-    if len(not_commuting)==1:
+    if len(not_commuting) == 1:
         return not_commuting[0].annotations
     return intersect_annotations(A.Ms) & {Unitary, Stiefel}
 
@@ -146,12 +151,12 @@ def get_annotations(A: Permutation):
 
 @dispatch
 def get_annotations(A: Sliced):
-    symmetric=False
+    symmetric = False
     if isinstance(A.slices[0], slice) and isinstance(A.slices[0], slice):
         if A.slices[0] == A.slices[1]:
-            symmetric=True
+            symmetric = True
     elif (A.slices[0] == A.slices[1]).all():
-        symmetric=True
+        symmetric = True
     if symmetric:
         return A.A.annotations - {Unitary, Stiefel}
     # TODO: perhaps add case of slicing a unitary matrix

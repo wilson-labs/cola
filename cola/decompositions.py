@@ -7,13 +7,15 @@ from cola.ops import Triangular, Permutation
 from cola.utils import export
 from cola.linalg import inverse, eig, trace, apply_unary
 
+
 @export
 def cholesky_decomposed(A: LinearOperator):
     """ Performs a cholesky decomposition A=LL* of a linear operator A.
         The returned operator LL* is the same as A, but represented using
         the triangular structure """
     L = Triangular(A.xnp.cholesky(A.to_dense()), lower=True)
-    return L@L.H
+    return L @ L.H
+
 
 @export
 def lu_decomposed(A: LinearOperator):
@@ -21,9 +23,10 @@ def lu_decomposed(A: LinearOperator):
         The returned operator PLU is the same as A, but represented using
         the triangular (and permutation) structure """
     p, L, U = A.xnp.lu(A.to_dense())
-    P, L, U = Permutation(p), Triangular(L,lower=True), Triangular(U, lower=False)
+    P, L, U = Permutation(p), Triangular(L, lower=True), Triangular(U, lower=False)
     P, L, U = P.to(A.device), L.to(A.device), U.to(A.device)
-    return P@L@U
+    return P @ L @ U
+
 
 @export
 class UnitaryDecomposition(LinearOperator):
@@ -34,7 +37,7 @@ class UnitaryDecomposition(LinearOperator):
     but not necessarily Q@Q.H = I and Q need not be square.
     """
     def __init__(self, Q, M):
-        super().__init__(M.dtype, (Q.shape[0],Q.shape[0]))
+        super().__init__(M.dtype, (Q.shape[0], Q.shape[0]))
         self.Q = cola.fns.lazify(Q)
         self.M = cola.fns.lazify(M)
 

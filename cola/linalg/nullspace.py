@@ -6,12 +6,14 @@ import logging
 import numpy as np
 from plum import dispatch
 
+
 def orthogonal_complement(C, tol=1e-5):
     """ Computes the orthogonal complement to a given matrix proj"""
     xnp = get_library_fns(C.dtype)
     U, S, VH = xnp.svd(C, full_matrices=True)
     rank = (S > tol).sum()
     return VH[rank:].conj().T
+
 
 @dispatch
 @export

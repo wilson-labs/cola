@@ -17,7 +17,7 @@ def product(xs):
 @export
 def logdet(A: LinearOperator, **kwargs) -> Array:
     r""" Computes logdet of a linear operator. 
-    
+
     For large inputs (or with method='iterative'),
     uses either :math:`O(\tfrac{1}{\delta^2}\log(1/\epsilon))` time stochastic algorithm (SLQ)
     where :math:`\epsilon=` tol is the bias and :math:`\delta=` vtol is the standard deviation of the estimate,
@@ -64,14 +64,13 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
         Tuple[Array, Array]: sign, logdet
     """
     kws = dict(method="auto", tol=1e-6, vtol=1e-6, pbar=False, max_iters=300)
-    #assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
+    # assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
-    if method =='dense' or (method == 'auto' and
-                                        (np.prod(A.shape) <= 1e6 or kws['tol'] < 3e-2)):
+    if method == 'dense' or (method == 'auto' and (np.prod(A.shape) <= 1e6 or kws['tol'] < 3e-2)):
         return slogdet(cola.decompositions.lu_decomposed(A), **kws)
     elif 'iterative' in method or (method == 'auto' and
-                                               (np.prod(A.shape) > 1e6 and kws['tol'] >= 3e-2)):
+                                   (np.prod(A.shape) > 1e6 and kws['tol'] >= 3e-2)):
         return ValueError("Unknown phase"), logdet(PSD(A.H @ A), **kws) / 2.
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
@@ -83,16 +82,16 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
     # assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
-    if method =='dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
+    if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
         return slogdet(cola.decompositions.cholesky_decomposed(A), **kws)
     elif 'iterative' in method or (method == 'auto' and np.prod(A.shape) > 1e6):
         tol, vtol = kws.pop('tol'), kws.pop('vtol')
-        if (vtol < 1/np.sqrt(10*A.shape[-1])) or 'stochastic' in method:
-            logA =cola.linalg.log(A, tol=tol, **kws)
-            trlogA  = cola.linalg.trace(logA, method='exact', **kws)
-            #TODO: autograd rule for this case?
+        if (vtol < 1 / np.sqrt(10 * A.shape[-1])) or 'stochastic' in method:
+            logA = cola.linalg.log(A, tol=tol, **kws)
+            trlogA = cola.linalg.trace(logA, method='exact', **kws)
+            # TODO: autograd rule for this case?
         else:
-            trlogA = stochastic_lanczos_quad(A, A.xnp.log, tol=tol,vtol=vtol,**kws)
+            trlogA = stochastic_lanczos_quad(A, A.xnp.log, tol=tol, vtol=vtol, **kws)
         one = A.xnp.array(1., dtype=A.dtype, device=A.device)
         return one, trlogA
     else:

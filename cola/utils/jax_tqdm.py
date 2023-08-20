@@ -256,10 +256,10 @@ def pbar_while(errorfn, tol, desc='', every=1, hide=False):
 
 def while_loop_winfo(errorfn, tol, every=1, desc='', pbar=False, **kwargs):
     """ Decorator for while loop with progress bar. 
-    
+
         Assumes that errorfn is a function of the loop variable and returns a scalar
         that starts at a given value and decreases to tol as the loop progresses.
-        
+
         Args:
             errorfn: function of the while state that returns a scalar tracking the error (e.g. residual)
             tol: tolerance for errorfn
@@ -322,14 +322,16 @@ def while_loop_winfo(errorfn, tol, every=1, desc='', pbar=False, **kwargs):
 
         def newcond(ival):
             _, val = ival
-            out = jax.lax.cond(cond_fun(val), lambda _: True,
-                               lambda _: False,#host_callback.id_tap(close_info, ival, result=False),
-                               operand=None)
+            out = jax.lax.cond(
+                cond_fun(val),
+                lambda _: True,
+                lambda _: False,  # host_callback.id_tap(close_info, ival, result=False),
+                operand=None)
             return out
 
         host_callback.id_tap(construct_info, None)
         k, val = jax.lax.while_loop(newcond, newbody, (0, init_val))
-        host_callback.id_tap(close_info,(k,val))
+        host_callback.id_tap(close_info, (k, val))
         return val
 
     return new_while, info

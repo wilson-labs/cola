@@ -36,6 +36,7 @@ def cg_svrg_fns(b):
 #         return Ahat.T@(Ahat@(W-anchor_W)) # not quite right
 #     return minres_grad, minres_grad_vrdiff
 
+
 # @export
 def solve_svrg_symmetric(A: Sum, b, tol=1e-6, P=None, x0=None, pbar=False, info=False,
                          max_iters=5000, bs=50):
@@ -126,6 +127,7 @@ def get_optimal_learning_rate(M, P, bs=1, stochastic=True):
     print(text)
     return lr, beta
 
+
 @export
 def svrg_eigh_max(A: Product[Dense, Dense], k=1, tol=1e-6, pbar=False, info=False, max_iters=5000,
                   bs=50, lr_scale=1.):
@@ -161,7 +163,7 @@ def svrg_solveh(A: Product[Dense, Dense], b, tol=1e-6, pbar=False, info=False, m
 
 def solve_svrg_generic(A: Product[Dense, Dense], grad_fns, x0, tol=1e-6, P=None, pbar=False,
                        info=False, max_iters=5000, bs=50, lr_scale=1.):
-    import jax # TODO: enable support for pytorch
+    import jax  # TODO: enable support for pytorch
     gradients, vrdiffs = grad_fns
     # assert isinstance(A, Sum), f"A (of type {type(A)}) must be directly a Sum"
     xnp = A.xnp
@@ -218,7 +220,8 @@ def solve_svrg_generic(A: Product[Dense, Dense], grad_fns, x0, tol=1e-6, P=None,
     return anchor_w, inf
 
 
-def solve_svrg_rff(A, rhs, tol=1e-6, P=None, pbar=False, info=False, max_iters=5000, bs=50, lr_scale=1.):
+def solve_svrg_rff(A, rhs, tol=1e-6, P=None, pbar=False, info=False, max_iters=5000, bs=50,
+                   lr_scale=1.):
     xnp = A.xnp
     x0 = xnp.randn(A.shape[1], rhs.shape[1], dtype=A.dtype)
     x0 /= xnp.norm(x0)

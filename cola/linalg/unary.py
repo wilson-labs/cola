@@ -48,7 +48,7 @@ class ArnoldiUnary(LinearOperator):
         self.kwargs = kwargs
         self.info = {}
 
-    def _matmat(self, V): #(n,bs)
+    def _matmat(self, V):  # (n,bs)
         Q, H, _, info = get_arnoldi_matrix(A=self.A, rhs=V, **self.kwargs)
         Q = self.xnp.moveaxis(Q, 2, 0)
         H = self.xnp.moveaxis(H, 2, 0)
@@ -57,12 +57,13 @@ class ArnoldiUnary(LinearOperator):
         eigvals, P = self.xnp.eig(H)
         norms = self.xnp.norm(V, axis=0)
         e0 = self.xnp.canonical(0, (P.shape[1], V.shape[-1]), dtype=P.dtype)
-        Pinv0 = self.xnp.solve(P, e0.T) # (bs, m, m) vs (bs, m)
+        Pinv0 = self.xnp.solve(P, e0.T)  # (bs, m, m) vs (bs, m)
         out = Pinv0 * norms[:, None]  # (bs, m)
-        Q = self.xnp.cast(Q, dtype=P.dtype) # (bs, n, m)
+        Q = self.xnp.cast(Q, dtype=P.dtype)  # (bs, n, m)
         # (bs,n,m) @ (bs,m,m) @ (bs, m) -> (bs, n)
         out = (Q @ P @ (self.f(eigvals) * out)[..., None])[..., 0]
         return out.T
+
 
 @dispatch
 @export
@@ -170,11 +171,12 @@ def exp(A: LinearOperator, **kwargs):
 def exp(A: KronSum, **kwargs):
     return Kronecker(*[exp(a, **kwargs) for a in A.Ms])
 
+
 @dispatch(cond=lambda A: A.isa(PSD))
 @export
 def log(A: LinearOperator, **kwargs):
     """ Computes the matrix logarithm log(A) of PSD matrix A
-    
+
     Args:
         f (Callable): The function to apply.
         A (LinearOperator): The linear operator to compute f(A) with.

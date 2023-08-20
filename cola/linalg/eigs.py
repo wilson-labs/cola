@@ -13,6 +13,7 @@ from cola.algorithms.lanczos import LanczosDecomposition
 from cola.algorithms.arnoldi import ArnoldiDecomposition
 from cola.utils import export
 
+
 @dispatch
 @export
 def eig(A: LinearOperator, **kwargs):
@@ -58,7 +59,7 @@ def eig(A: LinearOperator, **kwargs):
         raise ValueError(f"Unknown method {method}")
 
 
-@dispatch(cond = lambda A, **kwargs: A.isa(SelfAdjoint))
+@dispatch(cond=lambda A, **kwargs: A.isa(SelfAdjoint))
 def eig(A: LinearOperator, **kwargs):
     kws = dict(eig_slice=slice(0, None, None), tol=1e-6, pbar=False, method='auto', max_iters=1000)
     assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
@@ -76,7 +77,7 @@ def eig(A: LinearOperator, **kwargs):
     else:
         raise ValueError(f"Unknown method {method} for SelfAdjoint operator")
 
-    
+
 # @dispatch
 # def eig(A: LowerTriangular, **kwargs):
 #     xnp = A.xnp
