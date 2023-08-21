@@ -14,7 +14,7 @@ def lobpcg(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, 
     del pbar, start_vector, tol
 
     def matvec(x):
-        X = xnp.array(x, dtype=A.dtype)
+        X = xnp.array(x, dtype=A.dtype, device=A.device)
         out = A @ X
         return np.array(out, dtype=np.float32)
 
@@ -22,8 +22,8 @@ def lobpcg(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, 
     k = min(A.shape[0] - 1, max_iters)
     X = np.random.normal(size=(A.shape[0], k)).astype(np.float32)
     eigvals, eigvecs = lobpcg_sp(A2, X)
-    eigvals = xnp.array(np.copy(eigvals), dtype=A.dtype)
-    eigvecs = xnp.array(np.copy(eigvecs), dtype=A.dtype)
+    eigvals = xnp.array(np.copy(eigvals), dtype=A.dtype, device=A.device)
+    eigvecs = xnp.array(np.copy(eigvecs), dtype=A.dtype, device=A.device)
     idx = xnp.argsort(eigvals, axis=-1)
     info = {}
     return eigvals[idx], Dense(eigvecs[:, idx]), info

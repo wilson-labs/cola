@@ -58,9 +58,9 @@ def diag(A: Dense, k=0, **kwargs):
 @dispatch
 def diag(A: Identity, k=0, **kwargs):
     if k == 0:
-        return A.xnp.ones(A.shape[0], A.dtype)
+        return A.xnp.ones(A.shape[0], A.dtype, device=A.device)
     else:
-        return A.xnp.zeros(A.shape[0] - k, A.dtype)
+        return A.xnp.zeros(A.shape[0] - k, A.dtype, device=A.device)
 
 
 @dispatch
@@ -68,7 +68,7 @@ def diag(A: Diagonal, k=0, **kwargs):
     if k == 0:
         return A.diag
     else:
-        return A.xnp.zeros(A.shape[0] - k, A.dtype)
+        return A.xnp.zeros(A.shape[0] - k, A.dtype, device=A.device)
 
 
 @dispatch

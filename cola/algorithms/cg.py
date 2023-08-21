@@ -104,9 +104,10 @@ def initialize(A, b, preconditioner, x0, xnp):
     r0 = b - A @ x0
     z0 = preconditioner @ r0
     p0 = z0
+    device = A.device
     gamma0 = xnp.sum(xnp.conj(r0) * z0, axis=-2, keepdims=True)
-    alpha0 = xnp.zeros(shape=gamma0.shape, dtype=r0.dtype)
-    beta0 = xnp.zeros(shape=gamma0.shape, dtype=r0.dtype)
+    alpha0 = xnp.zeros(shape=gamma0.shape, dtype=r0.dtype, device=device)
+    beta0 = xnp.zeros(shape=gamma0.shape, dtype=r0.dtype, device=device)
     return (x0, 0, r0, p0, alpha0, beta0, gamma0)
 
 
@@ -120,7 +121,7 @@ def cond_fun(value, tol, max_iters, xnp):
 
 def take_cg_step(state, A, preconditioner, xnp):
     x0, k, r0, p0, _, _, gamma0 = state
-    eps = xnp.array(_small_value, dtype=p0.real.dtype)
+    eps = xnp.array(_small_value, dtype=p0.real.dtype, device=A.device)
     has_converged = xnp.norm(r0, axis=-2, keepdims=True) < eps
     Ap0 = A @ p0
 
@@ -137,19 +138,22 @@ def take_cg_step(state, A, preconditioner, xnp):
 def update_alpha(gamma, p, Ap, has_converged, xnp):
     denom = xnp.sum(xnp.conj(p) * Ap, axis=-2, keepdims=True)
     alpha = do_safe_div(gamma, denom, xnp=xnp)
-    alpha = xnp.where(has_converged, x=xnp.array(0.0, dtype=p.dtype), y=alpha)
+    device = xnp.get_device(p)
+    alpha = xnp.where(has_converged, x=xnp.array(0.0, dtype=p.dtype, device=device), y=alpha)
     return alpha
 
 
 def update_gamma_beta(r, z, gamma0, has_converged, xnp):
     gamma1 = xnp.sum(xnp.conj(r) * z, axis=-2, keepdims=True)
     beta = do_safe_div(gamma1, gamma0, xnp=xnp)
-    beta = xnp.where(has_converged, x=xnp.array(0.0, dtype=r.dtype), y=beta)
+    device = xnp.get_device(r)
+    beta = xnp.where(has_converged, x=xnp.array(0.0, dtype=r.dtype, device=device), y=beta)
     return gamma1, beta
 
 
 def do_safe_div(num, denom, xnp):
-    is_zero = xnp.abs(denom) < xnp.array(_small_value, dtype=num.real.dtype)
+    device = xnp.get_device(num)
+    is_zero = xnp.abs(denom) < xnp.array(_small_value, dtype=num.real.dtype, device=device)
     denom = xnp.where(is_zero, _small_value, denom)
     output = num / denom
     return output
@@ -178,9 +182,10 @@ def run_batched_tracking_cg(A, b, x0, max_iters, tol, preconditioner):
 def initialize_track(A, b, preconditioner, x0, max_iters, xnp):
     state = initialize(A=A, b=b, preconditioner=preconditioner, x0=x0, xnp=xnp)
     *_, gamma0 = state
-    alphas = xnp.zeros(shape=(max_iters, ) + gamma0.shape, dtype=b.dtype)
-    betas = xnp.zeros(shape=(max_iters, ) + gamma0.shape, dtype=b.dtype)
-    rs = xnp.zeros(shape=(max_iters, ) + gamma0.shape, dtype=b.dtype)
+    device = A.device
+    alphas = xnp.zeros(shape=(max_iters, ) + gamma0.shape, dtype=b.dtype, device=device)
+    betas = xnp.zeros(shape=(max_iters, ) + gamma0.shape, dtype=b.dtype, device=device)
+    rs = xnp.zeros(shape=(max_iters, ) + gamma0.shape, dtype=b.dtype, device=device)
     return (state, (rs, alphas, betas))
 
 

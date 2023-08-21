@@ -82,7 +82,7 @@ def eig(A: LinearOperator, **kwargs):
 # def eig(A: LowerTriangular, **kwargs):
 #     xnp = A.xnp
 #     eig_vals = diag(A.A)[eig_slice]
-#         eig_vecs = xnp.eye(eig_vals.shape[0], eig_vals.shape[0])
+#         eig_vecs = xnp.eye(eig_vals.shape[0], eig_vals.shape[0], dtype=A.dtype, device=A.device)
 #         return eig_vals, eig_vecs
 #     else:
 #         raise ValueError(f"Unknown method {method}")

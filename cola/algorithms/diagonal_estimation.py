@@ -15,14 +15,14 @@ def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):
     elif k <= 0:
         k = abs(k)
         I_chunk = Id[:, i:i + bs + k].to_dense()
-        padded_chunk = A.xnp.zeros((A.shape[0], bs + k), dtype=A.dtype)
+        padded_chunk = A.xnp.zeros((A.shape[0], bs + k), dtype=A.dtype, device=A.device)
         slc = np.s_[:I_chunk.shape[-1]]
         padded_chunk = xnp.update_array(padded_chunk, I_chunk, slice(0, None), slc)
         chunk = I_chunk[:, :bs]
         shifted_chunk = padded_chunk[:, k:k + bs]
     else:
         I_chunk = Id[:, max(i - k, 0):i + bs].to_dense()
-        padded_chunk = A.xnp.zeros((A.shape[0], bs + k), dtype=A.dtype)
+        padded_chunk = A.xnp.zeros((A.shape[0], bs + k), dtype=A.dtype, device=A.device)
         slc = np.s_[-I_chunk.shape[-1]:]
         padded_chunk = xnp.update_array(padded_chunk, I_chunk, slice(0, None), slc)
         chunk = I_chunk[:, -bs:]
@@ -140,7 +140,7 @@ def approx_diag(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=
 
     while_loop, infos = xnp.while_loop_winfo(err, tol, pbar=pbar)
     # while_loop = xnp.while_loop
-    zeros = xnp.zeros((A.shape[0] - abs(k), ), dtype=A.dtype)
+    zeros = xnp.zeros((A.shape[0] - abs(k), ), dtype=A.dtype, device=A.device)
     n, diag_sum, *_ = while_loop(cond, body, (0, zeros, zeros, xnp.PRNGKey(42)))
     mean = diag_sum / (n * bs)
     return mean, infos

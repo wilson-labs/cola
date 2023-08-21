@@ -140,7 +140,7 @@ def get_nys_approx(A, Omega, eps):
     xnp = A.xnp
     Omega, _ = xnp.qr(Omega, full_matrices=False)
     Y = A @ Omega
-    # Y = xnp.array(Y, dtype=xnp.float64)
+    # Y = xnp.array(Y, dtype=xnp.float64, device=A.device)
     nu = eps * xnp.norm(Y, ord="fro")
     Y += nu * Omega
     C = xnp.cholesky(Omega.T @ Y)

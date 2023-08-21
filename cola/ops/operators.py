@@ -65,7 +65,7 @@ class ScalarMul(LinearOperator):
     """ Linear Operator representing scalar multiplication"""
     def __init__(self, c, shape, dtype=None):
         super().__init__(dtype=dtype or type(c), shape=shape)
-        self.c = self.xnp.array(c, dtype=dtype)
+        self.c = self.xnp.array(c, dtype=dtype, device=self.device)
         self.ensure_const_register_as_array()
 
     def ensure_const_register_as_array(self):
@@ -198,8 +198,8 @@ class Kronecker(LinearOperator):
 
 def kronsum(A, B):
     xnp = get_library_fns(A.dtype)
-    IA = xnp.eye(A.shape[-2])
-    IB = xnp.eye(B.shape[-2])
+    IA = xnp.eye(A.shape[-2], dtype=A.dtype, device=A.device)
+    IB = xnp.eye(B.shape[-2], dtype=B.dtype, device=B.device)
     return xnp.kron(A, IB) + xnp.kron(IA, B)
 
 
@@ -328,8 +328,8 @@ class Tridiagonal(LinearOperator):
 
     def _matmat(self, X: Array) -> Array:
         xnp = self.xnp
-        aux_alpha = xnp.zeros(shape=X.shape, dtype=X.dtype)
-        aux_gamma = xnp.zeros(shape=X.shape, dtype=X.dtype)
+        aux_alpha = xnp.zeros(shape=X.shape, dtype=X.dtype, device=X.device)
+        aux_gamma = xnp.zeros(shape=X.shape, dtype=X.dtype, device=X.device)
 
         output = self.beta * X
         aux_gamma = xnp.update_array(aux_gamma, self.gamma * X[1:], np.s_[:-1])
@@ -390,7 +390,7 @@ class Sliced(LinearOperator):
     def _matmat(self, X: Array) -> Array:
         xnp = self.xnp
         start_slices, end_slices = self.slices
-        Y = xnp.zeros(shape=(self.A.shape[-1], X.shape[-1]), dtype=self.dtype)
+        Y = xnp.zeros(shape=(self.A.shape[-1], X.shape[-1]), dtype=self.dtype, device=X.device)
         Y = xnp.update_array(Y, X, end_slices)
         output = self.A @ Y
         return output[start_slices]
@@ -473,14 +473,14 @@ class Hessian(LinearOperator):
         xnp = self.xnp
         # hack to make it work with pytorch
         if xnp.__name__ == 'cola.torch_fns' and False:
-            expanded_x = self.x[None, :] + self.xnp.zeros((X.shape[0], 1), dtype=self.x.dtype)
+            expanded_x = self.x[None, :] + self.xnp.zeros((X.shape[0], 1), dtype=self.x.dtype, device=self.device)
             fn = partial(self.xnp.vjp_derivs, self.xnp.vmap(self.xnp.grad(self.f)), (expanded_x, ))
             out = fn((X, ))
         else:
             mvm = partial(xnp.jvp_derivs, xnp.grad(self.f), (self.x, ), create_graph=False)
             out = xnp.vmap(mvm)((X.T, )).T
             if xnp.__name__ == 'cola.torch_fns':  # pytorch converts to double silently
-                out = out.to(dtype=self.dtype)
+                out = out.to(dtype=self.dtype, device=self.device)
             return out
 
     def __str__(self):
@@ -557,7 +557,7 @@ class Householder(LinearOperator):
     def __init__(self, vec, beta=2.):
         super().__init__(shape=(vec.shape[-2], vec.shape[-2]), dtype=vec.dtype)
         self.vec = vec
-        self.beta = self.xnp.array(beta, dtype=vec.dtype)
+        self.beta = self.xnp.array(beta, dtype=vec.dtype, device=self.device)
 
     def _matmat(self, X: Array) -> Array:
         xnp = self.xnp

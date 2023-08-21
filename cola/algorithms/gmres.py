@@ -64,6 +64,7 @@ def gmres_bwd(res, grads, unflatten, *args, **kwargs):
 @iterative_autograd(gmres_bwd)
 def gmres_fwd(A, rhs, x0, max_iters, tol, P, use_householder, use_triangular, pbar):
     xnp = A.xnp
+    device = A.device
     res = rhs - A @ x0
     if use_householder:
         Q, H, infodict = run_householder_arnoldi(A=A, rhs=res, max_iters=max_iters)
@@ -72,7 +73,7 @@ def gmres_fwd(A, rhs, x0, max_iters, tol, P, use_householder, use_triangular, pb
                                                  pbar=pbar)
         Q, H = Q[:, :idx, :], H[:idx, :idx, :]
     beta = xnp.norm(res, axis=-2)
-    e1 = xnp.zeros(shape=(H.shape[0], beta.shape[0]), dtype=rhs.dtype)
+    e1 = xnp.zeros(shape=(H.shape[0], beta.shape[0]), dtype=rhs.dtype, device=A.device)
     e1 = xnp.update_array(e1, beta, 0)
 
     if use_triangular:
@@ -94,11 +95,12 @@ def gmres_fwd(A, rhs, x0, max_iters, tol, P, use_householder, use_triangular, pb
 
 
 def get_hessenberg_triangular_qr(H, xnp):
+    device = xnp.get_device(H)
     R = xnp.copy(H)
     Gs = []
     for jdx in range(H.shape[0] - 1):
         cx, sx = get_givens_cos_sin(R[jdx, jdx], R[jdx + 1, jdx], xnp)
-        G = xnp.array([[cx, sx], [-sx, cx]], dtype=H.dtype)
+        G = xnp.array([[cx, sx], [-sx, cx]], dtype=H.dtype, device=device)
         Gs.append(G)
         update = G.T @ R[[jdx, jdx + 1], :]
         R = xnp.update_array(R, update, [jdx, jdx + 1])
