@@ -172,10 +172,11 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
 
 
 def initialize_lanczos_vec(xnp, rhs, max_iters, dtype):
-    i = xnp.array(1, dtype=xnp.int32)
-    beta = xnp.zeros(shape=(rhs.shape[-1], max_iters), dtype=dtype)
-    alpha = xnp.zeros(shape=(rhs.shape[-1], max_iters + 1), dtype=dtype)
-    vec = xnp.zeros(shape=(rhs.shape[-1], rhs.shape[0], max_iters + 2), dtype=dtype)
+    device = xnp.get_device(rhs)
+    i = xnp.array(1, dtype=xnp.int32, device=device)
+    beta = xnp.zeros(shape=(rhs.shape[-1], max_iters), dtype=dtype, device=device)
+    alpha = xnp.zeros(shape=(rhs.shape[-1], max_iters + 1), dtype=dtype, device=device)
+    vec = xnp.zeros(shape=(rhs.shape[-1], rhs.shape[0], max_iters + 2), dtype=dtype, device=device)
     rhs = rhs / xnp.norm(rhs, axis=-2, keepdims=True)
     vec = xnp.update_array(vec, xnp.copy(rhs.T), ..., 1)
     return i, vec, beta, alpha
@@ -226,9 +227,10 @@ def get_lanczos_coeffs(A: LinearOperator, rhs: Array, max_iters: int, tol: float
 
 
 def initialize_lanczos(xnp, vec, max_iters, dtype):
-    i = xnp.array(1, dtype=xnp.int32)
-    beta = xnp.zeros(shape=(max_iters + 1, 1), dtype=dtype)
-    alpha = xnp.zeros(shape=(max_iters + 1, 1), dtype=dtype)
+    device = xnp.get_device(vec)
+    i = xnp.array(1, dtype=xnp.int32, device=device)
+    beta = xnp.zeros(shape=(max_iters + 1, 1), dtype=dtype, device=device)
+    alpha = xnp.zeros(shape=(max_iters + 1, 1), dtype=dtype, device=device)
     vec /= xnp.norm(vec)
     vec_prev = xnp.copy(vec)
     return i, vec, vec_prev, beta, alpha
@@ -241,10 +243,11 @@ def construct_tridiagonal(alpha: Array, beta: Array, gamma: Array) -> Array:
 
 def construct_tridiagonal_batched(alpha: Array, beta: Array, gamma: Array) -> Array:
     xnp = get_library_fns(beta.dtype)
-    T = xnp.zeros(shape=(beta.shape[-2], beta.shape[-1], beta.shape[-1]), dtype=beta.dtype)
-    diag_ind = xnp.array([idx for idx in range(beta.shape[-1])], dtype=xnp.int64)
+    device = xnp.get_device(beta)
+    T = xnp.zeros(shape=(beta.shape[-2], beta.shape[-1], beta.shape[-1]), dtype=beta.dtype, device=device)
+    diag_ind = xnp.array([idx for idx in range(beta.shape[-1])], dtype=xnp.int64, device=device)
     T = xnp.update_array(T, beta, ..., diag_ind, diag_ind)
-    shifted_ind = xnp.array([idx + 1 for idx in range(gamma.shape[-1])], dtype=xnp.int64)
+    shifted_ind = xnp.array([idx + 1 for idx in range(gamma.shape[-1])], dtype=xnp.int64, device=device)
     T = xnp.update_array(T, gamma, ..., diag_ind[:-1], shifted_ind)
     T = xnp.update_array(T, alpha, ..., shifted_ind, diag_ind[:-1])
     return T
@@ -252,7 +255,7 @@ def construct_tridiagonal_batched(alpha: Array, beta: Array, gamma: Array) -> Ar
 
 def get_lu_from_tridiagonal(A: LinearOperator) -> Array:
     xnp = A.xnp
-    eigenvals = xnp.zeros(shape=(A.shape[0], ), dtype=A.dtype)
+    eigenvals = xnp.zeros(shape=(A.shape[0], ), dtype=A.dtype, device=A.device)
     eigenvals = xnp.update_array(eigenvals, A.beta[0, 0], 0)
 
     def body_fun(i, state):
@@ -260,6 +263,6 @@ def get_lu_from_tridiagonal(A: LinearOperator) -> Array:
         state = xnp.update_array(state, pi, i + 1)
         return state
 
-    lower, upper = xnp.array(0, dtype=xnp.int32), xnp.array(A.shape[0] - 1, dtype=xnp.int32)
+    lower, upper = xnp.array(0, dtype=xnp.int32), xnp.array(A.shape[0] - 1, dtype=xnp.int32, device=A.device)
     eigenvals = xnp.for_loop(lower, upper, body_fun, init_val=eigenvals)
     return eigenvals

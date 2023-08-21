@@ -106,7 +106,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         if self.isa(cola.annotations.SelfAdjoint):
             return self.xnp.conj(self._matmat(self.xnp.conj(XT)).T)
         primals = self.xnp.zeros(shape=(self.shape[1], XT.shape[1]), dtype=XT.dtype,
-                                 device=X.device)
+                                 device=self.device)
         out = self.xnp.linear_transpose(self._matmat, primals=primals, duals=XT)
         return out.T
 

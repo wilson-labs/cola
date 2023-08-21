@@ -56,7 +56,7 @@ class ArnoldiUnary(LinearOperator):
         self.info.update(info)
         eigvals, P = self.xnp.eig(H)
         norms = self.xnp.norm(V, axis=0)
-        e0 = self.xnp.canonical(0, (P.shape[1], V.shape[-1]), dtype=P.dtype)
+        e0 = self.xnp.canonical(0, (P.shape[1], V.shape[-1]), dtype=P.dtype, device=self.device)
         Pinv0 = self.xnp.solve(P, e0.T)  # (bs, m, m) vs (bs, m)
         out = Pinv0 * norms[:, None]  # (bs, m)
         Q = self.xnp.cast(Q, dtype=P.dtype)  # (bs, n, m)
