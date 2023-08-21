@@ -4,6 +4,7 @@ import cola
 import numpy as np
 from cola.utils import export
 from numbers import Number
+import numpy as np
 
 Array = Dtype = Any
 export(Array)
@@ -26,6 +27,9 @@ def get_library_fns(dtype: Dtype):
                 torch.int64
         ]:
             import cola.torch_fns as fns
+            return fns
+        elif dtype in [np.float32, np.float64, np.complex64, np.complex128, np.int32, np.int64]:
+            import cola.np_fns as fns
             return fns
     except ImportError:
         pass
