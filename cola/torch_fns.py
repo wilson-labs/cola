@@ -141,8 +141,8 @@ def permute(array, axes):
     return torch.permute(array, dims=axes)
 
 
-def ones(shape, dtype):
-    return torch.ones(size=shape, dtype=dtype)
+def ones(shape, dtype, device=None):
+    return torch.ones(size=shape, dtype=dtype, device=device)
 
 
 def clip(array, a_min=None, a_max=None, out=None):

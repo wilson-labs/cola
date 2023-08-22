@@ -73,7 +73,6 @@ while_loop_no_jit = _while_loop_no_jit
 for_loop = _for_loop
 min = jnp.min
 max = jnp.max
-ones = jnp.ones
 concat = jnp.concatenate
 vmap = vmap
 grad = grad
@@ -223,7 +222,8 @@ def zeros(shape, dtype, device=None):
     return jnp.zeros(shape=shape, dtype=dtype)
 
 
-def ones(shape, dtype):
+def ones(shape, dtype, device=None):
+    del device
     return jnp.ones(shape=shape, dtype=dtype)
 
 

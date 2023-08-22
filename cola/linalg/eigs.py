@@ -1,13 +1,14 @@
-from typing import Tuple
 from math import prod
 from plum import dispatch
 from cola import SelfAdjoint
 from cola import Unitary
 from cola.fns import lazify
+from cola.linalg import diag
 from cola.ops import LinearOperator
-from cola.ops import Array
 from cola.ops import Diagonal
 from cola.ops import I_like
+from cola.ops import Identity
+from cola.ops import Triangular
 from cola.algorithms import power_iteration
 from cola.algorithms.lanczos import LanczosDecomposition
 from cola.algorithms.arnoldi import ArnoldiDecomposition
@@ -80,14 +81,21 @@ def eig(A: LinearOperator, **kwargs):
         raise ValueError(f"Unknown method {method} for SelfAdjoint operator")
 
 
-# @dispatch
-# def eig(A: LowerTriangular, **kwargs):
-#     xnp = A.xnp
-#     eig_vals = diag(A.A)[eig_slice]
-#         eig_vecs = xnp.eye(eig_vals.shape[0], eig_vals.shape[0], dtype=A.dtype, device=A.device)
-#         return eig_vals, eig_vecs
-#     else:
-#         raise ValueError(f"Unknown method {method}")
+@dispatch
+def eig(A: Identity, eig_slice=slice(0, None, None), **kwargs):
+    xnp = A.xnp
+    eig_vals = xnp.ones(shape=(A.shape[0],), dtype=A.dtype, device=A.device)
+    eig_vecs = A.to_dense()
+    return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
+
+
+@dispatch
+def eig(A: Triangular, eig_slice, **kwargs):
+    xnp = A.xnp
+    eig_vals = diag(A.A)
+    sorted_ind = xnp.argsort(eig_vals)
+    eig_vecs = I_like(A).to_dense()[:, sorted_ind]
+    return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
 
 
 @dispatch
@@ -97,10 +105,6 @@ def eig(A: Diagonal, eig_slice=slice(0, None, None), **kwargs):
     eig_vals = A.diag[sorted_ind]
     eig_vecs = I_like(A).to_dense()[:, sorted_ind]
     return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
-
-
-# def eigenvalues(A: LinearOperator, info=False, pbar=False):
-#     pass
 
 
 @export
