@@ -53,7 +53,8 @@ def eig(A: LinearOperator, **kwargs):
         eig_vals, eig_vecs = xnp.eig(A.to_dense())
         return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
     elif method in ('arnoldi', 'iterative') or (method == 'auto' and prod(A.shape) >= 1e6):
-        eig_vals, eig_vecs = eig(ArnoldiDecomposition(A, **kws), eig_slice=eig_slice)
+        eig_vals, eig_vecs = eig(ArnoldiDecomposition(A, **kws), eig_slice=eig_slice,
+                                 method="dense")
         return eig_vals, eig_vecs
     else:
         raise ValueError(f"Unknown method {method}")
@@ -72,7 +73,8 @@ def eig(A: LinearOperator, **kwargs):
         eig_vals, eig_vecs = xnp.eigh(A.to_dense())
         return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
     elif method in ('lanczos', 'iterative') or (method == 'auto' and prod(A.shape) >= 1e6):
-        eig_vals, eig_vecs = eig(LanczosDecomposition(A, **kws), eig_slice=eig_slice)
+        eig_vals, eig_vecs = eig(LanczosDecomposition(A, **kws), eig_slice=eig_slice,
+                                 method="dense")
         return eig_vals, eig_vecs
     else:
         raise ValueError(f"Unknown method {method} for SelfAdjoint operator")
