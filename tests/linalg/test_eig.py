@@ -3,6 +3,7 @@ from cola import torch_fns
 from cola.fns import lazify
 from cola.ops import Diagonal
 from cola.ops import Identity
+from cola.ops import Triangular
 from cola.annotations import SelfAdjoint
 from cola.linalg.eigs import eig
 from jax.config import config
@@ -80,6 +81,19 @@ def test_adjoint(xnp):
 
     rel_error = relative_error(A.to_dense(), approx)
     assert rel_error < _tol
+
+
+@parametrize([torch_fns, jax_fns])
+def test_triangular(xnp):
+    dtype = xnp.float32
+    A = xnp.array([[1., 2., 3.], [0., 6., 5.], [0., 0., 4.]], dtype=dtype)
+    A = Triangular(A)
+    soln_vals = xnp.array([1., 4., 6.], dtype=dtype)
+    soln_vecs = xnp.eye(3, dtype=dtype)[:, [0, 2, 1]]
+    eig_vals, eig_vecs = eig(A)
+
+    assert relative_error(soln_vals, eig_vals) < _tol
+    assert relative_error(soln_vecs, eig_vecs.to_dense()) < _tol
 
 
 @parametrize([torch_fns, jax_fns])

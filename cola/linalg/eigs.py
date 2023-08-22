@@ -90,10 +90,11 @@ def eig(A: Identity, eig_slice=slice(0, None, None), **kwargs):
 
 
 @dispatch
-def eig(A: Triangular, eig_slice, **kwargs):
+def eig(A: Triangular, eig_slice=slice(0, None, None), **kwargs):
     xnp = A.xnp
-    eig_vals = diag(A.A)
+    eig_vals = diag(A)
     sorted_ind = xnp.argsort(eig_vals)
+    eig_vals = eig_vals[sorted_ind]
     eig_vecs = I_like(A).to_dense()[:, sorted_ind]
     return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
 

@@ -21,9 +21,9 @@ def diag(A: LinearOperator, k=0, **kwargs):
     r""" Extract the (kth) diagonal of a linear operator.
 
     Uses either :math:`O(\tfrac{1}{\delta^2})` time stochastic estimation (Hutchinson estimator)
-    or a deterministic :math:`O(n)` time algorithm if :math:`\delta < 1/\sqrt{10n}`, where 
-    :math:`\delta=` tol is the standard deviation of the estimate. If you unly need unbiased estimates,
-    set tol to be very high.
+    or a deterministic :math:`O(n)` time algorithm if :math:`\delta < 1/\sqrt{10n}`, where
+    :math:`\delta=` tol is the standard deviation of the estimate.
+    If you unly need unbiased estimates, set tol to be very high.
 
     Args:
         A (LinearOperator): The linear operator to compute the logdet of.
@@ -117,9 +117,9 @@ def trace(A: LinearOperator, **kwargs):
     r""" Compute the trace of a linear operator tr(A).
 
     Uses either :math:`O(\tfrac{1}{\delta^2})` time stochastic estimation (Hutchinson estimator)
-    or a deterministic :math:`O(n)` time algorithm if :math:`\delta < 1/\sqrt{10n}`, where 
-    :math:`\delta=` tol is the standard deviation of the estimate. If you unly need unbiased estimates,
-    set tol to be very high.
+    or a deterministic :math:`O(n)` time algorithm if :math:`\delta < 1/\sqrt{10n}`, where
+    :math:`\delta=` tol is the standard deviation of the estimate.
+    If you unly need unbiased estimates, set tol to be very high.
 
     Args:
         A (LinearOperator): The linear operator to compute the logdet of.
