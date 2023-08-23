@@ -184,7 +184,7 @@ def next_key(key):
     return jax.random.split(key)[0]
 
 
-def randn(*shape, dtype=None, key=None):
+def randn(*shape, dtype=None, key=None, device=None):
     if key is None:
         print('Non keyed randn used. To be deprecated soon.')
         logging.warning('Non keyed randn used. To be deprecated soon.')
@@ -197,7 +197,7 @@ def randn(*shape, dtype=None, key=None):
         return z
 
 
-def fixed_normal_samples(shape, dtype=None):
+def fixed_normal_samples(shape, dtype=None,device=None):
     key = PRNGKey(4)
     z = normal(key, shape, dtype=dtype)
     return z

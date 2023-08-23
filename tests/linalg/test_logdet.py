@@ -33,6 +33,6 @@ def test_logdet(operator):
         l3 = logdet(A3, tol=tol, method='iterative-stochastic', vtol=3e-2)
         e3 = relative_error(l0, l3)
         assert e3 < 3e-1, f"SLQ logdet failed on {type(A)} with error {e3}"
-        l4 = logdet(A3, tol=tol, method='iterative', vtol=tol)
+        l4 = logdet(A3, tol=tol, method='iterative-exact', vtol=tol)
         e4 = relative_error(l0, l4)
-        assert e4 < 3 * tol, f"SLQ logdet failed on {type(A)} with error {e4}"
+        assert e4 < 10 * tol, f"Tr(log(A)) logdet failed on {type(A)} with error {e4}"

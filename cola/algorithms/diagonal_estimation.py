@@ -45,8 +45,8 @@ def exact_diag_bwd(res, grads, unflatten, *args, **kwargs):
         return out[abs(k):] if k <= 0 else out[:(-k or None)]
 
     def d_params(C, shifted_C):
-        d_params, _, _ = xnp.vjp_derivs(fun, (op_args, C, shifted_C), v)
-        return d_params
+        d_paramsv, _, _ = xnp.vjp_derivs(fun, (op_args, C, shifted_C), v)
+        return d_paramsv
 
     d_p = type(op_args)([0. * arg for arg in op_args])
     for i in range(0, A.shape[0], bs):
@@ -59,8 +59,8 @@ def exact_diag_bwd(res, grads, unflatten, *args, **kwargs):
     # print(args,kwargs)
     return (dA, )
 
-
-@iterative_autograd(exact_diag_bwd)
+# disable backwards for now, TODO: add tests then add back in
+#@iterative_autograd(exact_diag_bwd)
 def exact_diag_fwd(A, k, bs, tol, max_iters, pbar):
     bs = min(100, A.shape[0])
     # lazily create chunks of the identity matrix of size bs
@@ -122,7 +122,7 @@ def approx_diag(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=
         # TODO: fix randomness when using with jax
         i, diag_sum, diag_sumsq, key = state
         key = xnp.next_key(key)
-        z = xnp.randn(A.shape[0], bs, dtype=A.dtype, key=key)
+        z = xnp.randn(A.shape[0], bs, dtype=A.dtype, key=key, device=A.device)
         z2 = xnp.roll(z, -k, 0)
         z2 = xnp.update_array(z2, 0, slice(0, abs(k)) if k <= 0 else slice(-abs(k), None))
         slc = slice(abs(k), None) if -k > 0 else slice(None, -abs(k) or None)

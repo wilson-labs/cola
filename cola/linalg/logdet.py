@@ -68,10 +68,11 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and (np.prod(A.shape) <= 1e6 or kws['tol'] < 3e-2)):
-        return slogdet(cola.decompositions.lu_decomposed(A), **kws)
+        return slogdet(cola.decompositions.lu_decomposed(A), method='dense',**kws)
     elif 'iterative' in method or (method == 'auto' and
                                    (np.prod(A.shape) > 1e6 and kws['tol'] >= 3e-2)):
-        return ValueError("Unknown phase"), logdet(PSD(A.H @ A), **kws) / 2.
+        A2 = PSD((A.H @ A)+ 0. * cola.ops.I_like(A))
+        return ValueError("Unknown phase"), logdet(A2, method='iterative', **kws) / 2.
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 
@@ -83,15 +84,18 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
-        return slogdet(cola.decompositions.cholesky_decomposed(A), **kws)
+        return slogdet(cola.decompositions.cholesky_decomposed(A), method='dense', **kws)
     elif 'iterative' in method or (method == 'auto' and np.prod(A.shape) > 1e6):
         tol, vtol = kws.pop('tol'), kws.pop('vtol')
-        if (vtol < 1 / np.sqrt(10 * A.shape[-1])) or 'stochastic' in method:
-            logA = cola.linalg.log(A, tol=tol, **kws)
-            trlogA = cola.linalg.trace(logA, method='exact', **kws)
-            # TODO: autograd rule for this case?
-        else:
+        stochastic_faster = (vtol >= 1 / np.sqrt(10 * A.shape[-1]))
+        if 'stochastic' in method or (stochastic_faster and 'exact' not in method):
             trlogA = stochastic_lanczos_quad(A, A.xnp.log, tol=tol, vtol=vtol, **kws)
+        elif 'exact' in method or not stochastic_faster:
+            # TODO: explicit autograd rule for this case?
+            logA = cola.linalg.log(A, tol=tol, method='iterative', **kws)
+            trlogA = cola.linalg.trace(logA, method='exact', **kws)
+        else:
+            raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
         one = A.xnp.array(1., dtype=A.dtype, device=A.device)
         return one, trlogA
     else:
