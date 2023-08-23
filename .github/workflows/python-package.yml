@@ -29,7 +29,7 @@ jobs:
         pip install -e .
     - name: Test coverage.
       run: |
-        pytest --cov cola --cov-report xml:cov.xml tests/
+        pytest -m 'not big' --cov cola --cov-report xml:cov.xml tests/
     - name: Upload to codecov
       uses: codecov/codecov-action@v3
       with:

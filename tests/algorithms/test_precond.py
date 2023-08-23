@@ -1,5 +1,3 @@
-from cola import jax_fns
-from cola import torch_fns
 from cola.fns import lazify
 from cola.algorithms.preconditioners import get_nys_approx
 from cola.algorithms.preconditioners import select_rank_adaptively
@@ -7,18 +5,16 @@ from cola.algorithms.preconditioners import NystromPrecond
 from cola.algorithms.preconditioners import AdaNysPrecond
 from cola.algorithms.preconditioners import sqrt
 from cola.algorithms.preconditioners import inverse
-from cola.utils_test import parametrize, relative_error, construct_e_vec
+from cola.utils_test import get_xnp, parametrize, relative_error, construct_e_vec
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
-from jax.config import config
 
-config.update('jax_platform_name', 'cpu')
-# config.update("jax_enable_x64", True)
 
 _tol = 1e-7
 
 
-@parametrize([torch_fns, jax_fns])
-def test_AdaNysPrecond(xnp):
+@parametrize(['torch', 'jax'])
+def test_AdaNysPrecond(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=16)
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)
@@ -44,8 +40,9 @@ def test_AdaNysPrecond(xnp):
     assert approx == round(rank_init / mult)
 
 
-@parametrize([torch_fns, jax_fns])
-def test_select_rank_adaptively(xnp):
+@parametrize(['torch', 'jax'])
+def test_select_rank_adaptively(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=16)
     A = soln = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype)
@@ -60,8 +57,9 @@ def test_select_rank_adaptively(xnp):
     assert rel_error < 5e-5
 
 
-@parametrize([torch_fns, jax_fns])
-def test_nys_sqrt_inverse(xnp):
+@parametrize(['torch', 'jax'])
+def test_nys_sqrt_inverse(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)
@@ -82,8 +80,9 @@ def test_nys_sqrt_inverse(xnp):
     assert rel_error < _tol * 10
 
 
-@parametrize([torch_fns, jax_fns])
-def test_nys_precond(xnp):
+@parametrize(['torch', 'jax'])
+def test_nys_precond(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
     A = xnp.diag(xnp.array(diag, dtype=dtype))
@@ -116,8 +115,9 @@ def test_nys_precond(xnp):
     assert rel_error < _tol * 10
 
 
-@parametrize([torch_fns, jax_fns])
-def test_get_nys_approx_random(xnp):
+@parametrize(['torch', 'jax'])
+def test_get_nys_approx_random(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
     A = soln = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype)
@@ -134,8 +134,9 @@ def test_get_nys_approx_random(xnp):
     assert rel_error < _tol * 500
 
 
-@parametrize([torch_fns, jax_fns])
-def test_get_nys_approx_diagonal(xnp):
+@parametrize(['torch', 'jax'])
+def test_get_nys_approx_diagonal(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     A = xnp.diag(xnp.array([3., 4., 5., 7., 1.], dtype=dtype))
     e1 = xnp.array(construct_e_vec(i=0, size=A.shape[0]), dtype=dtype)[:, None]

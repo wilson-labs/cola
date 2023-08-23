@@ -1,7 +1,5 @@
 import pytest
 import numpy as np
-from cola import jax_fns
-from cola import torch_fns
 from cola.fns import kron, lazify
 from cola.ops import Tridiagonal
 from cola.ops import Diagonal
@@ -17,16 +15,15 @@ from cola.ops import Sparse
 from cola.ops import Jacobian
 from cola.ops import LinearOperator
 from cola.algorithms.arnoldi import get_householder_vec
-from cola.utils_test import parametrize, relative_error
-from jax.config import config
+from cola.utils_test import get_xnp, parametrize, relative_error
 
-config.update('jax_platform_name', 'cpu')
 
 _tol = 1e-6
 
 
-@parametrize([torch_fns, jax_fns])
-def test_find_device(xnp):
+@parametrize(['torch', 'jax'])
+def test_find_device(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     Aop = Diagonal(xnp.array([0.1, -0.2], dtype=dtype))
     diag2 = xnp.array([3., -7.], dtype=dtype)
@@ -43,8 +40,9 @@ def test_find_device(xnp):
         assert Op.device == xnp.get_default_device()
 
 
-@parametrize([torch_fns])
-def test_sparse(xnp):
+@parametrize(['torch'])
+def test_sparse(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     A = [[0., 1., 0., 0., 0.], [0., 2., -1., 0., 0.], [0., 0., 0., 0., 0.], [6.6, 0., 0., 0., 1.4]]
     A = xnp.array(A, dtype=dtype)
@@ -58,8 +56,9 @@ def test_sparse(xnp):
     assert rel_error < _tol
 
 
-@parametrize([jax_fns])
-def test_jacobian(xnp):
+@parametrize(['jax'])
+def test_jacobian(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
 
     def f1(x):
@@ -70,8 +69,9 @@ def test_jacobian(xnp):
     assert xnp.norm(A @ x) is not None
 
 
-@parametrize([torch_fns, jax_fns])
-def test_householder(xnp):
+@parametrize(['torch', 'jax'])
+def test_householder(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     x = xnp.array([0.29466099, 0.71853315, -0.06172857, -0.0432496, 0.44698924], dtype=dtype)
     w = x / xnp.norm(x)
@@ -88,8 +88,9 @@ def test_householder(xnp):
         assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_unflatten(xnp):
+@parametrize(['torch', 'jax'])
+def test_unflatten(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag1 = xnp.array([0.1, -0.2], dtype=dtype)
     Aop = Diagonal(diag1)
@@ -109,8 +110,9 @@ def test_unflatten(xnp):
     assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_flatten(xnp):
+@parametrize(['torch', 'jax'])
+def test_flatten(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag1 = xnp.array([0.1, -0.2], dtype=dtype)
     Aop = Diagonal(diag1)
@@ -129,8 +131,9 @@ def test_flatten(xnp):
         assert relative_error(par1, par2) < 1e-12
 
 
-@parametrize([torch_fns, jax_fns])
-def test_get_item(xnp):
+@parametrize(['torch', 'jax'])
+def test_get_item(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     np.random.seed(seed=48)
     A = np.random.normal(size=(5, 4))
@@ -147,8 +150,9 @@ def test_get_item(xnp):
     assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_sliced(xnp):
+@parametrize(['torch', 'jax'])
+def test_sliced(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     A = [[-1.0165, -1.9161, 0.8602, -0.4597], [1.1470, 0.9879, -1.0831, 1.2768],
          [1.0912, 0.6360, -0.8962, 0.7849], [-0.4359, 0.5612, 1.4560, 0.0682]]
@@ -172,8 +176,9 @@ def test_sliced(xnp):
     assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_product_op(xnp):
+@parametrize(['torch', 'jax'])
+def test_product_op(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     A = [[-1.0165, -1.9161, 0.8602, -0.4597], [1.1470, 0.9879, -1.0831, 1.2768],
          [1.0912, 0.6360, -0.8962, 0.7849], [-0.4359, 0.5612, 1.4560, 0.0682]]
@@ -199,8 +204,9 @@ def test_product_op(xnp):
     assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_sum_and_scalar_op(xnp):
+@parametrize(['torch', 'jax'])
+def test_sum_and_scalar_op(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     A = [[-1.0165, -1.9161, 0.8602, -0.4597], [1.1470, 0.9879, -1.0831, 1.2768],
          [1.0912, 0.6360, -0.8962, 0.7849], [-0.4359, 0.5612, 1.4560, 0.0682]]
@@ -223,8 +229,9 @@ def test_sum_and_scalar_op(xnp):
     assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_kron_sum(xnp):
+@parametrize(['torch', 'jax'])
+def test_kron_sum(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = xnp.array([0.1, -0.2], dtype=dtype)
     Aop = Diagonal(diag=diag)
@@ -247,8 +254,9 @@ def test_kron_sum(xnp):
     assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_identity(xnp):
+@parametrize(['torch', 'jax'])
+def test_identity(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     Id = xnp.eye(3, 3, dtype=dtype)
     rhs = [[1., 3.], [4., 5.], [6., -8.]]
@@ -266,8 +274,9 @@ def test_identity(xnp):
     assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_diagonal(xnp):
+@parametrize(['torch', 'jax'])
+def test_diagonal(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = xnp.array([0.1, 0.2, 3., 4.], dtype=dtype)
     A = xnp.diag(diag)
@@ -280,8 +289,9 @@ def test_diagonal(xnp):
     assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_diagonal_variants(xnp):
+@parametrize(['torch', 'jax'])
+def test_diagonal_variants(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     value = xnp.array(0.1, dtype=dtype)
     diag = xnp.array([0.1, 0.1, 0.1, 0.1], dtype=dtype)
@@ -304,8 +314,9 @@ def test_diagonal_variants(xnp):
     assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_tridiagonal(xnp):
+@parametrize(['torch', 'jax'])
+def test_tridiagonal(backend):
+    xnp = get_xnp(backend)
     alpha = [-0.5, 4., 5.]
     beta = [0.1, 0.2, -0.1, 0.4]
     gamma = [-1.0, 2., 3.]
@@ -324,8 +335,9 @@ def test_tridiagonal(xnp):
     assert rel_error < 1e-6
 
 
-@parametrize([torch_fns, jax_fns])
-def test_adjoint_property(xnp):
+@parametrize(['torch', 'jax'])
+def test_adjoint_property(backend):
+    xnp = get_xnp(backend)
     A = xnp.array([[1 + 1j, 2 - 2j, 7 - 3j], [3 + 1j, 4 - 1j, 5 + 2j]])
     B = LinearOperator(shape=A.shape, matmat=lambda x: A @ x, dtype=A.dtype)
     X = xnp.array([1. + 1j, 4. - 2j, 2.5 + 1j, -.1 - 1j, -3. + 1j, -7. - 3j]).reshape(2, 3)
@@ -333,8 +345,9 @@ def test_adjoint_property(xnp):
     assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_transpose_property(xnp):
+@parametrize(['torch', 'jax'])
+def test_transpose_property(backend):
+    xnp = get_xnp(backend)
     A = xnp.array([[1., 2., 7], [3., 4., 5]])
     B = LinearOperator(shape=A.shape, matmat=lambda x: A @ x, dtype=A.dtype)
 
@@ -344,8 +357,9 @@ def test_transpose_property(xnp):
     assert rel_error < _tol, f"JAX transpose relative error: {rel_error}"
 
 
-@parametrize([torch_fns, jax_fns])
-def test_vjp_transpose(xnp):
+@parametrize(['torch', 'jax'])
+def test_vjp_transpose(backend):
+    xnp = get_xnp(backend)
     A = xnp.array([[1., 2., 7], [3., 4., 5]])
     B = LinearOperator(shape=A.shape, matmat=lambda x: A @ x, dtype=A.dtype)
     X = xnp.array([1., 4., 2.5, -.1, -3., -7., -2., -5., 1.5]).reshape(3, 3)[:2, :2]
@@ -353,8 +367,9 @@ def test_vjp_transpose(xnp):
     assert rel_error < _tol, f"VJP transpose relative error: {rel_error}"
 
 
-@parametrize([torch_fns, jax_fns])
-def test_kronecker(xnp):
+@parametrize(['torch', 'jax'])
+def test_kronecker(backend):
+    xnp = get_xnp(backend)
     A = xnp.array([[1., 2., 7], [3., 4., 5]])
     B = xnp.array([[-1, 4.], [3., 3.], [2., -1.], [2., 1.]])
     actual_soln = xnp.kron(A, B)
@@ -367,8 +382,9 @@ def test_kronecker(xnp):
     assert rel_error2 < _tol, f"matmul, relative error is {rel_error2}"
 
 
-@parametrize([torch_fns, jax_fns])
-def test_matmul(xnp):
+@parametrize(['torch', 'jax'])
+def test_matmul(backend):
+    xnp = get_xnp(backend)
     A = xnp.array([1., 4., 2.5, -.1, -3., -7.]).reshape(3, 2)
     B = xnp.array([6., 2., 4., -20.]).reshape(2, 2)
     AB = A @ B
@@ -380,8 +396,9 @@ def test_matmul(xnp):
     assert relative_error(AB, AB4) < _tol, "Matmul fails"
 
 
-@parametrize([torch_fns, jax_fns])
-def test_scalarmul(xnp):
+@parametrize(['torch', 'jax'])
+def test_scalarmul(backend):
+    xnp = get_xnp(backend)
     A = xnp.array([1, 4, 2.5, -.1, -3, -7]).reshape(3, 2)
     c = -2.2
     A2 = (c * lazify(A)).to_dense()
@@ -390,8 +407,9 @@ def test_scalarmul(xnp):
     assert relative_error(c * A, A3) < _tol, f"Scalar rmul fails with {A3}"
 
 
-@parametrize([torch_fns, jax_fns])
-def test_sum(xnp):
+@parametrize(['torch', 'jax'])
+def test_sum(backend):
+    xnp = get_xnp(backend)
     A = xnp.array(
         [-12, 3., 54, 2, 31, 65, 7, 3, 0, 3, 4, 5, 67, 7, 23, 4234, 6234, 4, 6, 7, 3, 2, 1, 6])
     As = list(A.reshape(4, 2, 3))

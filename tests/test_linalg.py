@@ -1,6 +1,4 @@
 import cola as co
-from cola import jax_fns
-from cola import torch_fns
 from cola.fns import lazify
 from cola.ops import Tridiagonal
 from cola.algorithms.lanczos import get_lu_from_tridiagonal
@@ -8,16 +6,16 @@ from cola.algorithms.lanczos import construct_tridiagonal
 from cola.linalg.nullspace import nullspace
 from cola.linalg.eigs import power_iteration
 from cola.fns import kron
-from cola.utils_test import parametrize, relative_error
+from cola.utils_test import get_xnp, parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
-from jax.config import config
-config.update('jax_platform_name', 'cpu')
+
 
 _tol = 1e-7
 
 
-@parametrize([torch_fns, jax_fns])
-def test_inverse(xnp):
+@parametrize(['torch', 'jax'])
+def test_inverse(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.75, scale=1.0, size=25)
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype)
@@ -30,8 +28,9 @@ def test_inverse(xnp):
     assert rel_error < _tol * 10
 
 
-@parametrize([torch_fns, jax_fns])
-def test_power_iteration(xnp):
+@parametrize(['torch', 'jax'])
+def test_power_iteration(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     A = xnp.diag(xnp.array([10., 9.75, 3., 0.1], dtype=dtype))
     B = lazify(A)
@@ -42,8 +41,9 @@ def test_power_iteration(xnp):
     assert rel_error < _tol * 100
 
 
-@parametrize([torch_fns, jax_fns])
-def test_get_lu_from_tridiagonal(xnp):
+@parametrize(['torch', 'jax'])
+def test_get_lu_from_tridiagonal(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     alpha = [-1., -1., -1.]
     beta = [2., 2., 2., 1.]
@@ -59,8 +59,9 @@ def test_get_lu_from_tridiagonal(xnp):
     assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_construct_tridiagonal(xnp):
+@parametrize(['torch', 'jax'])
+def test_construct_tridiagonal(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     alpha = [0.73, 1.5, 0.4]
     beta = [0.8, 0.29, -0.6, 0.9]
@@ -78,11 +79,10 @@ def test_construct_tridiagonal(xnp):
     assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def ignore_test_nullspace(xnp):
+@parametrize(['torch', 'jax'])
+def ignore_test_nullspace(backend):
+    xnp = get_xnp(backend)
     # TODO: add test for double precision (pytorch fails with nan while jax succeeds)
-    # from jax.config import config
-    # config.update("jax_enable_x64", True)
     dtype = xnp.float32
     tol = 1e-4
     A = xnp.randn(12, 20, dtype=dtype)

@@ -1,17 +1,13 @@
 import numpy as np
-from cola import jax_fns
-from cola import torch_fns
 from cola.fns import lazify
 from cola.algorithms.lobpcg import lobpcg
-from cola.utils_test import parametrize, relative_error
+from cola.utils_test import get_xnp, parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
-from jax.config import config
-
-config.update('jax_platform_name', 'cpu')
 
 
-@parametrize([torch_fns, jax_fns])
-def test_lobpcg_random(xnp):
+@parametrize(['torch', 'jax'])
+def test_lobpcg_random(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     np_dtype = np.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
