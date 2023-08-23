@@ -64,37 +64,25 @@ def test_cg_vjp(xnp):
     assert rel_error < _tol * 10
 
 
-# @parametrize([torch_fns, jax_fns])
-# def test_cg_lanczos_coeffs(xnp):
-#     dtype = xnp.float32
-#     A = xnp.diag(xnp.array([3., 4., 5.], dtype=dtype))
-#     rhs = xnp.ones(shape=(A.shape[0], 1), dtype=dtype)
-#     soln = xnp.array([[1 / 3, 1 / 4, 1 / 5]]).T
-#
-#     max_iters, tolerance = 20, 1e-8
-#     fn = xnp.jit(run_batched_tracking_cg, static_argnums=(0, 3, 4, 5, 6))
-#     x0 = xnp.zeros_like(rhs)
-#     precond_fn = Identity(dtype=A.dtype, shape=A.shape)
-#     out = fn(lazify(A), rhs, x0, max_iters, tolerance, precond_fn, pbar=True)
-#     approx, _, k, tracker, _ = out
-#     alphas, betas = tracker[1][:k, 0], tracker[2][:k - 1, 0]
-#     diag = 1. / alphas
-#     update = diag[1:] + (betas / alphas[:k - 1])
-#     diag = xnp.update_array(diag, update, slice(1, None))
-#     band = xnp.sqrt(betas) / alphas[:k - 1]
-#     T_approx = construct_tridiagonal(band, diag, band)
-#
-#     rhs = np.array(rhs[:, 0], dtype=np.float64)
-#     x0 = np.zeros_like(rhs)
-#     out = run_cg_lanczos(np.array(A, np.float64), rhs, x0, max_iters=5, tolerance=1e-8)
-#     _, alpha, beta, _, k, _ = out
-#     T_soln = construct_tri(alpha[1:k], beta[1:k + 1])
-#
-#     rel_error = relative_error(soln, approx)
-#     assert rel_error < _tol
-#
-#     rel_error = relative_error(xnp.array(T_soln), T_approx)
-#     assert rel_error < _tol
+@parametrize([torch_fns])
+def test_cg_gpu(xnp):
+    dtype = xnp.float32
+    device = xnp.device("cuda:0" if xnp.is_cuda_available() else "cpu")
+    diag = generate_spectrum(coeff=0.75, scale=1.0, size=25, dtype=np.float32)
+    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype, device=device)
+    rhs = xnp.ones(shape=(A.shape[0], 5), dtype=dtype, device=device)
+    soln = xnp.solve(A, rhs)
+
+    B = lazify(A)
+    max_iters, tolerance = 100, 1e-8
+    rank = 5
+    precond_fn = NystromPrecond(B, rank=rank, mu=0, eps=1e-8)
+    x0 = xnp.zeros_like(rhs)
+    fn = xnp.jit(run_batched_cg, static_argnums=(0, 3, 4, 5, 6))
+    approx, *_ = fn(B, rhs, x0, max_iters, tolerance, precond_fn, pbar=True)
+
+    rel_error = relative_error(soln, approx)
+    assert rel_error < 1e-6
 
 
 @parametrize([torch_fns, jax_fns])
@@ -174,6 +162,7 @@ def test_cg_track_easy(xnp):
 
     rel_error = relative_error(soln, approx)
     assert rel_error < _tol
+
 
 # Marc: I disabled this test because it seems to test batched linear operators?
 # @parametrize([torch_fns, jax_fns])

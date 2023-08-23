@@ -9,6 +9,7 @@ from torch.func import vmap as _vmap
 from torch.func import grad as _grad
 import logging
 
+device = torch.device
 logdet = torch.logdet
 exp = torch.exp
 cos = torch.cos
@@ -65,17 +66,9 @@ slogdet = torch.linalg.slogdet
 prod = torch.prod
 moveaxis = torch.moveaxis
 
-# def eig(a):
-#     w, v = torch.linalg.eig(a)
-#     #w = w.to(dtype=a.dtype)
-#     #v = v.to(dtype=a.dtype)
-#     return w,v
 
-# def eigh(a):
-#     w, v = torch.linalg.eigh(a)
-#     w = w.to(dtype=a.dtype) # by default casts to float64 which we don't want
-#     v = v.to(dtype=a.dtype)
-#     return w,v
+def is_cuda_available():
+    return torch.cuda.is_available()
 
 
 def lu(a):
