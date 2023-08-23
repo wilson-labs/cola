@@ -197,7 +197,7 @@ def randn(*shape, dtype=None, key=None, device=None):
         return z
 
 
-def fixed_normal_samples(shape, dtype=None,device=None):
+def fixed_normal_samples(shape, dtype=None, device=None):
     key = PRNGKey(4)
     z = normal(key, shape, dtype=dtype)
     return z

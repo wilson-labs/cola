@@ -244,10 +244,12 @@ def construct_tridiagonal(alpha: Array, beta: Array, gamma: Array) -> Array:
 def construct_tridiagonal_batched(alpha: Array, beta: Array, gamma: Array) -> Array:
     xnp = get_library_fns(beta.dtype)
     device = xnp.get_device(beta)
-    T = xnp.zeros(shape=(beta.shape[-2], beta.shape[-1], beta.shape[-1]), dtype=beta.dtype, device=device)
+    T = xnp.zeros(shape=(beta.shape[-2], beta.shape[-1], beta.shape[-1]), dtype=beta.dtype,
+                  device=device)
     diag_ind = xnp.array([idx for idx in range(beta.shape[-1])], dtype=xnp.int64, device=device)
     T = xnp.update_array(T, beta, ..., diag_ind, diag_ind)
-    shifted_ind = xnp.array([idx + 1 for idx in range(gamma.shape[-1])], dtype=xnp.int64, device=device)
+    shifted_ind = xnp.array([idx + 1 for idx in range(gamma.shape[-1])], dtype=xnp.int64,
+                            device=device)
     T = xnp.update_array(T, gamma, ..., diag_ind[:-1], shifted_ind)
     T = xnp.update_array(T, alpha, ..., shifted_ind, diag_ind[:-1])
     return T
@@ -263,6 +265,7 @@ def get_lu_from_tridiagonal(A: LinearOperator) -> Array:
         state = xnp.update_array(state, pi, i + 1)
         return state
 
-    lower, upper = xnp.array(0, dtype=xnp.int32), xnp.array(A.shape[0] - 1, dtype=xnp.int32, device=A.device)
+    lower, upper = xnp.array(0, dtype=xnp.int32), xnp.array(A.shape[0] - 1, dtype=xnp.int32,
+                                                            device=A.device)
     eigenvals = xnp.for_loop(lower, upper, body_fun, init_val=eigenvals)
     return eigenvals

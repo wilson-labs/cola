@@ -473,7 +473,8 @@ class Hessian(LinearOperator):
         xnp = self.xnp
         # hack to make it work with pytorch
         if xnp.__name__ == 'cola.torch_fns' and False:
-            expanded_x = self.x[None, :] + self.xnp.zeros((X.shape[0], 1), dtype=self.x.dtype, device=self.device)
+            expanded_x = self.x[None, :] + self.xnp.zeros(
+                (X.shape[0], 1), dtype=self.x.dtype, device=self.device)
             fn = partial(self.xnp.vjp_derivs, self.xnp.vmap(self.xnp.grad(self.f)), (expanded_x, ))
             out = fn((X, ))
         else:

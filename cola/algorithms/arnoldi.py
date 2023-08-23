@@ -146,7 +146,10 @@ def run_householder_arnoldi(A: LinearOperator, rhs: Array, max_iters: int):
     xnp = A.xnp
     dtype = A.dtype
     device = A.device
-    Ps = [Householder(xnp.zeros((rhs.shape[-2], 1), dtype=dtype, device=device)) for _ in range(max_iters + 2)]
+    Ps = [
+        Householder(xnp.zeros((rhs.shape[-2], 1), dtype=dtype, device=device))
+        for _ in range(max_iters + 2)
+    ]
 
     def body_fun(idx, state):
         Q, H, zj = state
@@ -201,7 +204,8 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
     def body_fun(state):
         Q, H, idx, _ = state
         new_vec = A @ Q[..., idx, :]
-        h_vec = xnp.zeros(shape=(max_iters + 1, rhs.shape[-1]), dtype=new_vec.dtype, device=xnp.get_device(new_vec))
+        h_vec = xnp.zeros(shape=(max_iters + 1, rhs.shape[-1]), dtype=new_vec.dtype,
+                          device=xnp.get_device(new_vec))
 
         def inner_loop(jdx, result):
             new_vec, h_vec = result

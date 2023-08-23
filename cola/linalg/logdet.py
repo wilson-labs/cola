@@ -68,10 +68,10 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and (np.prod(A.shape) <= 1e6 or kws['tol'] < 3e-2)):
-        return slogdet(cola.decompositions.lu_decomposed(A), method='dense',**kws)
+        return slogdet(cola.decompositions.lu_decomposed(A), method='dense', **kws)
     elif 'iterative' in method or (method == 'auto' and
                                    (np.prod(A.shape) > 1e6 and kws['tol'] >= 3e-2)):
-        A2 = PSD((A.H @ A)+ 0. * cola.ops.I_like(A))
+        A2 = PSD((A.H @ A) + 0. * cola.ops.I_like(A))
         return ValueError("Unknown phase"), logdet(A2, method='iterative', **kws) / 2.
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")

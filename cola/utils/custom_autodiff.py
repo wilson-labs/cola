@@ -1,6 +1,7 @@
 from functools import wraps
 from cola.ops.operator_base import flatten_function
 
+
 def iterative_autograd(iterative_bwd):
     """ Autograd wrapper for iterative solvers like CG, Lanczos, SLQ, etc.
         Will construct a custom autograd rule for the iterative solver on every call
@@ -47,6 +48,7 @@ def iterative_autograd(iterative_bwd):
                     def forward(*params):
                         output, res = fwd(params)
                         return output
+
                     @staticmethod
                     def setup_context(ctx, inputs, output):
                         params = inputs

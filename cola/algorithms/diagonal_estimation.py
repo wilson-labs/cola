@@ -59,8 +59,9 @@ def exact_diag_bwd(res, grads, unflatten, *args, **kwargs):
     # print(args,kwargs)
     return (dA, )
 
+
 # disable backwards for now, TODO: add tests then add back in
-#@iterative_autograd(exact_diag_bwd)
+# @iterative_autograd(exact_diag_bwd)
 def exact_diag_fwd(A, k, bs, tol, max_iters, pbar):
     bs = min(100, A.shape[0])
     # lazily create chunks of the identity matrix of size bs

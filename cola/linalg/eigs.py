@@ -85,7 +85,7 @@ def eig(A: LinearOperator, **kwargs):
 @dispatch
 def eig(A: Identity, eig_slice=slice(0, None, None), **kwargs):
     xnp = A.xnp
-    eig_vals = xnp.ones(shape=(A.shape[0],), dtype=A.dtype, device=A.device)
+    eig_vals = xnp.ones(shape=(A.shape[0], ), dtype=A.dtype, device=A.device)
     eig_vecs = A.to_dense()
     return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
 

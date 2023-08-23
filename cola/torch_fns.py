@@ -202,9 +202,9 @@ def randn(*shape, dtype=None, key=None, device=None):
     return z
 
 
-def fixed_normal_samples(shape, dtype=None,device=None):
+def fixed_normal_samples(shape, dtype=None, device=None):
     # TODO: fix random seed for sample
-    return torch.randn(*shape, dtype=dtype,device=device)
+    return torch.randn(*shape, dtype=dtype, device=device)
 
 
 def vjp_derivs(fun, primals, duals, create_graph=True):
