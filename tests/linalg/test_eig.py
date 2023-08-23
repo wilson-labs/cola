@@ -1,3 +1,4 @@
+import numpy as np
 from cola import jax_fns
 from cola import torch_fns
 from cola.fns import lazify
@@ -6,9 +7,9 @@ from cola.ops import Identity
 from cola.ops import Triangular
 from cola.annotations import SelfAdjoint
 from cola.linalg.eigs import eig
-from jax.config import config
 from cola.utils_test import parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
+from jax.config import config
 
 config.update('jax_platform_name', 'cpu')
 # config.update("jax_enable_x64", True)
@@ -87,13 +88,15 @@ def test_adjoint(xnp):
 def test_triangular(xnp):
     dtype = xnp.float32
     A = xnp.array([[1., 2., 3.], [0., 6., 5.], [0., 0., 4.]], dtype=dtype)
+    soln_vecs = compute_lower_triangular_eigvecs(np.array(A))
     A = Triangular(A)
     soln_vals = xnp.array([1., 4., 6.], dtype=dtype)
-    soln_vecs = xnp.eye(3, dtype=dtype)[:, [0, 2, 1]]
+    soln_vecs = xnp.array(soln_vecs, dtype=dtype)[:, [0, 2, 1]]
     eig_vals, eig_vecs = eig(A)
 
     assert relative_error(soln_vals, eig_vals) < _tol
     assert relative_error(soln_vecs, eig_vecs.to_dense()) < _tol
+    assert relative_error(A.to_dense() @ soln_vecs, soln_vals[None, :] * soln_vecs) < _tol
 
 
 @parametrize([torch_fns, jax_fns])
@@ -121,3 +124,13 @@ def test_diagonal(xnp):
     rel_error = relative_error(xnp.sort(diag), eig_vals)
     assert rel_error < _tol
     assert relative_error(soln_vecs, eig_vecs) < _tol
+
+
+def compute_lower_triangular_eigvecs(L):
+    eigvals = np.diag(L)
+    eigvecs = np.eye(L.shape[0])
+    for i in range(1, L.shape[0]):
+        A = L[:i, :i] - eigvals[i] * np.eye(i)
+        out = np.linalg.solve(A, -L[:i, i])
+        eigvecs[:i, i] = out
+    return eigvecs
