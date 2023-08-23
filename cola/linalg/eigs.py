@@ -1,3 +1,4 @@
+import numpy as np
 from math import prod
 from plum import dispatch
 from cola import SelfAdjoint
@@ -91,12 +92,24 @@ def eig(A: Identity, eig_slice=slice(0, None, None), **kwargs):
 
 @dispatch
 def eig(A: Triangular, eig_slice=slice(0, None, None), **kwargs):
+    # TODO: take out compute_lower_triangular_eigvecs
     xnp = A.xnp
     eig_vals = diag(A)
     sorted_ind = xnp.argsort(eig_vals)
     eig_vals = eig_vals[sorted_ind]
-    eig_vecs = I_like(A).to_dense()[:, sorted_ind]
+    eig_vecs = compute_lower_triangular_eigvecs(np.array(A.A))
+    eig_vecs = xnp.array(eig_vecs, dtype=A.dtype)[:, sorted_ind]
     return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
+
+
+def compute_lower_triangular_eigvecs(L):
+    eigvals = np.diag(L)
+    eigvecs = np.eye(L.shape[0])
+    for i in range(1, L.shape[0]):
+        A = L[:i, :i] - eigvals[i] * np.eye(i)
+        out = np.linalg.solve(A, -L[:i, i])
+        eigvecs[:i, i] = out
+    return eigvecs
 
 
 @dispatch
