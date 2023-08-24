@@ -1,18 +1,14 @@
 import numpy as np
-from operator_market import get_test_operators
+from operator_market import op_names, get_test_operator
 import cola
 from cola.linalg import logdet
 from cola.ops import LinearOperator
-from cola import jax_fns
-from cola import torch_fns
 from cola.utils_test import parametrize, relative_error
 
-jax_test_ops = get_test_operators(jax_fns, jax_fns.float64)
-torch_test_ops = get_test_operators(torch_fns, torch_fns.float64)
 
-
-@parametrize(torch_test_ops + jax_test_ops)
-def test_logdet(operator):
+@parametrize(['torch', 'jax'], ['float64'], op_names)
+def test_logdet(backend, precision, op_name):
+    operator = get_test_operator(backend, precision, op_name)
     A, _, xnp = operator, operator.dtype, operator.xnp
     A2 = LinearOperator(A.dtype, A.shape, A._matmat)
     tol = 1e-4

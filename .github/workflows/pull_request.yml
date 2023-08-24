@@ -1,0 +1,9 @@
+name: Pull Request CI
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  run_test_suite:
+    uses: ./.github/workflows/run_test_suite.yml

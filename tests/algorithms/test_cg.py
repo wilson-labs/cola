@@ -1,6 +1,4 @@
 import numpy as np
-from cola import jax_fns
-from cola import torch_fns
 from cola.fns import lazify
 from cola.ops import Identity
 from cola.ops import Diagonal
@@ -8,20 +6,18 @@ from cola.algorithms.preconditioners import NystromPrecond
 from cola.algorithms.cg import run_batched_cg
 from cola.algorithms.cg import run_batched_tracking_cg
 from cola.algorithms.cg import run_cg
-from cola.utils_test import parametrize, relative_error
+from cola.utils_test import get_xnp, parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
 from cola.utils_test import generate_diagonals
 # from tests.algorithms.test_lanczos import construct_tridiagonal
-from jax.config import config
 
-config.update('jax_platform_name', 'cpu')
-# config.update("jax_enable_x64", True)
 
 _tol = 1e-7
 
 
-@parametrize([torch_fns, jax_fns])
-def test_cg_vjp(xnp):
+@parametrize(['torch', 'jax'])
+def test_cg_vjp(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
     diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
@@ -46,7 +42,7 @@ def test_cg_vjp(xnp):
         return loss
 
     out = f(diag)
-    if xnp.__name__.find("torch") >= 0:
+    if backend == 'torch':
         out.backward()
         approx = diag.grad.clone()
     else:
@@ -54,7 +50,7 @@ def test_cg_vjp(xnp):
     assert approx is not None
 
     out = f_alt(diag_soln)
-    if xnp.__name__.find("torch") >= 0:
+    if backend == 'torch':
         out.backward()
         soln = diag_soln.grad.clone()
     else:
@@ -64,10 +60,11 @@ def test_cg_vjp(xnp):
     assert rel_error < _tol * 10
 
 
-@parametrize([torch_fns])
-def test_cg_gpu(xnp):
+@parametrize(['torch'])
+def test_cg_gpu(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
-    device = xnp.device("cuda:0" if xnp.is_cuda_available() else "cpu")
+    device = xnp.device('cuda:0' if xnp.is_cuda_available() else 'cpu')
     diag = generate_spectrum(coeff=0.75, scale=1.0, size=25, dtype=np.float32)
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype, device=device)
     rhs = xnp.ones(shape=(A.shape[0], 5), dtype=dtype, device=device)
@@ -85,8 +82,9 @@ def test_cg_gpu(xnp):
     assert rel_error < 1e-6
 
 
-@parametrize([torch_fns, jax_fns])
-def test_cg_complex(xnp):
+@parametrize(['torch', 'jax'])
+def test_cg_complex(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.complex64
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=25, dtype=np.float32)
     A = xnp.array(generate_diagonals(diag, seed=48), dtype=dtype)
@@ -104,8 +102,9 @@ def test_cg_complex(xnp):
     assert rel_error < 1e-5
 
 
-@parametrize([torch_fns, jax_fns])
-def test_cg_random(xnp):
+@parametrize(['torch', 'jax'])
+def test_cg_random(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.75, scale=1.0, size=25, dtype=np.float32)
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype)
@@ -124,8 +123,9 @@ def test_cg_random(xnp):
     assert rel_error < 1e-6
 
 
-@parametrize([torch_fns, jax_fns])
-def test_cg_repeated_eig(xnp):
+@parametrize(['torch', 'jax'])
+def test_cg_repeated_eig(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = [1. for _ in range(10)] + [0.5 for _ in range(10)] + [0.25 for _ in range(10)]
     diag = np.array(diag, dtype=np.float32)
@@ -145,8 +145,9 @@ def test_cg_repeated_eig(xnp):
     assert rel_error < _tol * 10
 
 
-@parametrize([torch_fns, jax_fns])
-def test_cg_track_easy(xnp):
+@parametrize(['torch', 'jax'])
+def test_cg_track_easy(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float64
     A = xnp.diag(xnp.array([3., 4., 5.], dtype=dtype))
     rhs = [[1, 3], [1, 4], [1, 5]]
@@ -165,8 +166,9 @@ def test_cg_track_easy(xnp):
 
 
 # Marc: I disabled this test because it seems to test batched linear operators?
-# @parametrize([torch_fns, jax_fns])
-# def test_cg_easy_case(xnp):
+# @parametrize(['torch', 'jax'])
+# def test_cg_easy_case(backend):
+#     xnp = get_xnp(backend)
 #     dtype = xnp.float64
 #     A = xnp.diag(xnp.array([3., 4., 5.], dtype=dtype))
 #     rhs = xnp.array([[1.0 for _ in range(A.shape[0])]], dtype=dtype).T
@@ -197,7 +199,7 @@ def test_cg_track_easy(xnp):
 #     assert rel_error < _tol
 
 #     _, info = cg(A_fn, rhs, info=True)
-#     assert all([key in info.keys() for key in ["iterations", "residuals"]])
+#     assert all([key in info.keys() for key in ['iterations', 'residuals']])
 
 #     approx, _ = cg(lazify(A[0, :, :]), rhs[0, :, 0], info=False)
 #     rel_error = relative_error(soln[0, :, 0], approx)

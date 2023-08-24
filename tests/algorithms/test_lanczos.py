@@ -1,6 +1,4 @@
 import numpy as np
-from cola import jax_fns
-from cola import torch_fns
 from cola.fns import lazify
 from cola.ops import Dense
 from cola.algorithms.lanczos import construct_tridiagonal
@@ -9,17 +7,21 @@ from cola.algorithms.lanczos import get_lanczos_coeffs
 from cola.algorithms.lanczos import lanczos_parts
 from cola.algorithms.lanczos import lanczos
 from cola.algorithms.lanczos import lanczos_max_eig
-from cola.utils_test import parametrize, relative_error
+from cola.utils_test import get_xnp, parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
 from cola.utils_test import generate_diagonals
-from jax.config import config
-config.update('jax_platform_name', 'cpu')
+
 
 _tol = 1e-6
 
 
-@parametrize([torch_fns, jax_fns])
-def test_lanczos_vjp(xnp):
+@parametrize(['torch', 'jax'])
+def test_lanczos_vjp(backend):
+    if backend == 'torch':
+        import torch
+        torch.manual_seed(seed=21)
+
+    xnp = get_xnp(backend)
     dtype = xnp.float64
     # diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
     # diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
@@ -30,8 +32,6 @@ def test_lanczos_vjp(xnp):
     diag = xnp.Parameter(xnp.array(matrix, dtype=dtype))
     diag_soln = xnp.Parameter(xnp.array(matrix, dtype=dtype))
     _, unflatten = Dense(diag).flatten()
-    import torch
-    torch.manual_seed(seed=21)
     x0 = xnp.randn(diag.shape[0], 1)
 
     def f(theta):
@@ -55,8 +55,7 @@ def test_lanczos_vjp(xnp):
         return loss
 
     out = f(diag)
-    print(out)
-    if xnp.__name__.find("torch") >= 0:
+    if backend == 'torch':
         out.backward()
         approx = diag.grad.clone()
     else:
@@ -64,8 +63,7 @@ def test_lanczos_vjp(xnp):
     assert approx is not None
 
     out = f_alt(diag_soln)
-    print(out)
-    if xnp.__name__.find("torch") >= 0:
+    if backend == 'torch':
         out.backward()
         soln = diag_soln.grad.clone()
     else:
@@ -77,8 +75,9 @@ def test_lanczos_vjp(xnp):
     assert abs_error < _tol * 50
 
 
-@parametrize([torch_fns, jax_fns])
-def test_lanczos_complex(xnp):
+@parametrize(['torch', 'jax'])
+def test_lanczos_complex(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.complex64
     np_dtype = np.complex64
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
@@ -102,8 +101,9 @@ def test_lanczos_complex(xnp):
         assert rel_error < 5e-5
 
 
-@parametrize([torch_fns, jax_fns])
-def test_lanczos_random(xnp):
+@parametrize(['torch', 'jax'])
+def test_lanczos_random(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     np_dtype = np.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
@@ -129,8 +129,9 @@ def test_lanczos_random(xnp):
         assert rel_error < 5e-5
 
 
-@parametrize([torch_fns, jax_fns])
-def test_lanczos_manual(xnp):
+@parametrize(['torch', 'jax'])
+def test_lanczos_manual(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     cases = [case_2, case_3, case_early]
     for case in cases:
@@ -151,8 +152,9 @@ def test_lanczos_manual(xnp):
         assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_lanczos_iter(xnp):
+@parametrize(['torch', 'jax'])
+def test_lanczos_iter(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     max_eig = 6
     A = xnp.diag(xnp.array([4, 2, 1, max_eig], dtype=dtype))
@@ -176,8 +178,9 @@ def test_lanczos_iter(xnp):
         assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_get_lanczos_coeffs(xnp):
+@parametrize(['torch', 'jax'])
+def test_get_lanczos_coeffs(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     soln = 10.
     A = xnp.diag(xnp.array([soln, 9.5, 3.], dtype=dtype))
@@ -198,8 +201,9 @@ def test_get_lanczos_coeffs(xnp):
     assert rel_error < _tol
 
 
-@parametrize([torch_fns, jax_fns])
-def test_construct_tridiagonal(xnp):
+@parametrize(['torch', 'jax'])
+def test_construct_tridiagonal(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     gamma = xnp.array([1., -2., 3.], dtype=dtype)
     gamma = xnp.stack((-gamma, gamma), axis=0)

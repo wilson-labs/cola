@@ -1,102 +1,148 @@
-from cola import jax_fns
 from cola.fns import lazify
-from cola.ops import Tridiagonal, Diagonal, Identity
-from cola.ops import KronSum, Product, Sliced
+from cola.ops import LinearOperator, Tridiagonal, Diagonal, Identity
+from cola.ops import KronSum, Product
 from cola.ops import Triangular, Kronecker, Permutation
 from cola.ops import Dense, BlockDiag, Jacobian, Hessian
 from cola.annotations import SelfAdjoint
 from cola.annotations import PSD
+from cola.utils_test import get_xnp
 from functools import reduce
 import cola
+import pytest
 
-xnp = jax_fns
+
+op_names: set[str] = {
+    'psd_big',  # skipped by default
+    'psd_blockdiag',
+    'psd_diagonal',
+    'psd_identity',
+    'psd_prod',
+    'psd_scalarmul',
+    'selfadj_hessian',
+    'selfadj_tridiagonal',
+    'square_big',  # skipped by default
+    'square_blockdiag',
+    'square_dense',
+    # 'square_jacobian',
+    'square_kronecker',
+    'square_kronsum',
+    'square_lowertriangular',
+    'square_permutation',
+    'square_product',
+    # 'square_sparse',
+    'square_tridiagonal',
+}
 
 
-def get_test_operators(xnp, dtype):
-    alpha = xnp.array([1, 2, 3], dtype=dtype)[:2]
-    beta = xnp.array([4, 5, 6], dtype=dtype)
-    gamma = xnp.array([7, 8, 9], dtype=dtype)[:2]
-    tridiagonal = Tridiagonal(alpha, beta, gamma)
+def get_test_operator(backend: str, precision: str, op_name: str, device: str = 'cpu') -> LinearOperator:
+    xnp = get_xnp(backend)
+    dtype = getattr(xnp, precision)
+    if backend == 'torch':
+        import torch
+        device = torch.device(device)
+    else:
+        # TODO for jax?
+        device = None
 
-    shape = (3, 3)
+    # Define the operator
+    op = None
+    match op_name.split('_', 1):
+        case ('psd', 'diagonal'):
+            op = Diagonal(xnp.array([.1, .5, .22, 8.], dtype=dtype, device=device))
 
-    identity = Identity(shape, dtype)
+        case ('psd', ('identity' | 'scalarmul') as sub_op_name):
+            shape = (3, 3)
+            op = Identity(shape, dtype=dtype)
+            if sub_op_name == 'scalarmul':
+                op = 2 * op
 
-    M1 = xnp.array([[1, 0], [3, 4]], dtype=dtype)
-    M2 = xnp.array([[5, 6], [7, 8]], dtype=dtype)
-    kronsum = KronSum(lazify(M1), lazify(M2))
+        case ('psd', ('big' | 'blockdiag' | 'prod') as sub_op_name):
+            M1 = Dense(xnp.array([[6., 2], [2, 4]], dtype=dtype))
+            M2 = Dense(xnp.array([[7, 6], [6, 8]], dtype=dtype))
+            match sub_op_name:
+                case 'big':
+                    dtype2 = (xnp.array([1.]) + 1j).dtype
+                    big_psd = reduce(cola.kron, [M1, M2, M2, Identity((15, 15), dtype=dtype2)])
+                    op = big_psd + 0.04 * cola.ops.I_like(big_psd)
+                case 'blockdiag':
+                    op = BlockDiag(M1, M2, multiplicities=[2, 3])
+                case 'prod':
+                    op = M1 @ M1.T
 
-    scalarmul = 2. * identity
+        case (('selfadj' | 'square') as op_prop, 'tridiagonal'):
+            alpha = xnp.array([1, 2, 3], dtype=dtype, device=device)[:2]
+            beta = xnp.array([4, 5, 6], dtype=dtype, device=device)
+            gamma = xnp.array([7, 8, 9], dtype=dtype, device=device)[:2]
+            match op_prop:
+                case 'selfadj':
+                    op = Tridiagonal(alpha, beta, alpha)
+                case 'square':
+                    op = Tridiagonal(alpha, beta, gamma)
 
-    product = Product(Dense(M1), Dense(M2))
+        case ('selfadj', 'hessian'):
+            f2 = lambda x: (x[1] - .1) ** 3 + xnp.cos(x[2]) + (x[0] + .2) ** 2
+            x = xnp.array([1., 2., 3.], dtype=dtype)
+            op = Hessian(f2, x)
 
-    sliced = Sliced(M1, (slice(0, 1), slice(0, 2)))
+        case ('square', 'jacobian'):
+            f1 = lambda x: xnp.array([x[0]**2, x[1]**3, xnp.sin(x[2])],dtype=dtype)
+            x = xnp.array([1, 2, 3], dtype=dtype)
+            op = Jacobian(f1, x)
 
-    data = xnp.array([1, 2, 3, 4, 5, 6], dtype=dtype)
-    indices = xnp.array([0, 2, 1, 0, 2, 1])
-    indptr = xnp.array([0, 2, 4, 6])
-    shape = (3, 3)
-    # sparse = Sparse(data, indices, indptr, shape)
+        case ('square', 'permutation'):
+            op = Permutation(xnp.array([1, 0, 2, 3, 6, 5, 4]))
 
-    lowertriangular = Triangular(M1)
+        case ('square', sub_op_name):
+            M1 = xnp.array([[1, 0], [3, 4]], dtype=dtype, device=device)
+            M2 = xnp.array([[5, 6], [7, 8]], dtype=dtype, device=device)
+            match sub_op_name:
+                case 'big':
+                    dtype2 = (xnp.array([1.]) + 1j).dtype
+                    M1 = Dense(xnp.array([[1, 0, 0], [3, 4 + .1j, 2j], [0, 0, .1]], dtype=dtype2))
+                    M2 = Dense(xnp.array([[5, 2, 0], [3., 8, 0], [0, 0, -.5]], dtype=dtype2))
+                    big = reduce(cola.kron, [M1, M2, M1 @ M1, M2, Identity((10, 10), dtype=dtype2)])
+                    op = big + 0.5 * cola.ops.I_like(big)
+                case 'blockdiag':
+                    op = BlockDiag(M1, M2, multiplicities=[2, 3])
+                case 'dense':
+                    op = Dense(M1)
+                case 'kronecker':
+                    op = Kronecker(lazify(M1), lazify(M2))
+                case 'kronsum':
+                    op = KronSum(lazify(M1), lazify(M2))
+                case 'lowertriangular':
+                    op = Triangular(M1)
+                case 'product':
+                    op = Product(lazify(M1), lazify(M2))
 
-    kronecker = Kronecker(Dense(M1), Dense(M2))
+        case ('square', 'sparse'):
+            data = xnp.array([1, 2, 3, 4, 5, 6], dtype=dtype)
+            indices = xnp.array([0, 2, 1, 0, 2, 1])
+            indptr = xnp.array([0, 2, 4, 6])
+            shape = (3, 3)
+            sparse = Sparse(data, indices, indptr, shape)
 
-    permutation = Permutation(xnp.array([1, 0, 2, 3, 6, 5, 4]))
+    # Check to sure that we hit a case statement
+    if op is None:
+        raise ValueError(op_name)
 
-    dense = Dense(M1)
+    # Maybe wrap as a PSD or SelfAdjoint linear operator
+    match op_name.split('_')[0]:
+        case 'psd':
+            op = PSD(op)
+        case 'selfadj':
+            op = SelfAdjoint(op)
+        case _:
+            pass
 
-    M1 = Dense(xnp.array([[6., 2], [2, 4]], dtype=dtype))
-    M2 = Dense(xnp.array([[7, 6], [6, 8]], dtype=dtype))
+    return op
 
-    blockdiag = BlockDiag(M1, M2, multiplicities=[2, 3])
-    prod = M1 @ M1.T
 
-    # Jacobian
-    def f1(x):
-        return xnp.array([x[0]**2, x[1]**3, xnp.sin(x[2])],dtype=dtype)
-
-    x = xnp.array([1, 2, 3], dtype=dtype)
-    jacobian = Jacobian(f1, x)
-
-    # Hessian
-    def f2(x):
-        return (x[1] - .1)**3 + xnp.cos(x[2]) + (x[0] + .2)**2
-
-    x = xnp.array([1., 2., 3.], dtype=dtype)
-    hessian = Hessian(f2, x)
-    # print(hessian.dtype, dtype)
-    # assert False, (hessian.dtype, dtype)
-    # big
-    dtype2 = (x + 1j).dtype
-    M1 = Dense(xnp.array([[1, 0, 0], [3, 4 + .1j, 2j], [0, 0, .1]], dtype=dtype2))
-    M2 = Dense(xnp.array([[5, 2, 0], [3., 8, 0], [0, 0, -.5]], dtype=dtype2))
-    big = reduce(cola.kron, [M1, M2, M1 @ M1, M2, Identity((10, 10), dtype=dtype2)])
-    big = big + 0.5 * cola.ops.I_like(big)
-
-    # PSD
-    big_psd = reduce(cola.kron, [M1.H @ M1, M2.H @ M2, M2.H @ M2, Identity((15, 15), dtype=dtype2)])
-    big_psd = big_psd + 0.04 * cola.ops.I_like(big_psd)
-    psd_ops = [Diagonal(xnp.array([.1, .5, .22, 8.], dtype=dtype)), identity, scalarmul]
-    # psd_ops += [blockdiag, prod, big_psd]
-    psd_ops += [blockdiag, prod]
-    # JTJ = jacobian.T @ jacobian
-    # psd_ops += [JTJ+0.1*cola.ops.I_like(JTJ)]
-
-    symmetric_ops = [hessian, Tridiagonal(alpha, beta, alpha)]
-
-    square_ops = [
-        permutation,
-        kronsum,
-        tridiagonal,
-        dense,
-        kronecker,
-        blockdiag,
-        product,
-        lowertriangular,
-        # big,
-        #jacobian
+def get_test_operators(backend: str, precision: str, device: str = 'cpu') -> list[LinearOperator]:
+    return [
+        get_test_operator(backend=backend, precision=precision, device=device, op_name=op_name)
+        for op_name in op_names
     ]
 
-    # TODO: fix jacobian matmat
-    return [PSD(op) for op in psd_ops] + [SelfAdjoint(op) for op in symmetric_ops] + square_ops
+
+__all__ = ['get_test_operator', 'get_test_operators', 'op_names']

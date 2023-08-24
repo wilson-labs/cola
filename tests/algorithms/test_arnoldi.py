@@ -3,30 +3,27 @@ from cola.ops import Householder
 from cola.ops import Product
 from cola.ops import Dense
 from cola.algorithms.arnoldi import get_householder_vec
-from cola import jax_fns
-from cola import torch_fns
 from cola.fns import lazify
 from cola.algorithms.arnoldi import get_arnoldi_matrix
 from cola.algorithms.arnoldi import arnoldi_eigs
 from cola.algorithms.arnoldi import run_householder_arnoldi
-from cola.utils_test import parametrize, relative_error
+from cola.utils_test import get_xnp, parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
 from cola.utils_test import generate_lower_from_diag
-from jax.config import config
-
-config.update('jax_platform_name', 'cpu')
-# config.update("jax_enable_x64", True)
 
 
-@parametrize([torch_fns, jax_fns])
-def test_arnoldi_vjp(xnp):
+@parametrize(['torch', 'jax'])
+def test_arnoldi_vjp(backend):
+    if backend == 'torch':
+        import torch
+        torch.manual_seed(seed=21)
+
+    xnp = get_xnp(backend)
     dtype = xnp.float64
     matrix = [[6., 2., 3.], [2., 3., 1.], [3., 1., 4.]]
     diag = xnp.Parameter(xnp.array(matrix, dtype=dtype))
     diag_soln = xnp.Parameter(xnp.array(matrix, dtype=dtype))
     _, unflatten = Dense(diag).flatten()
-    import torch
-    torch.manual_seed(seed=21)
     x0 = xnp.randn(diag.shape[0], 1)
 
     def f(theta):
@@ -43,7 +40,7 @@ def test_arnoldi_vjp(xnp):
 
     out = f(diag)
     print(out)
-    if xnp.__name__.find("torch") >= 0:
+    if backend == 'torch':
         out.backward()
         approx = diag.grad.clone()
     else:
@@ -52,7 +49,7 @@ def test_arnoldi_vjp(xnp):
 
     out = f_alt(diag_soln)
     print(out)
-    if xnp.__name__.find("torch") >= 0:
+    if backend == 'torch':
         out.backward()
         soln = diag_soln.grad.clone()
     else:
@@ -64,8 +61,9 @@ def test_arnoldi_vjp(xnp):
     assert abs_error < 5e-5
 
 
-@parametrize([torch_fns, jax_fns])
-def test_arnoldi(xnp):
+@parametrize(['torch', 'jax'])
+def test_arnoldi(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.complex64
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=4, dtype=np.float32)
     A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype)
@@ -82,9 +80,9 @@ def test_arnoldi(xnp):
     assert rel_error < 1e-3
 
 
-# @parametrize([torch_fns])
-@parametrize([jax_fns])
-def test_householder_arnoldi_decomp(xnp):
+@parametrize(['jax'])
+def test_householder_arnoldi_decomp(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np.float32) - 0.5
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)
@@ -92,7 +90,7 @@ def test_householder_arnoldi_decomp(xnp):
     # A_np, rhs_np = np.array(A, dtype=np.complex128), np.array(rhs[:, 0], dtype=np.complex128)
     A_np, rhs_np = np.array(A, dtype=np.float64), np.array(rhs[:, 0], dtype=np.float64)
     # Q_sol, H_sol = run_householder_arnoldi(A, rhs, A.shape[0], np.float64, xnp)
-    Q_sol, H_sol = run_householder_arnoldi_np(A_np, rhs_np, A.shape[0], np.float64, jax_fns)
+    Q_sol, H_sol = run_householder_arnoldi_np(A_np, rhs_np, A.shape[0], np.float64, xnp)
 
     # fn = run_householder_arnoldi
     fn = xnp.jit(run_householder_arnoldi, static_argnums=(0, 2))
@@ -103,8 +101,9 @@ def test_householder_arnoldi_decomp(xnp):
         assert rel_error < 1e-5
 
 
-@parametrize([torch_fns])  # jax does not have complex128
-def test_get_arnoldi_matrix(xnp):
+@parametrize(['torch'])  # jax does not have complex128
+def test_get_arnoldi_matrix(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.complex128  # double precision on real and complex coordinates to achieve 1e-12 tol
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=20, dtype=np.float32) - 0.5
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)
@@ -133,12 +132,13 @@ def test_get_arnoldi_matrix(xnp):
     assert rel_error < 1e-12
 
 
-def test_numpy_arnoldi():
+@parametrize(['jax'])
+def test_numpy_arnoldi(backend):
+    xnp = get_xnp(backend)
     float_formatter = "{:.2f}".format
     np.set_printoptions(formatter={'float_kind': float_formatter})
     # dtype = np.complex64
     dtype = np.float64
-    xnp = jax_fns
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np.float32)
     A = np.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype)
     rhs = np.random.normal(size=(A.shape[0], ))

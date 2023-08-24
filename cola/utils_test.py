@@ -1,12 +1,42 @@
-import pytest
 import inspect
+import itertools
+import os
+import pytest
+from types import ModuleType
+
 from cola.ops import get_library_fns
 import numpy as np
-import itertools
+
+
+# Try importing jax and torch, for the get_framework function
+try:
+    from . import jax_fns
+except ImportError:
+    jax_fns = None
+
+try:
+    from . import torch_fns
+except ImportError:
+    torch_fns = None
 
 
 def strip_parens(string):
     return string.replace('(', '').replace(')', '')
+
+
+def _add_marks(case):
+    # This function is maybe hacky, but it adds marks based on the names of the parameters supplied
+    # In particular, it adds the 'torch', 'jax', and 'big' marks
+    case = case if isinstance(case, list) or isinstance(case, tuple) else [case]
+    marks = []
+    args = tuple(str(arg) for arg in case)
+    if any('torch' in arg for arg in args):
+        marks.append(pytest.mark.torch)
+    if any('jax' in arg for arg in args):
+        marks.append(pytest.mark.jax)
+    if any('big' in arg for arg in args):
+        marks.append(pytest.mark.big)
+    return pytest.param(*case, marks=marks)
 
 
 def parametrize(*cases, ids=None):
@@ -16,6 +46,9 @@ def parametrize(*cases, ids=None):
         all_cases = [tuple(elem) for elem in itertools.product(*cases)]
     else:
         all_cases = cases[0]
+
+    # Potentially add marks
+    all_cases = [_add_marks(case) for case in all_cases]
 
     def decorator(test_fn):
         argnames = ','.join(inspect.getfullargspec(test_fn).args)
@@ -106,3 +139,22 @@ def generate_clustered_spectrum(clusters, sizes, std=0.025, seed=None, dtype=np.
         diag.append(sub_diags)
     diag = np.concatenate(diag, axis=0)
     return np.sort(diag)[::-1]
+
+
+def get_xnp(backend: str) -> ModuleType:
+    match backend:
+        case "torch":
+            if torch_fns is None:  # There was an import error with torch
+                raise RuntimeError("Could not import torch. It is likely not installed.")
+            else:
+                return torch_fns
+        case "jax":
+            if jax_fns is None:  # There was an import error with jax
+                raise RuntimeError("Could not import jax. It is likely not installed.")
+            else:
+                from jax.config import config
+                config.update('jax_platform_name', 'cpu')  # Force tests to run tests on CPU
+                # config.update("jax_enable_x64", True)
+                return jax_fns
+        case _:
+            raise ValueError(f"Unknown backend {backend}.")

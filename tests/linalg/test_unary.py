@@ -1,20 +1,15 @@
-from operator_market import get_test_operators
+from operator_market import op_names, get_test_operator
 from cola.linalg import sqrt, exp
 from cola.ops import LinearOperator
 import cola
-from cola import jax_fns
-from cola import torch_fns
 from cola.utils_test import parametrize, relative_error
 from scipy.linalg import sqrtm, expm
 import numpy as np
 
-torch_test_ops = get_test_operators(torch_fns, torch_fns.float32)
-jax_test_ops = get_test_operators(jax_fns, jax_fns.float32)
-ops = jax_test_ops + torch_test_ops
 
-
-@parametrize(ops, [(exp, expm), (sqrt, sqrtm)])
-def test_unary(operator, fns):
+@parametrize(['torch', 'jax'], ['float64'], op_names, [(exp, expm), (sqrt, sqrtm)])
+def test_unary(backend, precision, op_name, fns):
+    operator = get_test_operator(backend, precision, op_name)
     fn, spfn = fns
     A, dtype, xnp = operator, operator.dtype, operator.xnp
     A2 = LinearOperator(A.dtype, A.shape, A._matmat)

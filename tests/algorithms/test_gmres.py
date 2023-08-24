@@ -1,21 +1,17 @@
 import numpy as np
-from cola import jax_fns
-from cola import torch_fns
 from cola.ops import Identity
 from cola.ops import Diagonal
 from cola.fns import lazify
 from cola.linalg.inverse import inverse
 from cola.algorithms.gmres import gmres
 from cola.algorithms.gmres import gmres_fwd
-from cola.utils_test import parametrize, relative_error
+from cola.utils_test import get_xnp, parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
-from jax.config import config
-
-config.update('jax_platform_name', 'cpu')
 
 
-@parametrize([torch_fns, jax_fns])
-def test_gmres_vjp(xnp):
+@parametrize(['torch', 'jax'])
+def test_gmres_vjp(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
     diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
@@ -39,7 +35,7 @@ def test_gmres_vjp(xnp):
         return loss
 
     out = f(diag)
-    if xnp.__name__.find("torch") >= 0:
+    if backend == 'torch':
         out.backward()
         approx = diag.grad.clone()
     else:
@@ -47,7 +43,7 @@ def test_gmres_vjp(xnp):
     assert approx is not None
 
     out = f_alt(diag_soln)
-    if xnp.__name__.find("torch") >= 0:
+    if backend == 'torch':
         out.backward()
         soln = diag_soln.grad.clone()
     else:
@@ -57,8 +53,9 @@ def test_gmres_vjp(xnp):
     assert rel_error < 1e-6
 
 
-@parametrize([torch_fns, jax_fns])
-def test_gmres_random(xnp):
+@parametrize(['torch', 'jax'])
+def test_gmres_random(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=25, dtype=np.float32)
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype)
@@ -73,8 +70,9 @@ def test_gmres_random(xnp):
     assert rel_error < 5e-4
 
 
-@parametrize([torch_fns, jax_fns])
-def test_gmres_easy(xnp):
+@parametrize(['torch', 'jax'])
+def test_gmres_easy(backend):
+    xnp = get_xnp(backend)
     dtype = xnp.float32
     A = xnp.diag(xnp.array([3., 4., 5.], dtype=dtype))
     rhs = [[1], [1], [1]]
