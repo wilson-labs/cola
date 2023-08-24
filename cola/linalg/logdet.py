@@ -15,7 +15,7 @@ def product(xs):
 
 
 @export
-def logdet(A: LinearOperator, **kwargs) -> Array:
+def logdet(A: LinearOperator, **kwargs):
     r""" Computes logdet of a linear operator. 
 
     For large inputs (or with method='iterative'),
@@ -42,7 +42,7 @@ def logdet(A: LinearOperator, **kwargs) -> Array:
 
 @dispatch
 @export
-def slogdet(A: LinearOperator, **kwargs) -> Array:
+def slogdet(A: LinearOperator, **kwargs):
     r""" Computes sign and logdet of a linear operator. such that det(A) = sign(A) exp(logdet(A))
 
     For large inputs (or with method='iterative'),
@@ -78,7 +78,7 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
 
 
 @dispatch(cond=lambda A: A.isa(PSD))
-def slogdet(A: LinearOperator, **kwargs) -> Array:
+def slogdet(A: LinearOperator, **kwargs):
     kws = dict(method="auto", tol=1e-6, vtol=1e-6, pbar=False, max_iters=300)
     # assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
@@ -103,13 +103,13 @@ def slogdet(A: LinearOperator, **kwargs) -> Array:
 
 
 @dispatch(cond=lambda A, **kwargs: all([(Ai.shape[-2] == Ai.shape[-1]) for Ai in A.Ms]))
-def slogdet(A: Product, **kwargs) -> Array:
+def slogdet(A: Product, **kwargs):
     signs, logdets = zip(*[slogdet(Ai, **kwargs) for Ai in A.Ms])
     return product(signs), sum(logdets)
 
 
 @dispatch
-def slogdet(A: Diagonal, **kwargs) -> Array:
+def slogdet(A: Diagonal, **kwargs):
     xnp = A.xnp
     mag = xnp.abs(A.diag)
     phase = A.diag / mag
@@ -117,7 +117,7 @@ def slogdet(A: Diagonal, **kwargs) -> Array:
 
 
 @dispatch
-def slogdet(A: Kronecker, **kwargs) -> Array:
+def slogdet(A: Kronecker, **kwargs):
     # logdet(Pi A_i \otimes I) = sum_i logdet(A_i)
     signs, logdets = zip(*[slogdet(Ai, **kwargs) for Ai in A.Ms])
     sizes = [Ai.shape[-1] for Ai in A.Ms]
@@ -128,7 +128,7 @@ def slogdet(A: Kronecker, **kwargs) -> Array:
 
 
 @dispatch
-def slogdet(A: BlockDiag, **kwargs) -> Array:
+def slogdet(A: BlockDiag, **kwargs):
     # logdet(\bigoplus A_i) = log \prod det(A_i) = sum_i logdet(A_i)
     signs, logdets = zip(*[slogdet(Ai, **kwargs) for Ai in A.Ms])
     scaled_logdets = sum(ld * n for ld, n in zip(logdets, A.multiplicities))
@@ -137,7 +137,7 @@ def slogdet(A: BlockDiag, **kwargs) -> Array:
 
 
 @dispatch
-def slogdet(A: Triangular, **kwargs) -> Array:
+def slogdet(A: Triangular, **kwargs):
     xnp = A.xnp
     diag = xnp.diag(A.A)
     mag = xnp.abs(diag)
@@ -146,7 +146,7 @@ def slogdet(A: Triangular, **kwargs) -> Array:
 
 
 @dispatch
-def slogdet(A: Permutation, **kwargs) -> Array:
+def slogdet(A: Permutation, **kwargs):
     # TODO: count the parity of the permutation and return an error if it is odd
     xnp = A.xnp
     zero = xnp.array(0., dtype=A.dtype, device=A.device)

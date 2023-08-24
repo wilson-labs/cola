@@ -145,7 +145,7 @@ def inverse(A: Permutation, **kwargs):
 
 
 @dispatch(cond=lambda A, **kwargs: all([M.shape[-2] == M.shape[-1] for M in A.Ms]))
-def inverse(A: Product, **kwargs) -> Product:
+def inverse(A: Product, **kwargs):
     output = reversed([inverse(M, **kwargs) for M in A.Ms])
     return Product(*output)
 

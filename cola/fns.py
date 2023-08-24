@@ -16,7 +16,7 @@ Scalar = Array
 
 
 @export
-def lazify(A: Union[LinearOperator, Array]) -> LinearOperator:
+def lazify(A: Union[LinearOperator, Array]):
     """ Convert an array to a linear operator if it is not already one. """
     if isinstance(A, LinearOperator):
         return A
@@ -25,7 +25,7 @@ def lazify(A: Union[LinearOperator, Array]) -> LinearOperator:
 
 
 @export
-def densify(A: Union[LinearOperator, Array]) -> Array:
+def densify(A: Union[LinearOperator, Array]):
     """ Convert a linear operator to a dense array if it is not already one. """
     if isinstance(A, LinearOperator):
         return A.to_dense()
@@ -34,22 +34,22 @@ def densify(A: Union[LinearOperator, Array]) -> Array:
 
 
 @dispatch
-def dot(A: LinearOperator, B: LinearOperator) -> Product:
+def dot(A: LinearOperator, B: LinearOperator):
     return Product(A, B)
 
 
 @dispatch
-def dot(A: Product, B: LinearOperator) -> Product:
+def dot(A: Product, B: LinearOperator):
     return Product(*(A.Ms + (B, )))
 
 
 @dispatch
-def dot(A: LinearOperator, B: Product) -> Product:
+def dot(A: LinearOperator, B: Product):
     return Product(*((A, ) + B.Ms))
 
 
 @dispatch
-def dot(A: Product, B: Product) -> Product:
+def dot(A: Product, B: Product):
     return Product(*(A.Ms + B.Ms))
 
 
@@ -64,48 +64,48 @@ def dot(A: Identity, B: Any):
 
 
 @dispatch
-def add(A: Any, B: Any) -> Sum:
+def add(A: Any, B: Any):
     return add(lazify(A), lazify(B))
 
 
 @dispatch
-def add(A: LinearOperator, B: LinearOperator) -> Sum:
+def add(A: LinearOperator, B: LinearOperator):
     return Sum(A, B)
 
 
 @dispatch
-def add(A: Sum, B: LinearOperator) -> Sum:
+def add(A: Sum, B: LinearOperator):
     return Sum(*(A.Ms + (B, )))
 
 
 @dispatch
-def add(A: LinearOperator, B: Sum) -> Sum:
+def add(A: LinearOperator, B: Sum):
     return Sum(*((A, ) + B.Ms))
 
 
 @dispatch
-def add(A: Sum, B: Sum) -> Sum:
+def add(A: Sum, B: Sum):
     return Sum(*(A.Ms + B.Ms))
 
 
 @dispatch
-def mul(A: LinearOperator, c: Scalar) -> LinearOperator:
+def mul(A: LinearOperator, c: Scalar):
     S = ScalarMul(c, (A.shape[-2], A.shape[-2]), A.dtype)
     return Product(*[S, A])
 
 
 @dispatch
-def mul(A: ScalarMul, c: Scalar) -> ScalarMul:
+def mul(A: ScalarMul, c: Scalar):
     return ScalarMul(A.c * c, A.shape, A.dtype)
 
 
 @dispatch
-def mul(c: Scalar, A: ScalarMul) -> ScalarMul:
+def mul(c: Scalar, A: ScalarMul):
     return ScalarMul(A.c * c, A.shape, A.dtype)
 
 
 @dispatch
-def mul(A: ScalarMul, B: ScalarMul) -> ScalarMul:
+def mul(A: ScalarMul, B: ScalarMul):
     return ScalarMul(A.c * B.c, A.shape, A.dtype)
 
 
@@ -152,58 +152,58 @@ def adjoint(A: Triangular):
 
 @dispatch
 @export
-def kron(A: Any, B: Any) -> Kronecker:
+def kron(A: Any, B: Any):
     """ Kronecker product of two linear operators. """
     return kron(lazify(A), lazify(B))
 
 
 @dispatch
-def kron(A: LinearOperator, B: LinearOperator) -> Kronecker:
+def kron(A: LinearOperator, B: LinearOperator):
     return Kronecker(*[A, B])
 
 
 @dispatch
-def kron(A: Diagonal, B: Diagonal) -> Diagonal:
+def kron(A: Diagonal, B: Diagonal):
     diag = (A.diag[:, None] * B.diag[None, :]).reshape(-1)
     return Diagonal(diag)
 
 
 @dispatch
-def kron(A: Kronecker, B: LinearOperator) -> Kronecker:
+def kron(A: Kronecker, B: LinearOperator):
     return Kronecker(*(A.Ms + (B, )))
 
 
 @dispatch
-def kron(A: LinearOperator, B: Kronecker) -> Kronecker:
+def kron(A: LinearOperator, B: Kronecker):
     return Kronecker(*((A, ) + B.Ms))
 
 
 @dispatch
 @export
-def kronsum(A: Any, B: Any) -> KronSum:
+def kronsum(A: Any, B: Any):
     return kronsum(lazify(A), lazify(B))
 
 
 @dispatch
-def kronsum(A: LinearOperator, B: LinearOperator) -> KronSum:
+def kronsum(A: LinearOperator, B: LinearOperator):
     return KronSum(*[A, B])
 
 
 @dispatch
-def kronsum(A: KronSum, B: LinearOperator) -> KronSum:
+def kronsum(A: KronSum, B: LinearOperator):
     return KronSum(*(A.Ms + (B, )))
 
 
 @dispatch
-def kronsum(A: LinearOperator, B: KronSum) -> KronSum:
+def kronsum(A: LinearOperator, B: KronSum):
     return KronSum(*((A, ) + B.Ms))
 
 
 @export
-def block_diag(*ops: List[LinearOperator]) -> LinearOperator:
+def block_diag(*ops: List[LinearOperator]):
     """ Construct a block diagonal operator from a list of ops. """
     return BlockDiag(*ops)
 
 
-def concatenate(ops: List[LinearOperator], axis=0) -> LinearOperator:
+def concatenate(ops: List[LinearOperator], axis=0):
     raise NotImplementedError
