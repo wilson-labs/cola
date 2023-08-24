@@ -23,4 +23,4 @@ def test_inverse(backend, precision, op_name):
     rel_error = relative_error(X, Ainv2 @ B)
     assert rel_error < 3 * tol, f"Dense inversion failed on {type(A)}"
     rel_error = relative_error(X, Ainv3 @ B)
-    assert rel_error, f"Krylov inversion failed on {type(A)}"
+    assert rel_error < 3 * tol, f"Krylov inversion failed on {type(A)}"
