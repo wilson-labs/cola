@@ -9,7 +9,6 @@ from torch.func import vmap as _vmap
 from torch.func import grad as _grad
 import logging
 
-device = torch.device
 logdet = torch.logdet
 exp = torch.exp
 cos = torch.cos
@@ -101,7 +100,7 @@ def device(device_name):
     if device_name == "cpu":
         return torch.device("cpu")
     else:
-        return torch.device("gpu:0")
+        return torch.device("cuda:0")
 
 
 def PRNGKey(x):
