@@ -13,7 +13,7 @@ setup(
     python_requires='>=3.10',
     install_requires=[
         'scipy', 'tqdm>=4.38',
-        'cola-plum-dispatch==0.1.0',
+        'cola-plum-dispatch==0.1.1',
     ],
     extras_require={
         'dev': ['pytest', 'pytest-cov'],
