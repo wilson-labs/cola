@@ -30,7 +30,7 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'Programming Language :: Python :: 3',
-        'Topic :: Scientific/Engineering :: Artificial Intelligence :: Machine Learning',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
     ],
     keywords=[
         'linear algebra',
