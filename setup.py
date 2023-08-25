@@ -13,10 +13,7 @@ setup(
     python_requires='>=3.10',
     install_requires=[
         'scipy', 'tqdm>=4.38',
-        # 'plum-dispatch @ git+ssh://git@github.com/beartype/plum.git',
-        # 'plum-dispatch @ git+https://github.com/beartype/plum',
-        'plum-dispatch @ git+https://github.com/mfinzi/plum'\
-                '#537534597f0061ea38e499d5127e2fe78463cdfb',
+        'cola-plum-dispatch==0.1.0',
     ],
     extras_require={
         'dev': ['pytest', 'pytest-cov'],
