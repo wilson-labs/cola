@@ -341,7 +341,7 @@ def test_adjoint_property(backend):
     A = xnp.array([[1 + 1j, 2 - 2j, 7 - 3j], [3 + 1j, 4 - 1j, 5 + 2j]])
     B = LinearOperator(shape=A.shape, matmat=lambda x: A @ x, dtype=A.dtype)
     X = xnp.array([1. + 1j, 4. - 2j, 2.5 + 1j, -.1 - 1j, -3. + 1j, -7. - 3j]).reshape(2, 3)
-    rel_error = xnp.norm(relative_error(xnp.conj(A).T @ X, B.H @ X))
+    rel_error = relative_error(xnp.conj(A).T @ X, B.H @ X)
     assert rel_error < _tol
 
 
