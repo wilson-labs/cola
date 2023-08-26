@@ -63,7 +63,7 @@ def relative_error(v, w):
     abs_err = xnp.norm(v - w)
     denom = (xnp.norm(v) + xnp.norm(w)) / 2.
     rel_err = abs_err / max(denom, 1e-16)
-    return rel_err.item()
+    return rel_err
 
 
 def construct_e_vec(i, size):
