@@ -1,6 +1,4 @@
 from functools import wraps
-from cola.ops.operator_base import flatten_function
-
 
 def iterative_autograd(iterative_bwd):
     """ Autograd wrapper for iterative solvers like CG, Lanczos, SLQ, etc.
@@ -53,9 +51,9 @@ def iterative_autograd(iterative_bwd):
                     def setup_context(ctx, inputs, output):
                         params = inputs
                         res = (inputs, output)
-                        all_tensors, t_unflatten = flatten_function(res)
+                        all_tensors, tree = A.xnp.tree_flatten(res)
                         ctx.save_for_backward(*all_tensors)
-                        ctx.t_unflatten = t_unflatten
+                        ctx.t_unflatten = lambda tensors: A.xnp.tree_unflatten(tree, tensors)
 
                     @staticmethod
                     def backward(ctx, *grads):

@@ -19,6 +19,7 @@ from jax.lax.linalg import svd
 from jax.lax.linalg import qr
 from jax.scipy.linalg import lu as lu_lax
 from jax.scipy.linalg import solve_triangular as solvetri
+import jax.tree_util as tu
 import numpy as np
 import logging
 
@@ -233,3 +234,12 @@ def array(arr, dtype=None, device=None):
 
 def update_array(array, update, *slices):
     return array.at[slices].set(update)
+
+def is_leaf(value):
+    return tu.treedef_is_leaf(tu.tree_structure(value))
+
+def tree_flatten(value):
+    return tu.tree_flatten(value) #leaves, treedef
+
+def tree_unflatten(treedef, value):
+    return tu.tree_unflatten(treedef, value)

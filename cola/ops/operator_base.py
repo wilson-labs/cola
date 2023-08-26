@@ -5,6 +5,7 @@ import numpy as np
 from cola.utils import export
 from numbers import Number
 import numpy as np
+import optree
 
 Array = Dtype = Any
 export(Array)
@@ -35,44 +36,146 @@ def get_library_fns(dtype: Dtype):
         pass
     raise ImportError("No supported array library found")
 
+# def get_children_aux(obj):
+#     if isinstance(obj, LinearOperator):
+#         return obj._args
+#     elif isinstance(obj, (tuple, list, set)):
+#         return obj
+#     elif isinstance(obj, dict):
+#         return obj.values()
+#     else:
+#         return []
+
+# def flatten_function(obj) -> Tuple[List[Array], Callable]:
+#     if is_array(obj):
+#         return [obj], lambda x: x[0]
+
+#     elif isinstance(obj, LinearOperator):
+#         flat, unflatten = flatten_function((obj._args, obj._kwargs))
+
+#         def unflatten_op(params):
+#             args, kwargs = unflatten(params)
+#             return obj.__class__(*args, **kwargs)
+
+#         return flat, unflatten_op
+
+#     elif isinstance(obj, (tuple, list)):  # TODO add dict?
+#         unflatten_fns, flat, slices = [], [], [slice(-1, 0)]
+#         for arg in obj:
+#             params, unflatten = flatten_function(arg)
+#             slices.append(slice(slices[-1].stop, slices[-1].stop + len(params)))
+#             unflatten_fns.append(unflatten)
+#             flat.extend(params)
+
+#         def unflatten(params):
+#             new_params = []
+#             for slc, unflatten in zip(slices[1:], unflatten_fns):
+#                 new_params.append(unflatten(params[slc]))
+#             return obj.__class__(new_params)
+
+#         return flat, unflatten
+
+#     elif isinstance(obj, dict):
+#         unflatten_fns, flat, slices = [], [], [slice(-1, 0)]
+#         for _, val in obj.items():
+#             params, unflatten = flatten_function(val)
+#             slices.append(slice(slices[-1].stop, slices[-1].stop + len(params)))
+#             unflatten_fns.append(unflatten)
+#             flat.extend(params)
+
+#         def unflatten(params):
+#             new_params = {}
+#             for key, slc, unflatten in zip(obj.keys(), slices[1:], unflatten_fns):
+#                 new_params[key] = unflatten(params[slc])
+#             return new_params
+
+#         return flat, unflatten
+#     else:
+#         return [], lambda _: obj
+
+
+def is_array(obj):
+    if not hasattr(obj, 'dtype'):
+        return False
+    if get_library_fns(obj.dtype).is_array(obj):
+        return True
+    return False
+
+
 
 class AutoRegisteringPyTree(type):
     def __init__(cls, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        import optree
+        optree.register_pytree_node_class(cls, namespace='cola')
         try:
             import jax
             jax.tree_util.register_pytree_node_class(cls)
         except ImportError:
             pass
+        try:
+            #TODO: when pytorch migrates to optree, switch as well
+            import torch
+            tree_flatten = lambda self: self.tree_flatten()
+            tree_unflatten = lambda ctx, children: cls.tree_unflatten(children, ctx)
+            torch.utils._pytree._register_pytree_node(cls, tree_flatten,tree_unflatten)
+        except ImportError:
+            pass
+        
 
-
-def find_device(obj, xnp):
+def find_xnp(obj):
     if is_array(obj):
+        return get_library_fns(obj.dtype)
+    elif isinstance(obj, LinearOperator) and obj.xnp is not None:
+        return obj.xnp
+    elif isinstance(obj, (tuple, list, set)):
+        for ob in obj:
+            xnp = find_xnp(ob)
+            if xnp is not None:
+                return xnp
+    elif isinstance(obj, dict):
+        for _, ob in obj.items():
+            xnp = find_xnp(ob)
+            if xnp is not None:
+                return xnp
+    try:
+        return get_library_fns(obj)
+    except (ImportError, AttributeError):
+        pass
+    return None
+
+def find_device(obj):
+    if is_array(obj):
+        xnp = get_library_fns(obj.dtype)
         return xnp.get_device(obj)
     elif isinstance(obj, LinearOperator):
         return obj.device
     elif isinstance(obj, (tuple, list, set)):
         for ob in obj:
-            device = find_device(ob, xnp)
+            device = find_device(ob)
             if device is not None:
                 return device
     elif isinstance(obj, dict):
         for _, ob in obj.items():
-            device = find_device(ob, xnp)
+            device = find_device(ob)
             if device is not None:
                 return device
-    else:
-        return None
+    return None
 
+def is_leaf(obj):
+    return 
 
 @export
 class LinearOperator(metaclass=AutoRegisteringPyTree):
     """ Linear Operator base class """
+    _dynamic = {key:False for key in ['xnp', 'shape', 'dtype', 'device', 'annotations']}
+
     def __new__(cls, *args, **kwargs):
         """ Creates attributes for the flatten and unflatten functionality. """
         obj = super().__new__(cls)
-        obj._args = args
-        obj._kwargs = kwargs
+        # obj.xnp = find_xnp([args, kwargs])
+        # assert obj.xnp is not None, f"No supported array library found in {args,kwargs,cls}"
+        obj.device = find_device([args, kwargs])
         return obj
 
     def __init__(self, dtype: Dtype, shape: Tuple, matmat=None, annotations={}):
@@ -84,8 +187,14 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         self.annotations = cola.annotations.get_annotations(self)
         # TODO: reform matrices with the new annotations?
         self.annotations.update(annotations)
-        device = find_device([self._args, self._kwargs], self.xnp)
-        self.device = device or self.xnp.get_default_device()
+        self.device = self.device or self.xnp.get_default_device()
+        
+
+    def __setattr__(self, name, value):
+        if name not in self.__class__._dynamic:
+            cond = is_array(value) or not optree.treespec_is_leaf(optree.tree_structure(value))
+            self.__class__._dynamic[name] = cond
+        return super().__setattr__(name, value)
 
     def to(self, device, dtype=None):
         """ Returns a new linear operator with given device and dtype """
@@ -132,7 +241,9 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         return cola.fns.adjoint(self)
 
     def flatten(self) -> Tuple[Array, ...]:
-        return flatten_function(self)
+        vals, tree = self.xnp.tree_flatten(self)
+        unflatten = lambda params: self.xnp.tree_unflatten(tree, params)
+        return vals, unflatten
 
     def __matmul__(self, X: Array) -> Array:
         assert X.shape[0] == self.shape[-1], f"dimension mismatch {self.shape} vs {X.shape}"
@@ -234,77 +345,27 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
                 raise NotImplementedError(f"__getitem__ not implemented for this case {type(ids)}")
 
     def tree_flatten(self):
-        # write a routine that sorts args and kwargs into
-        # dynamic arguments (LinearOperator, array, etc)
-        # and static arguments (int, float, everything else)
-        # and then also stores the information needed to reproduce
-        # the original _args and _kwargs in its original form
-        import jax
-
-        def is_leaf(x):
-            return not isinstance(x, (tuple, list, dict, set))
-
-        flat_args, uf = jax.tree_util.tree_flatten(self._args, is_leaf)
-        return flat_args, (self._kwargs, uf)
+        all_elems = vars(self)
+        # separate all_elems into pytrees and aux
+        pytrees, aux = [], []
+        for key, val in all_elems.items():
+            if self._dynamic[key]:
+                pytrees.append(val)
+                aux.append((key,))
+            else:
+                aux.append((key,val))
+        return pytrees, aux
 
     @classmethod
     def tree_unflatten(cls, aux, children):
-        import jax
-        new_args = jax.tree_util.tree_unflatten(aux[1], children)
-        return cls(*new_args, **aux[0])
-
-
-def flatten_function(obj) -> Tuple[List[Array], Callable]:
-    if is_array(obj):
-        return [obj], lambda x: x[0]
-
-    elif isinstance(obj, LinearOperator):
-        flat, unflatten = flatten_function((obj._args, obj._kwargs))
-
-        def unflatten_op(params):
-            args, kwargs = unflatten(params)
-            return obj.__class__(*args, **kwargs)
-
-        return flat, unflatten_op
-
-    elif isinstance(obj, (tuple, list)):  # TODO add dict?
-        unflatten_fns, flat, slices = [], [], [slice(-1, 0)]
-        for arg in obj:
-            params, unflatten = flatten_function(arg)
-            slices.append(slice(slices[-1].stop, slices[-1].stop + len(params)))
-            unflatten_fns.append(unflatten)
-            flat.extend(params)
-
-        def unflatten(params):
-            new_params = []
-            for slc, unflatten in zip(slices[1:], unflatten_fns):
-                new_params.append(unflatten(params[slc]))
-            return obj.__class__(new_params)
-
-        return flat, unflatten
-
-    elif isinstance(obj, dict):
-        unflatten_fns, flat, slices = [], [], [slice(-1, 0)]
-        for _, val in obj.items():
-            params, unflatten = flatten_function(val)
-            slices.append(slice(slices[-1].stop, slices[-1].stop + len(params)))
-            unflatten_fns.append(unflatten)
-            flat.extend(params)
-
-        def unflatten(params):
-            new_params = {}
-            for key, slc, unflatten in zip(obj.keys(), slices[1:], unflatten_fns):
-                new_params[key] = unflatten(params[slc])
-            return new_params
-
-        return flat, unflatten
-    else:
-        return [], lambda _: obj
-
-
-def is_array(obj):
-    if not hasattr(obj, 'dtype'):
-        return False
-    if get_library_fns(obj.dtype).is_array(obj):
-        return True
-    return False
+        fields = {}
+        child_iter = iter(children)
+        for keyv in aux:
+            if len(keyv) == 1:
+                fields[keyv[0]] = next(child_iter)
+            else:
+                fields[keyv[0]] = keyv[1]
+        obj = object.__new__(cls)
+        for k,v in fields.items():
+            setattr(obj, k, v)
+        return obj
