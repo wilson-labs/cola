@@ -52,12 +52,18 @@ def iterative_autograd(iterative_bwd):
                         params = inputs
                         res = (inputs, output)
                         all_tensors, tree = A.xnp.tree_flatten(res)
-                        ctx.save_for_backward(*all_tensors)
-                        ctx.t_unflatten = lambda tensors: A.xnp.tree_unflatten(tree, tensors)
+                        is_torch = [A.xnp.is_array(x) for x in all_tensors]
+                        torch_tensors = [x for x, y in zip(all_tensors, is_torch) if y]
+                        non_torch_tensors = [x for x, y in zip(all_tensors, is_torch) if not y]
+                        ctx.save_for_backward(*torch_tensors)
+                        ctx.non_torch_tensors = non_torch_tensors
+                        ctx.is_torch = is_torch
+                        ctx.tree = tree
 
                     @staticmethod
                     def backward(ctx, *grads):
-                        res = ctx.t_unflatten(ctx.saved_tensors)
+                        combined = combine(ctx.saved_tensors, ctx.non_torch_tensors, ctx.is_torch)
+                        res = A.xnp.tree_unflatten(ctx.tree, combined)
                         return tuple(bwd(res, grads)[0])
 
                 return Iterative.apply(*par)
@@ -68,7 +74,6 @@ def iterative_autograd(iterative_bwd):
                 def iterative(params):  # params -> y and has autograd
                     return fwd(params)[0]
 
-                # jax_bwd = lambda *args,**kwargs: ((bwd(*args,**kwargs)),)
                 iterative.defvjp(fwd, bwd)
 
                 return iterative(par)
@@ -78,3 +83,9 @@ def iterative_autograd(iterative_bwd):
         return iterative_w_A_arg
 
     return wrap_iterative
+
+
+def combine(torch_tensors,non_torch_tensors,is_torch):
+    iter1 = iter(torch_tensors)
+    iter2 = iter(non_torch_tensors)
+    return [next(iter1) if x else next(iter2) for x in is_torch]

@@ -36,63 +36,6 @@ def get_library_fns(dtype: Dtype):
         pass
     raise ImportError("No supported array library found")
 
-# def get_children_aux(obj):
-#     if isinstance(obj, LinearOperator):
-#         return obj._args
-#     elif isinstance(obj, (tuple, list, set)):
-#         return obj
-#     elif isinstance(obj, dict):
-#         return obj.values()
-#     else:
-#         return []
-
-# def flatten_function(obj) -> Tuple[List[Array], Callable]:
-#     if is_array(obj):
-#         return [obj], lambda x: x[0]
-
-#     elif isinstance(obj, LinearOperator):
-#         flat, unflatten = flatten_function((obj._args, obj._kwargs))
-
-#         def unflatten_op(params):
-#             args, kwargs = unflatten(params)
-#             return obj.__class__(*args, **kwargs)
-
-#         return flat, unflatten_op
-
-#     elif isinstance(obj, (tuple, list)):  # TODO add dict?
-#         unflatten_fns, flat, slices = [], [], [slice(-1, 0)]
-#         for arg in obj:
-#             params, unflatten = flatten_function(arg)
-#             slices.append(slice(slices[-1].stop, slices[-1].stop + len(params)))
-#             unflatten_fns.append(unflatten)
-#             flat.extend(params)
-
-#         def unflatten(params):
-#             new_params = []
-#             for slc, unflatten in zip(slices[1:], unflatten_fns):
-#                 new_params.append(unflatten(params[slc]))
-#             return obj.__class__(new_params)
-
-#         return flat, unflatten
-
-#     elif isinstance(obj, dict):
-#         unflatten_fns, flat, slices = [], [], [slice(-1, 0)]
-#         for _, val in obj.items():
-#             params, unflatten = flatten_function(val)
-#             slices.append(slice(slices[-1].stop, slices[-1].stop + len(params)))
-#             unflatten_fns.append(unflatten)
-#             flat.extend(params)
-
-#         def unflatten(params):
-#             new_params = {}
-#             for key, slc, unflatten in zip(obj.keys(), slices[1:], unflatten_fns):
-#                 new_params[key] = unflatten(params[slc])
-#             return new_params
-
-#         return flat, unflatten
-#     else:
-#         return [], lambda _: obj
-
 
 def is_array(obj):
     if not hasattr(obj, 'dtype'):
@@ -101,6 +44,12 @@ def is_array(obj):
         return True
     return False
 
+def is_xnp_array(obj, xnp):
+    if not hasattr(obj, 'dtype'):
+        return False
+    if xnp.is_array(obj):
+        return True
+    return False
 
 
 class AutoRegisteringPyTree(type):
@@ -162,8 +111,6 @@ def find_device(obj):
                 return device
     return None
 
-def is_leaf(obj):
-    return 
 
 @export
 class LinearOperator(metaclass=AutoRegisteringPyTree):
