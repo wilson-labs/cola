@@ -98,7 +98,7 @@ def eig(A: Triangular, eig_slice=slice(0, None, None), **kwargs):
     sorted_ind = xnp.argsort(eig_vals)
     eig_vals = eig_vals[sorted_ind]
     eig_vecs = compute_lower_triangular_eigvecs(np.array(A.A))
-    eig_vecs = xnp.array(eig_vecs, dtype=A.dtype)[:, sorted_ind]
+    eig_vecs = xnp.array(eig_vecs, dtype=A.dtype, device=A.device)[:, sorted_ind]
     return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
 
 
