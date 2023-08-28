@@ -8,7 +8,6 @@ from cola.linalg.eigs import eig
 from cola.utils_test import get_xnp, parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
 
-
 _tol = 1e-6
 
 
@@ -17,8 +16,8 @@ def test_general(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
-    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)
-    soln_vals = xnp.sort(xnp.array(diag, dtype=dtype))
+    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
+    soln_vals = xnp.sort(xnp.array(diag, dtype=dtype, device=None))
     A = SelfAdjoint(lazify(A))
 
     eig_vals, eig_vecs = eig(A, eig_slice=slice(0, None, None), tol=1e-6)
@@ -58,8 +57,8 @@ def test_adjoint(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
-    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)
-    soln_vals = xnp.sort(xnp.array(diag, dtype=dtype))
+    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
+    soln_vals = xnp.sort(xnp.array(diag, dtype=dtype, device=None))
     A = SelfAdjoint(lazify(A))
     eig_vals, eig_vecs = eig(A)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
@@ -86,11 +85,11 @@ def test_adjoint(backend):
 def test_triangular(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    A = xnp.array([[1., 2., 3.], [0., 6., 5.], [0., 0., 4.]], dtype=dtype)
+    A = xnp.array([[1., 2., 3.], [0., 6., 5.], [0., 0., 4.]], dtype=dtype, device=None)
     soln_vecs = compute_lower_triangular_eigvecs(np.array(A))
     A = Triangular(A)
-    soln_vals = xnp.array([1., 4., 6.], dtype=dtype)
-    soln_vecs = xnp.array(soln_vecs, dtype=dtype)[:, [0, 2, 1]]
+    soln_vals = xnp.array([1., 4., 6.], dtype=dtype, device=None)
+    soln_vecs = xnp.array(soln_vecs, dtype=dtype, device=None)[:, [0, 2, 1]]
     eig_vals, eig_vecs = eig(A)
 
     assert relative_error(soln_vals, eig_vals) < _tol
@@ -103,9 +102,9 @@ def test_identity(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     A = Identity(shape=(4, 4), dtype=dtype)
-    soln_vals = xnp.array([1., 1., 1., 1.], dtype=dtype)
+    soln_vals = xnp.array([1., 1., 1., 1.], dtype=dtype, device=None)
     eig_slice = slice(1, None, None)
-    soln_vecs = xnp.eye(4, dtype=dtype)
+    soln_vecs = xnp.eye(4, 4, dtype=dtype, device=None)
     eig_vals, eig_vecs = eig(A, eig_slice=eig_slice)
 
     assert relative_error(soln_vals[eig_slice], eig_vals) < _tol
@@ -116,9 +115,9 @@ def test_identity(backend):
 def test_diagonal(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    diag = xnp.array([0.1, 3., 0.2, 4.], dtype=dtype)
+    diag = xnp.array([0.1, 3., 0.2, 4.], dtype=dtype, device=None)
     soln_vecs = [[1., 0., 0., 0.], [0., 0., 1., 0.], [0., 1., 0., 0.], [0., 0., 0., 1.]]
-    soln_vecs = xnp.array(soln_vecs, dtype=dtype)
+    soln_vecs = xnp.array(soln_vecs, dtype=dtype, device=None)
     eig_vals, eig_vecs = eig(Diagonal(diag=diag))
     eig_vecs = eig_vecs.to_dense()
 

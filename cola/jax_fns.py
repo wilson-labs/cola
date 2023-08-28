@@ -1,27 +1,24 @@
-from jax.scipy.linalg import block_diag
-from jax.random import PRNGKey
-from jax.random import normal
-from jax import numpy as jnp
-from jax.lax import while_loop as _while_loop
-from cola.utils.control_flow import while_loop as _while_loop_no_jit
-from jax.lax import fori_loop as _for_loop
-# from cola.utils.control_flow import for_loop as _for_loop
-from jax.lax import conj as conj_lax
-from jax.lax import dynamic_slice
-# from jax.lax import dynamic_update_slice
-from jax.lax import expand_dims
+import numpy as np
+import logging
+import jax
 from jax import vjp
 from jax import jit, vmap, grad
-import jax
-from cola.utils.jax_tqdm import pbar_while, while_loop_winfo
+from jax import numpy as jnp
+from jax.random import PRNGKey
+from jax.random import normal
+from jax.lax import while_loop as _while_loop
+from jax.lax import fori_loop as _for_loop
+from jax.lax import conj as conj_lax
+from jax.lax import dynamic_slice
+from jax.lax import expand_dims
 from jax.lax.linalg import cholesky
 from jax.lax.linalg import svd
 from jax.lax.linalg import qr
+from jax.scipy.linalg import block_diag
 from jax.scipy.linalg import lu as lu_lax
 from jax.scipy.linalg import solve_triangular as solvetri
-import jax.tree_util as tu
-import numpy as np
-import logging
+from cola.utils.jax_tqdm import pbar_while, while_loop_winfo
+from cola.utils.control_flow import while_loop as _while_loop_no_jit
 
 cos = jnp.cos
 sin = jnp.sin
@@ -61,7 +58,6 @@ argsort = jnp.argsort
 jit = jit
 copy = jnp.copy
 nan_to_num = jnp.nan_to_num
-# randn = np.random.randn  # a little dangerous..
 dynamic_slice = dynamic_slice
 zeros_like = jnp.zeros_like
 svd = svd
@@ -83,7 +79,6 @@ PRNGKey = PRNGKey
 isreal = jnp.isreal
 allclose = jnp.allclose
 slogdet = jnp.linalg.slogdet
-# convolve = jax.scipy.signal.convolve
 prod = jnp.prod
 moveaxis = jnp.moveaxis
 
@@ -97,7 +92,7 @@ def eig(A):
     return jax.device_put(w, device), jax.device_put(v, device)
 
 
-def eye(n, m=None, dtype=None, device=None):
+def eye(n, m, dtype, device):
     del device
     return jnp.eye(N=n, M=m, dtype=dtype)
 
@@ -167,7 +162,8 @@ def convolve(in1, in2, mode='same'):
     return out  # ,boundary='symm')
 
 
-def canonical(loc, shape, dtype, device=None):
+def canonical(loc, shape, dtype, device):
+    del device
     vec = jnp.zeros(shape=shape, dtype=dtype)
     vec = vec.at[loc].set(1.)
     return vec
@@ -185,7 +181,8 @@ def next_key(key):
     return jax.random.split(key)[0]
 
 
-def randn(*shape, dtype=None, key=None, device=None):
+def randn(*shape, dtype, device, key=None):
+    del device
     if key is None:
         print('Non keyed randn used. To be deprecated soon.')
         logging.warning('Non keyed randn used. To be deprecated soon.')
@@ -198,7 +195,8 @@ def randn(*shape, dtype=None, key=None, device=None):
         return z
 
 
-def fixed_normal_samples(shape, dtype=None, device=None):
+def fixed_normal_samples(shape, dtype, device):
+    del device
     key = PRNGKey(4)
     z = normal(key, shape, dtype=dtype)
     return z
@@ -218,17 +216,18 @@ def linear_transpose(fun, primals, duals):
     return jax.linear_transpose(fun, primals)(duals)[0]
 
 
-def zeros(shape, dtype, device=None):
+def zeros(shape, dtype, device):
     del device
     return jnp.zeros(shape=shape, dtype=dtype)
 
 
-def ones(shape, dtype, device=None):
+def ones(shape, dtype, device):
     del device
     return jnp.ones(shape=shape, dtype=dtype)
 
 
-def array(arr, dtype=None, device=None):
+def array(arr, dtype, device):
+    del device
     return jnp.array(arr, dtype=dtype)
 
 

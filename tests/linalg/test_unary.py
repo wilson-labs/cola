@@ -14,7 +14,7 @@ def test_unary(backend, precision, op_name, fns):
     A, dtype, xnp = operator, operator.dtype, operator.xnp
     A2 = LinearOperator(A.dtype, A.shape, A._matmat)
     tol = 1e-4
-    v = xnp.randn(A.shape[-1], dtype=dtype)
+    v = xnp.randn(A.shape[-1], dtype=dtype, device=None)
     Adense = A.to_dense()
     Anp = np.array(Adense)
     fv = spfn(Anp) @ np.array(v)

@@ -11,7 +11,6 @@ from cola.utils_test import get_xnp, parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
 from cola.utils_test import generate_diagonals
 
-
 _tol = 1e-6
 
 
@@ -29,17 +28,17 @@ def test_lanczos_vjp(backend):
     # matrix = [[10., 2., 3.], [2., 14., 1.], [3., 1., 11.]]
     matrix = [[6., 2., 3.], [2., 3., 1.], [3., 1., 4.]]
     # matrix = [[3., 0., 0.], [0., 4., 0.], [0., 0., 5.]]
-    diag = xnp.Parameter(xnp.array(matrix, dtype=dtype))
-    diag_soln = xnp.Parameter(xnp.array(matrix, dtype=dtype))
+    diag = xnp.Parameter(xnp.array(matrix, dtype=dtype, device=None))
+    diag_soln = xnp.Parameter(xnp.array(matrix, dtype=dtype, device=None))
     _, unflatten = Dense(diag).flatten()
-    x0 = xnp.randn(diag.shape[0], 1)
+    x0 = xnp.randn(diag.shape[0], 1, dtype=dtype, device=None)
 
     def f(theta):
         Aop = unflatten([theta])
         out = lanczos(Aop, x0, max_iters=10, tol=1e-6, pbar=False)
         eig_vals, eig_vecs, _ = out
         # loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
-        loss = xnp.sum(eig_vals ** 2.)
+        loss = xnp.sum(eig_vals**2.)
         # loss = xnp.sum(eig_vecs ** 2., axis=[0, 1])
         # loss = xnp.sum(eig_vecs, axis=[0, 1])
         return loss
@@ -49,7 +48,7 @@ def test_lanczos_vjp(backend):
         A = theta
         eig_vals, eig_vecs = xnp.eigh(A)
         # loss = xnp.sum(eig_vals ** 2.) + xnp.sum(xnp.abs(eig_vecs), axis=[0, 1])
-        loss = xnp.sum(eig_vals ** 2.)
+        loss = xnp.sum(eig_vals**2.)
         # loss = xnp.sum(eig_vecs ** 2., axis=[0, 1])
         # loss = xnp.sum(eig_vecs, axis=[0, 1])
         return loss
@@ -81,8 +80,8 @@ def test_lanczos_complex(backend):
     dtype = xnp.complex64
     np_dtype = np.complex64
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
-    A = xnp.array(generate_diagonals(diag, seed=21), dtype=dtype)
-    rhs = xnp.randn(A.shape[0], 1, dtype=dtype)
+    A = xnp.array(generate_diagonals(diag, seed=21), dtype=dtype, device=None)
+    rhs = xnp.randn(A.shape[0], 1, dtype=dtype, device=None)
     alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
 
     B = lazify(A)
@@ -94,8 +93,7 @@ def test_lanczos_complex(backend):
     T = construct_tridiagonal(alpha.T, beta.T, alpha.T)
 
     assert idx == idx_np
-    comparisons = [(T_np, T), (Q_np, Q), (Q @ T, A @ Q),
-                   (alpha_np, alpha[0]), (beta_np, beta[0])]
+    comparisons = [(T_np, T), (Q_np, Q), (Q @ T, A @ Q), (alpha_np, alpha[0]), (beta_np, beta[0])]
     for soln, approx in comparisons:
         rel_error = relative_error(soln, approx)
         assert rel_error < 5e-5
@@ -107,8 +105,8 @@ def test_lanczos_random(backend):
     dtype = xnp.float32
     np_dtype = np.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
-    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)
-    rhs = xnp.ones(shape=(A.shape[0], 1), dtype=dtype)
+    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
+    rhs = xnp.ones(shape=(A.shape[0], 1), dtype=dtype, device=None)
     alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
 
     B = lazify(A)
@@ -122,7 +120,7 @@ def test_lanczos_random(backend):
     max_eig = lanczos_max_eig(B, rhs, B.shape[-1])
 
     assert idx == idx_np
-    comparisons = [(T_np, T), (Q_np, Q), (Q @ T, A @ Q), (xnp.array(1., dtype), max_eig),
+    comparisons = [(T_np, T), (Q_np, Q), (Q @ T, A @ Q), (xnp.array(1., dtype, None), max_eig),
                    (alpha_np, alpha[0]), (beta_np, beta[0])]
     for soln, approx in comparisons:
         rel_error = relative_error(soln, approx)
@@ -157,8 +155,8 @@ def test_lanczos_iter(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     max_eig = 6
-    A = xnp.diag(xnp.array([4, 2, 1, max_eig], dtype=dtype))
-    rhs = xnp.ones(shape=(A.shape[0], 7), dtype=dtype)
+    A = xnp.diag(xnp.array([4, 2, 1, max_eig], dtype=dtype, device=None))
+    rhs = xnp.ones(shape=(A.shape[0], 7), dtype=dtype, device=None)
     alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp)
 
     B = lazify(A)
@@ -172,7 +170,7 @@ def test_lanczos_iter(backend):
 
     assert idx == idx_np[0]
     comparisons = [(T_np, T), (Q_np, Q), (Q @ T, A @ Q), (alpha_np, alpha), (beta_np, beta),
-                   (xnp.array(max_eig, dtype=dtype), eigvals[0, -1])]
+                   (xnp.array(max_eig, dtype=dtype, device=None), eigvals[0, -1])]
     for soln, check in comparisons:
         rel_error = relative_error(soln, check)
         assert rel_error < _tol
@@ -183,21 +181,21 @@ def test_get_lanczos_coeffs(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     soln = 10.
-    A = xnp.diag(xnp.array([soln, 9.5, 3.], dtype=dtype))
+    A = xnp.diag(xnp.array([soln, 9.5, 3.], dtype=dtype, device=None))
     B = lazify(A)
     max_iters, tolerance = A.shape[0], 1e-7
-    rhs = xnp.array([[-0.72262044, -0.69495763, 0.85047752]], dtype=dtype).T
+    rhs = xnp.array([[-0.72262044, -0.69495763, 0.85047752]], dtype=dtype, device=None).T
     fn = xnp.jit(get_lanczos_coeffs, static_argnums=(0, 2, 3))
     alpha, beta, idx = fn(B, rhs, max_iters, tolerance)
     T = construct_tridiagonal(alpha[:idx - 1], beta[:idx], alpha[:idx - 1])
     eigvals, _ = xnp.eigh(T)
     approx = eigvals[-1]
 
-    rel_error = relative_error(xnp.array(soln, dtype=dtype), approx)
+    rel_error = relative_error(xnp.array(soln, dtype=dtype, device=None), approx)
     assert rel_error < _tol
 
     approx = lanczos_max_eig(B, rhs, max_iters, tolerance)
-    rel_error = relative_error(xnp.array(soln, dtype=dtype), approx)
+    rel_error = relative_error(xnp.array(soln, dtype=dtype, device=None), approx)
     assert rel_error < _tol
 
 
@@ -205,14 +203,14 @@ def test_get_lanczos_coeffs(backend):
 def test_construct_tridiagonal(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    gamma = xnp.array([1., -2., 3.], dtype=dtype)
+    gamma = xnp.array([1., -2., 3.], dtype=dtype, device=None)
     gamma = xnp.stack((-gamma, gamma), axis=0)
-    beta = xnp.array([4., 5., 6., 7.], dtype=dtype)
+    beta = xnp.array([4., 5., 6., 7.], dtype=dtype, device=None)
     beta = xnp.stack((-beta, beta), axis=0)
-    alpha = xnp.array([18., -20, 19.], dtype=dtype)
+    alpha = xnp.array([18., -20, 19.], dtype=dtype, device=None)
     alpha = xnp.stack((-alpha, alpha), axis=0)
     soln = [[4., 1, 0, 0], [18., 5., -2., 0.], [0., -20., 6., 3], [0., 0., 19., 7.]]
-    soln = xnp.array(soln, dtype=dtype)
+    soln = xnp.array(soln, dtype=dtype, device=None)
     soln = xnp.stack((-soln, soln), axis=0)
     approx = construct_tridiagonal_batched(alpha, beta, gamma)
 
@@ -221,10 +219,10 @@ def test_construct_tridiagonal(backend):
 
 
 def case_early(xnp, dtype):
-    A = xnp.diag(xnp.array([4, 2, 1], dtype=dtype))
-    beta_soln = xnp.array([[4, 0., 0.]]).T
-    alpha_soln = xnp.array([[0, 0.]]).T
-    rhs = xnp.array([[1.0, 0.0, 0.]], dtype=dtype).T
+    A = xnp.diag(xnp.array([4, 2, 1], dtype=dtype, device=None))
+    beta_soln = xnp.array([[4, 0., 0.]], dtype=dtype, device=None).T
+    alpha_soln = xnp.array([[0, 0.]], dtype=dtype, device=None).T
+    rhs = xnp.array([[1.0, 0.0, 0.]], dtype=dtype, device=None).T
     idx_soln = 1
     return A, rhs, beta_soln, alpha_soln, idx_soln
 
@@ -233,10 +231,10 @@ def case_3(xnp, dtype):
     beta = [1., 3., 7.]
     alpha = [0.1, 1.0]
     A = [[beta[2], 0, alpha[1]], [0, beta[0], alpha[0]], [alpha[1], alpha[0], beta[1]]]
-    beta_soln = xnp.array([beta]).T
-    alpha_soln = xnp.array([alpha]).T
-    A = xnp.array(A)
-    rhs = xnp.array([[0.0, 1.0, 0.]], dtype=dtype).T
+    beta_soln = xnp.array([beta], dtype=dtype, device=None).T
+    alpha_soln = xnp.array([alpha], dtype=dtype, device=None).T
+    A = xnp.array(A, dtype=dtype, device=None)
+    rhs = xnp.array([[0.0, 1.0, 0.]], dtype=dtype, device=None).T
     idx_soln = A.shape[0]
     return A, rhs, beta_soln, alpha_soln, idx_soln
 
@@ -245,10 +243,10 @@ def case_2(xnp, dtype):
     beta = [1., 2., 4.]
     alpha = [0.1, 0.1]
     A = [[beta[0], alpha[0], 0.], [alpha[0], beta[1], alpha[0]], [0., alpha[0], beta[2]]]
-    beta_soln = xnp.array([beta]).T
-    alpha_soln = xnp.array([alpha]).T
-    A = xnp.array(A)
-    rhs = xnp.array([[1.0, 0., 0.]], dtype=dtype).T
+    beta_soln = xnp.array([beta], dtype=dtype, device=None).T
+    alpha_soln = xnp.array([alpha], dtype=dtype, device=None).T
+    A = xnp.array(A, dtype=dtype, device=None)
+    rhs = xnp.array([[1.0, 0., 0.]], dtype=dtype, device=None).T
     idx_soln = A.shape[0]
     return A, rhs, beta_soln, alpha_soln, idx_soln
 
@@ -265,7 +263,7 @@ def case_numpy(A, rhs, xnp, np_dtype=np.float64):
 
     if rhs_np.shape[-1] > 1:
         out = stack_batches(results)
-    out = [xnp.array(vec, rhs.dtype) for vec in out]
+    out = [xnp.array(vec, rhs.dtype, device=None) for vec in out]
     return out
 
 

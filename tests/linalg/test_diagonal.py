@@ -8,7 +8,7 @@ from cola.utils_test import get_xnp, parametrize, relative_error
 @parametrize(['torch', 'jax'])
 def test_exact_diag(backend):
     xnp = get_xnp(backend)
-    A = Dense(xnp.array([[1, 2, 3], [4, 5, 6], [7, 8, 9.]], dtype=xnp.float32))
+    A = Dense(xnp.array([[1, 2, 3], [4, 5, 6], [7, 8, 9.]], dtype=xnp.float32, device=None))
     for u in [-2, -1, 0, 1, 2]:
         d1, _ = exact_diag(A, u)
         d2 = xnp.diag(A.to_dense(), u)
@@ -18,7 +18,7 @@ def test_exact_diag(backend):
 @parametrize(['torch', 'jax'])
 def test_approx_diag(backend):
     xnp = get_xnp(backend)
-    A = Dense(xnp.array([[1, 2, 3], [4, 5, 6], [7, 8, 9.]], dtype=xnp.float32))
+    A = Dense(xnp.array([[1, 2, 3], [4, 5, 6], [7, 8, 9.]], dtype=xnp.float32, device=None))
     for u in [-2, -1, 0, 1, 2]:
         d1, _ = approx_diag(A, u, tol=5e-2)
         d2 = xnp.diag(A.to_dense(), u)
@@ -28,10 +28,11 @@ def test_approx_diag(backend):
 @parametrize(['torch', 'jax'])
 def test_composite_diag(backend):
     xnp = get_xnp(backend)
-    A = Dense(xnp.array([[-1, 2], [3, 2]], dtype=xnp.float32))
+    dtype = xnp.float32
+    A = Dense(xnp.array([[-1, 2], [3, 2]], dtype=dtype, device=None))
     A = LinearOperator(A.dtype, A.shape, A._matmat)
-    B = Dense(xnp.array([[1, 2, 3], [4, 5, 6], [7, 8, 9.]], dtype=xnp.float32))
-    C = Dense(-xnp.ones((3, 3), dtype=xnp.float32))
+    B = Dense(xnp.array([[1, 2, 3], [4, 5, 6], [7, 8, 9.]], dtype=dtype, device=None))
+    C = Dense(-xnp.ones((3, 3), dtype=dtype, device=None))
     M = kron(A, B + C)
     d1 = diag(M)
     d2 = xnp.diag(M.to_dense())
@@ -41,7 +42,8 @@ def test_composite_diag(backend):
 @parametrize(['torch', 'jax'], ['exact', 'approx'])
 def test_large_trace(backend, method):
     xnp = get_xnp(backend)
-    array = xnp.fixed_normal_samples((210, 210))
+    dtype = xnp.float32
+    array = xnp.fixed_normal_samples((210, 210), dtype=dtype, device=None)
     A = Dense(array)
     A = LinearOperator(A.dtype, A.shape, A._matmat)
     d1 = trace(A, method=method, tol=2e-2)

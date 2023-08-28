@@ -111,7 +111,7 @@ def lanczos_decomp(A: LinearOperator, start_vector: Array = None, max_iters=100,
     """
     xnp = A.xnp
     if start_vector is None:
-        start_vector = xnp.fixed_normal_samples((A.shape[0], 1), device=A.device)
+        start_vector = xnp.fixed_normal_samples((A.shape[0], 1), dtype=A.dtype, device=A.device)
     alpha, beta, vec, iters, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters,
                                                   tol=tol, pbar=pbar)
     alpha, beta, Q = alpha[..., :iters - 1], beta[..., :iters], vec[0, :, :iters]
@@ -265,7 +265,7 @@ def get_lu_from_tridiagonal(A: LinearOperator) -> Array:
         state = xnp.update_array(state, pi, i + 1)
         return state
 
-    lower, upper = xnp.array(0, dtype=xnp.int32), xnp.array(A.shape[0] - 1, dtype=xnp.int32,
-                                                            device=A.device)
+    lower = xnp.array(0, dtype=xnp.int32, device=A.device)
+    upper = xnp.array(A.shape[0] - 1, dtype=xnp.int32, device=A.device)
     eigenvals = xnp.for_loop(lower, upper, body_fun, init_val=eigenvals)
     return eigenvals

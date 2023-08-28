@@ -8,7 +8,6 @@ from cola.algorithms.preconditioners import inverse
 from cola.utils_test import get_xnp, parametrize, relative_error, construct_e_vec
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
 
-
 _tol = 1e-7
 
 
@@ -17,7 +16,7 @@ def test_AdaNysPrecond(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=16)
-    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)
+    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
     B = lazify(A)
 
     rank_init, bounds, mult = 2, (0.2, 0.4, 0.6), 1.5  # first case
@@ -32,7 +31,7 @@ def test_AdaNysPrecond(backend):
     rank_init, bounds, mult = A.shape[0], (0.1, 0.2, 0.8), 1.5  # last case
     Nys = AdaNysPrecond(A=B, rank=rank_init, mult=mult, bounds=bounds, adjust_mu=False)
     approx = Nys.rank
-    ones = xnp.ones((Nys.shape[0], 1), dtype=dtype)
+    ones = xnp.ones((Nys.shape[0], 1), dtype=dtype, device=None)
     ones_approx = (Nys @ A @ ones) * (1. / Nys.preconditioned_eigmax)
 
     rel_error = relative_error(ones, ones_approx)
@@ -45,7 +44,7 @@ def test_select_rank_adaptively(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=16)
-    A = soln = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype)
+    A = soln = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype, device=None)
     rank_init, rank_max, tol = 4, 20, 1e-5
 
     B = lazify(A)
@@ -62,7 +61,7 @@ def test_nys_sqrt_inverse(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
-    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)
+    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
     rank = A.shape[0] // 2
 
     Nys = NystromPrecond(lazify(A), rank=rank)
@@ -72,7 +71,8 @@ def test_nys_sqrt_inverse(backend):
     assert rel_error < _tol * 10
 
     approx = inverse(Nys).to_dense()
-    rel_error = relative_error(xnp.eye(Nys.shape[0]), approx @ Nys.to_dense())
+    rel_error = relative_error(xnp.eye(Nys.shape[0], Nys.shape[0], dtype=dtype, device=None),
+                               approx @ Nys.to_dense())
     assert rel_error < _tol * 10
 
     approx = inverse(sqrt(inverse(sqrt(Nys)))).to_dense()
@@ -85,9 +85,9 @@ def test_nys_precond(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
-    A = xnp.diag(xnp.array(diag, dtype=dtype))
+    A = xnp.diag(xnp.array(diag, dtype=dtype, device=None))
     basis = [
-        xnp.array(construct_e_vec(i=i, size=A.shape[0]), dtype=dtype)[:, None]
+        xnp.array(construct_e_vec(i=i, size=A.shape[0]), dtype=dtype, device=None)[:, None]
         for i in range(A.shape[0])
     ]
     mu = 1e-8
@@ -99,15 +99,15 @@ def test_nys_precond(backend):
     Nys = NystromPrecond(B, rank=rank)
     Nys._create_approx(B, xnp.copy(Omega), mu=mu, eps=1e-8, adjust_mu=False)
 
-    P = Nys @ xnp.eye(B.shape[0])
+    P = Nys @ xnp.eye(B.shape[0], B.shape[0], dtype=dtype, device=None)
     Psqrt = P**0.5
     approx = Psqrt @ A @ Psqrt
 
-    subspace = xnp.diag(xnp.array(1 / (diag[:rank] + mu), dtype=dtype))
+    subspace = xnp.diag(xnp.array(1 / (diag[:rank] + mu), dtype=dtype, device=None))
     soln_P = diag[rank - 1] * Omega @ subspace @ Omega.T
-    soln_P += xnp.eye(Omega.shape[0]) - Omega @ Omega.T
+    soln_P += xnp.eye(Omega.shape[0], Omega.shape[0], dtype=dtype, device=None) - Omega @ Omega.T
 
-    inv = (A + mu * xnp.eye(B.shape[0]))[rank:, rank:]
+    inv = (A + mu * xnp.eye(B.shape[0], B.shape[0], dtype=dtype, device=None))[rank:, rank:]
     soln = (diag[rank - 1] + mu) * Omega @ Omega.T + Omega2 @ (inv @ Omega2.T)
     rel_error = relative_error(soln, approx)
     assert rel_error < _tol * 10
@@ -120,9 +120,9 @@ def test_get_nys_approx_random(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
-    A = soln = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype)
+    A = soln = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype, device=None)
     rank = A.shape[0]
-    Omega = xnp.fixed_normal_samples(shape=(A.shape[0], rank), dtype=dtype)
+    Omega = xnp.fixed_normal_samples(shape=(A.shape[0], rank), dtype=dtype, device=None)
 
     B = lazify(A)
     fn = xnp.jit(get_nys_approx, static_argnums=(0, 2))
@@ -138,12 +138,12 @@ def test_get_nys_approx_random(backend):
 def test_get_nys_approx_diagonal(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    A = xnp.diag(xnp.array([3., 4., 5., 7., 1.], dtype=dtype))
-    e1 = xnp.array(construct_e_vec(i=0, size=A.shape[0]), dtype=dtype)[:, None]
-    e3 = xnp.array(construct_e_vec(i=2, size=A.shape[0]), dtype=dtype)[:, None]
-    e5 = xnp.array(construct_e_vec(i=4, size=A.shape[0]), dtype=dtype)[:, None]
+    A = xnp.diag(xnp.array([3., 4., 5., 7., 1.], dtype=dtype, device=None))
+    e1 = xnp.array(construct_e_vec(i=0, size=A.shape[0]), dtype=dtype, device=None)[:, None]
+    e3 = xnp.array(construct_e_vec(i=2, size=A.shape[0]), dtype=dtype, device=None)[:, None]
+    e5 = xnp.array(construct_e_vec(i=4, size=A.shape[0]), dtype=dtype, device=None)[:, None]
     Omega = xnp.concat((e1, e5, e3), axis=1)
-    soln = xnp.diag(xnp.array([3., 0., 5., 0., 1.], dtype=dtype))
+    soln = xnp.diag(xnp.array([3., 0., 5., 0., 1.], dtype=dtype, device=None))
 
     B = lazify(A)
     fn = xnp.jit(get_nys_approx, static_argnums=(0, 2))

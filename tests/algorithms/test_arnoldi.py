@@ -21,10 +21,10 @@ def test_arnoldi_vjp(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float64
     matrix = [[6., 2., 3.], [2., 3., 1.], [3., 1., 4.]]
-    diag = xnp.Parameter(xnp.array(matrix, dtype=dtype))
-    diag_soln = xnp.Parameter(xnp.array(matrix, dtype=dtype))
+    diag = xnp.Parameter(xnp.array(matrix, dtype=dtype, device=None))
+    diag_soln = xnp.Parameter(xnp.array(matrix, dtype=dtype, device=None))
     _, unflatten = Dense(diag).flatten()
-    x0 = xnp.randn(diag.shape[0], 1)
+    x0 = xnp.randn(diag.shape[0], 1, dtype=dtype, device=None)
 
     def f(theta):
         Aop = unflatten([theta])
@@ -66,11 +66,12 @@ def test_arnoldi(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex64
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=4, dtype=np.float32)
-    A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype)
-    rhs = xnp.cast(xnp.randn(A.shape[1], 1, dtype=xnp.float32), dtype=dtype)
+    A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype,
+                  device=None)
+    rhs = xnp.cast(xnp.randn(A.shape[1], 1, dtype=xnp.float32, device=None), dtype=dtype)
     eigvals, eigvecs, _ = arnoldi_eigs(lazify(A), rhs, max_iters=A.shape[-1])
     approx = xnp.sort(xnp.cast(eigvals, xnp.float32))
-    soln = xnp.sort(xnp.array(diag, xnp.float32))
+    soln = xnp.sort(xnp.array(diag, xnp.float32, device=None))
 
     rel_error = relative_error(soln, approx)
     assert rel_error < 1e-3
@@ -85,8 +86,8 @@ def test_householder_arnoldi_decomp(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np.float32) - 0.5
-    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)
-    rhs = xnp.randn(A.shape[1], 1, dtype=dtype)
+    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
+    rhs = xnp.randn(A.shape[1], 1, dtype=dtype, device=None)
     # A_np, rhs_np = np.array(A, dtype=np.complex128), np.array(rhs[:, 0], dtype=np.complex128)
     A_np, rhs_np = np.array(A, dtype=np.float64), np.array(rhs[:, 0], dtype=np.float64)
     # Q_sol, H_sol = run_householder_arnoldi(A, rhs, A.shape[0], np.float64, xnp)
@@ -97,7 +98,7 @@ def test_householder_arnoldi_decomp(backend):
     Q_approx, H_approx, _ = fn(lazify(A), rhs, max_iters=A.shape[0])
 
     for soln, approx in ((Q_sol, Q_approx), (H_sol, H_approx)):
-        rel_error = relative_error(xnp.array(soln, dtype=dtype), approx)
+        rel_error = relative_error(xnp.array(soln, dtype=dtype, device=None), approx)
         assert rel_error < 1e-5
 
 
@@ -106,8 +107,8 @@ def test_get_arnoldi_matrix(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex128  # double precision on real and complex coordinates to achieve 1e-12 tol
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=20, dtype=np.float32) - 0.5
-    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype)
-    rhs = xnp.randn(A.shape[1], 1, dtype=dtype)
+    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
+    rhs = xnp.randn(A.shape[1], 1, dtype=dtype, device=None)
     rhs = xnp.concatenate((rhs, rhs), axis=-1)
     max_iter = A.shape[0]
     A_np, rhs_np = np.array(A, dtype=np.complex128), np.array(rhs[:, 0], dtype=np.complex128)
@@ -122,7 +123,7 @@ def test_get_arnoldi_matrix(backend):
 
     Q_approx, H_approx = Q_approx[:, :, 0], H_approx[:, :, 0]
     for soln, approx in ((Q_sol[:, :-1], Q_approx), (H_sol[:-1, :], H_approx)):
-        rel_error = relative_error(xnp.array(soln, dtype=dtype), approx)
+        rel_error = relative_error(xnp.array(soln, dtype=dtype, device=None), approx)
         assert rel_error < 1e-12
 
     # Next test is only valid when full decomposition is ran

@@ -9,13 +9,13 @@ class AdaNysPrecond(LinearOperator):
     def __init__(self, A, rank, bounds, mult=1.5, mu=1e-7, eps=1e-8, adjust_mu=True):
         super().__init__(dtype=A.dtype, shape=A.shape)
         xnp = A.xnp
-        Omega = xnp.randn(*(A.shape[0], rank), dtype=A.dtype)
+        Omega = xnp.randn(*(A.shape[0], rank), dtype=A.dtype, device=A.device)
         Lambda, self.U = get_nys_approx(A=A, Omega=Omega, eps=eps)
         self.error = estimate_approx_error(A, Lambda, self.U, tol=1e-7, max_iter=1000)
         i = 0
         while (self.error > bounds[-1]) & (i <= 10):
             rank = round(rank * mult)
-            Omega = xnp.randn(*(A.shape[0], rank), dtype=A.dtype)
+            Omega = xnp.randn(*(A.shape[0], rank), dtype=A.dtype, device=A.device)
             Lambda, self.U = get_nys_approx(A=A, Omega=Omega, eps=eps)
             self.error = estimate_approx_error(A, Lambda, self.U, tol=1e-7, max_iter=1000)
             i += 1
@@ -53,7 +53,7 @@ def select_rank_adaptively(A, rank_init, rank_max, tol, mult=2):
     def body_fun(state):
         i, *_, rank = state
         rank = round(mult * rank)
-        Omega = xnp.randn(*(A.shape[0], rank), dtype=A.dtype)
+        Omega = xnp.randn(*(A.shape[0], rank), dtype=A.dtype, device=A.device)
         Lambda, U = get_nys_approx(A, Omega, eps=1e-8)
         # error = xnp.jit(error_fn, static_argnums=(0,))(A, Lambda, U)
         error = error_fn(A, Lambda, U)
@@ -62,7 +62,7 @@ def select_rank_adaptively(A, rank_init, rank_max, tol, mult=2):
     def error_fn(A, Lambda, U):
         return estimate_approx_error(A, Lambda, U, tol=1e-7, max_iter=1000)
 
-    Omega = xnp.randn(*(A.shape[0], rank_init), dtype=A.dtype)
+    Omega = xnp.randn(*(A.shape[0], rank_init), dtype=A.dtype, device=A.device)
     Lambda, U = get_nys_approx(A, Omega, eps=1e-8)
     error = error_fn(A, Lambda, U)
     init_val = (0, xnp.abs(error), Lambda, U, rank_init)

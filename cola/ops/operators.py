@@ -198,8 +198,8 @@ class Kronecker(LinearOperator):
 
 def kronsum(A, B):
     xnp = get_library_fns(A.dtype)
-    IA = xnp.eye(A.shape[-2], dtype=A.dtype, device=A.device)
-    IB = xnp.eye(B.shape[-2], dtype=B.dtype, device=B.device)
+    IA = xnp.eye(A.shape[-2], A.shape[-2], dtype=A.dtype, device=A.device)
+    IB = xnp.eye(B.shape[-2], B.shape[-2], dtype=B.dtype, device=B.device)
     return xnp.kron(A, IB) + xnp.kron(IA, B)
 
 
