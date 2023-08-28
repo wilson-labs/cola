@@ -4,7 +4,6 @@ import cola
 import numpy as np
 from cola.utils import export
 from numbers import Number
-import numpy as np
 
 Array = Dtype = Any
 export(Array)
