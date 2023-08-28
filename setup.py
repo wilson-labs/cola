@@ -1,4 +1,20 @@
-from setuptools import setup, find_packages
+import io
+import os
+import re
+
+from setuptools import find_packages, setup
+
+
+# Get version from setuptools_scm file
+def find_version(*file_paths):
+    try:
+        with io.open(os.path.join(os.path.dirname(__file__), *file_paths), encoding="utf8") as fp:
+            version_file = fp.read()
+        version_match = re.search(r"^__version__ = version = ['\"]([^'\"]*)['\"]", version_file, re.M)
+        return version_match.group(1)
+    except Exception:
+        return None
+
 
 README_FILE = 'README.md'
 
@@ -6,7 +22,7 @@ project_name = "cola-ml"
 setup(
     name=project_name,
     description="",
-    version="0.0.1",
+    version=find_version("cola", "version.py"),
     author="Marc Finzi and Andres Potapczynski",
     author_email="maf820@nyu.edu",
     license='MIT',
@@ -17,7 +33,7 @@ setup(
         'optree',
     ],
     extras_require={
-        'dev': ['pytest', 'pytest-cov'],
+        'dev': ['pytest', 'pytest-cov', 'setuptools_scm'],
     },
     packages=find_packages(),
     long_description=open('README.md').read(),
