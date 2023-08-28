@@ -10,7 +10,8 @@ def find_version(*file_paths):
     try:
         with io.open(os.path.join(os.path.dirname(__file__), *file_paths), encoding="utf8") as fp:
             version_file = fp.read()
-        version_match = re.search(r"^__version__ = version = ['\"]([^'\"]*)['\"]", version_file, re.M)
+            pattern = r"^__version__ = version = ['\"]([^'\"]*)['\"]"
+        version_match = re.search(pattern, version_file, re.M)
         return version_match.group(1)
     except Exception:
         return None
@@ -28,7 +29,8 @@ setup(
     license='MIT',
     python_requires='>=3.10',
     install_requires=[
-        'scipy', 'tqdm>=4.38',
+        'scipy',
+        'tqdm>=4.38',
         'cola-plum-dispatch==0.1.1',
         'optree',
     ],
