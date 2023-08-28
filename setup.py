@@ -14,6 +14,7 @@ setup(
     install_requires=[
         'scipy', 'tqdm>=4.38',
         'cola-plum-dispatch==0.1.1',
+        'optree',
     ],
     extras_require={
         'dev': ['pytest', 'pytest-cov'],

@@ -8,6 +8,7 @@ from torch.func import vjp, jvp
 from torch.func import vmap as _vmap
 from torch.func import grad as _grad
 import logging
+import optree
 
 logdet = torch.logdet
 exp = torch.exp
@@ -282,3 +283,12 @@ def array(arr, dtype=None, device=None):
 def update_array(array, update, *slices):
     array[slices] = update
     return array
+
+def is_leaf(value):
+    return optree.treespec_is_leaf(optree.tree_structure(value))
+
+def tree_flatten(value):
+    return optree.tree_flatten(value,namespace='cola') # leaves, tree_def
+
+def tree_unflatten(treedef, value):
+    return optree.tree_unflatten(treedef, value)

@@ -4,7 +4,7 @@ import sys
 import numpy as np
 from scipy.linalg import block_diag as _block_diag, lu as _lu, solve_triangular
 from scipy.signal import convolve2d
-
+import optree
 
 class NumpyNotImplementedError(NotImplementedError):
     def __init__(self):
@@ -239,3 +239,12 @@ def while_loop_winfo(errorfn, tol, every=1, desc="", pbar=False, **kwargs):
 def zeros(shape, dtype, device=None):
     del device
     return np.zeros(shape=shape, dtype=dtype)
+
+def is_leaf(value):
+    return optree.treespec_is_leaf(optree.tree_structure(value))
+
+def tree_flatten(value):
+    return optree.tree_flatten(value,namespace='cola')[::-1]
+
+def tree_unflatten(treedef, value):
+    return optree.tree_unflatten(treedef, value)

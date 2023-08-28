@@ -21,7 +21,7 @@ class WrapMeta(type):
         return self.__name__
 
     def __call__(self, obj: LinearOperator):
-        new_obj = obj.__class__(*obj._args, **obj._kwargs)
+        new_obj = obj.xnp.tree_unflatten(*obj.xnp.tree_flatten(obj)[::-1])
         new_obj.annotations = obj.annotations | {self}
         # possible issues with pytrees and immutability?
         # TODO: recreate object with annotation.

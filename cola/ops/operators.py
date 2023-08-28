@@ -66,11 +66,11 @@ class ScalarMul(LinearOperator):
     def __init__(self, c, shape, dtype=None):
         super().__init__(dtype=dtype or type(c), shape=shape)
         self.c = self.xnp.array(c, dtype=dtype, device=self.device)
-        self.ensure_const_register_as_array()
+    #     self.ensure_const_register_as_array()
 
-    def ensure_const_register_as_array(self):
-        self._args = (self.c, )
-        self._kwargs = {"dtype": self.dtype, "shape": self.shape}
+    # def ensure_const_register_as_array(self):
+    #     self._args = (self.c, )
+    #     self._kwargs = {"dtype": self.dtype, "shape": self.shape}
 
     def _matmat(self, v):
         return self.c * v
@@ -422,9 +422,9 @@ class Jacobian(LinearOperator):
         self.f = f
         self.x = x
         # could perhaps relax this with automatic reshaping of x and y
-        assert len(x.shape) == 1, "x must be a vector"
+        #assert len(x.shape) == 1, "x must be a vector"
         y_shape = f(x).shape
-        assert len(y_shape) == 1, "y must be a vector"
+        #assert len(y_shape) == 1, "y must be a vector"
 
         super().__init__(dtype=x.dtype, shape=(y_shape[0], x.shape[0]))
 
