@@ -1,6 +1,7 @@
 import hashlib
 import logging
 import torch
+import optree
 from torch.nn import Parameter
 from torch.func import vjp, jvp
 from torch.func import vmap as _vmap
@@ -280,3 +281,12 @@ def array(arr, dtype, device):
 def update_array(array, update, *slices):
     array[slices] = update
     return array
+
+def is_leaf(value):
+    return optree.treespec_is_leaf(optree.tree_structure(value))
+
+def tree_flatten(value):
+    return optree.tree_flatten(value,namespace='cola') # leaves, tree_def
+
+def tree_unflatten(treedef, value):
+    return optree.tree_unflatten(treedef, value)
