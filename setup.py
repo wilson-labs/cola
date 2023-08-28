@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 README_FILE = 'README.md'
 
-project_name = "cola"
+project_name = "cola-ml"
 setup(
     name=project_name,
     description="",
