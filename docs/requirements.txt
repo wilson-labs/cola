@@ -1,9 +1,10 @@
 # Pandoc should be installed on the OS (sudo apt install pandoc)
-sphinx
+jupyter
+matplotlib
+nbmerge
 nbsphinx
 recommonmark
-sphinx_rtd_theme
-jupyter
-nbmerge
+setuptools_scm
+sphinx
 sphinx-autodoc-typehints
-matplotlib
+sphinx_rtd_theme
