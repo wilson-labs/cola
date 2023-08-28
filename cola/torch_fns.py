@@ -1,14 +1,13 @@
 import hashlib
+import logging
 import torch
-# from torch.autograd.functional import vjp, jvp
-from cola.utils.torch_tqdm import while_loop_winfo
 from torch.nn import Parameter
-# from torch._vmap_internals import vmap as _vmap
 from torch.func import vjp, jvp
 from torch.func import vmap as _vmap
 from torch.func import grad as _grad
-import logging
+from cola.utils.torch_tqdm import while_loop_winfo
 
+Parameter = Parameter
 logdet = torch.logdet
 exp = torch.exp
 cos = torch.cos
@@ -17,7 +16,6 @@ ndarray = torch.Tensor
 arange = torch.arange
 ones_like = torch.ones_like
 sign = torch.sign
-Parameter = Parameter
 any = torch.any
 inv = torch.linalg.inv
 pinv = torch.linalg.pinv
@@ -119,7 +117,7 @@ def stop_gradients(x):
     return x.detach()
 
 
-def canonical(loc, shape, dtype, device=None):
+def canonical(loc, shape, dtype, device):
     vec = torch.zeros(shape, dtype=dtype, device=device)
     vec[loc] = 1.
     return vec
@@ -133,7 +131,7 @@ def permute(array, axes):
     return torch.permute(array, dims=axes)
 
 
-def ones(shape, dtype, device=None):
+def ones(shape, dtype, device):
     return torch.ones(size=shape, dtype=dtype, device=device)
 
 
@@ -182,7 +180,7 @@ def sha_hash(n):
     return int(hash_integer % (2**32 - 1))
 
 
-def randn(*shape, dtype=None, key=None, device=None):
+def randn(*shape, dtype, device, key=None):
     if key is None:
         print('Non keyed randn used. To be deprecated soon.')
         logging.warning('Non keyed randn used. To be deprecated soon.')
@@ -194,7 +192,7 @@ def randn(*shape, dtype=None, key=None, device=None):
     return z
 
 
-def fixed_normal_samples(shape, dtype=None, device=None):
+def fixed_normal_samples(shape, dtype, device):
     # TODO: fix random seed for sample
     return torch.randn(*shape, dtype=dtype, device=device)
 
@@ -271,11 +269,11 @@ def where(condition, x, y):
     return torch.where(condition, x, y)
 
 
-def zeros(shape, dtype, device=None):
+def zeros(shape, dtype, device):
     return torch.zeros(size=shape, dtype=dtype, device=device)
 
 
-def array(arr, dtype=None, device=None):
+def array(arr, dtype, device):
     return torch.tensor(arr, dtype=dtype, device=device)
 
 
