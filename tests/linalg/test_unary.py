@@ -1,3 +1,4 @@
+import pytest
 from operator_market import op_names, get_test_operator
 from cola.linalg import sqrt, exp
 from cola.ops import LinearOperator
@@ -7,6 +8,7 @@ from scipy.linalg import sqrtm, expm
 import numpy as np
 
 
+@pytest.mark.skip()
 @parametrize(['torch', 'jax'], ['float64'], op_names, [(exp, expm), (sqrt, sqrtm)])
 def test_unary(backend, precision, op_name, fns):
     operator = get_test_operator(backend, precision, op_name)

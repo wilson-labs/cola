@@ -4,6 +4,7 @@ import jax
 from jax import vjp
 from jax import jit, vmap, grad
 from jax import numpy as jnp
+from jax import tree_util as tu
 from jax.random import PRNGKey
 from jax.random import normal
 from jax.lax import while_loop as _while_loop
@@ -234,11 +235,14 @@ def array(arr, dtype, device):
 def update_array(array, update, *slices):
     return array.at[slices].set(update)
 
+
 def is_leaf(value):
     return tu.treedef_is_leaf(tu.tree_structure(value))
 
+
 def tree_flatten(value):
-    return tu.tree_flatten(value) #leaves, treedef
+    return tu.tree_flatten(value)  #leaves, treedef
+
 
 def tree_unflatten(treedef, value):
     return tu.tree_unflatten(treedef, value)

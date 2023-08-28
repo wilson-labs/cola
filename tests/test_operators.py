@@ -346,7 +346,7 @@ def test_adjoint_property(backend):
     X = xnp.array([1. + 1j, 4. - 2j, 2.5 + 1j, -.1 - 1j, -3. + 1j, -7. - 3j], dtype=dtype,
                   device=None)
     X = X.reshape(2, 3)
-    rel_error = xnp.norm(relative_error(xnp.conj(A).T @ X, B.H @ X))
+    rel_error = relative_error(xnp.conj(A).T @ X, B.H @ X)
     assert rel_error < _tol
 
 
