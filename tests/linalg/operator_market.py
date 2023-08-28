@@ -56,12 +56,13 @@ def get_test_operator(backend: str, precision: str, op_name: str,
                 op = 2 * op
 
         case ('psd', ('big' | 'blockdiag' | 'prod') as sub_op_name):
-            M1 = Dense(xnp.array([[6., 2], [2, 4]], dtype=dtype))
-            M2 = Dense(xnp.array([[7, 6], [6, 8]], dtype=dtype))
+            M1 = Dense(xnp.array([[6., 2], [2, 4]], dtype=dtype, device=device))
+            M2 = Dense(xnp.array([[7, 6], [6, 8]], dtype=dtype, device=device))
             match sub_op_name:
                 case 'big':
-                    dtype2 = (xnp.array([1.]) + 1j).dtype
-                    big_psd = reduce(cola.kron, [M1, M2, M2, Identity((15, 15), dtype=dtype2)])
+                    dtype2 = (xnp.array([1.], dtype=dtype, device=device) + 1j).dtype
+                    Id = Identity((15, 15), dtype=dtype2)
+                    big_psd = reduce(cola.kron, [M1, M2, M2, Id])
                     op = big_psd + 0.04 * cola.ops.I_like(big_psd)
                 case 'blockdiag':
                     op = BlockDiag(M1, M2, multiplicities=[2, 3])
@@ -80,26 +81,29 @@ def get_test_operator(backend: str, precision: str, op_name: str,
 
         case ('selfadj', 'hessian'):
             f2 = lambda x: (x[1] - .1)**3 + xnp.cos(x[2]) + (x[0] + .2)**2
-            x = xnp.array([1., 2., 3.], dtype=dtype)
+            x = xnp.array([1., 2., 3.], dtype=dtype, device=device)
             op = Hessian(f2, x)
 
         case ('square', 'jacobian'):
             f1 = lambda x: xnp.array([x[0]**2, x[1]**3, xnp.sin(x[2])], dtype=dtype)
-            x = xnp.array([1, 2, 3], dtype=dtype)
+            x = xnp.array([1, 2, 3], dtype=dtype, device=device)
             op = Jacobian(f1, x)
 
         case ('square', 'permutation'):
-            op = Permutation(xnp.array([1, 0, 2, 3, 6, 5, 4]))
+            op = Permutation(xnp.array([1, 0, 2, 3, 6, 5, 4], dtype=xnp.int32, device=device))
 
         case ('square', sub_op_name):
             M1 = xnp.array([[1, 0], [3, 4]], dtype=dtype, device=device)
             M2 = xnp.array([[5, 6], [7, 8]], dtype=dtype, device=device)
             match sub_op_name:
                 case 'big':
-                    dtype2 = (xnp.array([1.]) + 1j).dtype
-                    M1 = Dense(xnp.array([[1, 0, 0], [3, 4 + .1j, 2j], [0, 0, .1]], dtype=dtype2))
-                    M2 = Dense(xnp.array([[5, 2, 0], [3., 8, 0], [0, 0, -.5]], dtype=dtype2))
-                    big = reduce(cola.kron, [M1, M2, M1 @ M1, M2, Identity((10, 10), dtype=dtype2)])
+                    dtype2 = (xnp.array([1.], device=device, dtype=dtype) + 1j).dtype
+                    M1 = [[1, 0, 0], [3, 4 + .1j, 2j], [0, 0, .1]]
+                    M1 = Dense(xnp.array(M1, dtype=dtype2, device=device))
+                    M2 = [[5, 2, 0], [3., 8, 0], [0, 0, -.5]]
+                    M2 = Dense(xnp.array(M2, dtype=dtype2, device=device))
+                    Id = Identity((10, 10), dtype=dtype2)
+                    big = reduce(cola.kron, [M1, M2, M1 @ M1, M2, Id])
                     op = big + 0.5 * cola.ops.I_like(big)
                 case 'blockdiag':
                     op = BlockDiag(M1, M2, multiplicities=[2, 3])
@@ -115,9 +119,9 @@ def get_test_operator(backend: str, precision: str, op_name: str,
                     op = Product(lazify(M1), lazify(M2))
 
         case ('square', 'sparse'):
-            data = xnp.array([1, 2, 3, 4, 5, 6], dtype=dtype)
-            indices = xnp.array([0, 2, 1, 0, 2, 1])
-            indptr = xnp.array([0, 2, 4, 6])
+            data = xnp.array([1, 2, 3, 4, 5, 6], dtype=dtype, device=device)
+            indices = xnp.array([0, 2, 1, 0, 2, 1], dtype=dtype, device=device)
+            indptr = xnp.array([0, 2, 4, 6], dtype=dtype, device=device)
             shape = (3, 3)
             sparse = Sparse(data, indices, indptr, shape)
 

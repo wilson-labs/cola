@@ -16,7 +16,8 @@ def test_inverse(backend, precision, op_name):
     Ainv2 = inverse(A3, tol=tol, method='dense')
 
     Ainv3 = inverse(A3, tol=tol, method='iterative')
-    B = xnp.array(xnp.fixed_normal_samples((A.shape[-1], 10)), dtype=dtype)
+    B = xnp.fixed_normal_samples((A.shape[-1], 10), dtype=dtype, device=None)
+    B = xnp.array(B, dtype=dtype, device=None)
     X = Ainv @ B
     rel_error = relative_error(A @ X, B)
     assert rel_error < 3 * tol, f"Dispatch rules failed on {type(A)}"
