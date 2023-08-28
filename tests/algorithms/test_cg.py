@@ -19,10 +19,10 @@ _tol = 1e-7
 def test_cg_vjp(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
-    diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
+    diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype, device=None))
+    diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype, device=None))
     A = xnp.diag(diag)
-    ones = xnp.ones(shape=(3, 1), dtype=dtype)
+    ones = xnp.ones(shape=(3, 1), dtype=dtype, device=None)
     max_iters, tol = 5, 1e-8
     x0 = xnp.zeros_like(ones)
     pbar, tol = False, 1e-6
@@ -87,8 +87,8 @@ def test_cg_complex(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex64
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=25, dtype=np.float32)
-    A = xnp.array(generate_diagonals(diag, seed=48), dtype=dtype)
-    rhs = xnp.randn(A.shape[1], 1, dtype=dtype)
+    A = xnp.array(generate_diagonals(diag, seed=48), dtype=dtype, device=None)
+    rhs = xnp.randn(A.shape[1], 1, dtype=dtype, device=None)
     soln = xnp.solve(A, rhs)
 
     B = lazify(A)
@@ -107,8 +107,8 @@ def test_cg_random(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.75, scale=1.0, size=25, dtype=np.float32)
-    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype)
-    rhs = xnp.ones(shape=(A.shape[0], 5), dtype=dtype)
+    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype, device=None)
+    rhs = xnp.ones(shape=(A.shape[0], 5), dtype=dtype, device=None)
     soln = xnp.solve(A, rhs)
 
     B = lazify(A)
@@ -129,8 +129,8 @@ def test_cg_repeated_eig(backend):
     dtype = xnp.float32
     diag = [1. for _ in range(10)] + [0.5 for _ in range(10)] + [0.25 for _ in range(10)]
     diag = np.array(diag, dtype=np.float32)
-    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype)
-    rhs = xnp.ones(shape=(A.shape[0], 1), dtype=dtype)
+    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype, device=None)
+    rhs = xnp.ones(shape=(A.shape[0], 1), dtype=dtype, device=None)
     soln = xnp.solve(A, rhs)
 
     B = lazify(A)
@@ -149,11 +149,11 @@ def test_cg_repeated_eig(backend):
 def test_cg_track_easy(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float64
-    A = xnp.diag(xnp.array([3., 4., 5.], dtype=dtype))
+    A = xnp.diag(xnp.array([3., 4., 5.], dtype=dtype, device=None))
     rhs = [[1, 3], [1, 4], [1, 5]]
-    rhs = xnp.array(rhs, dtype=dtype)
+    rhs = xnp.array(rhs, dtype=dtype, device=None)
     soln = [[1 / 3, 1], [1 / 4, 1], [1 / 5, 1]]
-    soln = xnp.array(soln, dtype=dtype)
+    soln = xnp.array(soln, dtype=dtype, device=None)
 
     max_iters, tolerance = 5, 1e-8
     fn = xnp.jit(run_batched_tracking_cg, static_argnums=(0, 3, 4, 5, 6))

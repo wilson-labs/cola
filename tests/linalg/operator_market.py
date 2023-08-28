@@ -8,8 +8,6 @@ from cola.annotations import PSD
 from cola.utils_test import get_xnp
 from functools import reduce
 import cola
-import pytest
-
 
 op_names: set[str] = {
     'psd_big',  # skipped by default
@@ -34,7 +32,8 @@ op_names: set[str] = {
 }
 
 
-def get_test_operator(backend: str, precision: str, op_name: str, device: str = 'cpu') -> LinearOperator:
+def get_test_operator(backend: str, precision: str, op_name: str,
+                      device: str = 'cpu') -> LinearOperator:
     xnp = get_xnp(backend)
     dtype = getattr(xnp, precision)
     if backend == 'torch':
@@ -80,12 +79,12 @@ def get_test_operator(backend: str, precision: str, op_name: str, device: str = 
                     op = Tridiagonal(alpha, beta, gamma)
 
         case ('selfadj', 'hessian'):
-            f2 = lambda x: (x[1] - .1) ** 3 + xnp.cos(x[2]) + (x[0] + .2) ** 2
+            f2 = lambda x: (x[1] - .1)**3 + xnp.cos(x[2]) + (x[0] + .2)**2
             x = xnp.array([1., 2., 3.], dtype=dtype)
             op = Hessian(f2, x)
 
         case ('square', 'jacobian'):
-            f1 = lambda x: xnp.array([x[0]**2, x[1]**3, xnp.sin(x[2])],dtype=dtype)
+            f1 = lambda x: xnp.array([x[0]**2, x[1]**3, xnp.sin(x[2])], dtype=dtype)
             x = xnp.array([1, 2, 3], dtype=dtype)
             op = Jacobian(f1, x)
 
