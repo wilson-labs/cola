@@ -117,9 +117,9 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     def to_dense(self) -> Array:
         """ Produces a dense array representation of the linear operator. """
         if 8 * self.shape[-2] < self.shape[-1]:
-            return self.xnp.eye(self.shape[-2], dtype=self.dtype, device=self.device) @ self
+            return self.xnp.eye(self.shape[-2], self.shape[-2], dtype=self.dtype, device=self.device) @ self
         else:
-            return self @ self.xnp.eye(self.shape[-1], dtype=self.dtype, device=self.device)
+            return self @ self.xnp.eye(self.shape[-1], self.shape[-1], dtype=self.dtype, device=self.device)
 
     @property
     def T(self):

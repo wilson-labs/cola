@@ -13,10 +13,10 @@ from cola.utils_test import generate_spectrum, generate_pd_from_diag
 def test_gmres_vjp(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
-    diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype))
+    diag = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype, device=None))
+    diag_soln = xnp.Parameter(xnp.array([3., 4., 5.], dtype=dtype, device=None))
     A = xnp.diag(diag)
-    rhs = xnp.ones(shape=(3, 1), dtype=dtype)
+    rhs = xnp.ones(shape=(3, 1), dtype=dtype, device=None)
     max_iters, tol = 5, 1e-6
     use_householder, use_triangular, pbar = False, False, False
     x0, P = xnp.zeros_like(rhs), Identity(dtype=A.dtype, shape=A.shape)
@@ -58,8 +58,8 @@ def test_gmres_random(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=25, dtype=np.float32)
-    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype)
-    rhs = xnp.ones(shape=(A.shape[0], 3), dtype=dtype)
+    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype, device=None)
+    rhs = xnp.ones(shape=(A.shape[0], 3), dtype=dtype, device=None)
     soln = xnp.solve(A, rhs)
 
     max_iters, tol = A.shape[0] - 5, 1e-8
@@ -74,11 +74,11 @@ def test_gmres_random(backend):
 def test_gmres_easy(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    A = xnp.diag(xnp.array([3., 4., 5.], dtype=dtype))
+    A = xnp.diag(xnp.array([3., 4., 5.], dtype=dtype, device=None))
     rhs = [[1], [1], [1]]
-    rhs = xnp.array(rhs, dtype=dtype)
+    rhs = xnp.array(rhs, dtype=dtype, device=None)
     soln = [[1 / 3], [1 / 4], [1 / 5]]
-    soln = xnp.array(soln, dtype=dtype)
+    soln = xnp.array(soln, dtype=dtype, device=None)
 
     max_iters, tolerance = 3, 1e-8
     fn = gmres
