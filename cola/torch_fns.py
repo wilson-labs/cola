@@ -63,7 +63,7 @@ jacrev = torch.func.jacrev
 slogdet = torch.linalg.slogdet
 prod = torch.prod
 moveaxis = torch.moveaxis
-
+promote_types = torch.promote_types
 
 def is_cuda_available():
     return torch.cuda.is_available()

@@ -65,7 +65,7 @@ stack = np.stack
 sum = np.sum
 svd = np.linalg.svd
 where = np.where
-
+promote_types = np.promote_types
 
 def PRNGKey(key):
     raise NumpyNotImplementedError()

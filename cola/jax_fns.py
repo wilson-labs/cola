@@ -82,7 +82,7 @@ allclose = jnp.allclose
 slogdet = jnp.linalg.slogdet
 prod = jnp.prod
 moveaxis = jnp.moveaxis
-
+promote_types = jnp.promote_types
 
 def eig(A):
     # if GPU, convert to CPU first since jax doesn't support it

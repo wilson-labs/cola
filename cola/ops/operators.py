@@ -21,10 +21,12 @@ class Dense(LinearOperator):
         super().__init__(dtype=A.dtype, shape=A.shape)
 
     def _matmat(self, X: Array) -> Array:
-        return self.A @ X
+        dtype = self.xnp.promote_types(self.dtype, X.dtype)
+        return self.xnp.cast(self.A,dtype) @ self.xnp.cast(X,dtype)
 
     def _rmatmat(self, X: Array) -> Array:
-        return X @ self.A
+        dtype = self.xnp.promote_types(self.dtype, X.dtype)
+        return self.xnp.cast(X,dtype) @ self.xnp.cast(self.A,dtype)
 
     def to_dense(self):
         return self.A
@@ -116,7 +118,7 @@ class Product(LinearOperator):
             if M1.shape[-1] != M2.shape[-2]:
                 raise ValueError(f"dimension mismatch {M1.shape} vs {M2.shape}")
         shape = (Ms[0].shape[-2], Ms[-1].shape[-1])
-        dtype = Ms[0].dtype
+        dtype = reduce(self.Ms[0].xnp.promote_types, (M.dtype for M in Ms))
         super().__init__(dtype, shape)
 
     def _matmat(self, v):
@@ -176,7 +178,7 @@ class Kronecker(LinearOperator):
     def __init__(self, *Ms):
         self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
         shape = product([Mi.shape[-2] for Mi in Ms]), product([Mi.shape[-1] for Mi in Ms])
-        dtype = Ms[0].dtype
+        dtype = reduce(self.Ms[0].xnp.promote_types, (M.dtype for M in Ms))
         super().__init__(dtype, shape)
 
     def _matmat(self, v):
@@ -218,7 +220,7 @@ class KronSum(LinearOperator):
     def __init__(self, *Ms):
         self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
         shape = product([Mi.shape[-2] for Mi in Ms]), product([Mi.shape[-1] for Mi in Ms])
-        dtype = Ms[0].dtype
+        dtype = reduce(self.Ms[0].xnp.promote_types, (M.dtype for M in Ms))
         super().__init__(dtype, shape)
 
     def _matmat(self, v):
@@ -259,7 +261,8 @@ class BlockDiag(LinearOperator):
         self.multiplicities = [1 for _ in Ms] if multiplicities is None else multiplicities
         shape = (sum(Mi.shape[-2] * c for Mi, c in zip(Ms, self.multiplicities)),
                  sum(Mi.shape[-1] * c for Mi, c in zip(Ms, self.multiplicities)))
-        super().__init__(Ms[0].dtype, shape)
+        dtype = reduce(self.Ms[0].xnp.promote_types, (M.dtype for M in Ms))
+        super().__init__(dtype, shape)
 
     def _matmat(self, v):  # (n,k)
         # n = v.shape[0]

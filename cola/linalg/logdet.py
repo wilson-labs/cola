@@ -1,6 +1,6 @@
 from plum import dispatch
 from cola.ops import Array
-from cola.ops import LinearOperator, Triangular, Permutation
+from cola.ops import LinearOperator, Triangular, Permutation, Identity, ScalarMul
 from cola.ops import Diagonal, Kronecker, BlockDiag, Product
 from cola.utils import export
 from cola.annotations import PSD
@@ -107,6 +107,19 @@ def slogdet(A: Product, **kwargs):
     signs, logdets = zip(*[slogdet(Ai, **kwargs) for Ai in A.Ms])
     return product(signs), sum(logdets)
 
+
+@dispatch
+def slogdet(A: Identity, **kwargs):
+    xnp = A.xnp
+    zero = xnp.array(0., dtype=A.dtype, device=A.device)
+    return 1. + zero, zero
+
+@dispatch
+def slogdet(A: ScalarMul, **kwargs):
+    xnp = A.xnp
+    c = A.c
+    phase = c/xnp.abs(c)
+    return phase, xnp.log(xnp.abs(c))
 
 @dispatch
 def slogdet(A: Diagonal, **kwargs):
