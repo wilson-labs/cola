@@ -70,8 +70,8 @@ def get_test_operator(backend: str, precision: str, op_name: str,
                 case 'prod':
                     op = M1 @ M1.T
         case ('psd', 'kron'):
-            M1 = Dense(xnp.array([[6., 2], [2, 4]], dtype=dtype))
-            M2 = Dense(xnp.array([[7, 6], [6, 8]], dtype=dtype))
+            M1 = Dense(xnp.array([[6., 2], [2, 4]], dtype=dtype, device=device))
+            M2 = Dense(xnp.array([[7, 6], [6, 8]], dtype=dtype, device=device))
             op = Kronecker(M1,M2)
             
         case (('selfadj' | 'square') as op_prop, 'tridiagonal'):
