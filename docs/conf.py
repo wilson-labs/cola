@@ -3,23 +3,32 @@ copyright = '2023, Wilson-Labs'
 author = 'Marc Finzi and Andres Potapczynski'
 language = "en"
 
+import io
 import os
 import sys
 import re
+
+
 sys.path.insert(0, os.path.abspath('..'))
 
 RE_VERSION = re.compile(r'^__version__ \= \'(\d+\.\d+\.\d+(?:\w+\d+)?)\'$', re.MULTILINE)
 PROJECTDIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECTDIR)
 
-def get_release():
-    with open(os.path.join(PROJECTDIR, 'cola', '__init__.py')) as f:
-        version = re.search(RE_VERSION, f.read())
-    assert version is not None, "can't parse __version__ from __init__.py"
-    return version.group(1)
 
-release = get_release()
+# Get version from setuptools_scm file
+def find_version(*file_paths):
+    try:
+        with io.open(os.path.join(PROJECTDIR,*file_paths), encoding="utf8") as fp:
+            version_file = fp.read()
+            pattern = r"^__version__ = version = ['\"]([^'\"]*)['\"]"
+        version_match = re.search(pattern, version_file, re.M)
+        return version_match.group(1)
+    except Exception:
+        return None
 
+
+release = find_version('cola','version.py')
 
 sys.path.append(os.path.abspath('sphinxext'))
 
