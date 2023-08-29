@@ -19,7 +19,7 @@ sys.path.insert(0, PROJECTDIR)
 # Get version from setuptools_scm file
 def find_version(*file_paths):
     try:
-        with io.open(os.path.join(PROJECTDIR, 'cola', *file_paths), encoding="utf8") as fp:
+        with io.open(os.path.join(PROJECTDIR,*file_paths), encoding="utf8") as fp:
             version_file = fp.read()
             pattern = r"^__version__ = version = ['\"]([^'\"]*)['\"]"
         version_match = re.search(pattern, version_file, re.M)
@@ -28,7 +28,7 @@ def find_version(*file_paths):
         return None
 
 
-release = find_version()
+release = find_version('../cola/version.py')
 
 sys.path.append(os.path.abspath('sphinxext'))
 
