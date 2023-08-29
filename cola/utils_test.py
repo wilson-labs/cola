@@ -24,7 +24,7 @@ def strip_parens(string):
     return string.replace('(', '').replace(')', '')
 
 
-def _add_marks(case):
+def _add_marks(case, is_tricky=False):
     # This function is maybe hacky, but it adds marks based on the names of the parameters supplied
     # In particular, it adds the 'torch', 'jax', and 'big' marks
     case = case if isinstance(case, list) or isinstance(case, tuple) else [case]
@@ -36,19 +36,34 @@ def _add_marks(case):
         marks.append(pytest.mark.jax)
     if any('big' in arg for arg in args):
         marks.append(pytest.mark.big)
+    if is_tricky:
+        marks.append(pytest.mark.tricky)
     return pytest.param(*case, marks=marks)
 
 
-def parametrize(*cases, ids=None):
+def parametrize(*cases, tricky=None, ids=None):
     """ Expands test cases with pytest.mark.parametrize but with argnames
-        assumed and ids given by the ids=[str(case) for case in cases] """
+        assumed and ids given by the ids=[str(case) for case in cases] 
+        
+    Certain cases can be marked as tricky, and will be marked with pytest.mark.tricky
+    Tricky can be specified as a list of argument combinations [(arg1,arg2,...), (arg1,arg2,...), ...])])]
+    or as a list of slices [slice(None), slice(None), ["dense","square",...], ...]
+    with lists expanded using the cartesian product (as in cases)."""
     if len(cases) > 1:
         all_cases = [tuple(elem) for elem in itertools.product(*cases)]
     else:
         all_cases = cases[0]
 
+    if tricky is not None:
+        if len(tricky)>1:
+            expanded_tricky = [(c[t] if isinstance(t,slice) else t) for t,c in zip(tricky,cases)]
+            tricky = {tuple(elem) for elem in itertools.product(*expanded_tricky)}
+        else:
+            tricky = tricky[0]
+    else:
+        tricky = set()
     # Potentially add marks
-    all_cases = [_add_marks(case) for case in all_cases]
+    all_cases = [_add_marks(case, case in tricky) for case in all_cases]
 
     def decorator(test_fn):
         argnames = ','.join(inspect.getfullargspec(test_fn).args)

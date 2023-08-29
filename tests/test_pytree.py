@@ -4,7 +4,7 @@ from cola.ops import Dense, Diagonal, Product, ScalarMul
 from functools import partial
 
 
-@parametrize(['jax'])  # many torch fns not yet implemented for vmap
+@parametrize(['jax','torch'], tricky=['torch'])
 def test_vmappable_constructor(backend):
     xnp = get_xnp(backend)
     dtype, device = xnp.float32, None
@@ -57,7 +57,7 @@ def test_jittable_constructor(backend):
     assert relative_error(dT @ X, bmm) < 1e-6
 
 
-@parametrize(['jax'])
+@parametrize(['jax', 'torch'])
 def test_vmapped_linalg(backend):
     xnp = get_xnp(backend)
     dtype, device = xnp.float32, None
