@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from operator_market import op_names, get_test_operator
 import cola
 from cola.linalg import logdet
@@ -7,7 +6,6 @@ from cola.ops import LinearOperator
 from cola.utils_test import parametrize, relative_error
 
 
-@pytest.mark.skip()
 @parametrize(['torch', 'jax'], ['float64'], op_names)
 def test_logdet(backend, precision, op_name):
     operator = get_test_operator(backend, precision, op_name)
