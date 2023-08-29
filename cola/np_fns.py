@@ -65,7 +65,9 @@ stack = np.stack
 sum = np.sum
 svd = np.linalg.svd
 where = np.where
-
+fft = np.fft.fft
+ifft = np.fft.ifft
+logdet = np.linalg.logdet
 
 def PRNGKey(key):
     raise NumpyNotImplementedError()

@@ -63,6 +63,13 @@ jacrev = torch.func.jacrev
 slogdet = torch.linalg.slogdet
 prod = torch.prod
 moveaxis = torch.moveaxis
+slogdet = torch.linalg.slogdet
+
+def fft(x, n=None, axis=-1, norm=None):
+    return torch.fft.fft(x, n=n, dim=axis, norm=norm)
+
+def ifft(x, n=None, axis=-1, norm=None):
+    return torch.fft.ifft(x, n=n, dim=axis, norm=norm)
 
 
 def is_cuda_available():
