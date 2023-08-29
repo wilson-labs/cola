@@ -85,6 +85,9 @@ moveaxis = jnp.moveaxis
 fft = jnp.fft.fft
 ifft = jnp.fft.ifft
 slogdet = jnp.linalg.slogdet
+softmax = jax.nn.softmax
+log_softmax = jax.nn.log_softmax
+
 
 def eig(A):
     # if GPU, convert to CPU first since jax doesn't support it

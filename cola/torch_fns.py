@@ -65,6 +65,12 @@ prod = torch.prod
 moveaxis = torch.moveaxis
 slogdet = torch.linalg.slogdet
 
+def softmax(x, axis=-1):
+    return torch.nn.functional.softmax(x, dim=axis)
+
+def log_softmax(x, axis=-1):
+    return torch.nn.functional.log_softmax(x, dim=axis)
+
 def fft(x, n=None, axis=-1, norm=None):
     return torch.fft.fft(x, n=n, dim=axis, norm=norm)
 
