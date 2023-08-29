@@ -39,11 +39,12 @@ def slq_fwd(A, fun, num_samples, max_iters, tol, pbar, key):
     xnp = A.xnp
     rhs = xnp.randn(A.shape[1], num_samples, dtype=A.dtype, key=key, device=A.device)
     alpha, beta, _, iters, _ = lanczos_parts(A, rhs, max_iters, tol, pbar)
-    if xnp.__name__.find("torch") >= 0:
-        alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
-    # REMOVED by marc due to it breaking jit compilation
-    else:
-        alpha = alpha[..., :-1]
+    # if xnp.__name__.find("torch") >= 0:
+    #     alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
+    # # REMOVED by marc due to it breaking jit compilation
+    # else:
+    #     alpha = alpha[..., :-1]
+    alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
     T = construct_tridiagonal_batched(alpha, beta, alpha)
     eigvals, Q = xnp.eigh(T)
     tau = Q[..., 0, :]

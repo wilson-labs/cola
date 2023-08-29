@@ -1,5 +1,4 @@
 from plum import dispatch
-from cola.ops import Array
 from cola.ops import LinearOperator, Triangular, Permutation
 from cola.ops import Diagonal, Kronecker, BlockDiag, Product
 from cola.utils import export
@@ -16,7 +15,7 @@ def product(xs):
 
 @export
 def logdet(A: LinearOperator, **kwargs):
-    r""" Computes logdet of a linear operator. 
+    r""" Computes logdet of a linear operator.
 
     For large inputs (or with method='iterative'),
     uses either :math:`O(\tfrac{1}{\delta^2}\log(1/\epsilon))` time stochastic algorithm (SLQ)
