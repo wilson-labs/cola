@@ -28,7 +28,7 @@ def find_version(*file_paths):
         return None
 
 
-release = find_version('../cola/version.py')
+release = find_version('cola','version.py')
 
 sys.path.append(os.path.abspath('sphinxext'))
 
