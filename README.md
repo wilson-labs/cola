@@ -129,21 +129,17 @@ Link to be added soon.
 }
 ```
 
-### Features being added
+### Features implemented
 
 | Linear Algebra    | inverse | eig | diag | trace | logdet | exp | sqrt | f(A) | SVD | pseudoinverse |
 |:-----------------:|:-------:|:---:|:----:|:-----:|:------:|:---:|:----:|:--------:|:---:|:-------------:|
 | **Implementation**|    ✓    |  ✓  |   ✓  |   ✓  |    ✓   |  ✓  |   ✓  |    ✓     |     |               |
 
-### Linear Operators implemented
-
 | LinearOperators   | Diag | BlockDiag | Kronecker | KronSum | Sparse | Jacobian | Hessian | Fisher | Concatenated | Triangular | FFT | Tridiagonal |
 |:-----------------:|:----:|:---------:|:---------:|:-------:|:------:|:--------:|:-------:|:------:|:------------:|:----------:|:---:|:-----------:|
 | **Implementation**|   ✓  |     ✓     |     ✓     |    ✓    |   ✓   |    ✓     |    ✓    |        |      ✓       |     ✓      |     |      ✓      |
 
-### Attribute Annotations
-
-| Annotation       | SelfAdjoint | PSD | Unitary |
+| Annotations      | SelfAdjoint | PSD | Unitary |
 |:----------------:|:-----------:|:---:|:-------:|
 | **Implementation**|      ✓      |  ✓  |    ✓   |
 
