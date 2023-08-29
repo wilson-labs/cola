@@ -1,6 +1,6 @@
 import cola
 from cola.utils_test import get_xnp, parametrize, relative_error
-from tests.linalg.operator_market import op_names, get_test_operator
+from linalg.operator_market import op_names, get_test_operator
 
 @parametrize(['torch', 'jax'],[op for op in op_names if op.startswith('psd')])
 def test_cholesky(backend, opname):
