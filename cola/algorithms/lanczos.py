@@ -155,11 +155,14 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
 
     def error(state):
         i, *_, alpha = state
-        return xnp.max(alpha[..., i - 1].real) + (i <= 1) * 1.
+        # rel_err = alpha[..., i - 1].real / xnp.max(alpha[..., 1].real, 1e-30)
+        rel_err = alpha[..., i - 1].real
+        return xnp.max(rel_err, axis=0) + (i <= 1) * 1.
 
     def cond_fun(state):
         i, *_, alpha = state
         is_max = i <= max_iters
+        # is_tol = (alpha[..., i - 1].real >= tol * alpha[..., 1].real) | (i <= 1)
         is_tol = (alpha[..., i - 1].real >= tol) | (i <= 1)
         flag = is_max & xnp.any(is_tol)
         return flag
