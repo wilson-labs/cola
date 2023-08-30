@@ -16,7 +16,7 @@ def product(xs):
 
 @export
 def logdet(A: LinearOperator, **kwargs):
-    r""" Computes logdet of a linear operator. 
+    r""" Computes logdet of a linear operator.
 
     For large inputs (or with method='iterative'),
     uses either :math:`O(\tfrac{1}{\delta^2}\log(1/\epsilon))` time stochastic algorithm (SLQ)

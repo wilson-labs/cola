@@ -24,7 +24,7 @@ def test_arnoldi_vjp(backend):
     diag = xnp.Parameter(xnp.array(matrix, dtype=dtype, device=None))
     diag_soln = xnp.Parameter(xnp.array(matrix, dtype=dtype, device=None))
     _, unflatten = Dense(diag).flatten()
-    x0 = xnp.randn(diag.shape[0], 1, dtype=dtype, device=None)
+    x0 = xnp.randn(diag.shape[0], 1, dtype=dtype, device=None, key=xnp.PRNGKey(21))
 
     def f(theta):
         Aop = unflatten([theta])
@@ -68,7 +68,8 @@ def test_arnoldi(backend):
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=4, dtype=np.float32)
     A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype,
                   device=None)
-    rhs = xnp.cast(xnp.randn(A.shape[1], 1, dtype=xnp.float32, device=None), dtype=dtype)
+    zr = xnp.randn(A.shape[1], 1, dtype=xnp.float32, device=None, key=xnp.PRNGKey(123))
+    rhs = xnp.cast(zr, dtype=dtype)
     eigvals, eigvecs, _ = arnoldi_eigs(lazify(A), rhs, max_iters=A.shape[-1])
     approx = xnp.sort(xnp.cast(eigvals, xnp.float32))
     soln = xnp.sort(xnp.array(diag, xnp.float32, device=None))
@@ -87,7 +88,7 @@ def test_householder_arnoldi_decomp(backend):
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np.float32) - 0.5
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
-    rhs = xnp.randn(A.shape[1], 1, dtype=dtype, device=None)
+    rhs = xnp.randn(A.shape[1], 1, dtype=dtype, device=None, key=xnp.PRNGKey(48))
     # A_np, rhs_np = np.array(A, dtype=np.complex128), np.array(rhs[:, 0], dtype=np.complex128)
     A_np, rhs_np = np.array(A, dtype=np.float64), np.array(rhs[:, 0], dtype=np.float64)
     # Q_sol, H_sol = run_householder_arnoldi(A, rhs, A.shape[0], np.float64, xnp)
@@ -108,7 +109,7 @@ def test_get_arnoldi_matrix(backend):
     dtype = xnp.complex128  # double precision on real and complex coordinates to achieve 1e-12 tol
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=20, dtype=np.float32) - 0.5
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
-    rhs = xnp.randn(A.shape[1], 1, dtype=dtype, device=None)
+    rhs = xnp.randn(A.shape[1], 1, dtype=dtype, device=None, key=xnp.PRNGKey(1256))
     rhs = xnp.concatenate((rhs, rhs), axis=-1)
     max_iter = A.shape[0]
     A_np, rhs_np = np.array(A, dtype=np.complex128), np.array(rhs[:, 0], dtype=np.complex128)

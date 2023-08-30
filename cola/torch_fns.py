@@ -46,7 +46,6 @@ diag = torch.diag
 zeros_like = torch.zeros_like
 cholesky = torch.linalg.cholesky
 min = torch.min
-max = torch.max
 while_loop_winfo = while_loop_winfo
 concat = torch.cat
 log = torch.log
@@ -64,6 +63,11 @@ slogdet = torch.linalg.slogdet
 prod = torch.prod
 moveaxis = torch.moveaxis
 promote_types = torch.promote_types
+finfo = torch.finfo
+
+def max(array, axis, keepdims=False):
+    maxval, _ = torch.max(array, dim=axis, keepdim=keepdims)
+    return maxval
 
 def is_cuda_available():
     return torch.cuda.is_available()
@@ -282,11 +286,14 @@ def update_array(array, update, *slices):
     array[slices] = update
     return array
 
+
 def is_leaf(value):
     return optree.treespec_is_leaf(optree.tree_structure(value))
 
+
 def tree_flatten(value):
-    return optree.tree_flatten(value,namespace='cola') # leaves, tree_def
+    return optree.tree_flatten(value, namespace='cola')  # leaves, tree_def
+
 
 def tree_unflatten(treedef, value):
     return optree.tree_unflatten(treedef, value)

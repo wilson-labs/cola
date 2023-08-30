@@ -108,7 +108,7 @@ class NystromPrecond(LinearOperator):
     def _create_approx(self, A, Omega, mu, eps, adjust_mu):
         xnp = self.xnp
         self.Lambda, self.U = get_nys_approx(A=A, Omega=Omega, eps=eps)
-        self.adjusted_mu = amu = mu * xnp.max(self.Lambda) if adjust_mu else mu
+        self.adjusted_mu = amu = mu * xnp.max(self.Lambda, axis=0) if adjust_mu else mu
         # Num and denom help for defining inverse and sqrt
         self.subspace_num = xnp.min(self.Lambda) + amu
         self.subspace_denom = self.Lambda + amu
