@@ -82,6 +82,7 @@ allclose = jnp.allclose
 slogdet = jnp.linalg.slogdet
 prod = jnp.prod
 moveaxis = jnp.moveaxis
+promote_types = jnp.promote_types
 finfo = jnp.finfo
 
 def eig(A):

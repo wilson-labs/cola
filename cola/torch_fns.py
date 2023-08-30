@@ -62,6 +62,7 @@ jacrev = torch.func.jacrev
 slogdet = torch.linalg.slogdet
 prod = torch.prod
 moveaxis = torch.moveaxis
+promote_types = torch.promote_types
 finfo = torch.finfo
 
 def max(array, axis, keepdims=False):
