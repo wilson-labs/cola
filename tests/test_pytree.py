@@ -4,7 +4,7 @@ from cola.ops import Dense, Diagonal, Product, ScalarMul
 from functools import partial
 
 
-@parametrize(['jax','torch']).excluding['torch']
+@parametrize(['jax','torch']).excluding['torch',]
 def test_vmappable_constructor(backend):
     xnp = get_xnp(backend)
     dtype, device = xnp.float32, None

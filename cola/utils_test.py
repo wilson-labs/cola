@@ -74,11 +74,12 @@ class parametrize:
         return self
 
     def __getitem__(self, indexed_cases):
-        if len(indexed_cases)>1: # multiple arguments, need to use cross product
+        if len(indexed_cases)>1 and isinstance(indexed_cases,tuple): # multiple arguments, need to use cross product
             expanded_indexed_cases = [(c[t] if isinstance(t,slice) else t) for t,c in zip(indexed_cases,self.cases)]
             indexed_cases = {tuple(elem) for elem in itertools.product(*expanded_indexed_cases)}
+            print("got here with", indexed_cases, expanded_indexed_cases)
         else: # single argument
-            match indexed_cases[0]:
+            match indexed_cases:
                 case slice() as s:
                     indexed_cases = set(self.all_cases[s])
                 case list() as l:
