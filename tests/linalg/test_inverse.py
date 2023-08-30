@@ -1,4 +1,3 @@
-import pytest
 from operator_market import op_names, get_test_operator
 from cola.linalg import inverse
 from cola.ops import LinearOperator
@@ -6,7 +5,6 @@ from cola.utils_test import parametrize, relative_error
 import cola
 
 
-@pytest.mark.skip()
 @parametrize(['torch', 'jax'], ['float64'], op_names)
 def test_inverse(backend, precision, op_name):
     operator = get_test_operator(backend, precision, op_name)
@@ -16,7 +14,6 @@ def test_inverse(backend, precision, op_name):
     Ainv = inverse(A, tol=tol)
     A3 = cola.PSD(A2) if A.isa(cola.PSD) else A2
     Ainv2 = inverse(A3, tol=tol, method='dense')
-
     Ainv3 = inverse(A3, tol=tol, method='iterative')
     B = xnp.fixed_normal_samples((A.shape[-1], 10), dtype=dtype, device=None)
     B = xnp.array(B, dtype=dtype, device=None)
