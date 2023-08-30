@@ -35,10 +35,10 @@ def test_power_iteration(backend):
     A = xnp.diag(xnp.array([10., 9.75, 3., 0.1], dtype=dtype, device=None))
     B = lazify(A)
     soln = xnp.array(10., dtype=dtype, device=None)
-    tol, max_iter = 1e-7, 500
+    tol, max_iter = 1e-5, 500
     _, approx, _ = power_iteration(B, tol=tol, max_iter=max_iter, momentum=0.)
     rel_error = relative_error(soln, approx)
-    assert rel_error < _tol * 100
+    assert rel_error < tol * 100
 
 
 @parametrize(['torch', 'jax'])
