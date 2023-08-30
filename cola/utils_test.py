@@ -62,7 +62,7 @@ class parametrize:
             @parametrize([a1,a2,...], [b1,b2,...], ...).excluding[:,[b2,b4,b5],:2,...]
             def test_fn(a,b,...):
 
-            @parametrize([a1,a2,...], [b1,b2,...], ...).excluding[(a1,b2,c2), (a2,b4,c5), ...]
+            @parametrize([a1,a2,...], [b1,b2,...], ...).excluding[[(a1,b2,c2), (a2,b4,c5), ...]]
             def test_fn(a,b,...):
 
             @parametrize([a1,a2,...], [b1,b2,...], ...)[:3, [b2,b4,b5], ...]  # include those cases only
