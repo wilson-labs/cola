@@ -77,7 +77,6 @@ class parametrize:
         if len(indexed_cases)>1 and isinstance(indexed_cases,tuple): # multiple arguments, need to use cross product
             expanded_indexed_cases = [(c[t] if isinstance(t,slice) else t) for t,c in zip(indexed_cases,self.cases)]
             indexed_cases = {tuple(elem) for elem in itertools.product(*expanded_indexed_cases)}
-            print("got here with", indexed_cases, expanded_indexed_cases)
         else: # single argument
             match indexed_cases:
                 case slice() as s:
@@ -87,7 +86,7 @@ class parametrize:
                 case tuple() as t:
                     indexed_cases = set(t)
                 case _:
-                    indexed_cases = set(indexed_cases)
+                    indexed_cases = set((indexed_cases,))
         # Potentially add marks
         assert indexed_cases-set(self.all_cases) == set(), "indexed_cases cases must be in the list of cases"
         self.indexed_cases = indexed_cases
