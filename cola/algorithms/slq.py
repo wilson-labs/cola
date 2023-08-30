@@ -37,18 +37,22 @@ def slq_bwd(res, grads, unflatten, *args, **kwargs):
 @iterative_autograd(slq_bwd)
 def slq_fwd(A, fun, num_samples, max_iters, tol, pbar, key):
     xnp = A.xnp
+    _mp = xnp.get_machine_precision(A.dtype)
     rhs = xnp.randn(A.shape[1], num_samples, dtype=A.dtype, key=key, device=A.device)
     alpha, beta, _, iters, _ = lanczos_parts(A, rhs, max_iters, tol, pbar)
-    # if xnp.__name__.find("torch") >= 0:
-    #     alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
-    # # REMOVED by marc due to it breaking jit compilation
-    # else:
-    #     alpha = alpha[..., :-1]
-    alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
+    if xnp.__name__.find("torch") >= 0:
+        alpha, beta = alpha[..., :iters - 1], beta[..., :iters]
+    # REMOVED by marc due to it breaking jit compilation
+    else:
+        alpha = alpha[..., :-1]
     T = construct_tridiagonal_batched(alpha, beta, alpha)
     eigvals, Q = xnp.eigh(T)
     tau = Q[..., 0, :]
-    approx = xnp.sum(tau**2 * fun(eigvals), axis=-1)
+    # approx = xnp.sum(tau**2 * fun(eigvals), axis=-1)
+    # fn_vals = xnp.where(xnp.abs(eigvals) > _mp, fun(eigvals), xnp.zeros_like(eigvals))
+    const = _mp * xnp.max(eigvals, axis=1, keepdims=True)
+    fn_vals = xnp.where(xnp.abs(eigvals) > const, fun(eigvals), xnp.zeros_like(eigvals))
+    approx = xnp.sum(tau**2 * fn_vals, axis=-1)
     estimate = A.shape[-2] * approx
     return xnp.mean(estimate, axis=0)
 
