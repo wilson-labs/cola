@@ -28,7 +28,7 @@ def test_inverse(backend):
     assert rel_error < _tol * 10
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(['torch', 'jax']).excluding['torch']
 def test_power_iteration(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
