@@ -85,6 +85,21 @@ moveaxis = jnp.moveaxis
 promote_types = jnp.promote_types
 finfo = jnp.finfo
 
+
+def get_array_device(array):
+    return array.device()
+
+
+def is_cuda_available():
+    devices = jax.devices()
+
+    for device in devices:
+        if device.device_kind == 'gpu':
+            return True
+
+    return False
+
+
 def eig(A):
     # if GPU, convert to CPU first since jax doesn't support it
     device = A.device_buffer.device()

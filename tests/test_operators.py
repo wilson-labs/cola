@@ -14,10 +14,41 @@ from cola.ops import Householder
 from cola.ops import Sparse
 from cola.ops import Jacobian
 from cola.ops import LinearOperator
+from cola import PSD
 from cola.algorithms.arnoldi import get_householder_vec
 from cola.utils_test import get_xnp, parametrize, relative_error
 
 _tol = 1e-6
+
+
+@parametrize(['torch', 'jax'])
+def test_to(backend):
+    xnp = get_xnp(backend)
+    dtype = xnp.float32
+    Aop = Diagonal(xnp.array([0.1, -0.2], dtype=dtype, device=None))
+    diag2 = xnp.array([3., -7.], dtype=dtype, device=None)
+    Bop = Diagonal(diag=diag2)
+    Cop = KronSum(Aop, Bop)
+    Dop = Diagonal(xnp.array([1., 2., 3., 4], dtype=dtype, device=None))
+    Eop = Sum(Cop, Dop)
+    Fop = PSD(Eop)
+    device_cpu = xnp.get_default_device()
+    dev_type = device_cpu.type if backend == "torch" else device_cpu.platform
+    assert dev_type == "cpu"
+    device_gpu = xnp.device("cuda:0") if xnp.is_cuda_available else device_cpu
+
+    Ops = [Aop, Bop, Cop, Dop, Eop, Fop]
+    for Op in Ops:
+        assert Op.device == device_cpu
+        ones = xnp.ones((Op.shape[0],), dtype=dtype, device=device_cpu)
+        aux = Op @ ones
+        assert xnp.get_array_device(aux) == device_cpu
+
+        Op = Op.to(device_gpu)
+        assert Op.device == device_gpu
+        ones = xnp.ones((Op.shape[0],), dtype=dtype, device=device_gpu)
+        aux = Op @ ones
+        assert xnp.get_array_device(aux) == device_gpu
 
 
 @parametrize(['torch', 'jax'])

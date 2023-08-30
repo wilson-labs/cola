@@ -65,9 +65,15 @@ moveaxis = torch.moveaxis
 promote_types = torch.promote_types
 finfo = torch.finfo
 
+
+def get_array_device(array):
+    return array.device
+
+
 def max(array, axis, keepdims=False):
     maxval, _ = torch.max(array, dim=axis, keepdim=keepdims)
     return maxval
+
 
 def is_cuda_available():
     return torch.cuda.is_available()
