@@ -40,8 +40,11 @@ def get_test_operator(backend: str, precision: str, op_name: str,
         import torch
         device = torch.device(device)
     else:
-        from jax.config import config
-        config.update("jax_enable_x64", True)
+        from jax import numpy as jnp
+        if dtype == jnp.float64:
+            from jax.config import config
+            config.update("jax_enable_x64", True)
+
         device = None
 
     # Define the operator
