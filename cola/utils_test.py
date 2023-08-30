@@ -41,36 +41,91 @@ def _add_marks(case, is_tricky=False):
     return pytest.param(*case, marks=marks)
 
 
-def parametrize(*cases, tricky=None, ids=None):
+class parametrize:
     """ Expands test cases with pytest.mark.parametrize but with argnames
-        assumed and ids given by the ids=[str(case) for case in cases] 
+            assumed and ids given by the ids=[str(case) for case in cases] 
         
-    Certain cases can be marked as tricky, and will be marked with pytest.mark.tricky
-    Tricky can be specified as a list of argument combinations [(arg1,arg2,...), (arg1,arg2,...), ...])])]
-    or as a list of slices [slice(None), slice(None), ["dense","square",...], ...]
-    with lists expanded using the cartesian product (as in cases)."""
-    if len(cases) > 1:
-        all_cases = [tuple(elem) for elem in itertools.product(*cases)]
-    else:
-        all_cases = cases[0]
+        usage: 
+            @parametrize([a1,a2,...], [b1,b2,...], ...).excluding[:,[b2,b4,b5],...]
+            def test_fn(a,b,...):
 
-    if tricky is not None:
-        if len(tricky)>1:
-            expanded_tricky = [(c[t] if isinstance(t,slice) else t) for t,c in zip(tricky,cases)]
-            tricky = {tuple(elem) for elem in itertools.product(*expanded_tricky)}
+            @parametrize([a1,a2,...], [b1,b2,...], ...).excluding[(a1,b2,c2), (a2,b4,c5), ...]
+            def test_fn(a,b,...):
+
+        Certain cases indexed using excluding will be marked with pytest.mark.tricky
+        """
+    def __init__(self, *cases, ids=None):
+        self.cases = cases
+        self.ids = ids
+        if len(cases) > 1:
+            self.all_cases = [tuple(elem) for elem in itertools.product(*cases)]
         else:
-            tricky = tricky[0]
-    else:
-        tricky = set()
-    # Potentially add marks
-    all_cases = [_add_marks(case, case in tricky) for case in all_cases]
+            self.all_cases = cases[0]
+        self.indexed_cases = set(self.all_cases)
+        self.indexing = True
 
-    def decorator(test_fn):
+    @property
+    def excluding(self):
+        self.indexing=False
+        self.indexed_cases = set()
+        return self
+
+    def __getitem__(self, indexed_cases):
+        if len(indexed_cases)>1: # multiple arguments, need to use cross product
+            expanded_indexed_cases = [(c[t] if isinstance(t,slice) else t) for t,c in zip(indexed_cases,self.cases)]
+            indexed_cases = {tuple(elem) for elem in itertools.product(*expanded_indexed_cases)}
+        else: # single argument
+            match indexed_cases[0]:
+                case slice() as s:
+                    indexed_cases = set(self.all_cases[s])
+                case list() as l:
+                    indexed_cases = set(l)
+                case tuple() as t:
+                    indexed_cases = set(t)
+                case _:
+                    indexed_cases = set(indexed_cases)
+        # Potentially add marks
+        assert indexed_cases-set(self.all_cases) == set(), "indexed_cases cases must be in the list of cases"
+        self.indexed_cases = indexed_cases
+        return self
+    
+    def __call__(self,test_fn):
+        all_cases = [_add_marks(case, (case in self.indexed_cases)^self.indexing) for case in self.all_cases]
         argnames = ','.join(inspect.getfullargspec(test_fn).args)
-        theids = [strip_parens(str(case)) for case in all_cases] if ids is None else ids
+        theids = [strip_parens(str(case)) for case in all_cases] if self.ids is None else self.ids
         return pytest.mark.parametrize(argnames, all_cases, ids=theids)(test_fn)
 
-    return decorator
+# def parametrize(*cases, tricky=None, ids=None):
+#     """ Expands test cases with pytest.mark.parametrize but with argnames
+#         assumed and ids given by the ids=[str(case) for case in cases] 
+        
+#     Certain cases can be marked as tricky, and will be marked with pytest.mark.tricky
+#     Tricky can be specified as a list of argument combinations [[(arg1,arg2,...), (arg1,arg2,...), ...]]
+#     or as a list of slices [slice(None), slice(None), ["dense","square",...], ...]
+#     with lists expanded using the cartesian product (as in cases)."""
+#     if len(cases) > 1:
+#         all_cases = [tuple(elem) for elem in itertools.product(*cases)]
+#     else:
+#         all_cases = cases[0]
+
+#     if tricky is not None:
+#         if len(tricky)>1:
+#             expanded_tricky = [(c[t] if isinstance(t,slice) else t) for t,c in zip(tricky,cases)]
+#             tricky = {tuple(elem) for elem in itertools.product(*expanded_tricky)}
+#         else:
+#             tricky = set(tricky[0])
+#     else:
+#         tricky = set()
+#     # Potentially add marks
+#     assert tricky-set(all_cases) == set(), "Tricky cases must be in the list of cases"
+#     all_cases = [_add_marks(case, case in tricky) for case in all_cases]
+
+#     def decorator(test_fn):
+#         argnames = ','.join(inspect.getfullargspec(test_fn).args)
+#         theids = [strip_parens(str(case)) for case in all_cases] if ids is None else ids
+#         return pytest.mark.parametrize(argnames, all_cases, ids=theids)(test_fn)
+
+#     return decorator
 
 
 def relative_error(v, w):

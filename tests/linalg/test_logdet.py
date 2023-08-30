@@ -7,9 +7,8 @@ from cola.ops import LinearOperator
 from cola.utils_test import parametrize, relative_error
 
 
-@pytest.mark.skip()
-@parametrize(['torch', 'jax'], ['float64'], op_names,
-tricky = [slice(None), slice(None), ['psd_identity','psd_scalarmul']])
+#@pytest.mark.skip()
+@parametrize(['torch', 'jax'], ['float64'], op_names).excluding[:,:,['psd_identity','psd_scalarmul']]
 def test_logdet(backend, precision, op_name):
     operator = get_test_operator(backend, precision, op_name)
     A, _, xnp = operator, operator.dtype, operator.xnp
