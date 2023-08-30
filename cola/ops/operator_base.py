@@ -54,6 +54,7 @@ def is_xnp_array(obj, xnp):
 class AutoRegisteringPyTree(type):
     def __init__(cls, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        cls._dynamic = cls._dynamic.copy()
         import optree
         optree.register_pytree_node_class(cls, namespace='cola')
         try:
@@ -119,8 +120,6 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     def __new__(cls, *args, **kwargs):
         """ Creates attributes for the flatten and unflatten functionality. """
         obj = super().__new__(cls)
-        # obj.xnp = find_xnp([args, kwargs])
-        # assert obj.xnp is not None, f"No supported array library found in {args,kwargs,cls}"
         obj.device = find_device([args, kwargs])
         return obj
 
@@ -140,12 +139,13 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         if name not in self.__class__._dynamic:
             cond = is_array(value) or not optree.treespec_is_leaf(optree.tree_structure(value))
             self.__class__._dynamic[name] = cond
-        return super().__setattr__(name, value)
+        return super().__setattr__(name,value)
 
     def to(self, device, dtype=None):
-        """ Returns a new linear operator with given device and dtype """
+        """ Returns a new linear operator with given device and dtype 
+            WARNING: dtype change is not supported yet. """
         params, unflatten = self.flatten()
-        params = [self.xnp.move_to(p, device=device, dtype=dtype) for p in params]
+        params = [self.xnp.move_to(p, device=device, dtype=dtype) if self.xnp.is_array(p) else p for p in params]
         return unflatten(params)
 
     def isa(self, annotation) -> bool:
@@ -313,5 +313,8 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
                 fields[keyv[0]] = keyv[1]
         obj = object.__new__(cls)
         for k,v in fields.items():
+            if k in ['device']:#,'dtype']: TODO: also separate dtype in case .to was called
+                continue
             setattr(obj, k, v)
+        obj.device = find_device(fields) or fields['device']
         return obj
