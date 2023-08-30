@@ -129,37 +129,20 @@ Link to be added soon.
 }
 ```
 
-### Features being added
-Linear Algebra Operations
-- [x] inverse: $A^{-1}$
-- [x] eig: $U \Lambda U^{-1}$
-- [x] diag
-- [x] trace
-- [x] logdet
-- [x] exp
-- [x] sqrt
-- [x] $f(A)$
-- [ ] SVD
-- [ ] pseudoinverse
-      
-Linear Operators implemented
-- [x] Diag
-- [x] BlockDiag
-- [x] Kronecker
-- [x] KronSum
-- [x] Sparse
-- [x] Jacobian
-- [x] Hessian
-- [ ] Fisher
-- [x] Concatenated
-- [x] Triangular
-- [ ] FFT
-- [x] Tridiagonal
-      
-Attribute Annotations
-- [x] SelfAdjoint
-- [x] PSD
-- [x] Unitary
+### Features implemented
+
+| Linear Algebra    | inverse | eig | diag | trace | logdet | exp | sqrt | f(A) | SVD | pseudoinverse |
+|:-----------------:|:-------:|:---:|:----:|:-----:|:------:|:---:|:----:|:--------:|:---:|:-------------:|
+| **Implementation**|    ✓    |  ✓  |   ✓  |   ✓  |    ✓   |  ✓  |   ✓  |    ✓     |     |               |
+
+| LinearOperators   | Diag | BlockDiag | Kronecker | KronSum | Sparse | Jacobian | Hessian | Fisher | Concatenated | Triangular | FFT | Tridiagonal |
+|:-----------------:|:----:|:---------:|:---------:|:-------:|:------:|:--------:|:-------:|:------:|:------------:|:----------:|:---:|:-----------:|
+| **Implementation**|   ✓  |     ✓     |     ✓     |    ✓    |   ✓   |    ✓     |    ✓    |        |      ✓       |     ✓      |     |      ✓      |
+
+| Annotations      | SelfAdjoint | PSD | Unitary |
+|:----------------:|:-----------:|:---:|:-------:|
+| **Implementation**|      ✓      |  ✓  |    ✓   |
+
 
 ## Contributing
 See the contributing guidelines [docs/CONTRIBUTING.md](https://cola.readthedocs.io/en/latest/contributing.html) for information on submitting issues

@@ -18,7 +18,7 @@ op_names: set[str] = {
     'psd_scalarmul',
     'selfadj_hessian',
     'selfadj_tridiagonal',
-    'square_big',  # skipped by default
+    # 'square_big',  # skipped by default
     'square_blockdiag',
     'square_dense',
     # 'square_jacobian',
@@ -40,7 +40,11 @@ def get_test_operator(backend: str, precision: str, op_name: str,
         import torch
         device = torch.device(device)
     else:
-        # TODO for jax?
+        from jax import numpy as jnp
+        if dtype == jnp.float64:
+            from jax.config import config
+            config.update("jax_enable_x64", True)
+
         device = None
 
     # Define the operator

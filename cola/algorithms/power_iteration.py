@@ -22,7 +22,7 @@ def power_iteration(A: LinearOperator, tol=1e-7, max_iter=1000, pbar=False, mome
             - info (dict): General information about the iterative procedure.
     """
     xnp = A.xnp
-    v = xnp.fixed_normal_samples(A.shape[-1:], A.dtype, device=A.device)
+    v = xnp.randn(*A.shape[-1:], dtype=A.dtype, device=A.device, key=xnp.PRNGKey(0))
 
     @xnp.jit
     def body(state):
