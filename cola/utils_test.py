@@ -44,15 +44,18 @@ def _add_marks(case, is_tricky=False):
 class parametrize:
     """ Expands test cases with pytest.mark.parametrize but with argnames
             assumed and ids given by the ids=[str(case) for case in cases] 
+
+        Cases indexed using excluding will be marked with pytest.mark.tricky
+        Can use no excluding to instead index which cases to include
         
         usage: 
-            @parametrize([a1,a2,...], [b1,b2,...], ...).excluding[:,[b2,b4,b5],...]
+            @parametrize([a1,a2,...], [b1,b2,...], ...).excluding[:,[b2,b4,b5],:2,...]
             def test_fn(a,b,...):
 
             @parametrize([a1,a2,...], [b1,b2,...], ...).excluding[(a1,b2,c2), (a2,b4,c5), ...]
             def test_fn(a,b,...):
 
-        Certain cases indexed using excluding will be marked with pytest.mark.tricky
+            @parametrize([a1,a2,...], [b1,b2,...], ...)[:3, [b2,b4,b5], ...]  # include those cases only
         """
     def __init__(self, *cases, ids=None):
         self.cases = cases
