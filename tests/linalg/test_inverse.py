@@ -5,7 +5,9 @@ from cola.utils_test import parametrize, relative_error
 import cola
 
 
-@parametrize(['torch', 'jax'], ['float64'], op_names)
+# both ways work
+#tricky = [("jax",'float64','psd_prod'),("jax",'float64','square_product'), ("jax",'float64','square_kronecker')]
+@parametrize(['torch', 'jax'], ['float64'], op_names)#.excluding['jax','float64',['psd_prod','square_product','square_kronecker']]
 def test_inverse(backend, precision, op_name):
     operator = get_test_operator(backend, precision, op_name)
     tol = 1e-5
