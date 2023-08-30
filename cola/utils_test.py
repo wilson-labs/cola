@@ -40,6 +40,16 @@ def _add_marks(case, is_tricky=False):
         marks.append(pytest.mark.tricky)
     return pytest.param(*case, marks=marks)
 
+def index(cases,idx):
+    match idx:
+        case slice() as s:
+            return cases[s]
+        case list() as l:
+            return l
+        case tuple() as t:
+            return t
+        case _:
+            return (idx,)
 
 class parametrize:
     """ Expands test cases with pytest.mark.parametrize but with argnames
@@ -75,7 +85,7 @@ class parametrize:
 
     def __getitem__(self, indexed_cases):
         if len(indexed_cases)>1 and isinstance(indexed_cases,tuple): # multiple arguments, need to use cross product
-            expanded_indexed_cases = [(c[t] if isinstance(t,slice) else t) for t,c in zip(indexed_cases,self.cases)]
+            expanded_indexed_cases = [index(c,t) for t,c in zip(indexed_cases,self.cases)]
             indexed_cases = {tuple(elem) for elem in itertools.product(*expanded_indexed_cases)}
         else: # single argument
             match indexed_cases:
