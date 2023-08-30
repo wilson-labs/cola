@@ -62,22 +62,11 @@ jacrev = torch.func.jacrev
 slogdet = torch.linalg.slogdet
 prod = torch.prod
 moveaxis = torch.moveaxis
-
+finfo = torch.finfo
 
 def max(array, axis, keepdims=False):
     maxval, _ = torch.max(array, dim=axis, keepdim=keepdims)
     return maxval
-
-
-def get_machine_precision(dtype):
-    if dtype in [torch.float32, torch.complex64]:
-        mp = 1e-6
-    elif dtype in [torch.float64, torch.complex128]:
-        mp = 1e-15
-    else:
-        raise NotImplementedError
-    return mp
-
 
 def is_cuda_available():
     return torch.cuda.is_available()

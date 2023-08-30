@@ -82,17 +82,7 @@ allclose = jnp.allclose
 slogdet = jnp.linalg.slogdet
 prod = jnp.prod
 moveaxis = jnp.moveaxis
-
-
-def get_machine_precision(dtype):
-    if dtype in [jnp.float32, jnp.complex64]:
-        mp = 1e-6
-    elif dtype in [jnp.float64, jnp.complex128]:
-        mp = 1e-15
-    else:
-        raise NotImplementedError
-    return mp
-
+finfo = jnp.finfo
 
 def eig(A):
     # if GPU, convert to CPU first since jax doesn't support it
