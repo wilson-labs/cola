@@ -55,7 +55,7 @@ def is_xnp_array(obj, xnp):
 class AutoRegisteringPyTree(type):
     def __init__(cls, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        cls._dynamic = cls._dynamic.copy()
+        # cls._dynamic = cls._dynamic.copy()
         import optree
         optree.register_pytree_node_class(cls, namespace='cola')
         try:
