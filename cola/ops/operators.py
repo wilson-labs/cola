@@ -25,6 +25,9 @@ class Dense(LinearOperator):
         return self.xnp.cast(self.A, dtype) @ self.xnp.cast(X, dtype)
 
     def _rmatmat(self, X: Array) -> Array:
+        # TODO: check if this is a correct fix
+        # xnp = self.xnp
+        # self.A = self.A.to(xnp.get_array_device(X))
         dtype = self.xnp.promote_types(self.dtype, X.dtype)
         return self.xnp.cast(X, dtype) @ self.xnp.cast(self.A, dtype)
 

@@ -30,7 +30,9 @@ def test_ops_to(backend, precision, op_name):
     device_cpu = xnp.get_default_device()
     dev_type = device_cpu.type if backend == "torch" else device_cpu.platform
     assert dev_type == "cpu"
-    device_gpu = xnp.device("cuda:0") if xnp.is_cuda_available else device_cpu
+    # FIXME: xnp.is_cuda_available failing for JAX
+    device_gpu = xnp.device("cuda:0") if xnp.is_cuda_available() else device_cpu
+    # device_gpu = xnp.device("cuda:0")
 
     assert Op.device == device_cpu
     ones = xnp.ones((Op.shape[0],), dtype=dtype, device=device_cpu)
