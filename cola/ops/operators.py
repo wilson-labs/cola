@@ -22,11 +22,11 @@ class Dense(LinearOperator):
 
     def _matmat(self, X: Array) -> Array:
         dtype = self.xnp.promote_types(self.dtype, X.dtype)
-        return self.xnp.cast(self.A,dtype) @ self.xnp.cast(X,dtype)
+        return self.xnp.cast(self.A, dtype) @ self.xnp.cast(X, dtype)
 
     def _rmatmat(self, X: Array) -> Array:
         dtype = self.xnp.promote_types(self.dtype, X.dtype)
-        return self.xnp.cast(X,dtype) @ self.xnp.cast(self.A,dtype)
+        return self.xnp.cast(X, dtype) @ self.xnp.cast(self.A, dtype)
 
     def to_dense(self):
         return self.A
@@ -68,6 +68,7 @@ class ScalarMul(LinearOperator):
     def __init__(self, c, shape, dtype=None):
         super().__init__(dtype=dtype or type(c), shape=shape)
         self.c = self.xnp.array(c, dtype=dtype, device=self.device)
+
     #     self.ensure_const_register_as_array()
 
     # def ensure_const_register_as_array(self):
@@ -101,6 +102,10 @@ class Identity(LinearOperator):
 
     def _matmat(self, X):
         return X
+
+    def to(self, device):
+        self.device = device
+        return self
 
 
 def I_like(A: LinearOperator) -> Identity:
