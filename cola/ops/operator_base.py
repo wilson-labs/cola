@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Union, Tuple, Any, List, Callable
+from typing import Union, Tuple, Any
 from numbers import Number
 import numpy as np
 import optree
@@ -43,6 +43,7 @@ def is_array(obj):
         return True
     return False
 
+
 def is_xnp_array(obj, xnp):
     if not hasattr(obj, 'dtype'):
         return False
@@ -63,14 +64,14 @@ class AutoRegisteringPyTree(type):
         except ImportError:
             pass
         try:
-            #TODO: when pytorch migrates to optree, switch as well
+            # TODO: when pytorch migrates to optree, switch as well
             import torch
             tree_flatten = lambda self: self.tree_flatten()
             tree_unflatten = lambda ctx, children: cls.tree_unflatten(children, ctx)
-            torch.utils._pytree._register_pytree_node(cls, tree_flatten,tree_unflatten)
+            torch.utils._pytree._register_pytree_node(cls, tree_flatten, tree_unflatten)
         except ImportError:
             pass
-        
+
 
 def find_xnp(obj):
     if is_array(obj):
@@ -92,6 +93,7 @@ def find_xnp(obj):
     except (ImportError, AttributeError):
         pass
     return None
+
 
 def find_device(obj):
     if is_array(obj):
@@ -115,7 +117,7 @@ def find_device(obj):
 @export
 class LinearOperator(metaclass=AutoRegisteringPyTree):
     """ Linear Operator base class """
-    _dynamic = {key:False for key in ['xnp', 'shape', 'dtype', 'device', 'annotations']}
+    _dynamic = {key: False for key in ['xnp', 'shape', 'dtype', 'device', 'annotations']}
 
     def __new__(cls, *args, **kwargs):
         """ Creates attributes for the flatten and unflatten functionality. """
@@ -133,19 +135,21 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         # TODO: reform matrices with the new annotations?
         self.annotations.update(annotations)
         self.device = self.device or self.xnp.get_default_device()
-        
 
     def __setattr__(self, name, value):
         if name not in self.__class__._dynamic:
             cond = is_array(value) or not optree.treespec_is_leaf(optree.tree_structure(value))
             self.__class__._dynamic[name] = cond
-        return super().__setattr__(name,value)
+        return super().__setattr__(name, value)
 
     def to(self, device, dtype=None):
-        """ Returns a new linear operator with given device and dtype 
+        """ Returns a new linear operator with given device and dtype
             WARNING: dtype change is not supported yet. """
         params, unflatten = self.flatten()
-        params = [self.xnp.move_to(p, device=device, dtype=dtype) if self.xnp.is_array(p) else p for p in params]
+        params = [
+            self.xnp.move_to(p, device=device, dtype=dtype) if self.xnp.is_array(p) else p
+            for p in params
+        ]
         return unflatten(params)
 
     def isa(self, annotation) -> bool:
@@ -172,9 +176,11 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     def to_dense(self) -> Array:
         """ Produces a dense array representation of the linear operator. """
         if 8 * self.shape[-2] < self.shape[-1]:
-            return self.xnp.eye(self.shape[-2], self.shape[-2], dtype=self.dtype, device=self.device) @ self
+            return self.xnp.eye(self.shape[-2], self.shape[-2], dtype=self.dtype,
+                                device=self.device) @ self
         else:
-            return self @ self.xnp.eye(self.shape[-1], self.shape[-1], dtype=self.dtype, device=self.device)
+            return self @ self.xnp.eye(self.shape[-1], self.shape[-1], dtype=self.dtype,
+                                       device=self.device)
 
     @property
     def T(self):
@@ -297,9 +303,9 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         for key, val in all_elems.items():
             if self._dynamic[key]:
                 pytrees.append(val)
-                aux.append((key,))
+                aux.append((key, ))
             else:
-                aux.append((key,val))
+                aux.append((key, val))
         return pytrees, aux
 
     @classmethod
@@ -312,8 +318,8 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
             else:
                 fields[keyv[0]] = keyv[1]
         obj = object.__new__(cls)
-        for k,v in fields.items():
-            if k in ['device']:#,'dtype']: TODO: also separate dtype in case .to was called
+        for k, v in fields.items():
+            if k in ['device']:  #,'dtype']: TODO: also separate dtype in case .to was called
                 continue
             setattr(obj, k, v)
         obj.device = find_device(fields) or fields['device']

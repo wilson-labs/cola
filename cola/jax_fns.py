@@ -146,7 +146,7 @@ def get_default_device():
 def device(device_name):
     del device_name
     zeros = jnp.zeros(1)
-    return zeros.device
+    return zeros.device()
 
 
 def diag(v, diagonal=0):
