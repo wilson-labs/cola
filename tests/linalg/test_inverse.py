@@ -1,8 +1,8 @@
-from operator_market import op_names, get_test_operator
 from cola.linalg import inverse
 from cola.ops import LinearOperator
 from cola.utils_test import parametrize, relative_error
 import cola
+from operator_market import op_names, get_test_operator
 
 
 @parametrize(['torch', 'jax'], ['float64'], op_names)

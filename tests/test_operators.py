@@ -17,7 +17,7 @@ from cola.ops import LinearOperator
 from cola import PSD
 from cola.algorithms.arnoldi import get_householder_vec
 from cola.utils_test import get_xnp, parametrize, relative_error
-from operator_market import op_names, get_test_operator
+from linalg.operator_market import op_names, get_test_operator
 
 _tol = 1e-6
 
