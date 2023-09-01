@@ -2,9 +2,9 @@ from abc import abstractmethod
 from typing import Union, Tuple, Any
 from numbers import Number
 import numpy as np
-import optree
 import cola
 from cola.utils import export
+import cola.np_fns as np_fns
 
 Array = Dtype = Any
 export(Array)
@@ -55,7 +55,7 @@ def is_xnp_array(obj, xnp):
 class AutoRegisteringPyTree(type):
     def __init__(cls, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # cls._dynamic = cls._dynamic.copy()
+        cls._dynamic = cls._dynamic.copy()
         import optree
         optree.register_pytree_node_class(cls, namespace='cola')
         try:
@@ -66,8 +66,13 @@ class AutoRegisteringPyTree(type):
         try:
             # TODO: when pytorch migrates to optree, switch as well
             import torch
-            tree_flatten = lambda self: self.tree_flatten()
-            tree_unflatten = lambda ctx, children: cls.tree_unflatten(children, ctx)
+
+            def tree_flatten(self):
+                return self.tree_flatten()
+
+            def tree_unflatten(ctx, children):
+                return cls.tree_unflatten(children, ctx)
+
             torch.utils._pytree._register_pytree_node(cls, tree_flatten, tree_unflatten)
         except ImportError:
             pass
@@ -138,7 +143,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
 
     def __setattr__(self, name, value):
         if name not in self.__class__._dynamic:
-            cond = is_array(value) or not optree.treespec_is_leaf(optree.tree_structure(value))
+            cond = is_array(value) or not np_fns.is_leaf(value)
             self.__class__._dynamic[name] = cond
         return super().__setattr__(name, value)
 
@@ -194,7 +199,10 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
 
     def flatten(self) -> Tuple[Array, ...]:
         vals, tree = self.xnp.tree_flatten(self)
-        unflatten = lambda params: self.xnp.tree_unflatten(tree, params)
+
+        def unflatten(params):
+            return self.xnp.tree_unflatten(tree, params)
+
         return vals, unflatten
 
     def __matmul__(self, X: Array) -> Array:
@@ -319,8 +327,17 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
                 fields[keyv[0]] = keyv[1]
         obj = object.__new__(cls)
         for k, v in fields.items():
-            if k in ['device']:  #,'dtype']: TODO: also separate dtype in case .to was called
+            if k in ['device']:  # ,'dtype']: TODO: also separate dtype in case .to was called
                 continue
             setattr(obj, k, v)
+        # dtypes = [dt for dt in map(maybe_get_dtype, children) if dt is not None]
+        # obj.dtype = reduce(obj.xnp.promote_types, dtypes) if len(dtypes) > 0 else None
         obj.device = find_device(fields) or fields['device']
         return obj
+
+
+def maybe_get_dtype(obj):
+    try:
+        return obj.dtype
+    except AttributeError:
+        return None

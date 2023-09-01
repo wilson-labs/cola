@@ -294,7 +294,7 @@ def update_array(array, update, *slices):
 
 
 def is_leaf(value):
-    return optree.treespec_is_leaf(optree.tree_structure(value))
+    return optree.treespec_is_leaf(optree.tree_structure(value, namespace="cola"))
 
 
 def tree_flatten(value):
