@@ -16,8 +16,33 @@ from cola.ops import Jacobian
 from cola.ops import LinearOperator
 from cola.algorithms.arnoldi import get_householder_vec
 from cola.utils_test import get_xnp, parametrize, relative_error
+from linalg.operator_market import op_names, get_test_operator
 
 _tol = 1e-6
+
+
+@parametrize(['torch', 'jax'], ['float32'], op_names)
+def test_ops_to(backend, precision, op_name):
+    Op = get_test_operator(backend, precision, op_name)
+    xnp = get_xnp(backend)
+    dtype = xnp.float32
+    device_cpu = xnp.get_default_device()
+    dev_type = device_cpu.type if backend == "torch" else device_cpu.platform
+    assert dev_type == "cpu"
+    # FIXME: xnp.is_cuda_available failing for JAX
+    device_gpu = xnp.device("cuda:0") if xnp.is_cuda_available() else device_cpu
+    # device_gpu = xnp.device("cuda:0")
+
+    assert Op.device == device_cpu
+    ones = xnp.ones((Op.shape[0],), dtype=dtype, device=device_cpu)
+    aux = Op @ ones
+    assert xnp.get_array_device(aux) == device_cpu
+
+    Op = Op.to(device_gpu)
+    assert Op.device == device_gpu
+    ones = xnp.ones((Op.shape[0],), dtype=dtype, device=device_gpu)
+    aux = Op @ ones
+    assert xnp.get_array_device(aux) == device_gpu
 
 
 @parametrize(['torch', 'jax'])
