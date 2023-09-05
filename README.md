@@ -19,12 +19,12 @@ pip install cola-ml
 ```
 
 ## Features in CoLA
-* Large scale linear algebra routines for `solve(A,b)`, `eig(A)`, `logdet(A)`, `exp(A)`, `trace(A)`, `diag(A)`, `sqrt(A)`
+* Large scale linear algebra routines for `solve(A,b)`, `eig(A)`, `logdet(A)`, `exp(A)`, `trace(A)`, `diag(A)`, `sqrt(A)`.
 * Provides (user extendible) compositional rules to exploit structure through multiple dispatch.
 * Has memory-efficient autodiff rules for iterative algorithms.
-* Works with PyTorch or JAX, supporting GPU hardware acceleration ✅
-* Supports operators with complex numbers and low precision ✅
-* Provides linear algebra operations for both symmetric and non-symmetric matrices ✅
+* Works with PyTorch or JAX, supporting GPU hardware acceleration.
+* Supports operators with complex numbers and low precision.
+* Provides linear algebra operations for both symmetric and non-symmetric matrices.
 
 See https://cola.readthedocs.io/en/latest/ for our full documentation and many examples.
 
@@ -148,14 +148,6 @@ Link to be added soon.
 See the contributing guidelines [docs/CONTRIBUTING.md](https://cola.readthedocs.io/en/latest/contributing.html) for information on submitting issues
 and pull requests.
 
-<!--
-## Team
--->
-
-## Acknowledgements
-This work is supported by XXX.
-
-## Licence
 CoLA is Apache 2.0 licensed.
 
 ## Support and contact
