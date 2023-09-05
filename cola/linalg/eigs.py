@@ -2,7 +2,7 @@ import numpy as np
 from math import prod
 from plum import dispatch
 from cola import SelfAdjoint
-from cola import Unitary
+from cola import Unitary, Stiefel, PSD
 from cola.fns import lazify
 from cola.linalg import diag
 from cola.ops import LinearOperator
@@ -11,8 +11,8 @@ from cola.ops import I_like
 from cola.ops import Identity
 from cola.ops import Triangular
 from cola.algorithms import power_iteration
-from cola.algorithms.lanczos import LanczosDecomposition
-from cola.algorithms.arnoldi import ArnoldiDecomposition
+from cola.algorithms.lanczos import lanczos
+from cola.algorithms.arnoldi import arnoldi_eigs
 from cola.utils import export
 
 
@@ -53,10 +53,9 @@ def eig(A: LinearOperator, **kwargs):
     xnp = A.xnp
     if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
         eig_vals, eig_vecs = xnp.eig(A.to_dense())
-        return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
+        return eig_vals[eig_slice], lazify(eig_vecs[:, eig_slice])
     elif method in ('arnoldi', 'iterative') or (method == 'auto' and prod(A.shape) >= 1e6):
-        eig_vals, eig_vecs = eig(ArnoldiDecomposition(A, **kws), eig_slice=eig_slice,
-                                 method="dense")
+        eig_vals, eig_vecs, info = arnoldi_eigs(A, **kws)
         return eig_vals, eig_vecs
     else:
         raise ValueError(f"Unknown method {method}")
@@ -73,10 +72,9 @@ def eig(A: LinearOperator, **kwargs):
     xnp = A.xnp
     if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
         eig_vals, eig_vecs = xnp.eigh(A.to_dense())
-        return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
+        return eig_vals[eig_slice], Stiefel(lazify(eig_vecs[:, eig_slice]))
     elif method in ('lanczos', 'iterative') or (method == 'auto' and prod(A.shape) >= 1e6):
-        eig_vals, eig_vecs = eig(LanczosDecomposition(A, **kws), eig_slice=eig_slice,
-                                 method="dense")
+        eig_vals, eig_vecs, info = lanczos(A, **kws)
         return eig_vals, eig_vecs
     else:
         raise ValueError(f"Unknown method {method} for SelfAdjoint operator")

@@ -139,7 +139,7 @@ def approx_diag(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=
     def cond(state):
         return (state[0] == 0) | ((state[0] < max_iters) & (err(state) > tol))
 
-    while_loop, infos = xnp.while_loop_winfo(err, tol, pbar=pbar)
+    while_loop, infos = xnp.while_loop_winfo(err, tol, max_iters, pbar=pbar)
     # while_loop = xnp.while_loop
     zeros = xnp.zeros((A.shape[0] - abs(k), ), dtype=A.dtype, device=A.device)
     n, diag_sum, *_ = while_loop(cond, body, (0, zeros, zeros, xnp.PRNGKey(42)))

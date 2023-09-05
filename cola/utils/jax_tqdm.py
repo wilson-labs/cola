@@ -252,7 +252,7 @@ def pbar_while(errorfn, tol, desc='', every=1, hide=False):
     return new_while
 
 
-def while_loop_winfo(errorfn, tol, every=1, desc='', pbar=False, **kwargs):
+def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,  **kwargs):
     """ Decorator for while loop with progress bar.
 
         Assumes that errorfn is a function of the loop variable and returns a scalar
@@ -285,21 +285,23 @@ def while_loop_winfo(errorfn, tol, every=1, desc='', pbar=False, **kwargs):
                 info['pbar'] = tqdm(total=100, desc=f'{desc or default_desc}',
                                     bar_format=bar_format)
 
-        def update_info(arg, _):
+        def update_info(ival, _):
+            i, arg = ival
             error = errorfn(arg)
             info['errors'].append(error)
             if pbar:
                 errstart = info.setdefault('errstart', error)
-                progress = max(
-                    100 * np.log(error / errstart) / np.log(tol / errstart) - info['progval'], 0)
-                progress = min(100 - info['progval'], progress)
+                howclose = np.log(error / errstart) / np.log(tol / errstart)
+                if max_iters is not None:
+                    howclose = max((i + 1) / max_iters, howclose)
+                progress = min(100 - info['progval'], max(100*howclose - info['progval'], 0))
                 if progress > 0:
                     info['progval'] += progress
                     info['pbar'].update(progress)
 
         def close_info(arg, transform):
             i, val = arg
-            update_info(val, transform)
+            update_info(arg, transform)
             info['iteration_time'] = (time.time() - info['iteration_time']) / (i + 1)
             if pbar:
                 info['pbar'].close()
@@ -313,7 +315,7 @@ def while_loop_winfo(errorfn, tol, every=1, desc='', pbar=False, **kwargs):
             i, val = ival
             jax.lax.cond(
                 i % every == 0,
-                lambda _: host_callback.id_tap(update_info, val, result=i),
+                lambda _: host_callback.id_tap(update_info, ival, result=i),
                 lambda _: i,
                 operand=None,
             )

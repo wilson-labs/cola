@@ -93,7 +93,7 @@ def run_batched_cg(A, b, x0, max_iters, tol, preconditioner, pbar):
     def track_res(state):
         return xnp.norm(state[2], axis=-2).mean()
 
-    while_fn, info = xnp.while_loop_winfo(track_res, pbar=pbar, tol=tol)
+    while_fn, info = xnp.while_loop_winfo(track_res, tol, max_iters, pbar=pbar)
     # while_fn, info = while_loop, {}
     # while_fn, info = xnp.while_loop, {}
     state = while_fn(cond_fun=cond, body_fun=body_fun, init_val=init_val)

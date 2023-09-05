@@ -80,21 +80,20 @@ def while_loop(cond_fun, body_fun, init_val):
     return val
 
 
-def pbar_while(errorfn, tol, desc='', every=1, hide=False):
+def pbar_while(errorfn, tol, max_iters=None, desc='', every=1, hide=False):
     """ Decorator for while loop with progress bar. Assumes that
         errorfn is a function of the loop variable and returns a scalar
         that starts at a given value and decreases to tol as the loop progresses."""
     def new_while(cond_fun, body_fun, init_val):
-        newbody = body_pbar(errorfn, tol, desc, every, hide)(body_fun)
+        newbody = body_pbar(errorfn, tol, desc, every, hide, max_iters)(body_fun)
         val = init_val
         while cond_fun(val):
             val = newbody(val)
         return val
-
     return new_while
 
 
-def body_pbar(errorfn, tol, desc='', every=1, hide=False):
+def body_pbar(errorfn, tol, desc='', every=1, hide=False, max_iters=None):
     if hide:
         return lambda body: body
 
@@ -117,9 +116,10 @@ def body_pbar(errorfn, tol, desc='', every=1, hide=False):
             if isinstance(error, Tensor):
                 error = error.cpu().data.item()
             errstart = info.setdefault('errstart', error)
-            progress = max(
-                100 * np.log(error / errstart) / np.log(tol / errstart) - info['progval'], 0)
-            progress = min(100 - info['progval'], progress)
+            howclose = np.log(error / errstart) / np.log(tol / errstart)
+            if max_iters is not None:
+                howclose = max((i + 1) / max_iters, howclose)
+            progress = min(100 - info['progval'], max(100*howclose - info['progval'], 0))
             if progress > 0:
                 info['progval'] += progress
                 info['pbar'].update(progress)

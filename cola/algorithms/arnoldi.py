@@ -5,6 +5,7 @@ from cola.utils.control_flow import for_loop
 from cola.utils import export
 from cola.utils.custom_autodiff import iterative_autograd
 import cola
+from cola import Stiefel, lazify
 
 
 def arnoldi_eigs_bwd(res, grads, unflatten, *args, **kwargs):
@@ -58,10 +59,10 @@ def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
     Q, H, info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
                          use_householder=use_householder, pbar=pbar)
     xnp = A.xnp
-    eigvals, eigvectors = xnp.eig(H)
-    eigvectors = xnp.cast(Q, dtype=eigvectors.dtype) @ eigvectors
-    eigvectors = xnp.cast(eigvectors, dtype=A.dtype)
-    eigvals = xnp.cast(eigvals, dtype=A.dtype)
+    eigvals, vs = xnp.eig(H)
+    eigvectors = Stiefel(lazify(xnp.cast(Q, dtype=vs.dtype))) @ lazify(vs)
+    # eigvectors = xnp.cast(eigvectors, dtype=A.dtype)
+    # eigvals = xnp.cast(eigvals, dtype=A.dtype)
     return eigvals, eigvectors, info
 
 
@@ -224,7 +225,7 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
         return Q, H, idx + 1, norm
 
     init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-    while_fn, info = xnp.while_loop_winfo(lambda s: s[-1][0], pbar=pbar, tol=tol)
+    while_fn, info = xnp.while_loop_winfo(lambda s: s[-1][0], tol, max_iters, pbar=pbar)
     state = while_fn(cond_fun, body_fun, init_val)
     Q, H, idx, _ = state
     return Q[:, :-1], H[:-1, :], idx, info
