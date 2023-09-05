@@ -36,7 +36,7 @@ solving linear systems, performing eigendecompositions and more for
 PSD, symmetric, non-symmetric, real and complex linear ops.
 
 Below we highlight some of the important features that ``CoLA`` has and how they
-compare with competitors.
+compare with alternatives.
 
 .. image:: ./CoLA_Table2.png
    :alt: Example Image
