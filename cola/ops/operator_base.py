@@ -119,6 +119,9 @@ def find_device(obj):
     return None
 
 
+def definitely_dynamic(obj):
+    return is_array(obj) or isinstance(obj, LinearOperator)
+
 @export
 class LinearOperator(metaclass=AutoRegisteringPyTree):
     """ Linear Operator base class """
@@ -143,7 +146,8 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
 
     def __setattr__(self, name, value):
         if name not in self.__class__._dynamic:
-            cond = is_array(value) or not np_fns.is_leaf(value)
+            # don't split this into two lines, we want the short circuiting
+            cond = definitely_dynamic(value) or any(map(is_array, np_fns.tree_flatten(value)[0]))
             self.__class__._dynamic[name] = cond
         return super().__setattr__(name, value)
 
@@ -305,10 +309,9 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
                 raise NotImplementedError(f"__getitem__ not implemented for this case {type(ids)}")
 
     def tree_flatten(self):
-        all_elems = vars(self)
         # separate all_elems into pytrees and aux
         pytrees, aux = [], []
-        for key, val in all_elems.items():
+        for key, val in sorted(vars(self).items()):
             if self._dynamic[key]:
                 pytrees.append(val)
                 aux.append((key, ))
