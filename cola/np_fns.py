@@ -247,7 +247,7 @@ def is_leaf(value):
 
 
 def tree_flatten(value):
-    return optree.tree_flatten(value, namespace='cola')[::-1]
+    return optree.tree_flatten(value, namespace='cola')
 
 
 def tree_unflatten(treedef, value):
