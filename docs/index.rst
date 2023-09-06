@@ -21,7 +21,7 @@ automatically exploit the structure present in a diverse set of linear ops.
 To achieve this, ``CoLA`` automatically exploits compositional structure by leveraging over 70 dispatch
 rules which select different algorithms for the diverse structure present in a linear
 operator. Additionally, given our emphasis on ML applications, ``CoLA`` also
-supports both ``PyTorch`` and ``JAX``, leverage GPU and TPU acceleration, supports low
+supports both ``PyTorch`` and ``JAX``, leverages GPU and TPU acceleration, supports low
 precision, provides automatic computation of
 gradients, diagonals, transposes and adjoints of linear
 ops, and incorporates specialty algorithms such as SVRG and a novel
