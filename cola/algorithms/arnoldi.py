@@ -8,34 +8,35 @@ import cola
 from cola import Stiefel, lazify
 
 
-def arnoldi_eigs_bwd(res, grads, unflatten, *args, **kwargs):
-    val_grads, eig_grads, _ = grads
-    op_args, (eig_vals, eig_vecs, _) = res
-    A = unflatten(op_args)
-    xnp = A.xnp
+# def arnoldi_eigs_bwd(res, grads, unflatten, *args, **kwargs):
+#     val_grads, eig_grads, _ = grads
+#     op_args, (eig_vals, eig_vecs, _) = res
+#     A = unflatten(op_args)
+#     xnp = A.xnp
 
-    e = eig_vals
-    V = eig_vecs  # (n, m)
-    W = eig_grads  # (n, m)
+#     e = eig_vals
+#     V = eig_vecs  # (n, m)
+#     W = eig_grads  # (n, m)
 
-    def altogether(*theta):
-        Aop = unflatten(theta)
-        AV = Aop @ V
-        eigs = (AV * V).sum(axis=-2)  # output 1
-        out1 = xnp.sum(eigs * val_grads)
-        VHAV = V.conj().T @ AV
-        diff = xnp.nan_to_num(1 / (e[:, None] - e[None, :]), nan=0., posinf=0., neginf=0.)
-        C = (W.conj().T @ V) * diff
-        out2 = (C.T * VHAV).sum()
-        return out1 + out2
+#     def altogether(*theta):
+#         Aop = unflatten(theta)
+#         AV = Aop @ V
+#         eigs = (AV * V).sum(axis=-2)  # output 1
+#         out1 = xnp.sum(eigs * val_grads)
+#         VHAV = V.conj().T @ AV
+#         diff = xnp.nan_to_num(1 / (e[:, None] - e[None, :]), nan=0., posinf=0., neginf=0.)
+#         C = (W.conj().T @ V) * diff
+#         out2 = (C.T * VHAV).sum()
+#         return out1 + out2
 
-    d_params = xnp.grad(altogether)(*op_args)
-    dA = unflatten([d_params])
-    return (dA, )
+#     d_params = xnp.grad(altogether)(*op_args)
+#     dA = unflatten([d_params])
+#     return (dA, )
 
 
+#@export
+#@iterative_autograd(arnoldi_eigs_bwd)
 @export
-@iterative_autograd(arnoldi_eigs_bwd)
 def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int = 100,
                  tol: float = 1e-7, use_householder: bool = False, pbar: bool = False):
     """

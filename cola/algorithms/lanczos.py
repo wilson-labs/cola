@@ -28,7 +28,7 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
     xnp = A.xnp
 
     e = eig_vals
-    V = eig_vecs  # (n, m)
+    V = eig_vecs.to_dense()  # (n, m)
     W = eig_grads  # (n, m)
 
     def altogether(*theta):
@@ -47,8 +47,9 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
     return (dA, )
 
 
+# @export
+# @iterative_autograd(lanczos_eig_bwd)
 @export
-@iterative_autograd(lanczos_eig_bwd)
 def lanczos(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7,
             pbar: bool = False):
     """
