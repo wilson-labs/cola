@@ -52,7 +52,7 @@ We recommend installing via ``pip``:
 
 .. code-block:: bash
 
-    pip install git+https://github.com/wilson-labs/cola.git
+    pip install cola-ml
 
 To install locally instead, clone the repository and install via ``pip``:
 
