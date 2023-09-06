@@ -28,7 +28,7 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
     xnp = A.xnp
 
     e = eig_vals
-    V = eig_vecs  # (n, m)
+    V = eig_vecs.to_dense()  # (n, m)
     W = eig_grads  # (n, m)
 
     def altogether(*theta):
@@ -47,8 +47,9 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
     return (dA, )
 
 
+# @export
+# @iterative_autograd(lanczos_eig_bwd)
 @export
-@iterative_autograd(lanczos_eig_bwd)
 def lanczos(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7,
             pbar: bool = False):
     """
@@ -73,10 +74,11 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters: int = 100,
     Q, T, info = lanczos_decomp(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
                                 pbar=pbar)
     eigvals, eigvectors = xnp.eigh(T)
-    V = Q @ eigvectors
     idx = xnp.argsort(eigvals, axis=-1)
+    V = lazify(Q) @ lazify(eigvectors[:,idx])
+    
     eigvals = eigvals[..., idx]
-    V = V[..., idx]
+    # V = V[..., idx]
     return eigvals, V, info
 
 
@@ -168,7 +170,7 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
         return flag
 
     init_val = initialize_lanczos_vec(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-    while_fn, info = xnp.while_loop_winfo(error, pbar=pbar, tol=tol)
+    while_fn, info = xnp.while_loop_winfo(error, tol, max_iters, pbar=pbar)
     state = while_fn(cond_fun, body_fun, init_val)
     i, vec, beta, alpha = state
     return alpha[..., 1:], beta, vec[..., 1:-1], i - 1, info

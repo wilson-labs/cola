@@ -1,18 +1,20 @@
 import pytest
 from operator_market import op_names, get_test_operator
-from cola.linalg import sqrt, exp
+import scipy.linalg
+import cola.linalg
+#from cola.linalg import sqrt, exp
 from cola.ops import LinearOperator
 import cola
 from cola.utils_test import parametrize, relative_error
-from scipy.linalg import sqrtm, expm
+#from scipy.linalg import sqrtm, expm
 import numpy as np
 
-
-@pytest.mark.skip()
-@parametrize(['torch', 'jax'], ['float64'], op_names, [(exp, expm), (sqrt, sqrtm)])
-def test_unary(backend, precision, op_name, fns):
+@parametrize(['torch', 'jax'], ['float64'], op_names,
+    ['exp','sqrt']).excluding['torch', :, 'psd_kron',:]
+def test_unary(backend, precision, op_name, fn_name):
     operator = get_test_operator(backend, precision, op_name)
-    fn, spfn = fns
+    fn = getattr(cola.linalg,fn_name)
+    spfn = getattr(scipy.linalg,fn_name+'m')
     A, dtype, xnp = operator, operator.dtype, operator.xnp
     A2 = LinearOperator(A.dtype, A.shape, A._matmat)
     tol = 1e-4

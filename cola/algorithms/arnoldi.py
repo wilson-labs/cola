@@ -5,36 +5,38 @@ from cola.utils.control_flow import for_loop
 from cola.utils import export
 from cola.utils.custom_autodiff import iterative_autograd
 import cola
+from cola import Stiefel, lazify
 
 
-def arnoldi_eigs_bwd(res, grads, unflatten, *args, **kwargs):
-    val_grads, eig_grads, _ = grads
-    op_args, (eig_vals, eig_vecs, _) = res
-    A = unflatten(op_args)
-    xnp = A.xnp
+# def arnoldi_eigs_bwd(res, grads, unflatten, *args, **kwargs):
+#     val_grads, eig_grads, _ = grads
+#     op_args, (eig_vals, eig_vecs, _) = res
+#     A = unflatten(op_args)
+#     xnp = A.xnp
 
-    e = eig_vals
-    V = eig_vecs  # (n, m)
-    W = eig_grads  # (n, m)
+#     e = eig_vals
+#     V = eig_vecs  # (n, m)
+#     W = eig_grads  # (n, m)
 
-    def altogether(*theta):
-        Aop = unflatten(theta)
-        AV = Aop @ V
-        eigs = (AV * V).sum(axis=-2)  # output 1
-        out1 = xnp.sum(eigs * val_grads)
-        VHAV = V.conj().T @ AV
-        diff = xnp.nan_to_num(1 / (e[:, None] - e[None, :]), nan=0., posinf=0., neginf=0.)
-        C = (W.conj().T @ V) * diff
-        out2 = (C.T * VHAV).sum()
-        return out1 + out2
+#     def altogether(*theta):
+#         Aop = unflatten(theta)
+#         AV = Aop @ V
+#         eigs = (AV * V).sum(axis=-2)  # output 1
+#         out1 = xnp.sum(eigs * val_grads)
+#         VHAV = V.conj().T @ AV
+#         diff = xnp.nan_to_num(1 / (e[:, None] - e[None, :]), nan=0., posinf=0., neginf=0.)
+#         C = (W.conj().T @ V) * diff
+#         out2 = (C.T * VHAV).sum()
+#         return out1 + out2
 
-    d_params = xnp.grad(altogether)(*op_args)
-    dA = unflatten([d_params])
-    return (dA, )
+#     d_params = xnp.grad(altogether)(*op_args)
+#     dA = unflatten([d_params])
+#     return (dA, )
 
 
+#@export
+#@iterative_autograd(arnoldi_eigs_bwd)
 @export
-@iterative_autograd(arnoldi_eigs_bwd)
 def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int = 100,
                  tol: float = 1e-7, use_householder: bool = False, pbar: bool = False):
     """
@@ -58,10 +60,10 @@ def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
     Q, H, info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
                          use_householder=use_householder, pbar=pbar)
     xnp = A.xnp
-    eigvals, eigvectors = xnp.eig(H)
-    eigvectors = xnp.cast(Q, dtype=eigvectors.dtype) @ eigvectors
-    eigvectors = xnp.cast(eigvectors, dtype=A.dtype)
-    eigvals = xnp.cast(eigvals, dtype=A.dtype)
+    eigvals, vs = xnp.eig(H)
+    eigvectors = Stiefel(lazify(xnp.cast(Q, dtype=vs.dtype))) @ lazify(vs)
+    # eigvectors = xnp.cast(eigvectors, dtype=A.dtype)
+    # eigvals = xnp.cast(eigvals, dtype=A.dtype)
     return eigvals, eigvectors, info
 
 
@@ -224,7 +226,7 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
         return Q, H, idx + 1, norm
 
     init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-    while_fn, info = xnp.while_loop_winfo(lambda s: s[-1][0], pbar=pbar, tol=tol)
+    while_fn, info = xnp.while_loop_winfo(lambda s: s[-1][0], tol, max_iters, pbar=pbar)
     state = while_fn(cond_fun, body_fun, init_val)
     Q, H, idx, _ = state
     return Q[:, :-1], H[:-1, :], idx, info

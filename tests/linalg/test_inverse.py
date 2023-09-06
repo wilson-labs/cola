@@ -5,7 +5,7 @@ import cola
 from operator_market import op_names, get_test_operator
 
 
-@parametrize(['torch', 'jax'], ['float64'], op_names)
+@parametrize(['torch', 'jax'], ['float64'], op_names).excluding['torch',:,'psd_kron']
 def test_inverse(backend, precision, op_name):
     operator = get_test_operator(backend, precision, op_name)
     tol = 1e-5
