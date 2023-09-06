@@ -90,6 +90,31 @@ Design Choices
    notebooks/Examples_on_Basic_Functionality.ipynb
 
 .. toctree::
+   :maxdepth: 1
+   :caption: Resources
+
+   notebooks/Adding_Linear_Operators.ipynb
+   notebooks/01_algorithms.ipynb
+
+.. toctree::
+   :maxdepth: 1
+   :caption: 💡 Example Applications
+
+   notebooks/03_GPs.ipynb
+   notebooks/07_second_order_optimization.ipynb
+   notebooks/09_hessian_spectrum.ipynb
+   notebooks/05_Boundary_Value_PDEs.ipynb
+   notebooks/06_PDE_Eigenvalue_Problems.ipynb
+   notebooks/04_Spectral_Clustering.ipynb
+
+.. toctree::
+   :maxdepth: 1
+   :caption: 🧙‍♂️ Advanced Features
+
+   notebooks/10_vmap_jit_grad.ipynb
+   notebooks/Lower_Precision.ipynb
+
+.. toctree::
    :glob:
    :maxdepth: 1
    :caption: 📚 API Reference
@@ -103,39 +128,11 @@ Design Choices
 
 .. toctree::
    :maxdepth: 1
-   :caption: 💡 Example Applications
-
-   notebooks/03_GPs.ipynb
-   notebooks/07_second_order_optimization.ipynb
-   notebooks/09_hessian_spectrum.ipynb
-   notebooks/05_Boundary_Value_PDEs.ipynb
-   notebooks/06_PDE_Eigenvalue_Problems.ipynb
-   notebooks/04_Spectral_Clustering.ipynb
-   notebooks/01_PCA.ipynb
-   notebooks/02_Linear_Regression.ipynb
-   
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Resources
-
-   notebooks/Adding_Linear_Operators.ipynb
-   notebooks/01_algorithms.ipynb
-
-.. toctree::
-   :maxdepth: 1
-   :caption: 🧙‍♂️ Advanced Features
-
-   notebooks/10_vmap_jit_grad.ipynb
-   notebooks/Lower_Precision.ipynb
-
-.. toctree::
-   :maxdepth: 1
    :caption: ✨ Research Highlight
 
 .. toctree::
    :maxdepth: 1
-   :caption: 🔪 Sharp Bits 🔪 and 🚧 Under development 🚧
+   :caption: 🚧 Tricky Bits 🚧
 
    notebooks/sharp_bits.ipynb
 
