@@ -52,7 +52,6 @@ def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,
         if isinstance(error, Tensor):
             error = error.cpu().data.item()
         info['errors'].append(error)
-        print(info['errors'])
         info['errors'] = np.array(info['errors'][2:])
         if pbar:
             update_pbar(info['errors'][-1], tol, info, max_iters)

@@ -107,6 +107,7 @@ Design Choices
 
    notebooks/03_GPs.ipynb
    notebooks/07_second_order_optimization.ipynb
+   notebooks/09_hessian_spectrum.ipynb
    notebooks/05_Boundary_Value_PDEs.ipynb
    notebooks/06_PDE_Eigenvalue_Problems.ipynb
    notebooks/04_Spectral_Clustering.ipynb
@@ -116,20 +117,27 @@ Design Choices
 
 .. toctree::
    :maxdepth: 1
-   :caption: 🧙‍♂️ Advanced Features
+   :caption: Resources
 
    notebooks/Adding_Linear_Operators.ipynb
+   notebooks/01_algorithms.ipynb
+
+.. toctree::
+   :maxdepth: 1
+   :caption: 🧙‍♂️ Advanced Features
+
+   notebooks/10_vmap_jit_grad.ipynb
    notebooks/Lower_Precision.ipynb
 
 .. toctree::
    :maxdepth: 1
-   :caption: 🔪 Sharp Bits
-
-   notebooks/sharp_bits.ipynb
+   :caption: ✨ Research Highlight
 
 .. toctree::
    :maxdepth: 1
-   :caption: ✨ Research Highlight
+   :caption: 🔪 Sharp Bits 🔪 and 🚧 Under development 🚧
+
+   notebooks/sharp_bits.ipynb
 
 .. toctree::
    :maxdepth: 1
