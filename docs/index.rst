@@ -86,7 +86,6 @@ Design Choices
 
    notebooks/About.ipynb
    notebooks/Quick_Start.ipynb
-   notebooks/LinOpIntro.ipynb
 
 .. toctree::
    :maxdepth: 1
