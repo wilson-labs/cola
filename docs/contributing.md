@@ -28,11 +28,21 @@ If you are not familiar with this style, look around the code base for examples.
 
 We use `pytest` to run unit tests:
 ```bash
-pytest tests/
+pytest -m "not tricky and not big" tests/
 ```
+The not big excludes tests of very large matrices, and not tricky excludes some known edge cases and situations that are not easy to solve right away. To isolate these tricky cases, just run `pytest -m "tricky" tests/`.
+There are also marks for `torch` and `jax` to isolate tests only for that framework.
 
-- To run tests within a specific directory, run (e.g.) `pytest tests/algorithms/`.
-- To run a specific unit test, run (e.g.) `pytest tests/algorithms/test_cg.py::test_cg_vjp`.
+Tests can be filtered with -k, such as
+```bash
+pytest -m "not tricky and not big" -k "trace" tests/
+```
+to get tests involving the trace.
+
+
+You can also
+- run tests within a specific directory, run (e.g.) `pytest tests/algorithms/`.
+- run a specific unit test, run (e.g.) `pytest tests/algorithms/test_cg.py::test_cg_vjp`.
 
 
 ### Documentation

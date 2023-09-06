@@ -87,17 +87,17 @@ Design Choices
    notebooks/About.ipynb
    notebooks/Quick_Start.ipynb
    notebooks/LinOpIntro.ipynb
-   notebooks/Examples_on_Basic_Functionality.ipynb
 
 .. toctree::
    :maxdepth: 1
-   :caption: Resources
+   :caption: 🧰 Basic Functionality
 
+   notebooks/Examples_on_Basic_Functionality.ipynb
    notebooks/Adding_Linear_Operators.ipynb
    notebooks/01_algorithms.ipynb
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 0
    :caption: 💡 Example Applications
 
    notebooks/03_GPs.ipynb
@@ -112,7 +112,6 @@ Design Choices
    :caption: 🧙‍♂️ Advanced Features
 
    notebooks/10_vmap_jit_grad.ipynb
-   notebooks/Lower_Precision.ipynb
 
 .. toctree::
    :glob:
@@ -138,17 +137,9 @@ Design Choices
 
 .. toctree::
    :maxdepth: 1
-   :caption: 📝 Notes
-
-   testing.md
-   CHANGELOG.md
-
-.. toctree::
-   :maxdepth: 2
    :caption: 👩‍💻 Developer Documentation
 
    contributing.md
-   documentation.md
 
 Indices and tables
 ==================
