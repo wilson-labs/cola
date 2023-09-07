@@ -50,7 +50,7 @@ def slq_fwd(A, fun, num_samples, max_iters, tol, pbar, key):
     tau = Q[..., 0, :]
     # approx = xnp.sum(tau**2 * fun(eigvals), axis=-1)
     # fn_vals = xnp.where(xnp.abs(eigvals) > _mp, fun(eigvals), xnp.zeros_like(eigvals))
-    const = 10*_mp * xnp.max(eigvals, axis=1, keepdims=True)
+    const = 10 * _mp * xnp.max(eigvals, axis=1, keepdims=True)
     fn_vals = xnp.where(xnp.abs(eigvals) > const, fun(eigvals), xnp.zeros_like(eigvals))
     approx = xnp.sum(tau**2 * fn_vals, axis=-1)
     estimate = A.shape[-2] * approx

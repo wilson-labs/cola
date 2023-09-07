@@ -7,7 +7,6 @@ from cola.utils.custom_autodiff import iterative_autograd
 import cola
 from cola import Stiefel, lazify
 
-
 # def arnoldi_eigs_bwd(res, grads, unflatten, *args, **kwargs):
 #     val_grads, eig_grads, _ = grads
 #     op_args, (eig_vals, eig_vecs, _) = res
@@ -34,8 +33,8 @@ from cola import Stiefel, lazify
 #     return (dA, )
 
 
-#@export
-#@iterative_autograd(arnoldi_eigs_bwd)
+# @export
+# @iterative_autograd(arnoldi_eigs_bwd)
 @export
 def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int = 100,
                  tol: float = 1e-7, use_householder: bool = False, pbar: bool = False):

@@ -11,7 +11,7 @@ from cola.ops import I_like
 from cola.ops import Identity
 from cola.ops import Triangular
 from cola.algorithms import power_iteration
-from cola.algorithms.lanczos import lanczos
+from cola.algorithms.lanczos import lanczos_eigs
 from cola.algorithms.arnoldi import arnoldi_eigs
 from cola.utils import export
 
@@ -75,7 +75,7 @@ def eig(A: LinearOperator, **kwargs):
         eig_vals, eig_vecs = xnp.eigh(A.to_dense())
         return eig_vals[eig_slice], Stiefel(lazify(eig_vecs[:, eig_slice]))
     elif method in ('lanczos', 'iterative') or (method == 'auto' and prod(A.shape) >= 1e6):
-        eig_vals, eig_vecs, _ = lanczos(A, **kws)
+        eig_vals, eig_vecs, _ = lanczos_eigs(A, **kws)
         return eig_vals, eig_vecs
     else:
         raise ValueError(f"Unknown method {method} for SelfAdjoint operator")
