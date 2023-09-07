@@ -20,14 +20,14 @@ def test_general(backend):
     soln_vals = xnp.sort(xnp.array(diag, dtype=dtype, device=None))
     A = SelfAdjoint(lazify(A))
 
-    eig_vals, eig_vecs = eig(A, eig_slice=slice(0, None, None), tol=1e-6)
+    eig_vals, eig_vecs = eig(A, num=None, which="LM", tol=1e-6)
     eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs.to_dense(), dtype)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
     rel_error = relative_error(soln_vals, xnp.sort(eig_vals))
     assert rel_error < _tol
     rel_error = relative_error(A.to_dense(), approx)
     assert rel_error < _tol * 5
-    eig_vals, eig_vecs = eig(A, eig_slice=slice(-2, None), tol=1e-6)
+    eig_vals, eig_vecs = eig(A, num=2, which="SM", tol=1e-6)
     eig_vals = xnp.cast(eig_vals, dtype)
     rel_error = relative_error(soln_vals[-2:], xnp.sort(eig_vals))
     assert rel_error < _tol
@@ -105,7 +105,7 @@ def test_identity(backend):
     soln_vals = xnp.array([1., 1., 1., 1.], dtype=dtype, device=None)
     eig_slice = slice(1, None, None)
     soln_vecs = xnp.eye(4, 4, dtype=dtype, device=None)
-    eig_vals, eig_vecs = eig(A, eig_slice=eig_slice)
+    eig_vals, eig_vecs = eig(A, num=3, which="SM")
 
     assert relative_error(soln_vals[eig_slice], eig_vals) < _tol
     assert relative_error(soln_vecs[:, eig_slice], eig_vecs.to_dense()) < _tol

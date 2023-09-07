@@ -2,7 +2,7 @@ import numpy as np
 from math import prod
 from plum import dispatch
 from cola import SelfAdjoint
-from cola import Unitary, Stiefel, PSD
+from cola import Unitary, Stiefel
 from cola.fns import lazify
 from cola.linalg import diag
 from cola.ops import LinearOperator
@@ -44,18 +44,17 @@ def eig(A: LinearOperator, **kwargs):
         >>> A = MyLinearOperator()
         >>> eig_vals, eig_vecs = eig(A, eig_slice=slice(0, 5), tol=1e-4)
     """
-    kws = dict(eig_slice=slice(0, None, None), tol=1e-6, pbar=False, method='auto', max_iters=1000)
+    kws = dict(num=None, which="LM", tol=1e-6, pbar=False, method='auto', max_iters=1000)
     assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
-    # make sure no extra kwargs
     method = kws.pop('method')
-    eig_slice = kws.pop('eig_slice')
+    eig_slice = get_slice(kws.pop('num'), kws.pop('which'))
     xnp = A.xnp
     if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
         eig_vals, eig_vecs = xnp.eig(A.to_dense())
         return eig_vals[eig_slice], lazify(eig_vecs[:, eig_slice])
     elif method in ('arnoldi', 'iterative') or (method == 'auto' and prod(A.shape) >= 1e6):
-        eig_vals, eig_vecs, info = arnoldi_eigs(A, **kws)
+        eig_vals, eig_vecs, _ = arnoldi_eigs(A, **kws)
         return eig_vals, eig_vecs
     else:
         raise ValueError(f"Unknown method {method}")
@@ -63,25 +62,25 @@ def eig(A: LinearOperator, **kwargs):
 
 @dispatch(cond=lambda A, **kwargs: A.isa(SelfAdjoint))
 def eig(A: LinearOperator, **kwargs):
-    kws = dict(eig_slice=slice(0, None, None), tol=1e-6, pbar=False, method='auto', max_iters=1000)
+    kws = dict(num=None, which="LM", tol=1e-6, pbar=False, method='auto', max_iters=1000)
     assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
-    # make sure no extra kwargs
     method = kws.pop('method')
-    eig_slice = kws.pop('eig_slice')
+    eig_slice = get_slice(kws.pop('num'), kws.pop('which'))
     xnp = A.xnp
     if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
         eig_vals, eig_vecs = xnp.eigh(A.to_dense())
         return eig_vals[eig_slice], Stiefel(lazify(eig_vecs[:, eig_slice]))
     elif method in ('lanczos', 'iterative') or (method == 'auto' and prod(A.shape) >= 1e6):
-        eig_vals, eig_vecs, info = lanczos(A, **kws)
+        eig_vals, eig_vecs, _ = lanczos(A, **kws)
         return eig_vals, eig_vecs
     else:
         raise ValueError(f"Unknown method {method} for SelfAdjoint operator")
 
 
 @dispatch
-def eig(A: Identity, eig_slice=slice(0, None, None), **kwargs):
+def eig(A: Identity, num=None, which="LM", **kwargs):
+    eig_slice = get_slice(num, which)
     xnp = A.xnp
     eig_vals = xnp.ones(shape=(A.shape[0], ), dtype=A.dtype, device=A.device)
     eig_vecs = A.to_dense()
@@ -89,8 +88,9 @@ def eig(A: Identity, eig_slice=slice(0, None, None), **kwargs):
 
 
 @dispatch
-def eig(A: Triangular, eig_slice=slice(0, None, None), **kwargs):
+def eig(A: Triangular, num=None, which="LM", **kwargs):
     # TODO: take out compute_lower_triangular_eigvecs
+    eig_slice = get_slice(num, which)
     xnp = A.xnp
     eig_vals = diag(A)
     sorted_ind = xnp.argsort(eig_vals)
@@ -111,7 +111,8 @@ def compute_lower_triangular_eigvecs(L):
 
 
 @dispatch
-def eig(A: Diagonal, eig_slice=slice(0, None, None), **kwargs):
+def eig(A: Diagonal, num=None, which="LM", **kwargs):
+    eig_slice = get_slice(num, which)
     xnp = A.xnp
     sorted_ind = xnp.argsort(A.diag)
     eig_vals = A.diag[sorted_ind]
@@ -140,7 +141,7 @@ def eigmax(A: LinearOperator, tol=1e-7, max_iters=1000, pbar=False, return_vec=F
             >>> eig = eigmax(A, tol=1e-3)
             >>> eig, vec = eigmax(A, tol=1e-3, return_vec=True)
     """
-    v0, e0, info = power_iteration(A, tol=tol, max_iter=max_iters, pbar=pbar)
+    v0, e0, _ = power_iteration(A, tol=tol, max_iter=max_iters, pbar=pbar)
     return e0 if not return_vec else (e0, v0)
 
 
@@ -149,3 +150,13 @@ def eigmin(A: LinearOperator, tol=1e-7):
     """ Returns eigenvalue with smallest magnitude of A
         up to specified tolerance tol."""
     raise NotImplementedError
+
+
+def get_slice(num, which):
+    if which == "LM":
+        eig_slice = slice(0, num, None)
+    elif which == "SM":
+        eig_slice = slice(-num, None, None)
+    else:
+        raise NotImplementedError(f"which={which} is not implemented")
+    return eig_slice
