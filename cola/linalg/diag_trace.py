@@ -73,7 +73,7 @@ def diag(A: Diagonal, k=0, **kwargs):
 
 @dispatch
 def diag(A: Sum, k=0, **kwargs):
-    out = sum(diag(M, **kwargs) for M in A.Ms)
+    out = sum(diag(M, k=k, **kwargs) for M in A.Ms)
     # out.info = {'sum': [(M.info if hasattr(M,'info') else {}) for M in A.Ms]}
     return out
 

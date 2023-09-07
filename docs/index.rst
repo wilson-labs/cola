@@ -92,7 +92,7 @@ Design Choices
    :maxdepth: 1
    :caption: 🧰 Basic Functionality
 
-   notebooks/Examples_on_Basic_Functionality.ipynb
+   notebooks/Linalg_operations_walkthrough.ipynb
    notebooks/Adding_Linear_Operators.ipynb
    notebooks/01_algorithms.ipynb
 
