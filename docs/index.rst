@@ -94,6 +94,7 @@ Design Choices
    notebooks/Examples_on_Basic_Functionality.ipynb
    notebooks/Adding_Linear_Operators.ipynb
    notebooks/01_algorithms.ipynb
+   notebooks/Device_Allocation.ipynb
 
 .. toctree::
    :maxdepth: 0
