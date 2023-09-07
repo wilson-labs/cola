@@ -24,25 +24,28 @@ def eig(A: LinearOperator, **kwargs):
 
     Args:
         A (LinearOperator): The linear operator for which eigenvalues and eigenvectors are computed.
-        eig_slice (slice): Optional. Slice object defining the range of eigenvalues to return.
-         Default is slice(0, None, None) (all eigenvalues).
+        num (int): The desired number of eigenvalues and eigenvectors.
+         Default is None which gets all available.
+        which (str): From what part of the spectrum would de eigenvalues be fetched.
+         Default is 'LM' (largest in magnitude) but alternatively you can use 'SM'
+         (smallest in magnitude).
         tol (float): Optional. Tolerance for convergence. Default is 1e-6.
         pbar (bool): Optional. Whether to display a progress bar during computation.
          Default is False.
         method (str): Optional. Method to use for computation.
          'dense' computes eigenvalues and eigenvectors using dense matrix operations.
-         'iterative' computes using lanczos or arnoldi iteration. 'auto' automatically selects the
+         'iterative' computes using Lanczos or Arnoldi iteration. 'auto' automatically selects the
           method based on the size of the linear operator. Default is 'auto'.
         max_iters (int): Optional. Maximum number of iterations for Arnoldi method. Default is 1000.
 
     Returns:
         Tuple[Array, Array]: A tuple containing eigenvalues and eigenvectors.
-         The eigenvalues are given by eig_vals[eig_slice] and the eigenvectors are given
-         by eig_vecs[:, eig_slice].
+         The eigenvalues are given by eig_vals and the eigenvectors are given
+         by eig_vecs.
 
     Example:
         >>> A = MyLinearOperator()
-        >>> eig_vals, eig_vecs = eig(A, eig_slice=slice(0, 5), tol=1e-4)
+        >>> eig_vals, eig_vecs = eig(A, num=6, which='LM', tol=1e-4)
     """
     kws = dict(num=None, which="LM", tol=1e-6, pbar=False, method='auto', max_iters=1000)
     assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
@@ -156,7 +159,8 @@ def get_slice(num, which):
     if which == "LM":
         eig_slice = slice(0, num, None)
     elif which == "SM":
-        eig_slice = slice(-num, None, None)
+        id = -1 if num is None else -num
+        eig_slice = slice(id, None, None)
     else:
         raise NotImplementedError(f"which={which} is not implemented")
     return eig_slice
