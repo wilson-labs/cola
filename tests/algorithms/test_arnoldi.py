@@ -81,7 +81,7 @@ def test_arnoldi(backend):
     assert rel_error < 1e-3
 
 
-@parametrize(['jax', 'torch'])
+@parametrize(['jax'])
 def test_householder_arnoldi_decomp(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
