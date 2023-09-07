@@ -116,15 +116,12 @@ print(g)
 ## Citing us
 If you use CoLA, please cite the following paper:
 
-<!-- > [Andres Potapczynski, Marc Finzi, Geoff Pleiss, and Andrew Gordon Wilson. "Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra." Pre-print (2023).]()
--->
-> Andres Potapczynski, Marc Finzi, Geoff Pleiss, and Andrew Gordon Wilson. "Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra." Pre-print (2023).
-Link to be added soon.
+[Andres Potapczynski, Marc Finzi, Geoff Pleiss, and Andrew Gordon Wilson. "Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra." 2023.](https://arxiv.org/abs/2309.03060)
 ```
 @article{potapczynski2023cola,
   title={{Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra}},
   author={Andres Potapczynski and Marc Finzi and Geoff Pleiss and Andrew Gordon Wilson},
-  journal={Pre-print},
+  journal={arXiv preprint arXiv:2309.03060},
   year={2023}
 }
 ```
