@@ -86,7 +86,6 @@ Design Choices
 
    notebooks/About.ipynb
    notebooks/Quick_Start.ipynb
-   notebooks/LinOpIntro.ipynb
 
 .. toctree::
    :maxdepth: 1
@@ -95,6 +94,7 @@ Design Choices
    notebooks/Linalg_operations_walkthrough.ipynb
    notebooks/Adding_Linear_Operators.ipynb
    notebooks/01_algorithms.ipynb
+   notebooks/Device_Allocation.ipynb
 
 .. toctree::
    :maxdepth: 0
