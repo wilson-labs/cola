@@ -16,12 +16,12 @@ import cola
 
 
 @parametric
-class IterativeInverse(LinearOperator):
+class IterativeInv(LinearOperator):
     def __str__(self):
         return f"{str(self.A)}⁻¹"
 
 
-class CGInverse(IterativeInverse):
+class CGInv(IterativeInv):
     def __init__(self, A, **kwargs):
         super().__init__(A.dtype, A.shape, annotations={PSD})
         self.A = A
@@ -33,7 +33,7 @@ class CGInverse(IterativeInverse):
         return out
 
 
-class GMResInverse(IterativeInverse):
+class GMResInv(IterativeInv):
     def __init__(self, A, **kwargs):
         super().__init__(A.dtype, A.shape)
         self.A = A
@@ -45,7 +45,7 @@ class GMResInverse(IterativeInverse):
         return out
 
 
-class SymmetricSVRGInverse(IterativeInverse):
+class SymmetricSVRGInv(IterativeInv):
     def __init__(self, A, **kwargs):
         super().__init__(A.dtype, A.shape)
         self.A = A
@@ -57,12 +57,12 @@ class SymmetricSVRGInverse(IterativeInverse):
         return out
 
 
-class GenericSVRGInverse(IterativeInverse):
+class GenericSVRGInv(IterativeInv):
     pass
 
 
 @parametric
-class TriangularInverse(LinearOperator):
+class TriangularInv(LinearOperator):
     def __init__(self, A: Triangular):
         super().__init__(A.dtype, A.shape)
         self.A = A.to_dense()
@@ -77,7 +77,7 @@ class TriangularInverse(LinearOperator):
 
 @dispatch
 @export
-def inverse(A: LinearOperator, **kwargs):
+def inv(A: LinearOperator, **kwargs):
     """(lazily) computes the inverse of a linear operator, equivalent to solve.
 
     Args:
@@ -103,68 +103,68 @@ def inverse(A: LinearOperator, **kwargs):
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
-        return inverse(cola.decompositions.lu_decomposed(A))
+        return inv(cola.decompositions.lu_decomposed(A))
     elif method == 'iterative' or (method == 'auto' and np.prod(A.shape) > 1e6):
-        return GMResInverse(A, **kws)
+        return GMResInv(A, **kws)
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 
 
 @dispatch(cond=lambda A, **kwargs: A.isa(PSD))
-def inverse(A: LinearOperator, **kwargs):
+def inv(A: LinearOperator, **kwargs):
     kws = dict(method="auto", tol=1e-6, P=None, x0=None, pbar=False, max_iters=5000)
     assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
     if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
-        return inverse(cola.decompositions.cholesky_decomposed(A))
+        return inv(cola.decompositions.cholesky_decomposed(A))
     if method == 'iterative' or (method == 'auto' and np.prod(A.shape) > 1e6):
-        return CGInverse(A, **kws)
+        return CGInv(A, **kws)
     else:
         raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 
 
 @dispatch(cond=lambda A, **kwargs: A.isa(Unitary))
-def inverse(A: LinearOperator, **kwargs):
+def inv(A: LinearOperator, **kwargs):
     return Unitary(A.H)
 
 
 @dispatch
-def inverse(A: Identity, **kwargs):
+def inv(A: Identity, **kwargs):
     return A
 
 
 @dispatch
-def inverse(A: ScalarMul, **kwargs):
+def inv(A: ScalarMul, **kwargs):
     return ScalarMul(1 / A.c, shape=A.shape, dtype=A.dtype)
 
 
 @dispatch
-def inverse(A: Permutation, **kwargs):
+def inv(A: Permutation, **kwargs):
     return Permutation(A.xnp.argsort(A.perm), A.dtype)
 
 
 @dispatch(cond=lambda A, **kwargs: all([M.shape[-2] == M.shape[-1] for M in A.Ms]))
-def inverse(A: Product, **kwargs):
-    output = reversed([inverse(M, **kwargs) for M in A.Ms])
+def inv(A: Product, **kwargs):
+    output = reversed([inv(M, **kwargs) for M in A.Ms])
     return Product(*output)
 
 
 @dispatch
-def inverse(A: BlockDiag, **kwargs):
-    return BlockDiag(*[inverse(M, **kwargs) for M in A.Ms], multiplicities=A.multiplicities)
+def inv(A: BlockDiag, **kwargs):
+    return BlockDiag(*[inv(M, **kwargs) for M in A.Ms], multiplicities=A.multiplicities)
 
 
 @dispatch
-def inverse(A: Kronecker, **kwargs):
-    return Kronecker(*[inverse(M, **kwargs) for M in A.Ms])
+def inv(A: Kronecker, **kwargs):
+    return Kronecker(*[inv(M, **kwargs) for M in A.Ms])
 
 
 @dispatch
-def inverse(A: Diagonal, **kwargs):
+def inv(A: Diagonal, **kwargs):
     return Diagonal(1. / A.diag)
 
 
 @dispatch
-def inverse(A: Triangular, **kwargs):
-    return TriangularInverse(A)
+def inv(A: Triangular, **kwargs):
+    return TriangularInv(A)
