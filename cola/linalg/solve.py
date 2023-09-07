@@ -29,4 +29,4 @@ def solve(A: LinearOperator, rhs, **kwargs):
         >>> x = cola.solve(A, b)
 
     """
-    return cola.inverse(A, **kwargs) @ rhs
+    return cola.inv(A, **kwargs) @ rhs
