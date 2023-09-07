@@ -2,7 +2,6 @@ import numpy as np
 from cola.ops import Householder
 from cola.ops import Product
 from cola.ops import Dense
-from cola.algorithms.arnoldi import get_householder_vec
 from cola.fns import lazify
 from cola.algorithms.arnoldi import get_arnoldi_matrix
 from cola.algorithms.arnoldi import arnoldi_eigs
@@ -82,7 +81,7 @@ def test_arnoldi(backend):
     assert rel_error < 1e-3
 
 
-@parametrize(['jax'])
+@parametrize(['jax', 'torch'])
 def test_householder_arnoldi_decomp(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -92,7 +91,7 @@ def test_householder_arnoldi_decomp(backend):
     # A_np, rhs_np = np.array(A, dtype=np.complex128), np.array(rhs[:, 0], dtype=np.complex128)
     A_np, rhs_np = np.array(A, dtype=np.float64), np.array(rhs[:, 0], dtype=np.float64)
     # Q_sol, H_sol = run_householder_arnoldi(A, rhs, A.shape[0], np.float64, xnp)
-    Q_sol, H_sol = run_householder_arnoldi_np(A_np, rhs_np, A.shape[0], np.float64, xnp)
+    Q_sol, H_sol = run_householder_arnoldi_np(A_np, rhs_np, A.shape[0], np.float64)
 
     # fn = run_householder_arnoldi
     fn = xnp.jit(run_householder_arnoldi, static_argnums=(0, 2))
@@ -146,7 +145,7 @@ def test_numpy_arnoldi(backend):
     rhs = np.random.normal(size=(A.shape[0], ))
     # rhs = np.random.normal(size=(A.shape[0], 2)).view(np.complex128)[:, 0]
 
-    Q, H = run_householder_arnoldi_np(A, rhs, max_iter=A.shape[0], dtype=dtype, xnp=xnp)
+    Q, H = run_householder_arnoldi_np(A, rhs, max_iter=A.shape[0], dtype=dtype)
     abs_error = np.linalg.norm(np.eye(A.shape[0]) - Q.T @ Q)
     assert abs_error < 1e-4
     abs_error = np.linalg.norm(Q.T @ A @ Q - H)
@@ -159,10 +158,10 @@ def test_numpy_arnoldi(backend):
     assert abs_error < 1e-10
 
 
-def run_householder_arnoldi_np(A, rhs, max_iter, dtype, xnp):
+def run_householder_arnoldi_np(A, rhs, max_iter, dtype):
     H, Q, Ps, zj = initialize_householder_arnoldi(rhs, max_iter, dtype)
     for jdx in range(1, max_iter + 2):
-        vec, beta = get_householder_vec(zj, jdx - 1, xnp)
+        vec, beta = get_householder_vec_np(zj, jdx - 1)
         Ps[jdx].vec, Ps[jdx].beta = vec[:, None], beta
         H[:, jdx - 1] = np.array(Ps[jdx] @ zj)
         if jdx <= max_iter:
@@ -184,6 +183,26 @@ def initialize_householder_arnoldi(rhs, max_iter, dtype):
     Ps = [Householder(np.zeros((max_iter, 1), dtype=dtype)) for _ in range(max_iter + 2)]
     zj = Q[:, 0]
     return H, Q, Ps, zj
+
+
+def get_householder_vec_np(x, idx):
+    sigma_2 = np.linalg.norm(x[idx + 1:])**2.
+    vec = np.zeros_like(x)
+    vec[idx:] = x[idx:]
+    if sigma_2 == 0 and x[idx] >= 0:
+        beta = 0
+    elif sigma_2 == 0 and x[idx] < 0:
+        beta = -2
+    else:
+        x_norm_partial = np.sqrt(x[idx]**2 + sigma_2)
+        if x[idx] <= 0:
+            vec[idx] = x[idx] - x_norm_partial
+        else:
+            vec[idx] = -sigma_2 / (x[idx] + x_norm_partial)
+        beta = 2 * vec[idx]**2 / (sigma_2 + vec[idx]**2)
+        vec = vec / vec[idx]
+        vec[idx:] = vec[idx:] / vec[idx]
+    return vec, beta
 
 
 def run_arnoldi(A, rhs, max_iter, tol, dtype):
