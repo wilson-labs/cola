@@ -14,7 +14,7 @@ _tol = 1e-7
 
 
 @parametrize(['torch', 'jax'])
-def test_inverse(backend):
+def test_inv(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.75, scale=1.0, size=25)
@@ -22,7 +22,7 @@ def test_inverse(backend):
     rhs = xnp.ones(shape=(A.shape[0], 5), dtype=dtype, device=None)
     soln = xnp.solve(A, rhs)
 
-    approx = co.inverse(lazify(A)) @ rhs
+    approx = co.inv(lazify(A)) @ rhs
 
     rel_error = relative_error(soln, approx)
     assert rel_error < _tol * 10

@@ -56,7 +56,7 @@ print(F @ v)
 ```python
 print(cola.linalg.trace(F))
 Q = F.T @ F + 1e-3 * cola.ops.I_like(F)
-b = cola.linalg.inverse(Q) @ v
+b = cola.linalg.inv(Q) @ v
 print(jnp.linalg.norm(Q @ b - v))
 print(cola.linalg.eig(F)[0][:5])
 print(cola.sqrt(A))
@@ -75,8 +75,8 @@ to enable the algorithms to run faster.
 
 ```python
 Qs = cola.SelfAdjoint(Q)
-%timeit cola.linalg.inverse(Q)@v
-%timeit cola.linalg.inverse(Qs)@v
+%timeit cola.linalg.inv(Q) @ v
+%timeit cola.linalg.inv(Qs) @ v
 ```
 
 3. **JAX and PyTorch**. We support both ML frameworks.
@@ -102,7 +102,7 @@ from jax import grad, jit, vmap
 
 def myloss(x):
     A = cola.ops.Dense(jnp.array([[1., 2.], [3., x]]))
-    return jnp.ones(2) @ cola.linalg.inverse(A) @ jnp.ones(2)
+    return jnp.ones(2) @ cola.linalg.inv(A) @ jnp.ones(2)
 
 
 g = jit(vmap(grad(myloss)))(jnp.array([.5, 10.]))
