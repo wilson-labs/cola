@@ -133,7 +133,7 @@ Design Choices
    :maxdepth: 1
    :caption: 🚧 Tricky Bits 🚧
 
-   notebooks/sharp_bits.ipynb
+   notebooks/tricky_bits.ipynb
 
 .. toctree::
    :maxdepth: 1
