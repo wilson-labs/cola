@@ -2,7 +2,7 @@ import numpy as np
 from cola.ops import Identity
 from cola.ops import Diagonal
 from cola.fns import lazify
-from cola.linalg.inverse import inverse
+from cola.linalg.inv import inv
 from cola.algorithms.gmres import gmres
 from cola.algorithms.gmres import gmres_fwd
 from cola.utils_test import get_xnp, parametrize, relative_error
@@ -63,7 +63,7 @@ def test_gmres_random(backend):
     soln = xnp.solve(A, rhs)
 
     max_iters, tol = A.shape[0] - 5, 1e-8
-    A_inv = inverse(lazify(A), max_iters=max_iters, tol=tol, method="iterative")
+    A_inv = inv(lazify(A), max_iters=max_iters, tol=tol, method="iterative")
     approx = A_inv @ rhs
 
     rel_error = relative_error(soln, approx)

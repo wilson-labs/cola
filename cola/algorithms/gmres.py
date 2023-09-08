@@ -64,7 +64,6 @@ def gmres_bwd(res, grads, unflatten, *args, **kwargs):
 @iterative_autograd(gmres_bwd)
 def gmres_fwd(A, rhs, x0, max_iters, tol, P, use_householder, use_triangular, pbar):
     xnp = A.xnp
-    device = A.device
     res = rhs - A @ x0
     if use_householder:
         Q, H, infodict = run_householder_arnoldi(A=A, rhs=res, max_iters=max_iters)

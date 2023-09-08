@@ -6,6 +6,7 @@ from scipy.linalg import block_diag as _block_diag, lu as _lu, solve_triangular
 from scipy.signal import convolve2d
 import optree
 
+
 class NumpyNotImplementedError(NotImplementedError):
     def __init__(self):
         fn_name = sys._getframe(1).f_code.co_name
@@ -68,6 +69,8 @@ where = np.where
 fft = np.fft.fft
 ifft = np.fft.ifft
 slogdet = np.linalg.slogdet
+promote_types = np.promote_types
+finfo = np.finfo
 
 def PRNGKey(key):
     raise NumpyNotImplementedError()
@@ -117,7 +120,7 @@ def dynamic_slice(operand, start_indices, slice_sizes):
 
 
 def expand(array, axis):
-    return np.expand_dims(array, dimensions=(axis,))
+    return np.expand_dims(array, dimensions=(axis, ))
 
 
 def eye(n, m=None, dtype=None, device=None):
@@ -175,9 +178,7 @@ def move_to(arr, device, dtype):
     if dtype is not None:
         arr = arr.astype(dtype)
     if device is not None:
-        raise RuntimeError(
-            "move_to does not take in a device argument for the numpy backend."
-        )
+        raise RuntimeError("move_to does not take in a device argument for the numpy backend.")
     return arr
 
 
@@ -242,11 +243,14 @@ def zeros(shape, dtype, device=None):
     del device
     return np.zeros(shape=shape, dtype=dtype)
 
+
 def is_leaf(value):
-    return optree.treespec_is_leaf(optree.tree_structure(value))
+    return optree.treespec_is_leaf(optree.tree_structure(value, namespace="cola"))
+
 
 def tree_flatten(value):
-    return optree.tree_flatten(value,namespace='cola')[::-1]
+    return optree.tree_flatten(value, namespace='cola')
+
 
 def tree_unflatten(treedef, value):
     return optree.tree_unflatten(treedef, value)

@@ -8,7 +8,9 @@
 [![Documentation](https://readthedocs.org/projects/cola/badge/)](https://cola.readthedocs.io/en/latest/)
 [![tests](https://github.com/wilson-labs/cola/actions/workflows/python-package.yml/badge.svg)](https://github.com/wilson-labs/cola/actions/workflows/python-package.yml)
 [![codecov](https://codecov.io/gh/wilson-labs/cola/branch/main/graph/badge.svg?token=bBnkfHv30C)](https://codecov.io/gh/wilson-labs/cola)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wilson-labs/cola/blob/master/docs/notebooks/colabs/all.ipynb)
+[![PyPI version](https://img.shields.io/pypi/v/cola-ml)](https://pypi.org/project/cola-ml/)
+[![Paper](https://img.shields.io/badge/arXiv-2309.03060-red)](https://arxiv.org/abs/2309.03060)
+<!-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wilson-labs/cola/blob/master/docs/notebooks/colabs/all.ipynb) -->
 
 CoLA is a framework for scalable linear algebra, automatically exploiting the structure often found in machine learning problems and beyond. 
 CoLA supports both PyTorch and JAX.
@@ -19,12 +21,12 @@ pip install cola-ml
 ```
 
 ## Features in CoLA
-* Large scale linear algebra routines for `solve(A,b)`, `eig(A)`, `logdet(A)`, `exp(A)`, `trace(A)`, `diag(A)`, `sqrt(A)`
+* Large scale linear algebra routines for `solve(A,b)`, `eig(A)`, `logdet(A)`, `exp(A)`, `trace(A)`, `diag(A)`, `sqrt(A)`.
 * Provides (user extendible) compositional rules to exploit structure through multiple dispatch.
 * Has memory-efficient autodiff rules for iterative algorithms.
-* Works with PyTorch or JAX, supporting GPU hardware acceleration ✅
-* Supports operators with complex numbers and low precision ✅
-* Provides linear algebra operations for both symmetric and non-symmetric matrices ✅
+* Works with PyTorch or JAX, supporting GPU hardware acceleration.
+* Supports operators with complex numbers and low precision.
+* Provides linear algebra operations for both symmetric and non-symmetric matrices.
 
 See https://cola.readthedocs.io/en/latest/ for our full documentation and many examples.
 
@@ -56,7 +58,7 @@ print(F @ v)
 ```python
 print(cola.linalg.trace(F))
 Q = F.T @ F + 1e-3 * cola.ops.I_like(F)
-b = cola.linalg.inverse(Q) @ v
+b = cola.linalg.inv(Q) @ v
 print(jnp.linalg.norm(Q @ b - v))
 print(cola.linalg.eig(F)[0][:5])
 print(cola.sqrt(A))
@@ -75,8 +77,8 @@ to enable the algorithms to run faster.
 
 ```python
 Qs = cola.SelfAdjoint(Q)
-%timeit cola.linalg.inverse(Q)@v
-%timeit cola.linalg.inverse(Qs)@v
+%timeit cola.linalg.inv(Q) @ v
+%timeit cola.linalg.inv(Qs) @ v
 ```
 
 3. **JAX and PyTorch**. We support both ML frameworks.
@@ -102,7 +104,7 @@ from jax import grad, jit, vmap
 
 def myloss(x):
     A = cola.ops.Dense(jnp.array([[1., 2.], [3., x]]))
-    return jnp.ones(2) @ cola.linalg.inverse(A) @ jnp.ones(2)
+    return jnp.ones(2) @ cola.linalg.inv(A) @ jnp.ones(2)
 
 
 g = jit(vmap(grad(myloss)))(jnp.array([.5, 10.]))
@@ -116,63 +118,35 @@ print(g)
 ## Citing us
 If you use CoLA, please cite the following paper:
 
-<!-- > [Andres Potapczynski, Marc Finzi, Geoff Pleiss, and Andrew Gordon Wilson. "Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra." Pre-print (2023).]()
--->
-> Andres Potapczynski, Marc Finzi, Geoff Pleiss, and Andrew Gordon Wilson. "Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra." Pre-print (2023).
-Link to be added soon.
+[Andres Potapczynski, Marc Finzi, Geoff Pleiss, and Andrew Gordon Wilson. "CoLA: Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra." 2023.](https://arxiv.org/abs/2309.03060)
 ```
 @article{potapczynski2023cola,
-  title={{Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra}},
+  title={{CoLA: Exploiting Compositional Structure for Automatic and Efficient Numerical Linear Algebra}},
   author={Andres Potapczynski and Marc Finzi and Geoff Pleiss and Andrew Gordon Wilson},
-  journal={Pre-print},
+  journal={arXiv preprint arXiv:2309.03060},
   year={2023}
 }
 ```
 
-### Features being added
-Linear Algebra Operations
-- [x] inverse: $A^{-1}$
-- [x] eig: $U \Lambda U^{-1}$
-- [x] diag
-- [x] trace
-- [x] logdet
-- [x] exp
-- [x] sqrt
-- [x] $f(A)$
-- [ ] SVD
-- [ ] pseudoinverse
-      
-Linear Operators implemented
-- [x] Diag
-- [x] BlockDiag
-- [x] Kronecker
-- [x] KronSum
-- [x] Sparse
-- [x] Jacobian
-- [x] Hessian
-- [ ] Fisher
-- [x] Concatenated
-- [x] Triangular
-- [ ] FFT
-- [x] Tridiagonal
-      
-Attribute Annotations
-- [x] SelfAdjoint
-- [x] PSD
-- [x] Unitary
+### Features implemented
+
+| Linear Algebra    | inverse | eig | diag | trace | logdet | exp | sqrt | f(A) | SVD | pseudoinverse |
+|:-----------------:|:-------:|:---:|:----:|:-----:|:------:|:---:|:----:|:--------:|:---:|:-------------:|
+| **Implementation**|    ✓    |  ✓  |   ✓  |   ✓  |    ✓   |  ✓  |   ✓  |    ✓     |     |               |
+
+| LinearOperators   | Diag | BlockDiag | Kronecker | KronSum | Sparse | Jacobian | Hessian | Fisher | Concatenated | Triangular | FFT | Tridiagonal |
+|:-----------------:|:----:|:---------:|:---------:|:-------:|:------:|:--------:|:-------:|:------:|:------------:|:----------:|:---:|:-----------:|
+| **Implementation**|   ✓  |     ✓     |     ✓     |    ✓    |   ✓   |    ✓     |    ✓    |        |      ✓       |     ✓      |     |      ✓      |
+
+| Annotations      | SelfAdjoint | PSD | Unitary |
+|:----------------:|:-----------:|:---:|:-------:|
+| **Implementation**|      ✓      |  ✓  |    ✓   |
+
 
 ## Contributing
 See the contributing guidelines [docs/CONTRIBUTING.md](https://cola.readthedocs.io/en/latest/contributing.html) for information on submitting issues
 and pull requests.
 
-<!--
-## Team
--->
-
-## Acknowledgements
-This work is supported by XXX.
-
-## Licence
 CoLA is Apache 2.0 licensed.
 
 ## Support and contact

@@ -4,7 +4,7 @@ from numbers import Number
 from typing import Callable
 from functools import reduce
 import cola
-from cola.ops import LinearOperator, Dense
+from cola.ops import LinearOperator
 from cola.utils import export
 from cola.annotations import SelfAdjoint, PSD
 from cola.utils.dispatch import parametric
@@ -90,7 +90,7 @@ def apply_unary(f: Callable, A: LinearOperator, **kwargs):
         eigs, V = xnp.eig(Adense)
         V = cola.lazify(V)
         D = cola.diag(f(eigs))
-        return V @ D @ cola.inverse(V)
+        return V @ D @ cola.inv(V)
     elif method == 'iterative' or (method == 'auto' and (np.prod(A.shape) > 1e6)):
         return ArnoldiUnary(A, f, **kws)
     else:
@@ -105,7 +105,7 @@ def apply_unary(f: Callable, A: LinearOperator, **kwargs):
     xnp = A.xnp
     if method == 'dense' or (method == 'auto' and (np.prod(A.shape) <= 1e6)):
         Adense = A.to_dense()
-        eigs, V = xnp.eigh(A.to_dense())
+        eigs, V = xnp.eigh(Adense)
         V = cola.lazify(V)
         D = cola.diag(f(eigs))
         return V @ D @ V.H
@@ -216,7 +216,7 @@ def pow(A: LinearOperator, alpha: Number, **kwargs):
         if k > 0 and k < 10:
             return product([A] * k)
         if k == -1:
-            return cola.inverse(A)
+            return cola.inv(A)
 
     return apply_unary(lambda x: x**alpha, A, **kwargs)
 

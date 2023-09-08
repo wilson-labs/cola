@@ -1,10 +1,10 @@
 from abc import abstractmethod
-from typing import Union, Tuple, Any, List, Callable
+from typing import Union, Tuple, Any
 from numbers import Number
 import numpy as np
-import optree
 import cola
 from cola.utils import export
+import cola.np_fns as np_fns
 
 Array = Dtype = Any
 export(Array)
@@ -43,6 +43,7 @@ def is_array(obj):
         return True
     return False
 
+
 def is_xnp_array(obj, xnp):
     if not hasattr(obj, 'dtype'):
         return False
@@ -54,6 +55,7 @@ def is_xnp_array(obj, xnp):
 class AutoRegisteringPyTree(type):
     def __init__(cls, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        cls._dynamic = cls._dynamic.copy()
         import optree
         optree.register_pytree_node_class(cls, namespace='cola')
         try:
@@ -62,14 +64,19 @@ class AutoRegisteringPyTree(type):
         except ImportError:
             pass
         try:
-            #TODO: when pytorch migrates to optree, switch as well
+            # TODO: when pytorch migrates to optree, switch as well
             import torch
-            tree_flatten = lambda self: self.tree_flatten()
-            tree_unflatten = lambda ctx, children: cls.tree_unflatten(children, ctx)
-            torch.utils._pytree._register_pytree_node(cls, tree_flatten,tree_unflatten)
+
+            def tree_flatten(self):
+                return self.tree_flatten()
+
+            def tree_unflatten(ctx, children):
+                return cls.tree_unflatten(children, ctx)
+
+            torch.utils._pytree._register_pytree_node(cls, tree_flatten, tree_unflatten)
         except ImportError:
             pass
-        
+
 
 def find_xnp(obj):
     if is_array(obj):
@@ -92,6 +99,7 @@ def find_xnp(obj):
         pass
     return None
 
+
 def find_device(obj):
     if is_array(obj):
         xnp = get_library_fns(obj.dtype)
@@ -111,16 +119,17 @@ def find_device(obj):
     return None
 
 
+def definitely_dynamic(obj):
+    return is_array(obj) or isinstance(obj, LinearOperator)
+
 @export
 class LinearOperator(metaclass=AutoRegisteringPyTree):
     """ Linear Operator base class """
-    _dynamic = {key:False for key in ['xnp', 'shape', 'dtype', 'device', 'annotations']}
+    _dynamic = {key: False for key in ['xnp', 'shape', 'dtype', 'device', 'annotations']}
 
     def __new__(cls, *args, **kwargs):
         """ Creates attributes for the flatten and unflatten functionality. """
         obj = super().__new__(cls)
-        # obj.xnp = find_xnp([args, kwargs])
-        # assert obj.xnp is not None, f"No supported array library found in {args,kwargs,cls}"
         obj.device = find_device([args, kwargs])
         return obj
 
@@ -134,18 +143,22 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         # TODO: reform matrices with the new annotations?
         self.annotations.update(annotations)
         self.device = self.device or self.xnp.get_default_device()
-        
 
     def __setattr__(self, name, value):
         if name not in self.__class__._dynamic:
-            cond = is_array(value) or not optree.treespec_is_leaf(optree.tree_structure(value))
+            # don't split this into two lines, we want the short circuiting
+            cond = definitely_dynamic(value) or any(map(is_array, np_fns.tree_flatten(value)[0]))
             self.__class__._dynamic[name] = cond
         return super().__setattr__(name, value)
 
     def to(self, device, dtype=None):
-        """ Returns a new linear operator with given device and dtype """
+        """ Returns a new linear operator with given device and dtype
+            WARNING: dtype change is not supported yet. """
         params, unflatten = self.flatten()
-        params = [self.xnp.move_to(p, device=device, dtype=dtype) for p in params]
+        params = [
+            self.xnp.move_to(p, device=device, dtype=dtype) if self.xnp.is_array(p) else p
+            for p in params
+        ]
         return unflatten(params)
 
     def isa(self, annotation) -> bool:
@@ -172,9 +185,11 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
     def to_dense(self) -> Array:
         """ Produces a dense array representation of the linear operator. """
         if 8 * self.shape[-2] < self.shape[-1]:
-            return self.xnp.eye(self.shape[-2], self.shape[-2], dtype=self.dtype, device=self.device) @ self
+            return self.xnp.eye(self.shape[-2], self.shape[-2], dtype=self.dtype,
+                                device=self.device) @ self
         else:
-            return self @ self.xnp.eye(self.shape[-1], self.shape[-1], dtype=self.dtype, device=self.device)
+            return self @ self.xnp.eye(self.shape[-1], self.shape[-1], dtype=self.dtype,
+                                       device=self.device)
 
     @property
     def T(self):
@@ -188,7 +203,10 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
 
     def flatten(self) -> Tuple[Array, ...]:
         vals, tree = self.xnp.tree_flatten(self)
-        unflatten = lambda params: self.xnp.tree_unflatten(tree, params)
+
+        def unflatten(params):
+            return self.xnp.tree_unflatten(tree, params)
+
         return vals, unflatten
 
     def __matmul__(self, X: Array) -> Array:
@@ -291,15 +309,14 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
                 raise NotImplementedError(f"__getitem__ not implemented for this case {type(ids)}")
 
     def tree_flatten(self):
-        all_elems = vars(self)
         # separate all_elems into pytrees and aux
         pytrees, aux = [], []
-        for key, val in all_elems.items():
+        for key, val in sorted(vars(self).items()):
             if self._dynamic[key]:
                 pytrees.append(val)
-                aux.append((key,))
+                aux.append((key, ))
             else:
-                aux.append((key,val))
+                aux.append((key, val))
         return pytrees, aux
 
     @classmethod
@@ -312,6 +329,18 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
             else:
                 fields[keyv[0]] = keyv[1]
         obj = object.__new__(cls)
-        for k,v in fields.items():
+        for k, v in fields.items():
+            if k in ['device']:  # ,'dtype']: TODO: also separate dtype in case .to was called
+                continue
             setattr(obj, k, v)
+        # dtypes = [dt for dt in map(maybe_get_dtype, children) if dt is not None]
+        # obj.dtype = reduce(obj.xnp.promote_types, dtypes) if len(dtypes) > 0 else None
+        obj.device = find_device(fields) or fields['device']
         return obj
+
+
+def maybe_get_dtype(obj):
+    try:
+        return obj.dtype
+    except AttributeError:
+        return None

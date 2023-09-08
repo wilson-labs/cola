@@ -5,7 +5,7 @@ from torch import Tensor
 from tqdm.auto import tqdm
 
 
-def while_loop_winfo(errorfn, tol, every=1, desc='', pbar=False, **kwargs):
+def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False, **kwargs):
     """ Decorator for while loop with progress bar.
 
     Assumes that
@@ -39,10 +39,10 @@ def while_loop_winfo(errorfn, tol, every=1, desc='', pbar=False, **kwargs):
             error = errorfn(state)
             if isinstance(error, Tensor):
                 error = error.cpu().data.item()
-            if not info['iterations'] % every:
+            if not (info['iterations'] % every):
                 info['errors'].append(error)
                 if pbar:
-                    update_pbar(error, tol, info)
+                    update_pbar(error, tol, info, max_iters)
             info['iterations'] += 1
             return cond_fun(state)
 
@@ -54,7 +54,7 @@ def while_loop_winfo(errorfn, tol, every=1, desc='', pbar=False, **kwargs):
         info['errors'].append(error)
         info['errors'] = np.array(info['errors'][2:])
         if pbar:
-            update_pbar(info['errors'][-1], tol, info)
+            update_pbar(info['errors'][-1], tol, info, max_iters)
             info['pbar'].close()
             info.pop('errstart')
             info.pop('pbar')
@@ -64,10 +64,12 @@ def while_loop_winfo(errorfn, tol, every=1, desc='', pbar=False, **kwargs):
     return new_while, info
 
 
-def update_pbar(error, tol, info):
+def update_pbar(error, tol, info, max_iters):
     errstart = info.setdefault('errstart', error)
-    progress = max(100 * np.log(error / errstart) / np.log(tol / errstart) - info['progval'], 0)
-    progress = min(100 - info['progval'], progress)
+    howclose = np.log(error / errstart) / np.log(tol / errstart)
+    if max_iters is not None:
+        howclose = max(info['iterations'] / max_iters, howclose)
+    progress = min(100 - info['progval'], max(100*howclose - info['progval'], 0))
     if progress > 0:
         info['progval'] += progress
         info['pbar'].update(progress)
@@ -80,21 +82,20 @@ def while_loop(cond_fun, body_fun, init_val):
     return val
 
 
-def pbar_while(errorfn, tol, desc='', every=1, hide=False):
+def pbar_while(errorfn, tol, max_iters=None, desc='', every=1, hide=False):
     """ Decorator for while loop with progress bar. Assumes that
         errorfn is a function of the loop variable and returns a scalar
         that starts at a given value and decreases to tol as the loop progresses."""
     def new_while(cond_fun, body_fun, init_val):
-        newbody = body_pbar(errorfn, tol, desc, every, hide)(body_fun)
+        newbody = body_pbar(errorfn, tol, desc, every, hide, max_iters)(body_fun)
         val = init_val
         while cond_fun(val):
             val = newbody(val)
         return val
-
     return new_while
 
 
-def body_pbar(errorfn, tol, desc='', every=1, hide=False):
+def body_pbar(errorfn, tol, desc='', every=1, hide=False, max_iters=None):
     if hide:
         return lambda body: body
 
@@ -117,9 +118,10 @@ def body_pbar(errorfn, tol, desc='', every=1, hide=False):
             if isinstance(error, Tensor):
                 error = error.cpu().data.item()
             errstart = info.setdefault('errstart', error)
-            progress = max(
-                100 * np.log(error / errstart) / np.log(tol / errstart) - info['progval'], 0)
-            progress = min(100 - info['progval'], progress)
+            howclose = np.log(error / errstart) / np.log(tol / errstart)
+            if max_iters is not None:
+                howclose = max(info['count'] / max_iters, howclose)
+            progress = min(100 - info['progval'], max(100*howclose - info['progval'], 0))
             if progress > 0:
                 info['progval'] += progress
                 info['pbar'].update(progress)

@@ -87,6 +87,22 @@ ifft = jnp.fft.ifft
 slogdet = jnp.linalg.slogdet
 softmax = jax.nn.softmax
 log_softmax = jax.nn.log_softmax
+promote_types = jnp.promote_types
+finfo = jnp.finfo
+
+
+def get_array_device(array):
+    return array.device()
+
+
+def is_cuda_available():
+    devices = jax.devices()
+
+    for device in devices:
+        if device.device_kind == 'gpu':
+            return True
+
+    return False
 
 
 def eig(A):
@@ -135,7 +151,7 @@ def get_default_device():
 def device(device_name):
     del device_name
     zeros = jnp.zeros(1)
-    return zeros.device
+    return zeros.device()
 
 
 def diag(v, diagonal=0):

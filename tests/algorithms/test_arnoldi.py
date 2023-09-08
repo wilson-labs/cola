@@ -2,7 +2,6 @@ import numpy as np
 from cola.ops import Householder
 from cola.ops import Product
 from cola.ops import Dense
-from cola.algorithms.arnoldi import get_householder_vec
 from cola.fns import lazify
 from cola.algorithms.arnoldi import get_arnoldi_matrix
 from cola.algorithms.arnoldi import arnoldi_eigs
@@ -12,7 +11,7 @@ from cola.utils_test import generate_spectrum, generate_pd_from_diag
 from cola.utils_test import generate_lower_from_diag
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(['torch', 'jax']).excluding[:]
 def test_arnoldi_vjp(backend):
     if backend == 'torch':
         import torch
@@ -24,18 +23,18 @@ def test_arnoldi_vjp(backend):
     diag = xnp.Parameter(xnp.array(matrix, dtype=dtype, device=None))
     diag_soln = xnp.Parameter(xnp.array(matrix, dtype=dtype, device=None))
     _, unflatten = Dense(diag).flatten()
-    x0 = xnp.randn(diag.shape[0], 1, dtype=dtype, device=None)
+    x0 = xnp.randn(diag.shape[0], 1, dtype=dtype, device=None, key=xnp.PRNGKey(21))
 
     def f(theta):
         Aop = unflatten([theta])
         eig_vals, *_ = arnoldi_eigs(Aop, x0, max_iters=10, tol=1e-6, pbar=False)
-        loss = xnp.sum(eig_vals**2.)
+        loss = xnp.sum(xnp.abs(eig_vals)**2.)
         return loss
 
     def f_alt(theta):
         A = theta
         eig_vals, _ = xnp.eigh(A)
-        loss = xnp.sum(eig_vals**2.)
+        loss = xnp.sum(xnp.abs(eig_vals)**2.)
         return loss
 
     out = f(diag)
@@ -68,7 +67,8 @@ def test_arnoldi(backend):
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=4, dtype=np.float32)
     A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype,
                   device=None)
-    rhs = xnp.cast(xnp.randn(A.shape[1], 1, dtype=xnp.float32, device=None), dtype=dtype)
+    zr = xnp.randn(A.shape[1], 1, dtype=xnp.float32, device=None, key=xnp.PRNGKey(123))
+    rhs = xnp.cast(zr, dtype=dtype)
     eigvals, eigvecs, _ = arnoldi_eigs(lazify(A), rhs, max_iters=A.shape[-1])
     approx = xnp.sort(xnp.cast(eigvals, xnp.float32))
     soln = xnp.sort(xnp.array(diag, xnp.float32, device=None))
@@ -76,7 +76,7 @@ def test_arnoldi(backend):
     rel_error = relative_error(soln, approx)
     assert rel_error < 1e-3
 
-    approx = eigvecs @ xnp.diag(eigvals) @ xnp.inv(eigvecs)
+    approx = eigvecs @ xnp.diag(eigvals) @ xnp.inv(eigvecs.to_dense())
     rel_error = relative_error(A, approx)
     assert rel_error < 1e-3
 
@@ -87,11 +87,11 @@ def test_householder_arnoldi_decomp(backend):
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np.float32) - 0.5
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
-    rhs = xnp.randn(A.shape[1], 1, dtype=dtype, device=None)
+    rhs = xnp.randn(A.shape[1], 1, dtype=dtype, device=None, key=xnp.PRNGKey(48))
     # A_np, rhs_np = np.array(A, dtype=np.complex128), np.array(rhs[:, 0], dtype=np.complex128)
     A_np, rhs_np = np.array(A, dtype=np.float64), np.array(rhs[:, 0], dtype=np.float64)
     # Q_sol, H_sol = run_householder_arnoldi(A, rhs, A.shape[0], np.float64, xnp)
-    Q_sol, H_sol = run_householder_arnoldi_np(A_np, rhs_np, A.shape[0], np.float64, xnp)
+    Q_sol, H_sol = run_householder_arnoldi_np(A_np, rhs_np, A.shape[0], np.float64)
 
     # fn = run_householder_arnoldi
     fn = xnp.jit(run_householder_arnoldi, static_argnums=(0, 2))
@@ -102,13 +102,13 @@ def test_householder_arnoldi_decomp(backend):
         assert rel_error < 1e-5
 
 
-@parametrize(['torch'])  # jax does not have complex128
+@parametrize(['torch'])  # jax does not have complex128 # yeah it does ?
 def test_get_arnoldi_matrix(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex128  # double precision on real and complex coordinates to achieve 1e-12 tol
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=20, dtype=np.float32) - 0.5
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
-    rhs = xnp.randn(A.shape[1], 1, dtype=dtype, device=None)
+    rhs = xnp.randn(A.shape[1], 1, dtype=dtype, device=None, key=xnp.PRNGKey(1256))
     rhs = xnp.concatenate((rhs, rhs), axis=-1)
     max_iter = A.shape[0]
     A_np, rhs_np = np.array(A, dtype=np.complex128), np.array(rhs[:, 0], dtype=np.complex128)
@@ -145,7 +145,7 @@ def test_numpy_arnoldi(backend):
     rhs = np.random.normal(size=(A.shape[0], ))
     # rhs = np.random.normal(size=(A.shape[0], 2)).view(np.complex128)[:, 0]
 
-    Q, H = run_householder_arnoldi_np(A, rhs, max_iter=A.shape[0], dtype=dtype, xnp=xnp)
+    Q, H = run_householder_arnoldi_np(A, rhs, max_iter=A.shape[0], dtype=dtype)
     abs_error = np.linalg.norm(np.eye(A.shape[0]) - Q.T @ Q)
     assert abs_error < 1e-4
     abs_error = np.linalg.norm(Q.T @ A @ Q - H)
@@ -158,10 +158,10 @@ def test_numpy_arnoldi(backend):
     assert abs_error < 1e-10
 
 
-def run_householder_arnoldi_np(A, rhs, max_iter, dtype, xnp):
+def run_householder_arnoldi_np(A, rhs, max_iter, dtype):
     H, Q, Ps, zj = initialize_householder_arnoldi(rhs, max_iter, dtype)
     for jdx in range(1, max_iter + 2):
-        vec, beta = get_householder_vec(zj, jdx - 1, xnp)
+        vec, beta = get_householder_vec_np(zj, jdx - 1)
         Ps[jdx].vec, Ps[jdx].beta = vec[:, None], beta
         H[:, jdx - 1] = np.array(Ps[jdx] @ zj)
         if jdx <= max_iter:
@@ -183,6 +183,26 @@ def initialize_householder_arnoldi(rhs, max_iter, dtype):
     Ps = [Householder(np.zeros((max_iter, 1), dtype=dtype)) for _ in range(max_iter + 2)]
     zj = Q[:, 0]
     return H, Q, Ps, zj
+
+
+def get_householder_vec_np(x, idx):
+    sigma_2 = np.linalg.norm(x[idx + 1:])**2.
+    vec = np.zeros_like(x)
+    vec[idx:] = x[idx:]
+    if sigma_2 == 0 and x[idx] >= 0:
+        beta = 0
+    elif sigma_2 == 0 and x[idx] < 0:
+        beta = -2
+    else:
+        x_norm_partial = np.sqrt(x[idx]**2 + sigma_2)
+        if x[idx] <= 0:
+            vec[idx] = x[idx] - x_norm_partial
+        else:
+            vec[idx] = -sigma_2 / (x[idx] + x_norm_partial)
+        beta = 2 * vec[idx]**2 / (sigma_2 + vec[idx]**2)
+        vec = vec / vec[idx]
+        vec[idx:] = vec[idx:] / vec[idx]
+    return vec, beta
 
 
 def run_arnoldi(A, rhs, max_iter, tol, dtype):

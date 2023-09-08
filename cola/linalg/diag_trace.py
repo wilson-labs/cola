@@ -58,9 +58,9 @@ def diag(A: Dense, k=0, **kwargs):
 @dispatch
 def diag(A: Identity, k=0, **kwargs):
     if k == 0:
-        return A.xnp.ones(A.shape[0], A.dtype, device=A.device)
+        return A.xnp.ones((A.shape[0],), A.dtype, device=A.device)
     else:
-        return A.xnp.zeros(A.shape[0] - k, A.dtype, device=A.device)
+        return A.xnp.zeros((A.shape[0] - k,), A.dtype, device=A.device)
 
 
 @dispatch
@@ -68,12 +68,12 @@ def diag(A: Diagonal, k=0, **kwargs):
     if k == 0:
         return A.diag
     else:
-        return A.xnp.zeros(A.shape[0] - k, A.dtype, device=A.device)
+        return A.xnp.zeros((A.shape[0] - k,), A.dtype, device=A.device)
 
 
 @dispatch
 def diag(A: Sum, k=0, **kwargs):
-    out = sum(diag(M, **kwargs) for M in A.Ms)
+    out = sum(diag(M, k=k, **kwargs) for M in A.Ms)
     # out.info = {'sum': [(M.info if hasattr(M,'info') else {}) for M in A.Ms]}
     return out
 
@@ -81,7 +81,8 @@ def diag(A: Sum, k=0, **kwargs):
 @dispatch
 def diag(A: BlockDiag, k=0, **kwargs):
     assert k == 0, "Havent filled this case yet, need to pad with 0s"
-    return A.xnp.concatenate([diag(M, **kwargs) for M in A.Ms])
+    diags = [[diag(M, **kwargs)]*m for M,m in zip(A.Ms,A.multiplicities)]
+    return A.xnp.concatenate([item for sublist in diags for item in sublist])
 
 
 @dispatch

@@ -5,3 +5,4 @@ Linear Operators
     :members:
     :exclude-members: LinearOperator
     :show-inheritance:
+    :member-order: bysource

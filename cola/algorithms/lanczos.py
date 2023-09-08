@@ -17,7 +17,7 @@ def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 
     max_iters: int maximum number of iters to run lanczos
     tol: float: tolerance criteria to stop lanczos
     """
-    eigvals, *_ = lanczos(A=A, start_vector=rhs, max_iters=max_iters, tol=tol)
+    eigvals, *_ = lanczos_eigs(A=A, start_vector=rhs, max_iters=max_iters, tol=tol)
     return eigvals[-1]
 
 
@@ -28,7 +28,7 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
     xnp = A.xnp
 
     e = eig_vals
-    V = eig_vecs  # (n, m)
+    V = eig_vecs.to_dense()  # (n, m)
     W = eig_grads  # (n, m)
 
     def altogether(*theta):
@@ -47,10 +47,11 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
     return (dA, )
 
 
+# @export
+# @iterative_autograd(lanczos_eig_bwd)
 @export
-@iterative_autograd(lanczos_eig_bwd)
-def lanczos(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7,
-            pbar: bool = False):
+def lanczos_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int = 100,
+                 tol: float = 1e-7, pbar: bool = False):
     """
     Computes the eigenvalues and eigenvectors using Lanczos.
 
@@ -70,29 +71,27 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters: int = 100,
 
     """
     xnp = A.xnp
-    Q, T, info = lanczos_decomp(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
-                                pbar=pbar)
+    Q, T, info = lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
     eigvals, eigvectors = xnp.eigh(T)
-    V = Q @ eigvectors
     idx = xnp.argsort(eigvals, axis=-1)
+    V = lazify(Q) @ lazify(eigvectors[:, idx])
+
     eigvals = eigvals[..., idx]
-    V = V[..., idx]
+    # V = V[..., idx]
     return eigvals, V, info
 
 
 def LanczosDecomposition(A: LinearOperator, start_vector=None, max_iters=100, tol=1e-7, pbar=False):
     """ Provides the Lanczos decomposition of a matrix A = Q T Q^*.
     LinearOperator form of lanczos, see lanczos for arguments."""
-    Q, T, info = lanczos_decomp(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
-                                pbar=pbar)
+    Q, T, info = lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
     A_approx = cola.UnitaryDecomposition(lazify(Q), SelfAdjoint(lazify(T)))
     A_approx.info = info
     return A_approx
 
 
 @export
-def lanczos_decomp(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7,
-                   pbar=False):
+def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7, pbar=False):
     """
     Computes the Lanczos decomposition of a the operator A, A = Q T Q^*.
 
@@ -155,17 +154,20 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
 
     def error(state):
         i, *_, alpha = state
-        return xnp.max(alpha[..., i - 1].real) + (i <= 1) * 1.
+        # rel_err = alpha[..., i - 1].real / xnp.max(alpha[..., 1].real, 1e-30)
+        rel_err = alpha[..., i - 1].real
+        return xnp.max(rel_err, axis=0) + (i <= 1) * 1.
 
     def cond_fun(state):
         i, *_, alpha = state
         is_max = i <= max_iters
+        # is_tol = (alpha[..., i - 1].real >= tol * alpha[..., 1].real) | (i <= 1)
         is_tol = (alpha[..., i - 1].real >= tol) | (i <= 1)
         flag = is_max & xnp.any(is_tol)
         return flag
 
     init_val = initialize_lanczos_vec(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-    while_fn, info = xnp.while_loop_winfo(error, pbar=pbar, tol=tol)
+    while_fn, info = xnp.while_loop_winfo(error, tol, max_iters, pbar=pbar)
     state = while_fn(cond_fun, body_fun, init_val)
     i, vec, beta, alpha = state
     return alpha[..., 1:], beta, vec[..., 1:-1], i - 1, info

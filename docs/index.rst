@@ -2,9 +2,7 @@ Compositional Linear Algebra (CoLA)
 ===================================
 
 *CoLA  is a multiplatform framework that enables fast linear algebra operations with support for GPU acceleration and autograd.
-Want to efficiently compute eigenvalues, a matrix inverse, a log determinant, or some other matrix operation, in a framework that supports both JAX and PyTorch?
-Then CoLA is the library for you.
-If your matrix has structure -- say it has sparsity or can be decomposed as a Kronecker product -- then even better.
+Want to efficiently compute eigenvalues, a matrix inverse, a log determinant, or some other matrix operation, in a framework that supports both JAX and PyTorch? If your matrix has structure -- say it has sparsity or can be decomposed as a Kronecker product -- then even better.
 Read on to find out more.*
 
 Introduction
@@ -23,7 +21,7 @@ automatically exploit the structure present in a diverse set of linear ops.
 To achieve this, ``CoLA`` automatically exploits compositional structure by leveraging over 70 dispatch
 rules which select different algorithms for the diverse structure present in a linear
 operator. Additionally, given our emphasis on ML applications, ``CoLA`` also
-supports both ``PyTorch`` and ``JAX``, leverage GPU and TPU acceleration, supports low
+supports both ``PyTorch`` and ``JAX``, leverages GPU and TPU acceleration, supports low
 precision, provides automatic computation of
 gradients, diagonals, transposes and adjoints of linear
 ops, and incorporates specialty algorithms such as SVRG and a novel
@@ -38,7 +36,7 @@ solving linear systems, performing eigendecompositions and more for
 PSD, symmetric, non-symmetric, real and complex linear ops.
 
 Below we highlight some of the important features that ``CoLA`` has and how they
-compare with competitors.
+compare with alternatives.
 
 .. image:: ./CoLA_Table2.png
    :alt: Example Image
@@ -54,7 +52,7 @@ We recommend installing via ``pip``:
 
 .. code-block:: bash
 
-    pip install git+https://github.com/wilson-labs/cola.git
+    pip install cola-ml
 
 To install locally instead, clone the repository and install via ``pip``:
 
@@ -88,8 +86,32 @@ Design Choices
 
    notebooks/About.ipynb
    notebooks/Quick_Start.ipynb
-   notebooks/LinOpIntro.ipynb
-   notebooks/Examples_on_Basic_Functionality.ipynb
+
+.. toctree::
+   :maxdepth: 1
+   :caption: 🧰 Basic Functionality
+
+   notebooks/Linalg_operations_walkthrough.ipynb
+   notebooks/Adding_Linear_Operators.ipynb
+   notebooks/01_algorithms.ipynb
+   notebooks/Device_Allocation.ipynb
+
+.. toctree::
+   :maxdepth: 0
+   :caption: 💡 Example Applications
+
+   notebooks/03_GPs.ipynb
+   notebooks/07_second_order_optimization.ipynb
+   notebooks/09_hessian_spectrum.ipynb
+   notebooks/05_Boundary_Value_PDEs.ipynb
+   notebooks/06_PDE_Eigenvalue_Problems.ipynb
+   notebooks/04_Spectral_Clustering.ipynb
+
+.. toctree::
+   :maxdepth: 1
+   :caption: 🧙‍♂️ Advanced Features
+
+   notebooks/10_vmap_jit_grad.ipynb
 
 .. toctree::
    :glob:
@@ -102,32 +124,7 @@ Design Choices
    package/cola.fns
    package/cola.algorithms
    package/cola.decompositions
-
-.. toctree::
-   :maxdepth: 1
-   :caption: 💡 Example Applications
-
-   notebooks/03_GPs.ipynb
-   notebooks/07_second_order_optimization.ipynb
-   notebooks/05_Boundary_Value_PDEs.ipynb
-   notebooks/06_PDE_Eigenvalue_Problems.ipynb
-   notebooks/04_Spectral_Clustering.ipynb
-   notebooks/01_PCA.ipynb
-   notebooks/02_Linear_Regression.ipynb
-   
-
-.. toctree::
-   :maxdepth: 1
-   :caption: 🧙‍♂️ Advanced Features
-
-   notebooks/Adding_Linear_Operators.ipynb
-   notebooks/Lower_Precision.ipynb
-
-.. toctree::
-   :maxdepth: 1
-   :caption: 🔪 Sharp Bits
-
-   notebooks/sharp_bits.ipynb
+   package/cola.annotations
 
 .. toctree::
    :maxdepth: 1
@@ -135,17 +132,15 @@ Design Choices
 
 .. toctree::
    :maxdepth: 1
-   :caption: 📝 Notes
+   :caption: 🚧 Tricky Bits 🚧
 
-   testing.md
-   CHANGELOG.md
+   notebooks/tricky_bits.ipynb
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: 👩‍💻 Developer Documentation
 
    contributing.md
-   documentation.md
 
 Indices and tables
 ==================

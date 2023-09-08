@@ -1,22 +1,57 @@
+""" Decompositions of linear operators, e.g. LU, Cholesky."""
+
 from typing import Callable
+from plum import dispatch
 import cola
 from cola import Unitary
 from cola.fns import lazify
 from cola.ops.operator_base import LinearOperator
-from cola.ops import Triangular, Permutation
+from cola.ops import Triangular, Permutation, Diagonal
+from cola.ops import Identity, ScalarMul, Kronecker, BlockDiag
 from cola.utils import export
-from cola.linalg import inverse, eig, trace, apply_unary
+from cola.linalg import inv, eig, trace, apply_unary
 
 
+@dispatch
 @export
 def cholesky_decomposed(A: LinearOperator):
     """ Performs a cholesky decomposition A=LL* of a linear operator A.
         The returned operator LL* is the same as A, but represented using
-        the triangular structure """
+        the triangular structure.
+
+        (Implicitly assumes A is PSD)
+    """
     L = Triangular(A.xnp.cholesky(A.to_dense()), lower=True)
     return L @ L.H
 
 
+@dispatch
+def cholesky_decomposed(A: Identity):
+    return A
+
+
+@dispatch
+def cholesky_decomposed(A: Diagonal):
+    return A
+
+
+@dispatch
+def cholesky_decomposed(A: ScalarMul):
+    return A
+
+
+@dispatch
+def cholesky_decomposed(A: Kronecker):
+    # see https://www.math.uwaterloo.ca/~hwolkowi/henry/reports/kronthesisschaecke04.pdf
+    return Kronecker(*[cholesky_decomposed(Ai) for Ai in A.Ms])
+
+
+@dispatch
+def cholesky_decomposed(A: BlockDiag):
+    return BlockDiag(*[cholesky_decomposed(Ai) for Ai in A.Ms], multiplicities=A.multiplicities)
+
+
+@dispatch
 @export
 def lu_decomposed(A: LinearOperator):
     """ Performs a cholesky decomposition A=PLU of a linear operator A.
@@ -26,6 +61,32 @@ def lu_decomposed(A: LinearOperator):
     P, L, U = Permutation(p), Triangular(L, lower=True), Triangular(U, lower=False)
     P, L, U = P.to(A.device), L.to(A.device), U.to(A.device)
     return P @ L @ U
+
+
+@dispatch
+def lu_decomposed(A: Identity):
+    return A
+
+
+@dispatch
+def lu_decomposed(A: Diagonal):
+    return A
+
+
+@dispatch
+def lu_decomposed(A: ScalarMul):
+    return A
+
+
+@dispatch
+def lu_decomposed(A: Kronecker):
+    # see https://www.math.uwaterloo.ca/~hwolkowi/henry/reports/kronthesisschaecke04.pdf
+    return Kronecker(*[lu_decomposed(Ai) for Ai in A.Ms])
+
+
+@dispatch
+def lu_decomposed(A: BlockDiag):
+    return BlockDiag(*[lu_decomposed(Ai) for Ai in A.Ms], multiplicities=A.multiplicities)
 
 
 @export
@@ -42,10 +103,10 @@ class UnitaryDecomposition(LinearOperator):
         self.M = cola.fns.lazify(M)
 
 
-@inverse.dispatch
-def inverse(A: UnitaryDecomposition, **kwargs):
+@inv.dispatch
+def inv(A: UnitaryDecomposition, **kwargs):
     Q, M = A.Q, A.M
-    return Q @ inverse(M, **kwargs) @ Q.H
+    return Q @ inv(M, **kwargs) @ Q.H
 
 
 @eig.dispatch
@@ -59,7 +120,7 @@ def eig(QH: UnitaryDecomposition, **kwargs):
 
 @trace.dispatch
 def trace(A: UnitaryDecomposition, **kwargs):
-    Q, M = A.Q, A.M
+    _, M = A.Q, A.M
     return trace(M, **kwargs)
 
 

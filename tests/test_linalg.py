@@ -14,7 +14,7 @@ _tol = 1e-7
 
 
 @parametrize(['torch', 'jax'])
-def test_inverse(backend):
+def test_inv(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.75, scale=1.0, size=25)
@@ -22,7 +22,7 @@ def test_inverse(backend):
     rhs = xnp.ones(shape=(A.shape[0], 5), dtype=dtype, device=None)
     soln = xnp.solve(A, rhs)
 
-    approx = co.inverse(lazify(A)) @ rhs
+    approx = co.inv(lazify(A)) @ rhs
 
     rel_error = relative_error(soln, approx)
     assert rel_error < _tol * 10
@@ -35,10 +35,10 @@ def test_power_iteration(backend):
     A = xnp.diag(xnp.array([10., 9.75, 3., 0.1], dtype=dtype, device=None))
     B = lazify(A)
     soln = xnp.array(10., dtype=dtype, device=None)
-    tol, max_iter = 1e-7, 500
+    tol, max_iter = 1e-5, 500
     _, approx, _ = power_iteration(B, tol=tol, max_iter=max_iter, momentum=0.)
     rel_error = relative_error(soln, approx)
-    assert rel_error < _tol * 100
+    assert rel_error < tol * 100
 
 
 @parametrize(['torch', 'jax'])

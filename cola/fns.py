@@ -118,6 +118,10 @@ def transpose(A: LinearOperator):
 def transpose(A: Transpose):
     return A.A
 
+@dispatch
+def transpose(A: Dense):
+    return Dense(A.A.T)
+
 
 @dispatch(cond=lambda A: A.isa(cola.SelfAdjoint))
 def transpose(A: LinearOperator):
@@ -144,10 +148,13 @@ def adjoint(A: LinearOperator):
 def adjoint(A: Adjoint):
     return A.A
 
+@dispatch
+def adjoint(A: Dense):
+    return Dense(A.A.T.conj())
 
 @dispatch
 def adjoint(A: Triangular):
-    return Triangular(A.xnp.conj(A.A.T), lower=not A.lower)
+    return Triangular(A.A.T.conj(), lower=not A.lower)
 
 
 @dispatch

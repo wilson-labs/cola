@@ -16,9 +16,10 @@ op_names: set[str] = {
     'psd_identity',
     'psd_prod',
     'psd_scalarmul',
+    'psd_kron',
     'selfadj_hessian',
     'selfadj_tridiagonal',
-    'square_big',  # skipped by default
+    # 'square_big',  # skipped by default
     'square_blockdiag',
     'square_dense',
     # 'square_jacobian',
@@ -40,7 +41,11 @@ def get_test_operator(backend: str, precision: str, op_name: str,
         import torch
         device = torch.device(device)
     else:
-        # TODO for jax?
+        from jax import numpy as jnp
+        if dtype == jnp.float64:
+            from jax.config import config
+            config.update("jax_enable_x64", True)
+
         device = None
 
     # Define the operator
@@ -68,6 +73,10 @@ def get_test_operator(backend: str, precision: str, op_name: str,
                     op = BlockDiag(M1, M2, multiplicities=[2, 3])
                 case 'prod':
                     op = M1 @ M1.T
+        case ('psd', 'kron'):
+            M1 = Dense(xnp.array([[6., 2], [2, 4]], dtype=dtype, device=device))
+            M2 = Dense(xnp.array([[7, 6], [6, 8]], dtype=dtype, device=device))
+            op = Kronecker(M1, M2)
 
         case (('selfadj' | 'square') as op_prop, 'tridiagonal'):
             alpha = xnp.array([1, 2, 3], dtype=dtype, device=device)[:2]

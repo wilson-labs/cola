@@ -34,16 +34,9 @@ class WrapMeta(type):
 class Annotation(metaclass=WrapMeta):
     pass
 
-
-class Stiefel(Annotation):
-    pass
-
-
-class Unitary(Stiefel):
-    pass
-
-
 class SelfAdjoint(Annotation):
+    """ Annotation for Self-Adjoint (Hermitian) matrices. A^H=A
+        Means symmetric for real matrices. A^T = A"""
     pass
 
 
@@ -51,6 +44,18 @@ Hermitian = SelfAdjoint
 
 
 class PSD(SelfAdjoint):
+    """ Annotation for Positive Semi-Definite matrices. A >= 0
+        all eigenvalues are greater than or equal to zero,
+        and the matrix should be self-adjoint. """
+    pass
+class Stiefel(Annotation):
+    """ Annotation for Stiefel matrices (incomplete unitary).
+        A^H A = I but A A^H != I. """
+    pass
+
+class Unitary(Stiefel):
+    """ Annotation for Unitary matrices. A^H A = I
+        and A A^H = I. """
     pass
 
 
@@ -60,7 +65,8 @@ class PSD(SelfAdjoint):
 @dispatch
 @export
 def get_annotations(A: LinearOperator) -> Set[str]:
-    """ Return the get_annotations of a linear operator. """
+    """ Return the get_annotations of a linear operator. 
+        Called in the constructor of LinearOperator."""
     return set()
 
 
