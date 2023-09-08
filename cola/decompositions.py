@@ -1,3 +1,5 @@
+""" Decompositions of linear operators, e.g. LU, Cholesky."""
+
 from typing import Callable
 from plum import dispatch
 import cola
