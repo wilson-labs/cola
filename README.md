@@ -3,7 +3,7 @@
 </p> -->
 
 <p align="center">
-  <img src="https://github.com/wilson-labs/cola/assets/6753639/28630ef8-5dcb-41c2-9f36-3cbba52f3d88.svg" width="470.695" height="218.669">
+  <img src="https://github.com/wilson-labs/cola/assets/6753639/28630ef8-5dcb-41c2-9f36-3cbba52f3d88.svg" width="300" height="139.29">
 </p>
  
 
