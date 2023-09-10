@@ -3,7 +3,7 @@ from functools import reduce
 from cola.utils import export, dispatch
 from cola.ops import LinearOperator, I_like, Diagonal, Identity
 from cola.ops import BlockDiag, ScalarMul, Sum, Dense, Array
-from cola.ops import Kronecker, KronSum
+from cola.ops import Kronecker, KronSum, Product
 from cola.algorithms import exact_diag, approx_diag
 
 
