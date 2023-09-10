@@ -1,15 +1,15 @@
-<!-- <p align="center">
+<p align="center">
  <img src="https://user-images.githubusercontent.com/6753639/251633368-1ec42732-1759-45d7-b949-51df6429a90a.svg"  width="300" height="150">
-</p> -->
+</p> 
 
 <!--
 <p align="center">
   <img src="https://github.com/wilson-labs/cola/assets/6753639/28630ef8-5dcb-41c2-9f36-3cbba52f3d88.svg" width="300" height="139.29">
 </p> -->
-
+<!--
 <p align = "center">
   <img src="https://github.com/wilson-labs/cola/assets/6753639/8b02c51e-0e1e-44f5-a52a-47ad428688e4.svg" width="300" height="139.29">
-</p>
+</p>-->
 
 
 # Compositional Linear Algebra (CoLA)
