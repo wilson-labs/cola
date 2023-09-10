@@ -60,7 +60,7 @@ def diag(A: Identity, k=0, **kwargs):
     if k == 0:
         return A.xnp.ones((A.shape[0],), A.dtype, device=A.device)
     else:
-        return A.xnp.zeros((A.shape[0] - k,), A.dtype, device=A.device)
+        return A.xnp.zeros((A.shape[0] - abs(k),), A.dtype, device=A.device)
 
 
 @dispatch
