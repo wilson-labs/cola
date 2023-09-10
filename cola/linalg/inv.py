@@ -168,3 +168,16 @@ def inv(A: Diagonal, **kwargs):
 @dispatch
 def inv(A: Triangular, **kwargs):
     return TriangularInv(A)
+
+
+@dispatch
+def inv(A: Sum[Product[Dense,Dense], Diagonal], **kwargs):
+    U, V = A.Ms[0].Ms
+    D_inv = inv(A.Ms[1])
+    I = Identity(shape=(V.shape[0], U.shape[1]), dtype=V.dtype) 
+    return D_inv - D_inv @ U @ inv(V @ D_inv @ U + I) @ V @ D_inv
+
+
+@dispatch
+def inv(A: Sum[Diagonal, Product[Dense,Dense]], **kwargs):
+    return inv(Product(*C.Ms[1].Ms) + C.Ms[0])
