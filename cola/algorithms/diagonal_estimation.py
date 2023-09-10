@@ -98,7 +98,7 @@ def exact_diag(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=F
 
 
 @export
-def approx_diag(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=False):
+def approx_diag(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, hutchpp_dist="rademacher", pbar=False):
     """ Extract the (kth) diagonal of a linear operator using stochastic estimation
 
     Args:
@@ -107,6 +107,7 @@ def approx_diag(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=
         bs (int, optional): Chunk size (default 100).
         tol (float, optional): Tolerance (default 3e-2).
         max_iters (int, optional): Maximum number of iterations (default 10000).
+        hutchpp_dist (str, optional): whether to use Hutch++ and what distribution should basis be sampled from.
         pbar (bool, optional): Flag for showing progress bar.
 
     Returns:
@@ -124,6 +125,10 @@ def approx_diag(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=
         i, diag_sum, diag_sumsq, key = state
         key = xnp.next_key(key)
         z = xnp.randn(A.shape[0], bs, dtype=A.dtype, key=key, device=A.device)
+        if hutchpp_dist == "rademacher":
+            z = xnp.sign(z)
+        if Q is not None:
+            z = z - Q @ (Q.T @ z)
         z2 = xnp.roll(z, -k, 0)
         z2 = xnp.update_array(z2, 0, slice(0, abs(k)) if k <= 0 else slice(-abs(k), None))
         slc = slice(abs(k), None) if -k > 0 else slice(None, -abs(k) or None)
@@ -139,9 +144,29 @@ def approx_diag(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=
     def cond(state):
         return (state[0] == 0) | ((state[0] < max_iters) & (err(state) > tol))
 
+    @xnp.jit
+    def hutchpp(key):
+        m = max_iters // 3 if hutchpp_dist == "rademacher" else (max_iters + 2) // 4
+        key = xnp.next_key(key)
+        S = xnp.randn(A.shape[0], m, dtype=A.dtype, key=key, device=A.device)
+        if hutchpp_dist == "rademacher":
+            S = xnp.sign(S)
+        Q, _ = xnp.qr(A @ S)
+        Q2 = xnp.roll(Q, -k, 0)
+        Q2 = xnp.update_array(Q2, 0, slice(0, abs(k)) if k <= 0 else slice(-abs(k), None))
+        slc = slice(abs(k), None) if -k > 0 else slice(None, -abs(k) or None)
+        diag_sum = ((A @ Q) * Q2)[slc].sum(-1)
+        new_max_iters = max_iters - m
+        return Q, diag_sum, new_max_iters
+
+    key = xnp.PRNGKey(42)
+    if hutchpp_dist:
+        Q, hutch_sum, max_iters = hutchpp(key)
     while_loop, infos = xnp.while_loop_winfo(err, tol, max_iters, pbar=pbar)
     # while_loop = xnp.while_loop
     zeros = xnp.zeros((A.shape[0] - abs(k), ), dtype=A.dtype, device=A.device)
-    n, diag_sum, *_ = while_loop(cond, body, (0, zeros, zeros, xnp.PRNGKey(42)))
+    n, diag_sum, *_ = while_loop(cond, body, (0, zeros, zeros, key))
     mean = diag_sum / (n * bs)
+    if hutchpp_dist:
+        mean += hutch_sum
     return mean, infos
