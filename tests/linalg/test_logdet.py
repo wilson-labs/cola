@@ -5,9 +5,10 @@ from cola.linalg import logdet
 from cola.ops import LinearOperator
 from cola.utils_test import parametrize, relative_error
 
+_exclude = (slice(None), slice(None), ['psd_identity', 'psd_scalarmul'])
 
-@parametrize(['torch', 'jax'], ['float64'], op_names).excluding[:, :,
-                                                                ['psd_identity', 'psd_scalarmul']]
+
+@parametrize(['torch', 'jax'], ['float64'], op_names).excluding[_exclude]
 def test_logdet(backend, precision, op_name):
     operator = get_test_operator(backend, precision, op_name)
     A, _, xnp = operator, operator.dtype, operator.xnp
