@@ -93,7 +93,6 @@ Qs = cola.SelfAdjoint(Q)
 3. **JAX and PyTorch**. We support both ML frameworks.
 ```python
 import torch
-
 A = cola.ops.Dense(torch.Tensor([[1., 2.], [3., 4.]]))
 print(cola.linalg.trace(cola.kron(A, A)))
 
@@ -107,9 +106,10 @@ tensor(25.)
 25.0
 ```
 
-and both support autograd (and jit):
+CoLA also supports autograd (and jit):
 ```python
 from jax import grad, jit, vmap
+
 
 def myloss(x):
     A = cola.ops.Dense(jnp.array([[1., 2.], [3., x]]))
