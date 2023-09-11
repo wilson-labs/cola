@@ -146,4 +146,3 @@ def trace(A: Kronecker, **kwargs):
 @dispatch(cond=lambda A, **kwargs: A.Ms[0].shape[0] > A.Ms[0].shape[1])
 def trace(A: Product[LinearOperator, LinearOperator]):
     return trace(Product(*reversed(A.Ms)))
-    
