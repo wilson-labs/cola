@@ -208,15 +208,8 @@ def randn(*shape, dtype, device, key=None):
             out = out.astype(dtype)
         return out
     else:
-        z = normal(key, shape, dtype=dtype)
+        z = normal(key, shape=shape, dtype=dtype)
         return z
-
-
-def fixed_normal_samples(shape, dtype, device):
-    del device
-    key = PRNGKey(4)
-    z = normal(key, shape, dtype=dtype)
-    return z
 
 
 def jvp_derivs(fun, primals, tangents, create_graph=True):
