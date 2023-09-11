@@ -143,7 +143,7 @@ def trace(A: Kronecker, **kwargs):
     return product([trace(M, **kwargs) for M in A.Ms])
 
 
-@dispatch(cond=lambda A, **kwargs: A.Ms[0].shape[0] > A.Ms[0].shape[1])
-def trace(A: Product[LinearOperator, LinearOperator]):
-    return trace(Product(*reversed(A.Ms)))
-    
+@dispatch(cond=lambda A, **kwargs: A.Ms[0].shape[0] > min(M.shape[0] for M in A.Ms))
+def trace(A: Product, **kwargs):
+    shift_idx = min(enumerate(M.shape[0] for M in A.Ms), key= lambda x: x[1])[0]
+    return trace(Product(*(A.Ms[shift_idx::] + A.Ms[:shift_idx:])), **kwargs)

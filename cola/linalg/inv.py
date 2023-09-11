@@ -2,8 +2,8 @@ import numpy as np
 from plum import dispatch
 from cola.ops import LinearOperator
 from cola.ops import Diagonal, Permutation
-from cola.ops import Identity
-from cola.ops import ScalarMul
+from cola.ops import Identity, Dense
+from cola.ops import ScalarMul, Sum
 from cola.ops import BlockDiag, Triangular
 from cola.ops import Kronecker, Product
 from cola.algorithms.cg import cg
@@ -173,11 +173,11 @@ def inv(A: Triangular, **kwargs):
 @dispatch
 def inv(A: Sum[Product[Dense,Dense], Diagonal], **kwargs):
     U, V = A.Ms[0].Ms
-    D_inv = inv(A.Ms[1])
+    D_inv = inv(A.Ms[1], **kwargs)
     I = Identity(shape=(V.shape[0], U.shape[1]), dtype=V.dtype) 
-    return D_inv - D_inv @ U @ inv(V @ D_inv @ U + I) @ V @ D_inv
+    return D_inv - D_inv @ U @ inv(V @ D_inv @ U + I, **kwargs) @ V @ D_inv
 
 
 @dispatch
 def inv(A: Sum[Diagonal, Product[Dense,Dense]], **kwargs):
-    return inv(Product(*C.Ms[1].Ms) + C.Ms[0])
+    return inv(Product(*A.Ms[1].Ms) + A.Ms[0], **kwargs)
