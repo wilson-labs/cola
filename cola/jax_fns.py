@@ -212,13 +212,6 @@ def randn(*shape, dtype, device, key=None):
         return z
 
 
-def fixed_normal_samples(shape, dtype, device):
-    del device
-    key = PRNGKey(4)
-    z = normal(key, shape, dtype=dtype)
-    return z
-
-
 def jvp_derivs(fun, primals, tangents, create_graph=True):
     _, deriv_out = jax.jvp(fun, primals, tangents)
     return deriv_out
