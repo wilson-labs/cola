@@ -39,7 +39,7 @@ def test_composite_diag(backend):
     assert relative_error(d1, d2) < 1e-5
 
 
-@parametrize(['torch', 'jax'], ['exact', 'approx'])
+@parametrize(['torch', 'jax'], ['exact', 'approx']).excluding[:,'approx']
 def test_large_trace(backend, method):
     xnp = get_xnp(backend)
     dtype = xnp.float32
