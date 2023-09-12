@@ -23,8 +23,8 @@ jobs:
 
       - name: Check formatting
         run: |
-          autopep8 -ir "$file"
-          yapf -ir "$file"
+          autopep8 -ir .
+          yapf -ir .
 
       - name: Check for changes
         run: git diff --exit-code || (echo "Code is not formatted correctly. Please run formatter locally." && exit 1)
