@@ -249,8 +249,8 @@ def is_leaf(value):
     return tu.treedef_is_leaf(tu.tree_structure(value))
 
 
-def tree_flatten(value):
-    return tu.tree_flatten(value)  # leaves, treedef
+def tree_flatten(value ):
+    return tu.tree_flatten(value)  #leaves, treedef
 
 
 def tree_unflatten(treedef, value):
