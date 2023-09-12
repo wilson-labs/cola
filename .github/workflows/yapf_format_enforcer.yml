@@ -24,12 +24,15 @@ jobs:
       - name: Install Autopep8
         run: pip install autopep8
 
-      - name: Run YAPF Format Check
+      - name: List modified files
+        id: modified-files
+        run: echo "::set-output name=files::$(git diff --name-only ${{ github.base_ref }}...${{ github.head_ref }})"
+
+      - name: Format modified files with yapf
         run: |
-          git diff --name-only ${{ github.base_ref }}..${{ github.head_ref }} | grep '\.py$' > files_to_check.txt
-          while read -r file; do
+          for file in ${{ steps.modified-files.outputs.files }}; do
             yapf -i "$file"
-            autopep8 -i "$file"
-            yapf -i "$file"
-          done < files_to_check.txt
-          rm files_to_check.txt
+          done
+
+      - name: Check for changes
+        run: git diff --exit-code || (echo "Code is not formatted correctly. Please run 'yapf -i .' locally." && exit 1)
