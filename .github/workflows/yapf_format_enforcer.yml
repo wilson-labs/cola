@@ -23,7 +23,8 @@ jobs:
 
       - name: Check formatting
         run: |
-          for file in ("cola/annotations.py" "cola/annotations.py" ); do
+          file_list=("cola/annotations.py" "cola/utils_test.py")
+          for file in "${file_list[@]}"; do
             echo "Checking formatting for $file..."
             autopep8 - "$file"
             yapf -i "$file"
