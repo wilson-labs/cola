@@ -1,0 +1,35 @@
+name: YAPF Format Check
+
+on:
+  pull_request:
+    paths:
+      - '**/*.py'
+
+jobs:
+  format_check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+
+      - name: Install YAPF
+        run: pip install yapf
+
+      - name: Install Autopep8
+        run: pip install autopep8
+
+      - name: Run YAPF Format Check
+        run: |
+          git diff --name-only | grep '\.py$' > files_to_check.txt
+          while read -r file; do
+            yapf -i "$file"
+            autopep8 -i "$file"
+            yapf -i "$file"
+          done < files_to_check.txt
+          rm files_to_check.txt
