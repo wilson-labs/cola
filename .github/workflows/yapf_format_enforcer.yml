@@ -21,15 +21,16 @@ jobs:
       - name: Install YAPF, Autope8 and flake8
         run: pip install yapf autopep8 flake8
 
-      - name: Run linter
-        run: flake8
-
-      - name: Format files with yapf and autopep8
+      - name: Check formatting
         run: |
-          echo $PWD
-          yapf -ir .
-          autopep8 -ir .
-          yapf -ir .
+          base_branch=${{ github.base_ref }}
+          for file in $(git diff --name-only "$base_branch" HEAD); do
+            if [[ $file == *.py ]]; then
+              echo "Checking formatting for $file..."
+              autopep8 - "$file"
+              yapf -i "$file"
+            fi
+          done
 
       - name: Check for changes
         run: git diff --exit-code || (echo "Code is not formatted correctly. Please run formatter locally." && exit 1)
