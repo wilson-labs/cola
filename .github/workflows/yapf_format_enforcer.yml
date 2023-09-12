@@ -26,7 +26,7 @@ jobs:
           file_list=("cola/annotations.py" "cola/utils_test.py")
           for file in "${file_list[@]}"; do
             echo "Checking formatting for $file..."
-            autopep8 - "$file"
+            autopep8 -i "$file"
             yapf -i "$file"
           done
 
