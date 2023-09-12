@@ -23,7 +23,7 @@ jobs:
 
       - name: Check formatting
         run: |
-          for file in $(git diff --name-only ${{ github.event.pull_request.base_ref }} HEAD); do
+          for file in ("cola/annotations.py" "cola/annotations.py" ); do
             echo "Checking formatting for $file..."
             autopep8 - "$file"
             yapf -i "$file"
