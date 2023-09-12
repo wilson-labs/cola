@@ -1,6 +1,5 @@
 import inspect
 import itertools
-import os
 import pytest
 from types import ModuleType
 
@@ -44,8 +43,8 @@ def index(cases, idx):
     match idx:
         case slice() as s:
             return cases[s]
-        case list() as l:
-            return l
+        case list() as li:
+            return li
         case tuple() as t:
             return t
         case _:
@@ -54,19 +53,19 @@ def index(cases, idx):
 
 class parametrize:
     """ Expands test cases with pytest.mark.parametrize but with argnames
-            assumed and ids given by the ids=[str(case) for case in cases] 
+            assumed and ids given by the ids=[str(case) for case in cases]
 
         Cases indexed using excluding will be marked with pytest.mark.tricky
         Can use no excluding to instead index which cases to include
 
-        usage: 
+        usage:
             @parametrize([a1,a2,...], [b1,b2,...], ...).excluding[:,[b2,b4,b5],:2,...]
             def test_fn(a,b,...):
 
             @parametrize([a1,a2,...], [b1,b2,...], ...).excluding[[(a1,b2,c2), (a2,b4,c5), ...]]
             def test_fn(a,b,...):
 
-            @parametrize([a1,a2,...], [b1,b2,...], ...)[:3, [b2,b4,b5], ...]  # include those cases only
+            @parametrize([a1,a2,...], [b1,b2,...], ...)[:3, [b2,b4,b5], ...]  # only include those
         """
     def __init__(self, *cases, ids=None):
         self.cases = cases
@@ -94,8 +93,8 @@ class parametrize:
             match indexed_cases:
                 case slice() as s:
                     indexed_cases = set(self.all_cases[s])
-                case list() as l:
-                    indexed_cases = set(l)
+                case list() as li:
+                    indexed_cases = set(li)
                 case tuple() as t:
                     indexed_cases = set(t)
                 case _:
@@ -121,7 +120,8 @@ class parametrize:
 #         assumed and ids given by the ids=[str(case) for case in cases]
 
 #     Certain cases can be marked as tricky, and will be marked with pytest.mark.tricky
-#     Tricky can be specified as a list of argument combinations [[(arg1,arg2,...), (arg1,arg2,...), ...]]
+#     Tricky can be specified as a list of argument combinations
+#     [[(arg1,arg2,...), (arg1,arg2,...), ...]]
 #     or as a list of slices [slice(None), slice(None), ["dense","square",...], ...]
 #     with lists expanded using the cartesian product (as in cases)."""
 #     if len(cases) > 1:

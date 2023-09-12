@@ -4,7 +4,6 @@ from cola.ops import LinearOperator
 from cola.ops import Array
 from cola.ops import get_library_fns
 from cola.utils import export
-from cola.utils.custom_autodiff import iterative_autograd
 import cola
 
 

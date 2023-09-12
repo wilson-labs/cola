@@ -3,10 +3,9 @@ from typing import Set, Union
 from collections.abc import Iterable
 from plum import dispatch
 from cola.ops import LinearOperator, Array
-from cola.ops import Dense
 from cola.ops import Kronecker, Product, Sum
 from cola.ops import Transpose, Adjoint
-from cola.ops import BlockDiag, Identity, Diagonal, ScalarMul
+from cola.ops import BlockDiag, Identity, ScalarMul
 from cola.ops import Hessian, Permutation, Sliced
 from cola.utils import export
 
@@ -69,7 +68,7 @@ class Unitary(Stiefel):
 @dispatch
 @export
 def get_annotations(A: LinearOperator) -> Set[str]:
-    """ Return the get_annotations of a linear operator. 
+    """ Return the get_annotations of a linear operator.
         Called in the constructor of LinearOperator."""
     return set()
 

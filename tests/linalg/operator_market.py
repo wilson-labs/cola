@@ -133,12 +133,12 @@ def get_test_operator(backend: str, precision: str, op_name: str,
                 case 'product':
                     op = Product(lazify(M1), lazify(M2))
 
-        case ('square', 'sparse'):
-            data = xnp.array([1, 2, 3, 4, 5, 6], dtype=dtype, device=device)
-            indices = xnp.array([0, 2, 1, 0, 2, 1], dtype=dtype, device=device)
-            indptr = xnp.array([0, 2, 4, 6], dtype=dtype, device=device)
-            shape = (3, 3)
-            sparse = Sparse(data, indices, indptr, shape)
+        # case ('square', 'sparse'):
+        #     data = xnp.array([1, 2, 3, 4, 5, 6], dtype=dtype, device=device)
+        #     indices = xnp.array([0, 2, 1, 0, 2, 1], dtype=dtype, device=device)
+        #     indptr = xnp.array([0, 2, 4, 6], dtype=dtype, device=device)
+        #     shape = (3, 3)
+        #     sparse = Sparse(data, indices, indptr, shape)
 
     # Check to sure that we hit a case statement
     if op is None:

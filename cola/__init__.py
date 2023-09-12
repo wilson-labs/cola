@@ -1,5 +1,4 @@
 from cola.utils import import_from_all
-from .ops import LinearOperator
 
 # Read version number as written by setuptools_scm
 try:

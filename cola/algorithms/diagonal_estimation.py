@@ -1,7 +1,6 @@
 import numpy as np
 from cola.utils import export
 from cola.ops import I_like, LinearOperator
-from cola.utils.custom_autodiff import iterative_autograd
 
 
 def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):

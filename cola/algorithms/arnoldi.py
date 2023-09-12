@@ -3,7 +3,6 @@ from cola.ops import Array
 from cola.ops import Householder, Product
 from cola.utils.control_flow import for_loop
 from cola.utils import export
-from cola.utils.custom_autodiff import iterative_autograd
 import cola
 from cola import Stiefel, lazify
 

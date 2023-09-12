@@ -1,5 +1,4 @@
 from plum import dispatch
-from cola.ops import Array
 from cola.ops import LinearOperator, Triangular, Permutation, Identity, ScalarMul
 from cola.ops import Diagonal, Kronecker, BlockDiag, Product
 from cola.utils import export
@@ -20,8 +19,9 @@ def logdet(A: LinearOperator, **kwargs):
 
     For large inputs (or with method='iterative'),
     uses either :math:`O(\tfrac{1}{\delta^2}\log(1/\epsilon))` time stochastic algorithm (SLQ)
-    where :math:`\epsilon=` tol is the bias and :math:`\delta=` vtol is the standard deviation of the estimate,
-    or a deterministic :math:`O(n\log(1/\epsilon))` time algorithm if :math:`\delta < 1/\sqrt{10n}`.
+    where :math:`\epsilon=` tol is the bias and :math:`\delta=` vtol is the standard deviation of
+    the estimate, or a deterministic :math:`O(n\log(1/\epsilon))` time algorithm if
+    :math:`\delta < 1/\sqrt{10n}`.
 
     Args:
         A (LinearOperator): The linear operator to compute the logdet of.
@@ -47,7 +47,8 @@ def slogdet(A: LinearOperator, **kwargs):
 
     For large inputs (or with method='iterative'),
     uses either :math:`O(\tfrac{1}{\delta^2}\log(1/\epsilon))` time stochastic algorithm (SLQ)
-    where :math:`\epsilon=` tol is the bias and :math:`\delta=` vtol is the standard deviation of the estimate,
+    where :math:`\epsilon=` tol is the bias and :math:`\delta=` vtol
+    is the standard deviation of the estimate,
     or a deterministic :math:`O(n\log(1/\epsilon))` time algorithm if :math:`\delta < 1/\sqrt{10n}`.
 
     Args:
@@ -67,10 +68,10 @@ def slogdet(A: LinearOperator, **kwargs):
     # assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
     kws.update(kwargs)
     method = kws.pop('method', 'auto')
+    shape_prod = np.prod(A.shape)
     if method == 'dense' or (method == 'auto' and (np.prod(A.shape) <= 1e6 or kws['tol'] < 3e-2)):
         return slogdet(cola.decompositions.lu_decomposed(A), method='dense', **kws)
-    elif 'iterative' in method or (method == 'auto' and
-                                   (np.prod(A.shape) > 1e6 and kws['tol'] >= 3e-2)):
+    elif 'iterative' in method or (method == 'auto' and (shape_prod > 1e6 and kws['tol'] >= 3e-2)):
         A2 = PSD((A.H @ A) + 0. * cola.ops.I_like(A))
         return ValueError("Unknown phase"), logdet(A2, method='iterative', **kws) / 2.
     else:

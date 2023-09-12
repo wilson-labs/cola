@@ -88,6 +88,10 @@ nbsphinx_prolog = r"""
 
     .. nbinfo::
         Interactive online version:
-        :raw-html:`<a href="https://colab.research.google.com/github/wilson-labs/cola/blob/master/{{ docname }}"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" style="vertical-align:text-bottom"></a>`
+        :raw-html:`<a
+        href="https://colab.research.google.com/github/wilson-labs/cola/blob/master/{{
+            docname }}"><img alt="Open In Colab"
+        src="https://colab.research.google.com/assets/colab-badge.svg"
+        style="vertical-align:text-bottom"></a>`
 
 """

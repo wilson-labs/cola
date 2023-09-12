@@ -136,6 +136,7 @@ def test_get_arnoldi_matrix(backend):
 @parametrize(['jax'])
 def test_numpy_arnoldi(backend):
     xnp = get_xnp(backend)
+    del xnp
     float_formatter = "{:.2f}".format
     np.set_printoptions(formatter={'float_kind': float_formatter})
     # dtype = np.complex64
