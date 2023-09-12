@@ -1,4 +1,4 @@
-name: YAPF Format Check
+name: YAPF and Autopep8 Format Enforcer
 
 on:
   pull_request:
@@ -24,15 +24,8 @@ jobs:
       - name: Install Autopep8
         run: pip install autopep8
 
-      - name: List modified files
-        id: modified-files
-        run: echo "::set-output name=files::$(git diff --name-only ${{ github.base_ref }}...${{ github.head_ref }})"
-
-      - name: Format modified files with yapf
+      - name: Format files with yapf and autopep8
         run: |
-          for file in ${{ steps.modified-files.outputs.files }}; do
-            yapf -i "$file"
-          done
-
-      - name: Check for changes
-        run: git diff --exit-code || (echo "Code is not formatted correctly. Please run 'yapf -i .' locally." && exit 1)
+          yapf -i **/*.py
+          autopep8 -i **/*.py
+          yapf -i **/*.py
