@@ -27,4 +27,4 @@ jobs:
           yapf -ir .
 
       - name: Check for changes
-        run: git diff --exit-code || (echo "Code is not formatted correctly. Please run formatter locally." && exit 1)
+        run: git diff --exit-code --name-only || (echo "Code is not formatted correctly. Please run formatter locally." && exit 1)
