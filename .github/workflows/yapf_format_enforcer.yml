@@ -29,3 +29,6 @@ jobs:
           yapf -i **/*.py
           autopep8 -i **/*.py
           yapf -i **/*.py
+
+      - name: Check for changes
+        run: git diff --exit-code || (echo "Code is not formatted correctly. Please run formatter locally." && exit 1)
