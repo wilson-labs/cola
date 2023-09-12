@@ -110,7 +110,7 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
     """
     xnp = A.xnp
     if start_vector is None:
-        start_vector = xnp.fixed_normal_samples((A.shape[0], 1), dtype=A.dtype, device=A.device)
+        start_vector = xnp.randn(*(A.shape[0], 1), dtype=A.dtype, device=A.device)
     alpha, beta, vec, iters, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters,
                                                   tol=tol, pbar=pbar)
     alpha, beta, Q = alpha[..., :iters - 1], beta[..., :iters], vec[0, :, :iters]

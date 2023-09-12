@@ -122,7 +122,7 @@ def test_get_nys_approx_random(backend):
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
     A = soln = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype, device=None)
     rank = A.shape[0]
-    Omega = xnp.fixed_normal_samples(shape=(A.shape[0], rank), dtype=dtype, device=None)
+    Omega = xnp.randn(*(A.shape[0], rank), dtype=dtype, device=None)
 
     B = lazify(A)
     fn = xnp.jit(get_nys_approx, static_argnums=(0, 2))

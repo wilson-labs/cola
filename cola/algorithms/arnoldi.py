@@ -90,7 +90,7 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e
     xnp = A.xnp
     xnp = A.xnp
     if start_vector is None:
-        start_vector = xnp.fixed_normal_samples((A.shape[-1], 1), dtype=A.dtype, device=A.device)
+        start_vector = xnp.randn(*(A.shape[-1], 1), dtype=A.dtype, device=A.device)
     if use_householder:
         Q, H, infodict = run_householder_arnoldi(A=A, rhs=start_vector, max_iters=max_iters)
     else:
