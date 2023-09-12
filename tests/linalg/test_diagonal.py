@@ -70,9 +70,9 @@ def test_diagonal_diag(backend):
 def test_circular_trace(backend, method):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    array_tall = xnp.fixed_normal_samples((200, 100), dtype=dtype, device=None)
+    array_tall = xnp.randn(200, 100, dtype=dtype, device=None)
     U = Dense(array_tall)
-    array_fat = xnp.fixed_normal_samples((100, 200), dtype=dtype, device=None)
+    array_fat = xnp.randn(100, 200, dtype=dtype, device=None)
     V = Dense(array_fat)
     A = U @ V
     d1 = trace(A, method=method, tol=2e-2)

@@ -1,13 +1,15 @@
 from cola.fns import lazify
 from cola.ops import LinearOperator, Tridiagonal, Diagonal, Identity
 from cola.ops import KronSum, Product
-from cola.ops import Triangular, Kronecker, Permutation
+from cola.ops import Triangular, Kronecker, Permutation, Concatenated
 from cola.ops import Dense, BlockDiag, Jacobian, Hessian, Sparse
 from cola.annotations import SelfAdjoint
 from cola.annotations import PSD
 from cola.utils_test import get_xnp
 from functools import reduce
 import cola
+
+#TODO: refactor this file?
 
 op_names: set[str] = {
     'psd_big',  # skipped by default
@@ -32,6 +34,7 @@ op_names: set[str] = {
     'square_tridiagonal',
     'diagonal_plus_uv',
     'uv_plus_diagonal',
+    'square_scalarmul_plus_uv_concat',
 }
 
 
@@ -129,13 +132,23 @@ def get_test_operator(backend: str, precision: str, op_name: str,
                     op = Triangular(M1)
                 case 'product':
                     op = Product(lazify(M1), lazify(M2))
+                
+                case 'sparse':
+                    data = xnp.array([1, 2, 3, 4, 5, 6], dtype=dtype, device=device)
+                    indices = xnp.array([0, 2, 1, 0, 2, 1], dtype=dtype, device=device)
+                    indptr = xnp.array([0, 2, 4, 6], dtype=dtype, device=device)
+                    shape = (3, 3)
+                    op = Sparse(data, indices, indptr, shape)
+                
+                case 'scalarmul_plus_uv_concat':
+                    S = 3.*Identity((4, 4), dtype=dtype).to(device)
+                    U1 = Dense(xnp.array([[6., 2], [2, 4]], dtype=dtype, device=device))
+                    U2 = Dense(xnp.array([[1.2, 2], [5, 10]], dtype=dtype, device=device))
+                    U = Concatenated(U1, U2, axis=0)
+                    V = Dense(xnp.array([[7, 6, 6, 8.7], [3., .2, 13, 4]], dtype=dtype, device=device))
+                    op = S + U @ V
 
-        case ('square', 'sparse'):
-            data = xnp.array([1, 2, 3, 4, 5, 6], dtype=dtype, device=device)
-            indices = xnp.array([0, 2, 1, 0, 2, 1], dtype=dtype, device=device)
-            indptr = xnp.array([0, 2, 4, 6], dtype=dtype, device=device)
-            shape = (3, 3)
-            sparse = Sparse(data, indices, indptr, shape)
+
 
         case ('diagonal', 'plus_uv'):
             D = Diagonal(xnp.array([.1, .5, .22, 8.], dtype=dtype, device=device))
@@ -148,6 +161,8 @@ def get_test_operator(backend: str, precision: str, op_name: str,
             U = Dense(xnp.array([[6., 2], [2, 4], [1.2, 2], [5, 10]], dtype=dtype, device=device))
             V = Dense(xnp.array([[7, 6, 6, 8.7], [3., .2, 13, 4]], dtype=dtype, device=device))
             op = U @ V + D
+
+            
 
     # Check to sure that we hit a case statement
     if op is None:

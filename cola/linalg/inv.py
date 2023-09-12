@@ -13,7 +13,7 @@ from cola.utils.dispatch import parametric
 from cola.utils import export
 from cola.annotations import PSD, Unitary
 import cola
-
+from typing import Union
 
 @parametric
 class IterativeInv(LinearOperator):
@@ -170,14 +170,16 @@ def inv(A: Triangular, **kwargs):
     return TriangularInv(A)
 
 
+efficiently_invertible = Union[Identity, Diagonal, ScalarMul, Triangular, Permutation]
+
 @dispatch
-def inv(A: Sum[Product[Dense,Dense], Diagonal], **kwargs):
+def inv(A: Sum[Product[LinearOperator,LinearOperator], efficiently_invertible], **kwargs):
     U, V = A.Ms[0].Ms
     D_inv = inv(A.Ms[1], **kwargs)
-    I = Identity(shape=(V.shape[0], U.shape[1]), dtype=V.dtype) 
+    I = Identity(shape=(V.shape[0], U.shape[1]), dtype=V.dtype).to(A.device)
     return D_inv - D_inv @ U @ inv(V @ D_inv @ U + I, **kwargs) @ V @ D_inv
 
 
 @dispatch
-def inv(A: Sum[Diagonal, Product[Dense,Dense]], **kwargs):
-    return inv(Product(*A.Ms[1].Ms) + A.Ms[0], **kwargs)
+def inv(A: Sum[efficiently_invertible, Product[LinearOperator,LinearOperator]], **kwargs):
+    return inv(A.Ms[1] + A.Ms[0], **kwargs)
