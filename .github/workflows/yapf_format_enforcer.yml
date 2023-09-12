@@ -18,17 +18,18 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install YAPF
-        run: pip install yapf
+      - name: Install YAPF, Autope8 and flake8
+        run: pip install yapf autopep8 flake8
 
-      - name: Install Autopep8
-        run: pip install autopep8
+      - name: Run linter
+        run: flake8
 
       - name: Format files with yapf and autopep8
         run: |
-          yapf -i **/*.py
-          autopep8 -i **/*.py
-          yapf -i **/*.py
+          echo $PWD
+          yapf -ir .
+          autopep8 -ir .
+          yapf -ir .
 
       - name: Check for changes
         run: git diff --exit-code || (echo "Code is not formatted correctly. Please run formatter locally." && exit 1)
