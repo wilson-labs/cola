@@ -23,13 +23,10 @@ jobs:
 
       - name: Check formatting
         run: |
-          base_branch=${{ github.base_ref }}
-          for file in $(git diff --name-only "$base_branch" HEAD); do
-            if [[ $file == *.py ]]; then
-              echo "Checking formatting for $file..."
-              autopep8 - "$file"
-              yapf -i "$file"
-            fi
+          for file in $(git diff --name-only ${{ github.base_ref }} HEAD); do
+            echo "Checking formatting for $file..."
+            autopep8 - "$file"
+            yapf -i "$file"
           done
 
       - name: Check for changes
