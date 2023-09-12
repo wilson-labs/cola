@@ -1,14 +1,10 @@
 #!/bin/bash
 
-file_extensions=("py")
-
-for file_extension in "${file_extensions[@]}"; do
-    for staged_file in $(git diff --cached --name-only --diff-filter=ACM | grep -E "\.${file_extension}$"); do
-        echo "Formatting ${staged_file}..."
-        autopep8 --in-place --aggressive --aggressive "${staged_file}"
-        yapf --in-place --style pep8 "${staged_file}"
-        git add "${staged_file}"
-    done
+for staged_file in $(git diff --cached --name-only); do
+    echo "Formatting ${staged_file}..."
+    autopep8 -i "${staged_file}"
+    yapf -i "${staged_file}"
+    git add "${staged_file}"
 done
 
 exit 0
