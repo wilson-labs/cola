@@ -6,9 +6,9 @@ from cola.fns import lazify
 from cola.algorithms.arnoldi import get_arnoldi_matrix
 from cola.algorithms.arnoldi import arnoldi_eigs
 from cola.algorithms.arnoldi import run_householder_arnoldi
-from cola.utils_test import get_xnp, parametrize, relative_error
-from cola.utils_test import generate_spectrum, generate_pd_from_diag
-from cola.utils_test import generate_lower_from_diag
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
+from cola.utils.test_utils import generate_lower_from_diag
 
 
 @parametrize(['torch', 'jax']).excluding[:]

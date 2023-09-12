@@ -6,8 +6,8 @@ from cola.algorithms.lanczos import construct_tridiagonal
 from cola.linalg.nullspace import nullspace
 from cola.linalg.eigs import power_iteration
 from cola.fns import kron
-from cola.utils_test import get_xnp, parametrize, relative_error
-from cola.utils_test import generate_spectrum, generate_pd_from_diag
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 
 
 _tol = 1e-7
