@@ -26,7 +26,8 @@ jobs:
 
       - name: Run YAPF Format Check
         run: |
-          git diff --name-only | grep '\.py$' > files_to_check.txt
+          # git diff --name-only | grep '\.py$' > files_to_check.txt
+          git diff --name-only ${{ github.base_ref }} ${{ github.head_ref }} | grep '\.py$' > files_to_check.txt
           while read -r file; do
             yapf -i "$file"
             autopep8 -i "$file"
