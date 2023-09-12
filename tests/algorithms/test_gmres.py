@@ -5,8 +5,8 @@ from cola.fns import lazify
 from cola.linalg.inv import inv
 from cola.algorithms.gmres import gmres
 from cola.algorithms.gmres import gmres_fwd
-from cola.utils_test import get_xnp, parametrize, relative_error
-from cola.utils_test import generate_spectrum, generate_pd_from_diag
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 
 
 @parametrize(['torch', 'jax'])

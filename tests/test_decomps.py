@@ -1,5 +1,5 @@
 import cola
-from cola.utils_test import get_xnp, parametrize, relative_error
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from linalg.operator_market import op_names, get_test_operator
 
 

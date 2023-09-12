@@ -2,23 +2,11 @@ import inspect
 import itertools
 import os
 import pytest
-from types import ModuleType
 
-from cola.ops import get_library_fns
+from cola.backends import get_library_fns, get_xnp
 import numpy as np
 
-
-# Try importing jax and torch, for the get_framework function
-try:
-    from . import jax_fns
-except ImportError:
-    jax_fns = None
-
-try:
-    from . import torch_fns
-except ImportError:
-    torch_fns = None
-
+get_xnp = get_xnp
 
 def strip_parens(string):
     return string.replace('(', '').replace(')', '')
@@ -30,10 +18,6 @@ def _add_marks(case, is_tricky=False):
     case = case if isinstance(case, list) or isinstance(case, tuple) else [case]
     marks = []
     args = tuple(str(arg) for arg in case)
-    if any('torch' in arg for arg in args):
-        marks.append(pytest.mark.torch)
-    if any('jax' in arg for arg in args):
-        marks.append(pytest.mark.jax)
     if any('big' in arg for arg in args):
         marks.append(pytest.mark.big)
     if is_tricky:
@@ -223,21 +207,3 @@ def generate_clustered_spectrum(clusters, sizes, std=0.025, seed=None, dtype=np.
     diag = np.concatenate(diag, axis=0)
     return np.sort(diag)[::-1]
 
-
-def get_xnp(backend: str) -> ModuleType:
-    match backend:
-        case "torch":
-            if torch_fns is None:  # There was an import error with torch
-                raise RuntimeError("Could not import torch. It is likely not installed.")
-            else:
-                return torch_fns
-        case "jax":
-            if jax_fns is None:  # There was an import error with jax
-                raise RuntimeError("Could not import jax. It is likely not installed.")
-            else:
-                from jax.config import config
-                config.update('jax_platform_name', 'cpu')  # Force tests to run tests on CPU
-                # config.update("jax_enable_x64", True)
-                return jax_fns
-        case _:
-            raise ValueError(f"Unknown backend {backend}.")

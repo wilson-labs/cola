@@ -2,8 +2,8 @@ import numpy as np
 from cola.ops import Diagonal
 from cola.algorithms import stochastic_lanczos_quad
 from cola.fns import lazify
-from cola.utils_test import get_xnp, parametrize, relative_error
-from cola.utils_test import generate_spectrum, generate_pd_from_diag
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 
 
 # @parametrize(['torch', 'jax'])

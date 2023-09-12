@@ -1,5 +1,5 @@
 import cola
-from cola.utils_test import get_xnp, parametrize, relative_error
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.ops import Dense, Diagonal, Product, ScalarMul
 from functools import partial
 

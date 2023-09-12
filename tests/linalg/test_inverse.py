@@ -1,6 +1,6 @@
 from cola.linalg import inv
 from cola.ops import LinearOperator
-from cola.utils_test import parametrize, relative_error
+from cola.utils.test_utils import parametrize, relative_error
 import cola
 from operator_market import op_names, get_test_operator
 

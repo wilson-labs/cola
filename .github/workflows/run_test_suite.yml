@@ -53,18 +53,19 @@ jobs:
     - name: Run unit tests
       run: |
         MARK="not big and not tricky"
+        FILTER=""
         if [[ ${{ matrix.jax }} == "none" ]]; then
-          MARK="${MARK} and not jax";
+          FILTER="not jax";
         fi
         if [[ ${{ matrix.torch }} == "none" ]]; then
-          MARK="${MARK} and not torch";
+          FILTER="not torch";
         fi
         if [[ ${{ matrix.codecov || 'none' }} == "upload" ]]; then
           CODECOV_ARGS=" --cov cola --cov-report xml:cov.xml";
         else
           CODECOV_ARGS="";
         fi
-        cmd="pytest -m '${MARK}'${CODECOV_ARGS} tests/"
+        cmd="pytest -m '${MARK}' -k '${FILTER}' ${CODECOV_ARGS} tests/"
         echo $cmd
         eval $cmd
 

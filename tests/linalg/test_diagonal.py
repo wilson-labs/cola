@@ -2,7 +2,7 @@ from cola import kron
 from cola.ops import Dense, LinearOperator, Identity, Diagonal
 from cola.algorithms import exact_diag, approx_diag
 from cola.linalg import diag, trace
-from cola.utils_test import get_xnp, parametrize, relative_error
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
 
 
 @parametrize(['torch', 'jax'])
