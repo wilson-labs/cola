@@ -34,13 +34,13 @@ def test_ops_to(backend, precision, op_name):
     # device_gpu = xnp.device("cuda:0")
 
     assert Op.device == device_cpu
-    ones = xnp.ones((Op.shape[0],), dtype=dtype, device=device_cpu)
+    ones = xnp.ones((Op.shape[0], ), dtype=dtype, device=device_cpu)
     aux = Op @ ones
     assert xnp.get_array_device(aux) == device_cpu
 
     Op = Op.to(device_gpu)
     assert Op.device == device_gpu
-    ones = xnp.ones((Op.shape[0],), dtype=dtype, device=device_gpu)
+    ones = xnp.ones((Op.shape[0], ), dtype=dtype, device=device_gpu)
     aux = Op @ ones
     assert xnp.get_array_device(aux) == device_gpu
 

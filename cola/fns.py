@@ -118,6 +118,7 @@ def transpose(A: LinearOperator):
 def transpose(A: Transpose):
     return A.A
 
+
 @dispatch
 def transpose(A: Dense):
     return Dense(A.A.T)
@@ -148,9 +149,11 @@ def adjoint(A: LinearOperator):
 def adjoint(A: Adjoint):
     return A.A
 
+
 @dispatch
 def adjoint(A: Dense):
     return Dense(A.A.T.conj())
+
 
 @dispatch
 def adjoint(A: Triangular):

@@ -1,13 +1,12 @@
+import re
+import sys
+import os
+import io
+
 project = 'CoLA'
 copyright = '2023, Wilson-Labs'
 author = 'Marc Finzi and Andres Potapczynski'
 language = "en"
-
-import io
-import os
-import sys
-import re
-
 
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -19,7 +18,7 @@ sys.path.insert(0, PROJECTDIR)
 # Get version from setuptools_scm file
 def find_version(*file_paths):
     try:
-        with io.open(os.path.join(PROJECTDIR,*file_paths), encoding="utf8") as fp:
+        with io.open(os.path.join(PROJECTDIR, *file_paths), encoding="utf8") as fp:
             version_file = fp.read()
             pattern = r"^__version__ = version = ['\"]([^'\"]*)['\"]"
         version_match = re.search(pattern, version_file, re.M)
@@ -28,7 +27,7 @@ def find_version(*file_paths):
         return None
 
 
-release = find_version('cola','version.py')
+release = find_version('cola', 'version.py')
 
 sys.path.append(os.path.abspath('sphinxext'))
 
@@ -56,8 +55,9 @@ html_theme_options = {
 
 templates_path = ['_templates']
 exclude_patterns = [
-    '_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints', 'notebooks/.ipynb_checkpoints', 'notebooks/colabs/**'
-, '**/_**.**']
+    '_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints', 'notebooks/.ipynb_checkpoints',
+    'notebooks/colabs/**', '**/_**.**'
+]
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
@@ -68,7 +68,6 @@ intersphinx_mapping = {
 
 source_suffix = ['.rst', '.md']
 main_doc = 'index'
-
 
 autodoc_default_options = {'autosummary': True}
 autodoc_member_order = 'bysource'
