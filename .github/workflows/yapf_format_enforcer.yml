@@ -23,8 +23,8 @@ jobs:
 
       - name: Check formatting
         run: |
-          file_list=("cola/annotations.py" "cola/utils_test.py")
-          for file in "${file_list[@]}"; do
+          file_list=$(git diff --name-only main..HEAD)
+          for file in "${file_list}"; do
             echo "Checking formatting for $file..."
             autopep8 -i "$file"
             yapf -i "$file"
