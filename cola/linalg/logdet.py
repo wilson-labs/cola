@@ -114,12 +114,14 @@ def slogdet(A: Identity, **kwargs):
     zero = xnp.array(0., dtype=A.dtype, device=A.device)
     return 1. + zero, zero
 
+
 @dispatch
 def slogdet(A: ScalarMul, **kwargs):
     xnp = A.xnp
     c = A.c
-    phase = c/xnp.abs(c)
+    phase = c / xnp.abs(c)
     return phase, xnp.log(xnp.abs(c))
+
 
 @dispatch
 def slogdet(A: Diagonal, **kwargs):

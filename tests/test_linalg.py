@@ -9,7 +9,6 @@ from cola.fns import kron
 from cola.utils_test import get_xnp, parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
 
-
 _tol = 1e-7
 
 

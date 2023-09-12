@@ -252,7 +252,7 @@ def pbar_while(errorfn, tol, desc='', every=1, hide=False):
     return new_while
 
 
-def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,  **kwargs):
+def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False, **kwargs):
     """ Decorator for while loop with progress bar.
 
         Assumes that errorfn is a function of the loop variable and returns a scalar
@@ -294,7 +294,7 @@ def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,
                 howclose = np.log(error / errstart) / np.log(tol / errstart)
                 if max_iters is not None:
                     howclose = max((i + 1) / max_iters, howclose)
-                progress = min(100 - info['progval'], max(100*howclose - info['progval'], 0))
+                progress = min(100 - info['progval'], max(100 * howclose - info['progval'], 0))
                 if progress > 0:
                     info['progval'] += progress
                     info['pbar'].update(progress)

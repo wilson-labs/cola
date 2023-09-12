@@ -433,9 +433,9 @@ class Jacobian(LinearOperator):
         self.f = f
         self.x = x
         # could perhaps relax this with automatic reshaping of x and y
-        #assert len(x.shape) == 1, "x must be a vector"
+        # assert len(x.shape) == 1, "x must be a vector"
         y_shape = f(x).shape
-        #assert len(y_shape) == 1, "y must be a vector"
+        # assert len(y_shape) == 1, "y must be a vector"
 
         super().__init__(dtype=x.dtype, shape=(y_shape[0], x.shape[0]))
 

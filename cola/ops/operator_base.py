@@ -122,6 +122,7 @@ def find_device(obj):
 def definitely_dynamic(obj):
     return is_array(obj) or isinstance(obj, LinearOperator)
 
+
 @export
 class LinearOperator(metaclass=AutoRegisteringPyTree):
     """ Linear Operator base class """

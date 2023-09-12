@@ -250,7 +250,7 @@ def is_leaf(value):
 
 
 def tree_flatten(value):
-    return tu.tree_flatten(value)  #leaves, treedef
+    return tu.tree_flatten(value)  # leaves, treedef
 
 
 def tree_unflatten(treedef, value):

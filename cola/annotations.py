@@ -34,6 +34,7 @@ class WrapMeta(type):
 class Annotation(metaclass=WrapMeta):
     pass
 
+
 class SelfAdjoint(Annotation):
     """ Annotation for Self-Adjoint (Hermitian) matrices. A^H=A
         Means symmetric for real matrices. A^T = A"""
@@ -48,10 +49,13 @@ class PSD(SelfAdjoint):
         all eigenvalues are greater than or equal to zero,
         and the matrix should be self-adjoint. """
     pass
+
+
 class Stiefel(Annotation):
     """ Annotation for Stiefel matrices (incomplete unitary).
         A^H A = I but A A^H != I. """
     pass
+
 
 class Unitary(Stiefel):
     """ Annotation for Unitary matrices. A^H A = I

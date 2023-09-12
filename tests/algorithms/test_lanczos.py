@@ -14,7 +14,7 @@ from cola.utils_test import generate_diagonals
 _tol = 1e-6
 
 
-@parametrize(['torch', 'jax']).excluding[:] # disabled before we fix new lanczos outputs
+@parametrize(['torch', 'jax']).excluding[:]  # disabled before we fix new lanczos outputs
 def test_lanczos_vjp(backend):
     if backend == 'torch':
         import torch

@@ -7,7 +7,6 @@ try:
 except Exception:  # pragma: no cover
     __version__ = "Unknown"  # pragma: no cover
 
-
 __all__ = []
 # for loader, module_name, is_pkg in  pkgutil.walk_packages(__path__):
 import_from_all("fns", globals(), __all__, __name__)

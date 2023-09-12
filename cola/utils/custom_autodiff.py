@@ -1,5 +1,6 @@
 from functools import wraps
 
+
 def iterative_autograd(iterative_bwd):
     """ Autograd wrapper for iterative solvers like CG, Lanczos, SLQ, etc.
         Will construct a custom autograd rule for the iterative solver on every call
@@ -85,7 +86,7 @@ def iterative_autograd(iterative_bwd):
     return wrap_iterative
 
 
-def combine(torch_tensors,non_torch_tensors,is_torch):
+def combine(torch_tensors, non_torch_tensors, is_torch):
     iter1 = iter(torch_tensors)
     iter2 = iter(non_torch_tensors)
     return [next(iter1) if x else next(iter2) for x in is_torch]
