@@ -23,12 +23,8 @@ jobs:
 
       - name: Check formatting
         run: |
-          file_list=$(git diff --name-only ${{ github.base_ref }}...${{ github.head_ref }})
-          for file in "${file_list}"; do
-            echo "Checking formatting for $file..."
-            autopep8 -i "$file"
-            yapf -i "$file"
-          done
+          autopep8 -ir "$file"
+          yapf -ir "$file"
 
       - name: Check for changes
         run: git diff --exit-code || (echo "Code is not formatted correctly. Please run formatter locally." && exit 1)
