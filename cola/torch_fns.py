@@ -71,7 +71,7 @@ def get_array_device(array):
 
 
 def max(array, axis, keepdims=False):
-    maxval, _ = torch.max(array, dim=axis, keepdim=keepdims)
+    maxval, _ = torch.max(array, dim=axis, keepdim=keepdims)  # hello
     return maxval
 
 
