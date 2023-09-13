@@ -5,7 +5,7 @@ import numpy as np
 from scipy.linalg import block_diag as _block_diag, lu as _lu, solve_triangular
 from scipy.signal import convolve2d
 import optree
-from cola.utils.torch_tqdm import while_loop_winfo
+
 
 class NumpyNotImplementedError(NotImplementedError):
     def __init__(self):
@@ -70,6 +70,7 @@ promote_types = np.promote_types
 finfo = np.finfo
 zeros_like = np.zeros_like
 
+
 def PRNGKey(key):
     raise NumpyNotImplementedError()
 
@@ -108,20 +109,25 @@ def convolve(in1, in2, mode="same"):
 def device(device_name):
     return None
 
+
 def PRNGKey(x):
     return sha_hash(x)
+
 
 def next_key(key):
     return sha_hash(key)
 
+
 def diag(v, diagonal=0):
     return np.diag(v, k=diagonal)
+
 
 def sha_hash(n):
     n_bytes = n.to_bytes((n.bit_length() + 7) // 8, 'big')
     hash_bytes = hashlib.sha256(n_bytes).digest()
     hash_integer = int.from_bytes(hash_bytes, 'big')
     return int(hash_integer % (2**32 - 1))
+
 
 def dynamic_slice(operand, start_indices, slice_sizes):
     raise NumpyNotImplementedError()
@@ -156,7 +162,7 @@ def grad(fun):
 
 
 def is_array(array):
-    return isinstance(array,np.ndarray)
+    return isinstance(array, np.ndarray)
 
 
 def jit(fn, static_argnums=None):
@@ -241,6 +247,7 @@ def while_loop(cond_fun, body_fun, init_val):
 
 def while_loop_no_jit(cond_fun, body_fun, init_val):
     return while_loop(cond_fun, body_fun, init_val)
+
 
 def zeros(shape, dtype, device=None):
     del device

@@ -5,7 +5,7 @@ import numpy as np
 import cola
 from cola.utils import export
 from cola.backends import np_fns, get_library_fns, AutoRegisteringPyTree
-from types import ModuleType
+
 Array = Dtype = Any
 export(Array)
 

@@ -1,6 +1,6 @@
 import cola
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.backends import all_backends, tracing_backends
+from cola.backends import tracing_backends
 from cola.ops import Dense, Diagonal, Product, ScalarMul
 from functools import partial
 

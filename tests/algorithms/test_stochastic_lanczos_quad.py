@@ -3,7 +3,7 @@ from cola.ops import Diagonal
 from cola.algorithms import stochastic_lanczos_quad
 from cola.fns import lazify
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.backends import all_backends, tracing_backends
+from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 
 

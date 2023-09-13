@@ -90,6 +90,7 @@ def while_loop_no_jit(cond_fun, body_fun, init_val):
         val = body_fun(val)
     return val
 
+
 def get_array_device(array):
     return array.device()
 
