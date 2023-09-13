@@ -1,5 +1,5 @@
 """ CoLA Backends"""
-from cola.utils import import_from_all, import_every
+from cola.utils import import_from_all
 
 __all__ = []
 import_from_all("backends", globals(), __all__, __name__)

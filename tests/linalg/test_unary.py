@@ -7,6 +7,7 @@ from cola.utils.test_utils import parametrize, relative_error
 import numpy as np
 from cola.backends import all_backends
 
+
 @parametrize(all_backends, ['float64'], op_names, ['exp', 'sqrt']).excluding['torch', :, 'psd_kron', :]
 def test_unary(backend, precision, op_name, fn_name):
     operator = get_test_operator(backend, precision, op_name)
