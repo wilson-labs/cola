@@ -2,10 +2,11 @@ import numpy as np
 from cola.fns import lazify
 from cola.algorithms.iram import iram
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_iram_random(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32

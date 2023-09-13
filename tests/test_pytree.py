@@ -1,10 +1,11 @@
 import cola
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.backends import all_backends
 from cola.ops import Dense, Diagonal, Product, ScalarMul
 from functools import partial
 
 
-@parametrize(['jax', 'torch']).excluding['torch']
+@parametrize(all_backends).excluding['torch']
 def test_vmappable_constructor(backend):
     xnp = get_xnp(backend)
     dtype, device = xnp.float32, None
@@ -33,7 +34,7 @@ def test_vmappable_constructor(backend):
     assert relative_error((dT @ vecX[..., None])[..., 0], bmm2) < 1e-6
 
 
-@parametrize(['jax', 'torch'])
+@parametrize(all_backends)
 def test_jittable_constructor(backend):
     xnp = get_xnp(backend)
     dtype, device = xnp.float32, None
@@ -57,7 +58,7 @@ def test_jittable_constructor(backend):
     assert relative_error(dT @ X, bmm) < 1e-6
 
 
-@parametrize(['jax', 'torch'])
+@parametrize(all_backends)
 def test_vmapped_linalg(backend):
     xnp = get_xnp(backend)
     dtype, device = xnp.float32, None
@@ -76,7 +77,7 @@ def test_vmapped_linalg(backend):
     assert relative_error(logdets, logdets2) < 1e-6
 
 
-@parametrize(['jax', 'torch'])
+@parametrize(all_backends)
 def test_grad(backend):
     xnp = get_xnp(backend)
     dtype, device = xnp.float32, None

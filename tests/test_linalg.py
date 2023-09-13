@@ -7,12 +7,13 @@ from cola.linalg.nullspace import nullspace
 from cola.linalg.eigs import power_iteration
 from cola.fns import kron
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 
 _tol = 1e-7
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_inv(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -27,7 +28,7 @@ def test_inv(backend):
     assert rel_error < _tol * 10
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_power_iteration(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -40,7 +41,7 @@ def test_power_iteration(backend):
     assert rel_error < tol * 100
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_get_lu_from_tridiagonal(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -58,7 +59,7 @@ def test_get_lu_from_tridiagonal(backend):
     assert rel_error < _tol
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_construct_tridiagonal(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -78,7 +79,7 @@ def test_construct_tridiagonal(backend):
     assert rel_error < _tol
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def ignore_test_nullspace(backend):
     xnp = get_xnp(backend)
     # TODO: add test for double precision (pytorch fails with nan while jax succeeds)

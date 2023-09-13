@@ -3,10 +3,11 @@ from cola.ops import Diagonal
 from cola.algorithms import stochastic_lanczos_quad
 from cola.fns import lazify
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 
 
-# @parametrize(['torch', 'jax'])
+# @parametrize(all_backends)
 @parametrize(['torch'])
 def test_slq_vjp(backend):
     xnp = get_xnp(backend)
@@ -44,7 +45,7 @@ def test_slq_vjp(backend):
     assert rel_error < 1e-1
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_stochastic_lanczos_quad_random(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32

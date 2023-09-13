@@ -5,13 +5,14 @@ from cola.algorithms.preconditioners import NystromPrecond
 from cola.algorithms.preconditioners import AdaNysPrecond
 from cola.algorithms.preconditioners import sqrt
 from cola.algorithms.preconditioners import inverse
-from cola.utils.test_utils import get_xnp, parametrize, relative_error, construct_e_vec
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.backends import all_backends, construct_e_vec
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 
 _tol = 1e-7
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_AdaNysPrecond(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -39,7 +40,7 @@ def test_AdaNysPrecond(backend):
     assert approx == round(rank_init / mult)
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_select_rank_adaptively(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -56,7 +57,7 @@ def test_select_rank_adaptively(backend):
     assert rel_error < 5e-5
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_nys_sqrt_inverse(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -79,7 +80,7 @@ def test_nys_sqrt_inverse(backend):
     assert rel_error < _tol * 10
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_nys_precond(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -113,7 +114,7 @@ def test_nys_precond(backend):
     assert rel_error < _tol * 10
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_get_nys_approx_random(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -132,7 +133,7 @@ def test_get_nys_approx_random(backend):
     assert rel_error < _tol * 500
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_get_nys_approx_diagonal(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32

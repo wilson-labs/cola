@@ -1,5 +1,6 @@
 from cola.utils import export
 from types import ModuleType
+import numpy as np
 
 @export
 def get_library_fns(dtype):
