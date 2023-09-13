@@ -22,10 +22,7 @@ def get_library_fns(dtype: Dtype):
         pass
     try:
         import torch
-        if dtype in [
-                torch.float32, torch.float64, torch.complex64, torch.complex128, torch.int32,
-                torch.int64
-        ]:
+        if dtype in [torch.float32, torch.float64, torch.complex64, torch.complex128, torch.int32, torch.int64]:
             import cola.torch_fns as fns
             return fns
         elif dtype in [np.float32, np.float64, np.complex64, np.complex128, np.int32, np.int64]:
@@ -122,6 +119,7 @@ def find_device(obj):
 def definitely_dynamic(obj):
     return is_array(obj) or isinstance(obj, LinearOperator)
 
+
 @export
 class LinearOperator(metaclass=AutoRegisteringPyTree):
     """ Linear Operator base class """
@@ -155,10 +153,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         """ Returns a new linear operator with given device and dtype
             WARNING: dtype change is not supported yet. """
         params, unflatten = self.flatten()
-        params = [
-            self.xnp.move_to(p, device=device, dtype=dtype) if self.xnp.is_array(p) else p
-            for p in params
-        ]
+        params = [self.xnp.move_to(p, device=device, dtype=dtype) if self.xnp.is_array(p) else p for p in params]
         return unflatten(params)
 
     def isa(self, annotation) -> bool:
@@ -177,19 +172,16 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         XT = X.T
         if self.isa(cola.annotations.SelfAdjoint):
             return self.xnp.conj(self._matmat(self.xnp.conj(XT)).T)
-        primals = self.xnp.zeros(shape=(self.shape[1], XT.shape[1]), dtype=XT.dtype,
-                                 device=self.device)
+        primals = self.xnp.zeros(shape=(self.shape[1], XT.shape[1]), dtype=XT.dtype, device=self.device)
         out = self.xnp.linear_transpose(self._matmat, primals=primals, duals=XT)
         return out.T
 
     def to_dense(self) -> Array:
         """ Produces a dense array representation of the linear operator. """
         if 8 * self.shape[-2] < self.shape[-1]:
-            return self.xnp.eye(self.shape[-2], self.shape[-2], dtype=self.dtype,
-                                device=self.device) @ self
+            return self.xnp.eye(self.shape[-2], self.shape[-2], dtype=self.dtype, device=self.device) @ self
         else:
-            return self @ self.xnp.eye(self.shape[-1], self.shape[-1], dtype=self.dtype,
-                                       device=self.device)
+            return self @ self.xnp.eye(self.shape[-1], self.shape[-1], dtype=self.dtype, device=self.device)
 
     @property
     def T(self):
@@ -271,8 +263,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         dt = 'dtype=' + str(self.dtype)
         return '<%dx%d %s with %s>' % (M, N, self.__class__.__name__, dt)
 
-    def __getitem__(
-            self, ids: Union[Tuple[int, ...], Tuple[slice, ...]]) -> Union[Array, 'LinearOperator']:
+    def __getitem__(self, ids: Union[Tuple[int, ...], Tuple[slice, ...]]) -> Union[Array, 'LinearOperator']:
         # TODO: add Tuple[List[int],...] and List[Tuple[int,int]] cases
         # print(type(ids))
         # print(type(ids[0]), type(ids[1]))
@@ -281,18 +272,15 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
         from cola.ops import Sliced
         match ids:
             case int(i):
-                ei = xnp.canonical(loc=i, shape=(self.shape[-1], ), dtype=self.dtype,
-                                   device=self.device)
+                ei = xnp.canonical(loc=i, shape=(self.shape[-1], ), dtype=self.dtype, device=self.device)
                 return (self.T @ ei)
             case (slice() | xnp.ndarray() | np.ndarray()) as s_i:
                 return Sliced(A=self, slices=(s_i, slice(None)))
             case b, int(j):
-                ej = xnp.canonical(loc=j, shape=(self.shape[-1], ), dtype=self.dtype,
-                                   device=self.device)
+                ej = xnp.canonical(loc=j, shape=(self.shape[-1], ), dtype=self.dtype, device=self.device)
                 return (self @ ej)[b]
             case int(i), b:
-                ei = xnp.canonical(loc=i, shape=(self.shape[-1], ), dtype=self.dtype,
-                                   device=self.device)
+                ei = xnp.canonical(loc=i, shape=(self.shape[-1], ), dtype=self.dtype, device=self.device)
                 return (self.T @ ei)[b]
             case (slice() | xnp.ndarray() | np.ndarray()) as s_i,  \
                  (slice() | xnp.ndarray() | np.ndarray()) as s_j:
@@ -301,8 +289,7 @@ class LinearOperator(metaclass=AutoRegisteringPyTree):
                 out = []
                 for idx, jdx in zip(li, lj):
                     # TODO: batch jdx
-                    ej = xnp.canonical(loc=jdx, shape=(self.A.shape[-1], ), dtype=self.dtype,
-                                       device=self.device)
+                    ej = xnp.canonical(loc=jdx, shape=(self.A.shape[-1], ), dtype=self.dtype, device=self.device)
                     out.append((self.A @ ej)[idx])
                 return xnp.stack(out)
             case _:

@@ -10,7 +10,7 @@ from plum import dispatch
 def orthogonal_complement(C, tol=1e-5):
     """ Computes the orthogonal complement to a given matrix proj"""
     xnp = get_library_fns(C.dtype)
-    U, S, VH = xnp.svd(C, full_matrices=True)
+    _, S, VH = xnp.svd(C, full_matrices=True)
     rank = (S > tol).sum()
     return VH[rank:].conj().T
 
@@ -25,7 +25,8 @@ def nullspace(C: LinearOperator, tol=1e-5, pbar=True, info=False, method='auto')
         tol (float, optional): Tolerance for the computation. Default is 1e-5.
         pbar (bool, optional): Whether to display a progress bar. Default is True.
         info (bool, optional): Whether to return additional information. Default is False.
-        method (str, optional): Method to use for computation. Options are 'dense', 'iterative' and 'auto'. 'auto' chooses based on the C matrix size. Default is 'auto'.
+        method (str, optional): Method to use for computation. Options are 'dense', 'iterative'
+        and 'auto'. 'auto' chooses based on the C matrix size. Default is 'auto'.
 
     Returns:
         Array: The nullspace of C, shape (C.shape[1], rank(C)).
@@ -35,7 +36,7 @@ def nullspace(C: LinearOperator, tol=1e-5, pbar=True, info=False, method='auto')
         >>> Q = nullspace(C, method='auto', pbar=False)
         >>> C@Q # should be zero
 
-    .. warning:: 
+    .. warning::
         This function is not yet well tested and does not yet include composition rules.
     """
 
@@ -95,17 +96,16 @@ def krylov_constraint_solve_upto_r(C, r, tol=1e-5, max_iter=10000, pbar=False, i
     i, W, err = while_loop(cond_fn, body_fn, (0, W, 1e10))
     assert err < tol, f"Err {err:.2e} failed to converge to tol {tol:.2e} in {max_iter} iterations"
     # Orthogonalize solution at the end
-    U, S, VT = xnp.svd(W, full_matrices=False)
+    U, S, _ = xnp.svd(W, full_matrices=False)
     rank = (S > 3 * tol).sum()
     Q = U[:, :rank]
-    # final_L
     final_error = body_fn((0, Q, 0))[-1]
     if final_error > 5 * tol:
         logging.warning(f"Normalized basis has too high error {final_error:.2e} for tol {tol:.2e}")
     scutoff = (S[rank] if r > rank else 0)
-    assert rank == 0 or scutoff < S[rank -
-                                    1] / 100, f"Singular value gap too small: {S[rank-1]:.2e} \
-        above cutoff {scutoff:.2e} below cutoff. Final L {final_L:.2e}, earlier {S[rank-5:rank]}"
+    text = f"Singular value gap too small: {S[rank-1]:.2e}"
+    text += "above cutoff {scutoff:.2e} below cutoff. Final L, earlier {S[rank-5:rank]}"
+    assert rank == 0 or scutoff < S[rank - 1] / 100, text
 
     return Q, inf if info else Q
 

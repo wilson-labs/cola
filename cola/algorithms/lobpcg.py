@@ -8,8 +8,7 @@ from cola.utils import export
 
 
 @export
-def lobpcg(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7,
-           pbar: bool = False):
+def lobpcg(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7, pbar: bool = False):
     xnp = A.xnp
     del pbar, start_vector, tol
 

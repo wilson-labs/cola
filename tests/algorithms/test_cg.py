@@ -11,7 +11,6 @@ from cola.utils_test import generate_spectrum, generate_pd_from_diag
 from cola.utils_test import generate_diagonals
 # from tests.algorithms.test_lanczos import construct_tridiagonal
 
-
 _tol = 1e-7
 
 

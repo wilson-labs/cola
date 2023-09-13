@@ -9,7 +9,6 @@ from cola.fns import kron
 from cola.utils_test import get_xnp, parametrize, relative_error
 from cola.utils_test import generate_spectrum, generate_pd_from_diag
 
-
 _tol = 1e-7
 
 
@@ -66,8 +65,8 @@ def test_construct_tridiagonal(backend):
     alpha = [0.73, 1.5, 0.4]
     beta = [0.8, 0.29, -0.6, 0.9]
     gamma = [0.04, 0.59, 1.1]
-    T = [[beta[0], gamma[0], 0, 0], [alpha[0], beta[1], gamma[1], 0],
-         [0., alpha[1], beta[2], gamma[2]], [0., 0., alpha[2], beta[3]]]
+    T = [[beta[0], gamma[0], 0, 0], [alpha[0], beta[1], gamma[1], 0], [0., alpha[1], beta[2], gamma[2]],
+         [0., 0., alpha[2], beta[3]]]
     alpha = xnp.array([alpha], dtype=dtype, device=None).T
     beta = xnp.array([beta], dtype=dtype, device=None).T
     gamma = xnp.array([gamma], dtype=dtype, device=None).T
