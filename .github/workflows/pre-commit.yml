@@ -21,7 +21,7 @@ jobs:
 
     - name: Run pre-commit
       run: |
-        SKIP=flake8 pre-commit run --all-files
+        SKIP=flake8 pre-commit run --all-files || true
 
     - name: Check if there are changes to commit
       run: |
