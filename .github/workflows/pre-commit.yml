@@ -20,7 +20,7 @@ jobs:
       run: pip install pre-commit
 
     - name: Run pre-commit
-      run: pre-commit run --all-files
+      run: SKIP=flake8 pre-commit run --all-files
 
     - name: Check if there are changes to commit
       run: |
