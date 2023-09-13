@@ -1,4 +1,3 @@
-import functools
 import time
 import numpy as np
 
@@ -81,3 +80,10 @@ def update_pbar(error, tol, info, max_iters):
     if progress > 0:
         info['progval'] += progress
         info['pbar'].update(progress)
+
+
+def while_loop(cond_fun, body_fun, init_val):
+    val = init_val
+    while cond_fun(val):
+        val = body_fun(val)
+    return val
