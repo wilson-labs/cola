@@ -16,7 +16,7 @@ have faster runtimes than general algorithms, a user must manually implement the
 a case-by-case basis and be familiar with the different algorithms that exist for
 different structures. This process leads to a notorious implementation bottleneck!
 
-To eliminate this bottleneck we introduce ``CoLA``, a numerical linear algebra library designed to 
+To eliminate this bottleneck we introduce ``CoLA``, a numerical linear algebra library designed to
 automatically exploit the structure present in a diverse set of linear ops.
 To achieve this, ``CoLA`` automatically exploits compositional structure by leveraging over 70 dispatch
 rules which select different algorithms for the diverse structure present in a linear
@@ -31,7 +31,7 @@ structure of several linear ops found in ML applications.
 Furthermore, regardless of whether there is structure that can be exploited or not,
 ``CoLA`` can be used as a general purpose numerical linear algebra package
 for large-scale linear ops.
-``CoLA`` provides an implementation of classical iterative algorithms for 
+``CoLA`` provides an implementation of classical iterative algorithms for
 solving linear systems, performing eigendecompositions and more for
 PSD, symmetric, non-symmetric, real and complex linear ops.
 
