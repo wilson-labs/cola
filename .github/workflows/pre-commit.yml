@@ -19,13 +19,12 @@ jobs:
     - name: Install pre-commit
       run: pip install pre-commit
 
-    - name: Run pre-commit
+    - name: Run pre-commit and capture changes
       run: |
-        SKIP=flake8 pre-commit run --all-files || true
-
-    - name: Check if there are changes to commit
-      run: |
-        if [ -n "$(git status --porcelain)" ]; then
+        pre-commit run --all-files || true
+        git_diff=$(git diff)
+        if [ -n "$git_diff" ]; then
+          echo "Changes detected. Committing and pushing..."
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add .
