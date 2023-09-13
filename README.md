@@ -157,7 +157,7 @@ See the contributing guidelines [docs/CONTRIBUTING.md](https://cola.readthedocs.
 and pull requests.
 
 To easily and automatically follow the format used in CoLA (contained in  `setup.cfg`), you can
-add a pre-commit hook that applies the format to the commited files by running (only
+add a pre-commit hook that applies the format to the committed files by running (only
 once) `source hooks/add_pre-commit_hook.sh`.
 
 CoLA is Apache 2.0 licensed.
