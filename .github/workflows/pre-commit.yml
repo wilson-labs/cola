@@ -25,11 +25,12 @@ jobs:
         git_diff=$(git diff)
         if [ -n "$git_diff" ]; then
           echo "Changes detected. Committing and pushing..."
+          git status
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add .
           git commit -m "Pre-commit fixes (GitHub Actions)"
-        git push ${{ github.head_ref }} HEAD:${{ github.head_ref }}
+          git push origin ${{ github.head_ref }}
         else
           echo "No changes to commit."
         fi
