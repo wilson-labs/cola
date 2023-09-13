@@ -91,9 +91,7 @@ def exact_diag(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=F
         Array: Extracted diagonal elements.
         Info: Dictionary with information about the method used.
     """
-    return exact_diag_fwd(A, k=k, bs=bs, tol=tol, max_iters=max_iters, pbar=pbar), {
-        'method': 'exact'
-    }
+    return exact_diag_fwd(A, k=k, bs=bs, tol=tol, max_iters=max_iters, pbar=pbar), {'method': 'exact'}
 
 
 @export

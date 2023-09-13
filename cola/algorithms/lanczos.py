@@ -49,8 +49,8 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
 # @export
 # @iterative_autograd(lanczos_eig_bwd)
 @export
-def lanczos_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int = 100,
-                 tol: float = 1e-7, pbar: bool = False):
+def lanczos_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7,
+                 pbar: bool = False):
     """
     Computes the eigenvalues and eigenvectors using Lanczos.
 
@@ -110,8 +110,7 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
     xnp = A.xnp
     if start_vector is None:
         start_vector = xnp.randn(*(A.shape[0], 1), dtype=A.dtype, device=A.device)
-    alpha, beta, vec, iters, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters,
-                                                  tol=tol, pbar=pbar)
+    alpha, beta, vec, iters, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
     alpha, beta, Q = alpha[..., :iters - 1], beta[..., :iters], vec[0, :, :iters]
     T = construct_tridiagonal_batched(alpha, beta, alpha)[0]
     return Q, T, info
@@ -245,12 +244,10 @@ def construct_tridiagonal(alpha: Array, beta: Array, gamma: Array) -> Array:
 def construct_tridiagonal_batched(alpha: Array, beta: Array, gamma: Array) -> Array:
     xnp = get_library_fns(beta.dtype)
     device = xnp.get_device(beta)
-    T = xnp.zeros(shape=(beta.shape[-2], beta.shape[-1], beta.shape[-1]), dtype=beta.dtype,
-                  device=device)
+    T = xnp.zeros(shape=(beta.shape[-2], beta.shape[-1], beta.shape[-1]), dtype=beta.dtype, device=device)
     diag_ind = xnp.array([idx for idx in range(beta.shape[-1])], dtype=xnp.int64, device=device)
     T = xnp.update_array(T, beta, ..., diag_ind, diag_ind)
-    shifted_ind = xnp.array([idx + 1 for idx in range(gamma.shape[-1])], dtype=xnp.int64,
-                            device=device)
+    shifted_ind = xnp.array([idx + 1 for idx in range(gamma.shape[-1])], dtype=xnp.int64, device=device)
     T = xnp.update_array(T, gamma, ..., diag_ind[:-1], shifted_ind)
     T = xnp.update_array(T, alpha, ..., shifted_ind, diag_ind[:-1])
     return T

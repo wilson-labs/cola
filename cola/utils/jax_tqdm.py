@@ -78,9 +78,7 @@ def loop_tqdm(n: int, message: typing.Optional[str] = None) -> typing.Callable:
     return _loop_tqdm
 
 
-def build_tqdm(
-        n: int,
-        message: typing.Optional[str] = None) -> typing.Tuple[typing.Callable, typing.Callable]:
+def build_tqdm(n: int, message: typing.Optional[str] = None) -> typing.Tuple[typing.Callable, typing.Callable]:
     """
     Build the tqdm progress bar on the host
     """
@@ -160,8 +158,7 @@ def pbar_while(errorfn, tol, desc='', every=1, hide=False):
         def update_tqdm(arg, transform):
             error = errorfn(arg)
             errstart = info.setdefault('errstart', error)
-            progress = max(
-                100 * np.log(error / errstart) / np.log(tol / errstart) - info['progval'], 0)
+            progress = max(100 * np.log(error / errstart) / np.log(tol / errstart) - info['progval'], 0)
             progress = min(100 - info['progval'], progress)
             if progress > 0:
                 info['progval'] += progress
@@ -184,8 +181,7 @@ def pbar_while(errorfn, tol, desc='', every=1, hide=False):
         def newcond(ival):
             i, val = ival
             out = jax.lax.cond(cond_fun(val), lambda _: True,
-                               lambda _: host_callback.id_tap(close_tqdm, val, result=False),
-                               operand=None)
+                               lambda _: host_callback.id_tap(close_tqdm, val, result=False), operand=None)
             return out
 
         host_callback.id_tap(construct_tqdm, None)
@@ -225,8 +221,7 @@ def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,
             if pbar:
                 bar_format = "{l_bar}{bar}| {n:.3g}/{total_fmt} [{elapsed}<{remaining},"
                 bar_format += "{rate_fmt}{postfix}]"
-                info['pbar'] = tqdm(total=100, desc=f'{desc or default_desc}',
-                                    bar_format=bar_format)
+                info['pbar'] = tqdm(total=100, desc=f'{desc or default_desc}', bar_format=bar_format)
 
         def update_info(ival, _):
             i, arg = ival

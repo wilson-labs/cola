@@ -38,8 +38,7 @@ def cg_svrg_fns(b):
 
 
 # @export
-def solve_svrg_symmetric(A: Sum, b, tol=1e-6, P=None, x0=None, pbar=False, info=False,
-                         max_iters=5000, bs=50):
+def solve_svrg_symmetric(A: Sum, b, tol=1e-6, P=None, x0=None, pbar=False, info=False, max_iters=5000, bs=50):
     import jax
     # mult = jnp.linalg.norm(b, axis=0)
     # b_norm = do_safe_div(b, mult)
@@ -129,8 +128,7 @@ def get_optimal_learning_rate(M, P, bs=1, stochastic=True):
 
 
 @export
-def svrg_eigh_max(A: Product[Dense, Dense], k=1, tol=1e-6, pbar=False, info=False, max_iters=5000,
-                  bs=50, lr_scale=1.):
+def svrg_eigh_max(A: Product[Dense, Dense], k=1, tol=1e-6, pbar=False, info=False, max_iters=5000, bs=50, lr_scale=1.):
     """ Use SVRG to find the largest k eigenvalues and eigenvectors of an hermitian matrix A.
         Assumes A = B@C where B and C are dense matrices, decomposes the sum over the
         inner dimension.
@@ -139,16 +137,15 @@ def svrg_eigh_max(A: Product[Dense, Dense], k=1, tol=1e-6, pbar=False, info=Fals
             (eigvals, V), info
     """
     x0 = A.xnp.randn(A.shape[1], k, dtype=A.dtype)
-    out, info = solve_svrg_generic(A, oja_svrg_fns(), tol=tol, pbar=pbar, info=info,
-                                   max_iters=max_iters, bs=bs, lr_scale=lr_scale, x0=x0)
+    out, info = solve_svrg_generic(A, oja_svrg_fns(), tol=tol, pbar=pbar, info=info, max_iters=max_iters, bs=bs,
+                                   lr_scale=lr_scale, x0=x0)
     eigvals = A.xnp.vmap(lambda v: v.T @ v)(out.T)
     V = A.xnp.vmap(lambda v: v / A.xnp.sqrt(v.T @ v))(out.T).T
     return (eigvals, V), info
 
 
 @export
-def svrg_solveh(A: Product[Dense, Dense], b, tol=1e-6, pbar=False, info=False, max_iters=5000,
-                bs=50, lr_scale=1.):
+def svrg_solveh(A: Product[Dense, Dense], b, tol=1e-6, pbar=False, info=False, max_iters=5000, bs=50, lr_scale=1.):
     """ Use SVRG solve the linear system Ax=b assuming an hermitian matrix A.
         Assumes A = B@C where B and C are dense matrices, decomposes the sum over
         the inner dimension.
@@ -158,13 +155,13 @@ def svrg_solveh(A: Product[Dense, Dense], b, tol=1e-6, pbar=False, info=False, m
     """
     # x0 = A.xnp.randn(A.shape[1], k, dtype=A.dtype)
     x0 = A.xnp.randn(A.shape[1], b.shape[1], dtype=A.dtype)
-    out, info = solve_svrg_generic(A, cg_svrg_fns(b), tol=tol, pbar=pbar, info=info,
-                                   max_iters=max_iters, bs=bs, lr_scale=lr_scale, x0=x0)
+    out, info = solve_svrg_generic(A, cg_svrg_fns(b), tol=tol, pbar=pbar, info=info, max_iters=max_iters, bs=bs,
+                                   lr_scale=lr_scale, x0=x0)
     return out, info
 
 
-def solve_svrg_generic(A: Product[Dense, Dense], grad_fns, x0, tol=1e-6, P=None, pbar=False,
-                       info=False, max_iters=5000, bs=50, lr_scale=1.):
+def solve_svrg_generic(A: Product[Dense, Dense], grad_fns, x0, tol=1e-6, P=None, pbar=False, info=False, max_iters=5000,
+                       bs=50, lr_scale=1.):
     import jax  # TODO: enable support for pytorch
     gradients, vrdiffs = grad_fns
     # assert isinstance(A, Sum), f"A (of type {type(A)}) must be directly a Sum"
@@ -222,8 +219,7 @@ def solve_svrg_generic(A: Product[Dense, Dense], grad_fns, x0, tol=1e-6, P=None,
     return anchor_w, inf
 
 
-def solve_svrg_rff(A, rhs, tol=1e-6, P=None, pbar=False, info=False, max_iters=5000, bs=50,
-                   lr_scale=1.):
+def solve_svrg_rff(A, rhs, tol=1e-6, P=None, pbar=False, info=False, max_iters=5000, bs=50, lr_scale=1.):
     import jax
     xnp = A.xnp
     x0 = xnp.randn(A.shape[1], rhs.shape[1], dtype=A.dtype)

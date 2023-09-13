@@ -88,8 +88,7 @@ def test_gmres_easy(backend):
     rel_error = relative_error(soln, approx)
     assert rel_error < 1e-7
 
-    approx, _ = fn(lazify(A), rhs, x0, max_iters, tolerance, use_householder=False,
-                   use_triangular=True)
+    approx, _ = fn(lazify(A), rhs, x0, max_iters, tolerance, use_householder=False, use_triangular=True)
     rel_error = relative_error(soln, approx)
     assert rel_error < 1e-7
 

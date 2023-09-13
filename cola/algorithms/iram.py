@@ -8,8 +8,7 @@ from cola.utils import export
 
 
 @export
-def iram(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7,
-         pbar: bool = False):
+def iram(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7, pbar: bool = False):
     xnp = A.xnp
     del pbar
     del start_vector
@@ -23,7 +22,6 @@ def iram(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, to
     k = min(A.shape[0] - 1, max_iters)
     eigvals, eigvecs = eigsh(A2, k=k, M=None, sigma=None, which="LM", v0=None, tol=tol)
     eigvals, eigvecs = xnp.array(eigvals, dtype=A.dtype,
-                                 device=A.device), xnp.array(eigvecs, dtype=A.dtype,
-                                                             device=A.device)
+                                 device=A.device), xnp.array(eigvecs, dtype=A.dtype, device=A.device)
     info = {}
     return eigvals, Dense(eigvecs), info

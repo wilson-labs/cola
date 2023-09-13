@@ -120,8 +120,8 @@ def test_lanczos_random(backend):
     max_eig = lanczos_max_eig(B, rhs, B.shape[-1])
 
     assert idx == idx_np
-    comparisons = [(T_np, T), (Q_np, Q), (Q @ T, A @ Q), (xnp.array(1., dtype, None), max_eig),
-                   (alpha_np, alpha[0]), (beta_np, beta[0])]
+    comparisons = [(T_np, T), (Q_np, Q), (Q @ T, A @ Q), (xnp.array(1., dtype, None), max_eig), (alpha_np, alpha[0]),
+                   (beta_np, beta[0])]
     for soln, approx in comparisons:
         rel_error = relative_error(soln, approx)
         assert rel_error < 5e-5

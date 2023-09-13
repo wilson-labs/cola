@@ -33,8 +33,7 @@ op_names: set[str] = {
 }
 
 
-def get_test_operator(backend: str, precision: str, op_name: str,
-                      device: str = 'cpu') -> LinearOperator:
+def get_test_operator(backend: str, precision: str, op_name: str, device: str = 'cpu') -> LinearOperator:
     xnp = get_xnp(backend)
     dtype = getattr(xnp, precision)
     if backend == 'torch':
@@ -158,8 +157,7 @@ def get_test_operator(backend: str, precision: str, op_name: str,
 
 def get_test_operators(backend: str, precision: str, device: str = 'cpu') -> list[LinearOperator]:
     return [
-        get_test_operator(backend=backend, precision=precision, device=device, op_name=op_name)
-        for op_name in op_names
+        get_test_operator(backend=backend, precision=precision, device=device, op_name=op_name) for op_name in op_names
     ]
 
 

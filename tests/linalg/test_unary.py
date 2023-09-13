@@ -7,8 +7,7 @@ from cola.utils_test import parametrize, relative_error
 import numpy as np
 
 
-@parametrize(['torch', 'jax'], ['float64'], op_names, ['exp', 'sqrt']).excluding['torch', :,
-                                                                                 'psd_kron', :]
+@parametrize(['torch', 'jax'], ['float64'], op_names, ['exp', 'sqrt']).excluding['torch', :, 'psd_kron', :]
 def test_unary(backend, precision, op_name, fn_name):
     operator = get_test_operator(backend, precision, op_name)
     fn = getattr(cola.linalg, fn_name)

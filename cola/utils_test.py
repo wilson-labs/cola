@@ -99,16 +99,12 @@ class parametrize:
                 case _:
                     indexed_cases = set((indexed_cases, ))
         # Potentially add marks
-        assert indexed_cases - set(
-            self.all_cases) == set(), "indexed_cases cases must be in the list of cases"
+        assert indexed_cases - set(self.all_cases) == set(), "indexed_cases cases must be in the list of cases"
         self.indexed_cases = indexed_cases
         return self
 
     def __call__(self, test_fn):
-        all_cases = [
-            _add_marks(case, (case in self.indexed_cases) ^ self.indexing)
-            for case in self.all_cases
-        ]
+        all_cases = [_add_marks(case, (case in self.indexed_cases) ^ self.indexing) for case in self.all_cases]
         argnames = ','.join(inspect.getfullargspec(test_fn).args)
         theids = [strip_parens(str(case)) for case in all_cases] if self.ids is None else self.ids
         return pytest.mark.parametrize(argnames, all_cases, ids=theids)(test_fn)
@@ -196,8 +192,7 @@ def generate_pd_from_diag(diag, dtype, seed=None, normalize=True):
     return A
 
 
-def generate_beta_spectrum(coeff, scale, size, alpha=1., beta=1., seed=48, dtype=np.float32,
-                           y_min=1e-6):
+def generate_beta_spectrum(coeff, scale, size, alpha=1., beta=1., seed=48, dtype=np.float32, y_min=1e-6):
     if seed:
         np.random.seed(seed=seed)
     x = np.random.beta(a=alpha, b=beta, size=(size, )).astype(dtype)

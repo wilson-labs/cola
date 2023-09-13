@@ -82,10 +82,8 @@ def get_annotations(A: Kronecker):
     return intersect_annotations(A.Ms)
 
 
-inferred_self_adjoint_types = Union[Product[LinearOperator, Union[Transpose[LinearOperator],
-                                                                  Adjoint[LinearOperator]]],
-                                    Product[Union[Transpose[LinearOperator],
-                                                  Adjoint[LinearOperator]], LinearOperator]]
+inferred_self_adjoint_types = Union[Product[LinearOperator, Union[Transpose[LinearOperator], Adjoint[LinearOperator]]],
+                                    Product[Union[Transpose[LinearOperator], Adjoint[LinearOperator]], LinearOperator]]
 
 
 def are_the_same(A1, A1T):

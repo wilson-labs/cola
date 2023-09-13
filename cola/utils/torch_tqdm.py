@@ -109,8 +109,7 @@ def body_pbar(errorfn, tol, desc='', every=1, hide=False, max_iters=None):
             if info['pbar'] is None:
                 _bar_format = "{l_bar}{bar}| {n:.3g}/{total_fmt} [{elapsed}<{remaining},"
                 _bar_format += " {rate_fmt}{postfix}]"
-                info['pbar'] = tqdm(total=100, desc=f'{desc or default_desc}',
-                                    bar_format=_bar_format)
+                info['pbar'] = tqdm(total=100, desc=f'{desc or default_desc}', bar_format=_bar_format)
             val = body(*args, **kwargs)
             info['count'] += 1
             if info['count'] % every != 0:
