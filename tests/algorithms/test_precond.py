@@ -5,8 +5,8 @@ from cola.algorithms.preconditioners import NystromPrecond
 from cola.algorithms.preconditioners import AdaNysPrecond
 from cola.algorithms.preconditioners import sqrt
 from cola.algorithms.preconditioners import inverse
-from cola.utils_test import get_xnp, parametrize, relative_error, construct_e_vec
-from cola.utils_test import generate_spectrum, generate_pd_from_diag
+from cola.utils.test_utils import get_xnp, parametrize, relative_error, construct_e_vec
+from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 
 _tol = 1e-7
 

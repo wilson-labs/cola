@@ -3,7 +3,7 @@ from operator_market import op_names, get_test_operator
 import cola
 from cola.linalg import logdet
 from cola.ops import LinearOperator
-from cola.utils_test import parametrize, relative_error
+from cola.utils.test_utils import parametrize, relative_error
 
 _exclude = (slice(None), slice(None), ['psd_identity', 'psd_scalarmul'])
 

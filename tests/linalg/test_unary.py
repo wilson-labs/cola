@@ -3,7 +3,7 @@ import scipy.linalg
 import cola.linalg
 from cola.ops import LinearOperator
 import cola
-from cola.utils_test import parametrize, relative_error
+from cola.utils.test_utils import parametrize, relative_error
 import numpy as np
 
 

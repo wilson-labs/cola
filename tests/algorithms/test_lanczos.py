@@ -7,9 +7,9 @@ from cola.algorithms.lanczos import get_lanczos_coeffs
 from cola.algorithms.lanczos import lanczos_parts
 from cola.algorithms.lanczos import lanczos_eigs
 from cola.algorithms.lanczos import lanczos_max_eig
-from cola.utils_test import get_xnp, parametrize, relative_error
-from cola.utils_test import generate_spectrum, generate_pd_from_diag
-from cola.utils_test import generate_diagonals
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
+from cola.utils.test_utils import generate_diagonals
 
 _tol = 1e-6
 
