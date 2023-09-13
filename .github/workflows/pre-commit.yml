@@ -29,6 +29,7 @@ jobs:
           git config --local user.name "GitHub Actions"
           git add .
           git commit -m "Pre-commit fixes (GitHub Actions)"
+          git push ${{ github.head_ref }}
         else
           echo "No changes to commit."
         fi
