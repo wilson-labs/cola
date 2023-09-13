@@ -208,8 +208,9 @@ class Kronecker(LinearOperator):
 
 def kronsum(A, B):
     xnp = get_library_fns(A.dtype)
-    IA = xnp.eye(A.shape[-2], A.shape[-2], dtype=A.dtype, device=A.device)
-    IB = xnp.eye(B.shape[-2], B.shape[-2], dtype=B.dtype, device=B.device)
+    device = xnp.get_device(A)
+    IA = xnp.eye(A.shape[-2], A.shape[-2], dtype=A.dtype, device=device)
+    IB = xnp.eye(B.shape[-2], B.shape[-2], dtype=B.dtype, device=device)
     return xnp.kron(A, IB) + xnp.kron(IA, B)
 
 
@@ -338,8 +339,8 @@ class Tridiagonal(LinearOperator):
 
     def _matmat(self, X: Array) -> Array:
         xnp = self.xnp
-        aux_alpha = xnp.zeros(shape=X.shape, dtype=X.dtype, device=X.device)
-        aux_gamma = xnp.zeros(shape=X.shape, dtype=X.dtype, device=X.device)
+        aux_alpha = xnp.zeros(shape=X.shape, dtype=X.dtype, device=xnp.get_device(X))
+        aux_gamma = xnp.zeros(shape=X.shape, dtype=X.dtype, device=xnp.get_device(X))
 
         output = self.beta * X
         aux_gamma = xnp.update_array(aux_gamma, self.gamma * X[1:], np.s_[:-1])
@@ -400,7 +401,8 @@ class Sliced(LinearOperator):
     def _matmat(self, X: Array) -> Array:
         xnp = self.xnp
         start_slices, end_slices = self.slices
-        Y = xnp.zeros(shape=(self.A.shape[-1], X.shape[-1]), dtype=self.dtype, device=X.device)
+        device = xnp.get_device(X)
+        Y = xnp.zeros(shape=(self.A.shape[-1], X.shape[-1]), dtype=self.dtype, device=device)
         Y = xnp.update_array(Y, X, end_slices)
         output = self.A @ Y
         return output[start_slices]

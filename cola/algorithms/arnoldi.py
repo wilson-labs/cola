@@ -1,7 +1,6 @@
 from cola.ops import LinearOperator
 from cola.ops import Array
 from cola.ops import Householder, Product
-from cola.utils.control_flow import for_loop
 from cola.utils import export
 import cola
 from cola import Stiefel, lazify
@@ -111,7 +110,7 @@ def ArnoldiDecomposition(A: LinearOperator, start_vector=None, max_iters=100, to
 
 def get_householder_vec_simple(x, idx, xnp):
     indices = xnp.arange(x.shape[0])
-    vec = xnp.where(indices >= idx, x=x, y=0.)
+    vec = xnp.where(indices >= idx, x, 0.)
     x_norm = xnp.norm(vec)
     vec = xnp.update_array(vec, vec[idx] - x_norm, idx)
     beta = xnp.nan_to_num(2. / xnp.norm(vec)**2., posinf=0., neginf=0., nan=0.)
@@ -170,7 +169,7 @@ def run_householder_arnoldi(A: LinearOperator, rhs: Array, max_iters: int):
 
     init_val = initialize_householder_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
     # state = xnp.while_loop(cond_fun, body_fun, init_val)
-    state = for_loop(1, max_iters + 1, body_fun, init_val)
+    state = xnp.for_loop(1, max_iters + 1, body_fun, init_val)
     state = last_iter_fun(state)
     Q, H, *_ = state
     infodict = {}

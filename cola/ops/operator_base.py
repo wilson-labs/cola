@@ -5,7 +5,7 @@ import numpy as np
 import cola
 from cola.utils import export
 from cola.backends import np_fns, get_library_fns, AutoRegisteringPyTree
-
+from types import ModuleType
 Array = Dtype = Any
 export(Array)
 
@@ -224,11 +224,10 @@ def maybe_get_dtype(obj):
 
 
 def is_array(obj):
-    if not hasattr(obj, 'dtype'):
+    try:
+        return get_library_fns(obj.dtype).is_array(obj)
+    except (ImportError, AttributeError):
         return False
-    if get_library_fns(obj.dtype).is_array(obj):
-        return True
-    return False
 
 
 def is_xnp_array(obj, xnp):

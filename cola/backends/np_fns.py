@@ -1,11 +1,11 @@
 import logging
 import sys
-
+import hashlib
 import numpy as np
 from scipy.linalg import block_diag as _block_diag, lu as _lu, solve_triangular
 from scipy.signal import convolve2d
 import optree
-
+from cola.utils.torch_tqdm import while_loop_winfo
 
 class NumpyNotImplementedError(NotImplementedError):
     def __init__(self):
@@ -68,7 +68,7 @@ svd = np.linalg.svd
 where = np.where
 promote_types = np.promote_types
 finfo = np.finfo
-
+zeros_like = np.zeros_like
 
 def PRNGKey(key):
     raise NumpyNotImplementedError()
@@ -106,12 +106,22 @@ def convolve(in1, in2, mode="same"):
 
 
 def device(device_name):
-    raise NumpyNotImplementedError()
+    return None
 
+def PRNGKey(x):
+    return sha_hash(x)
+
+def next_key(key):
+    return sha_hash(key)
 
 def diag(v, diagonal=0):
     return np.diag(v, k=diagonal)
 
+def sha_hash(n):
+    n_bytes = n.to_bytes((n.bit_length() + 7) // 8, 'big')
+    hash_bytes = hashlib.sha256(n_bytes).digest()
+    hash_integer = int.from_bytes(hash_bytes, 'big')
+    return int(hash_integer % (2**32 - 1))
 
 def dynamic_slice(operand, start_indices, slice_sizes):
     raise NumpyNotImplementedError()
@@ -127,7 +137,10 @@ def eye(n, m=None, dtype=None, device=None):
 
 
 def for_loop(lower, upper, body_fun, init_val):
-    raise NumpyNotImplementedError()
+    state = init_val
+    for iter in range(lower, upper):
+        state = body_fun(iter, state)
+    return state
 
 
 def get_default_device():
@@ -143,11 +156,11 @@ def grad(fun):
 
 
 def is_array(array):
-    return False
+    return isinstance(array,np.ndarray)
 
 
 def jit(fn, static_argnums=None):
-    raise NumpyNotImplementedError()
+    return fn
 
 
 def jvp(fun, primals, tangents, has_aux=False):
@@ -178,7 +191,7 @@ def next_key(key):
     raise NumpyNotImplementedError()
 
 
-def ones(shape, dtype):
+def ones(shape, dtype, device):
     return np.ones(shape=shape, dtype=dtype)
 
 
@@ -190,21 +203,21 @@ def permute(array, axes):
     return np.transpose(array, axes=axes)
 
 
-def randn(*shape, dtype=None, key=None):
+def randn(*shape, dtype=None, device=None, key=None):
     if key is None:
-        print("Non keyed randn used. To be deprecated soon.")
         logging.warning("Non keyed randn used. To be deprecated soon.")
-        out = np.random.randn(*shape)
-    if dtype is not None:
-        out = out.astype(dtype)
-        return out
-    else:
-        z = normal(key, shape, dtype=dtype)
-        return z
+        key = PRNGKey(0)
+
+    old_state = np.random.get_state()
+    np.random.seed(key)
+    z = np.random.randn(*shape).astype(dtype)
+    np.random.set_state(old_state)
+    return z
 
 
 def update_array(array, update, *slices):
-    return array.at[slices].set(update)
+    array[slices] = update
+    return array
 
 
 def vjp(fun, *primals, has_aux=False):
@@ -220,16 +233,14 @@ def vmap(fun, in_axes=0, out_axes=0):
 
 
 def while_loop(cond_fun, body_fun, init_val):
-    raise NumpyNotImplementedError()
+    val = init_val
+    while cond_fun(val):
+        val = body_fun(val)
+    return val
 
 
 def while_loop_no_jit(cond_fun, body_fun, init_val):
-    raise NumpyNotImplementedError()
-
-
-def while_loop_winfo(errorfn, tol, every=1, desc="", pbar=False, **kwargs):
-    raise NumpyNotImplementedError()
-
+    return while_loop(cond_fun, body_fun, init_val)
 
 def zeros(shape, dtype, device=None):
     del device

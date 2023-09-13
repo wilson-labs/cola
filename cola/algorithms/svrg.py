@@ -3,7 +3,6 @@ import cola
 # from cola.linalg.eigs import eigmax
 from cola.ops import Sum, Product, Dense
 from cola.ops import I_like
-from cola.utils.control_flow import while_loop
 from cola.utils import export
 # import standard Union type
 
@@ -99,7 +98,7 @@ def solve_svrg_symmetric(A: Sum, b, tol=1e-6, P=None, x0=None, pbar=False, info=
     inf = {}
     # while_loop, inf = xnp.while_loop_winfo(lambda s: s[-3], tol, pbar=pbar)
     # while_loop = xnp.while_loop
-    _, _, anchor_w, _, residual, _, _ = while_loop(cond, body, state)
+    _, _, anchor_w, _, residual, _, _ = xnp.while_loop(cond, body, state)
     return anchor_w, inf if info else anchor_w
 
 

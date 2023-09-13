@@ -139,7 +139,7 @@ def update_alpha(gamma, p, Ap, has_converged, xnp):
     denom = xnp.sum(xnp.conj(p) * Ap, axis=-2, keepdims=True)
     alpha = do_safe_div(gamma, denom, xnp=xnp)
     device = xnp.get_device(p)
-    alpha = xnp.where(has_converged, x=xnp.array(0.0, dtype=p.dtype, device=device), y=alpha)
+    alpha = xnp.where(has_converged, xnp.array(0.0, dtype=p.dtype, device=device), alpha)
     return alpha
 
 
@@ -147,7 +147,7 @@ def update_gamma_beta(r, z, gamma0, has_converged, xnp):
     gamma1 = xnp.sum(xnp.conj(r) * z, axis=-2, keepdims=True)
     beta = do_safe_div(gamma1, gamma0, xnp=xnp)
     device = xnp.get_device(r)
-    beta = xnp.where(has_converged, x=xnp.array(0.0, dtype=r.dtype, device=device), y=beta)
+    beta = xnp.where(has_converged, xnp.array(0.0, dtype=r.dtype, device=device), beta)
     return gamma1, beta
 
 

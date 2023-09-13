@@ -6,11 +6,11 @@ from cola.linalg.inv import inv
 from cola.algorithms.gmres import gmres
 from cola.algorithms.gmres import gmres_fwd
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.backends import all_backends
+from cola.backends import all_backends, tracing_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 
 
-@parametrize(all_backends)
+@parametrize(tracing_backends)
 def test_gmres_vjp(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32

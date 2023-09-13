@@ -19,7 +19,6 @@ from jax.scipy.linalg import block_diag
 from jax.scipy.linalg import lu as lu_lax
 from jax.scipy.linalg import solve_triangular as solvetri
 from cola.utils.jax_tqdm import pbar_while, while_loop_winfo
-from cola.utils.control_flow import while_loop as _while_loop_no_jit
 
 cos = jnp.cos
 sin = jnp.sin
@@ -67,7 +66,6 @@ solvetri = solvetri
 qr = qr
 clip = jnp.clip
 while_loop = _while_loop
-while_loop_no_jit = _while_loop_no_jit
 for_loop = _for_loop
 min = jnp.min
 max = jnp.max
@@ -85,6 +83,12 @@ moveaxis = jnp.moveaxis
 promote_types = jnp.promote_types
 finfo = jnp.finfo
 
+
+def while_loop_no_jit(cond_fun, body_fun, init_val):
+    val = init_val
+    while cond_fun(val):
+        val = body_fun(val)
+    return val
 
 def get_array_device(array):
     return array.device()
@@ -202,7 +206,6 @@ def next_key(key):
 def randn(*shape, dtype, device, key=None):
     del device
     if key is None:
-        print('Non keyed randn used. To be deprecated soon.')
         logging.warning('Non keyed randn used. To be deprecated soon.')
         out = np.random.randn(*shape)
         if dtype is not None:

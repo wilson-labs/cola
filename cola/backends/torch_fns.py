@@ -193,7 +193,6 @@ def sha_hash(n):
 
 def randn(*shape, dtype, device, key=None):
     if key is None:
-        print('Non keyed randn used. To be deprecated soon.')
         logging.warning('Non keyed randn used. To be deprecated soon.')
         key = PRNGKey(0)
     old_state = torch.random.get_rng_state()

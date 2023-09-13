@@ -19,11 +19,12 @@ def get_library_fns(dtype):
         if dtype in [torch.float32, torch.float64, torch.complex64, torch.complex128, torch.int32, torch.int64]:
             from cola.backends import torch_fns as fns
             return fns
-        elif dtype in [np.float32, np.float64, np.complex64, np.complex128, np.int32, np.int64]:
-            from cola.backends import np_fns as fns
-            return fns
     except ImportError:
         pass
+
+    if dtype in [np.float32, np.float64, np.complex64, np.complex128, np.int32, np.int64]:
+        from cola.backends import np_fns as fns
+        return fns
     raise ImportError("No supported array library found")
 
 
@@ -39,6 +40,9 @@ def get_xnp(backend: str) -> ModuleType:
                 from jax.config import config
                 config.update('jax_platform_name', 'cpu')  # Force tests to run tests on CPU
                 # do we actually want this here?
+                return fns
+            case "numpy":
+                from cola.backends import np_fns as fns
                 return fns
             case _:
                 raise ValueError(f"Unknown backend {backend}.")

@@ -1,7 +1,7 @@
 import functools
 import time
 import numpy as np
-from torch import Tensor
+
 from tqdm.auto import tqdm
 
 
@@ -37,8 +37,12 @@ def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,
             if info['iterations'] == 0:
                 info['iteration_time'] = time.time()
             error = errorfn(state)
-            if isinstance(error, Tensor):
-                error = error.cpu().data.item()
+            try:
+                from torch import Tensor
+                if isinstance(error, Tensor):
+                    error = error.cpu().data.item()
+            except ImportError:
+                pass
             if not (info['iterations'] % every):
                 info['errors'].append(error)
                 if pbar:
@@ -49,8 +53,12 @@ def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,
         out = while_loop(newcond, body_fun, init_val)
         info['iteration_time'] = (time.time() - info['iteration_time']) / info['iterations']
         error = errorfn(out)
-        if isinstance(error, Tensor):
-            error = error.cpu().data.item()
+        try:
+            from torch import Tensor
+            if isinstance(error, Tensor):
+                error = error.cpu().data.item()
+        except ImportError:
+            pass
         info['errors'].append(error)
         info['errors'] = np.array(info['errors'][2:])
         if pbar:

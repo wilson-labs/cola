@@ -8,14 +8,14 @@ from cola.algorithms.lanczos import lanczos_parts
 from cola.algorithms.lanczos import lanczos_eigs
 from cola.algorithms.lanczos import lanczos_max_eig
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.backends import all_backends
+from cola.backends import all_backends, tracing_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 from cola.utils.test_utils import generate_diagonals
 
 _tol = 1e-6
 
 
-@parametrize(all_backends).excluding[:]  # disabled before we fix new lanczos outputs
+@parametrize(tracing_backends).excluding[:]  # disabled before we fix new lanczos outputs
 def test_lanczos_vjp(backend):
     if backend == 'torch':
         import torch

@@ -79,7 +79,7 @@ def iterative_autograd(iterative_bwd):
 
                 return iterative(par)
             else:
-                NotImplemented("Unknown ops for autograd")
+                return iterative_fn(A, *args, **kwargs)
 
         return iterative_w_A_arg
 
