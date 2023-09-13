@@ -6,8 +6,8 @@ from cola.algorithms.preconditioners import AdaNysPrecond
 from cola.algorithms.preconditioners import sqrt
 from cola.algorithms.preconditioners import inverse
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.backends import all_backends, construct_e_vec
-from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
+from cola.backends import all_backends
+from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag, construct_e_vec
 
 _tol = 1e-7
 
