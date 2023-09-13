@@ -3,9 +3,10 @@ from cola.ops import LinearOperator
 from cola.utils.test_utils import parametrize, relative_error
 import cola
 from operator_market import op_names, get_test_operator
+from cola.backends import all_backends
 
 
-@parametrize(['torch', 'jax'], ['float64'], op_names).excluding['torch', :, 'psd_kron']
+@parametrize(all_backends, ['float64'], op_names).excluding['torch', :, 'psd_kron']
 def test_inverse(backend, precision, op_name):
     operator = get_test_operator(backend, precision, op_name)
     tol = 1e-5

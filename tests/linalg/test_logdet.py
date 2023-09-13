@@ -4,11 +4,12 @@ import cola
 from cola.linalg import logdet
 from cola.ops import LinearOperator
 from cola.utils.test_utils import parametrize, relative_error
+from cola.backends import all_backends
 
 _exclude = (slice(None), slice(None), ['psd_identity', 'psd_scalarmul'])
 
 
-@parametrize(['torch', 'jax'], ['float64'], op_names).excluding[_exclude]
+@parametrize(all_backends, ['float64'], op_names).excluding[_exclude]
 def test_logdet(backend, precision, op_name):
     operator = get_test_operator(backend, precision, op_name)
     A, _, xnp = operator, operator.dtype, operator.xnp

@@ -6,10 +6,11 @@ from cola.linalg.inv import inv
 from cola.algorithms.gmres import gmres
 from cola.algorithms.gmres import gmres_fwd
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_gmres_vjp(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -53,7 +54,7 @@ def test_gmres_vjp(backend):
     assert rel_error < 1e-6
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_gmres_random(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -70,7 +71,7 @@ def test_gmres_random(backend):
     assert rel_error < 5e-4
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_gmres_easy(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32

@@ -7,11 +7,12 @@ from cola.algorithms.arnoldi import get_arnoldi_matrix
 from cola.algorithms.arnoldi import arnoldi_eigs
 from cola.algorithms.arnoldi import run_householder_arnoldi
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 from cola.utils.test_utils import generate_lower_from_diag
 
 
-@parametrize(['torch', 'jax']).excluding[:]
+@parametrize(all_backends).excluding[:]
 def test_arnoldi_vjp(backend):
     if backend == 'torch':
         import torch
@@ -60,7 +61,7 @@ def test_arnoldi_vjp(backend):
     assert abs_error < 5e-5
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_arnoldi(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex64

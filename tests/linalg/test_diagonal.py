@@ -3,9 +3,10 @@ from cola.ops import Dense, LinearOperator, Identity, Diagonal
 from cola.algorithms import exact_diag, approx_diag
 from cola.linalg import diag, trace
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.backends import all_backends
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_exact_diag(backend):
     xnp = get_xnp(backend)
     A = Dense(xnp.array([[1, 2, 3], [4, 5, 6], [7, 8, 9.]], dtype=xnp.float32, device=None))
@@ -15,7 +16,7 @@ def test_exact_diag(backend):
         assert relative_error(d1, d2) < 1e-5
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_approx_diag(backend):
     xnp = get_xnp(backend)
     A = Dense(xnp.array([[1, 2, 3], [4, 5, 6], [7, 8, 9.]], dtype=xnp.float32, device=None))
@@ -25,7 +26,7 @@ def test_approx_diag(backend):
         assert relative_error(d1, d2) < 9e-1
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_composite_diag(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -39,7 +40,7 @@ def test_composite_diag(backend):
     assert relative_error(d1, d2) < 1e-5
 
 
-@parametrize(['torch', 'jax'], ['exact', 'approx']).excluding[:, 'approx']
+@parametrize(all_backends, ['exact', 'approx']).excluding[:, 'approx']
 def test_large_trace(backend, method):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -52,7 +53,7 @@ def test_large_trace(backend, method):
     assert relative_error(d1, d2) < (1e-1 if method == 'approx' else 1e-5)
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_diagonal_diag(backend):
     size = 3
     xnp = get_xnp(backend)

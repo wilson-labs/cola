@@ -37,16 +37,11 @@ def get_test_operator(backend: str, precision: str, op_name: str,
                       device: str = 'cpu') -> LinearOperator:
     xnp = get_xnp(backend)
     dtype = getattr(xnp, precision)
-    if backend == 'torch':
-        import torch
-        device = torch.device(device)
-    else:
-        from jax import numpy as jnp
-        if dtype == jnp.float64:
-            from jax.config import config
-            config.update("jax_enable_x64", True)
-
-        device = None
+    device = xnp.device(device)
+    
+    if backend == 'jax' and dtype == xnp.float64:
+        from jax.config import config
+        config.update('jax_enable_x64', True)
 
     # Define the operator
     op = None

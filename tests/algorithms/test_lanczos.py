@@ -8,13 +8,14 @@ from cola.algorithms.lanczos import lanczos_parts
 from cola.algorithms.lanczos import lanczos_eigs
 from cola.algorithms.lanczos import lanczos_max_eig
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 from cola.utils.test_utils import generate_diagonals
 
 _tol = 1e-6
 
 
-@parametrize(['torch', 'jax']).excluding[:] # disabled before we fix new lanczos outputs
+@parametrize(all_backends).excluding[:] # disabled before we fix new lanczos outputs
 def test_lanczos_vjp(backend):
     if backend == 'torch':
         import torch
@@ -74,7 +75,7 @@ def test_lanczos_vjp(backend):
     assert abs_error < _tol * 50
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_lanczos_complex(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex64
@@ -99,7 +100,7 @@ def test_lanczos_complex(backend):
         assert rel_error < 5e-5
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_lanczos_random(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -127,7 +128,7 @@ def test_lanczos_random(backend):
         assert rel_error < 5e-5
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_lanczos_manual(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -150,7 +151,7 @@ def test_lanczos_manual(backend):
         assert rel_error < _tol
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_lanczos_iter(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -176,7 +177,7 @@ def test_lanczos_iter(backend):
         assert rel_error < _tol
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_get_lanczos_coeffs(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -199,7 +200,7 @@ def test_get_lanczos_coeffs(backend):
     assert rel_error < _tol
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_construct_tridiagonal(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32

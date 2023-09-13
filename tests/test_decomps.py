@@ -1,9 +1,10 @@
 import cola
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.backends import all_backends
 from linalg.operator_market import op_names, get_test_operator
 
 
-@parametrize(['torch', 'jax'], [op for op in op_names if op.startswith('psd')])
+@parametrize(all_backends, [op for op in op_names if op.startswith('psd')])
 def test_cholesky(backend, opname):
     xnp = get_xnp(backend)
     A = get_test_operator(backend, 'float32', opname)
@@ -16,7 +17,7 @@ def test_cholesky(backend, opname):
     assert relative_error(logdet1, logdet2) < 1e-5
 
 
-@parametrize(['torch', 'jax'], [op for op in op_names if op.startswith('square')])
+@parametrize(all_backends, [op for op in op_names if op.startswith('square')])
 def test_lu(backend, opname):
     xnp = get_xnp(backend)
     A = get_test_operator(backend, 'float32', opname)

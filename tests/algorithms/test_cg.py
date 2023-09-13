@@ -7,6 +7,7 @@ from cola.algorithms.cg import run_batched_cg
 from cola.algorithms.cg import run_batched_tracking_cg
 from cola.algorithms.cg import run_cg
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 from cola.utils.test_utils import generate_diagonals
 # from tests.algorithms.test_lanczos import construct_tridiagonal
@@ -15,7 +16,7 @@ from cola.utils.test_utils import generate_diagonals
 _tol = 1e-7
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_cg_vjp(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -82,7 +83,7 @@ def test_cg_gpu(backend):
     assert rel_error < 1e-6
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_cg_complex(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex64
@@ -102,7 +103,7 @@ def test_cg_complex(backend):
     assert rel_error < 1e-5
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_cg_random(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -123,7 +124,7 @@ def test_cg_random(backend):
     assert rel_error < 1e-6
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_cg_repeated_eig(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -145,7 +146,7 @@ def test_cg_repeated_eig(backend):
     assert rel_error < _tol * 10
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_cg_track_easy(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float64
@@ -166,7 +167,7 @@ def test_cg_track_easy(backend):
 
 
 # Marc: I disabled this test because it seems to test batched linear operators?
-# @parametrize(['torch', 'jax'])
+# @parametrize(all_backends)
 # def test_cg_easy_case(backend):
 #     xnp = get_xnp(backend)
 #     dtype = xnp.float64
