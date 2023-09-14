@@ -215,11 +215,6 @@ def randn(*shape, dtype, device, key=None):
     return z
 
 
-def fixed_normal_samples(shape, dtype, device):
-    # TODO: fix random seed for sample
-    return torch.randn(*shape, dtype=dtype, device=device)
-
-
 def vjp_derivs(fun, primals, duals, create_graph=True):
     if isinstance(primals, (list, tuple)):
         conj_primals = type(primals)((torch.conj(primal) for primal in primals))

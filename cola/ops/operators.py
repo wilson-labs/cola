@@ -237,8 +237,7 @@ class KronSum(LinearOperator):
         xnp = self.xnp
         for i, M in enumerate(self.Ms):
             ev_front = xnp.moveaxis(ev, i, 0)
-            Mev_front = (M @ ev_front.reshape(M.shape[-1], -1)).reshape(
-                M.shape[0], *ev_front.shape[1:])
+            Mev_front = (M @ ev_front.reshape(M.shape[-1], -1)).reshape(M.shape[0], *ev_front.shape[1:])
             out += xnp.moveaxis(Mev_front, 0, i)
         return out.reshape(self.shape[-2], ev.shape[-1])
 
@@ -433,9 +432,9 @@ class Jacobian(LinearOperator):
         self.f = f
         self.x = x
         # could perhaps relax this with automatic reshaping of x and y
-        #assert len(x.shape) == 1, "x must be a vector"
+        # assert len(x.shape) == 1, "x must be a vector"
         y_shape = f(x).shape
-        #assert len(y_shape) == 1, "y must be a vector"
+        # assert len(y_shape) == 1, "y must be a vector"
 
         super().__init__(dtype=x.dtype, shape=(y_shape[0], x.shape[0]))
 
@@ -484,8 +483,7 @@ class Hessian(LinearOperator):
         xnp = self.xnp
         # hack to make it work with pytorch
         if xnp.__name__ == 'cola.torch_fns' and False:
-            expanded_x = self.x[None, :] + self.xnp.zeros(
-                (X.shape[0], 1), dtype=self.x.dtype, device=self.device)
+            expanded_x = self.x[None, :] + self.xnp.zeros((X.shape[0], 1), dtype=self.x.dtype, device=self.device)
             fn = partial(self.xnp.vjp_derivs, self.xnp.vmap(self.xnp.grad(self.f)), (expanded_x, ))
             out = fn((X, ))
         else:

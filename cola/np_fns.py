@@ -128,12 +128,6 @@ def eye(n, m=None, dtype=None, device=None):
     return np.eye(N=n, M=m, dtype=dtype)
 
 
-def fixed_normal_samples(shape, dtype=None):
-    key = PRNGKey(4)
-    z = normal(key, shape, dtype=dtype)
-    return z
-
-
 def for_loop(lower, upper, body_fun, init_val):
     raise NumpyNotImplementedError()
 

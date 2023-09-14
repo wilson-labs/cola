@@ -1,6 +1,15 @@
 <p align="center">
  <img src="https://user-images.githubusercontent.com/6753639/251633368-1ec42732-1759-45d7-b949-51df6429a90a.svg"  width="300" height="150">
-</p>
+</p> 
+
+<!--
+<p align="center">
+  <img src="https://github.com/wilson-labs/cola/assets/6753639/28630ef8-5dcb-41c2-9f36-3cbba52f3d88.svg" width="300" height="139.29">
+</p> -->
+<!--
+<p align = "center">
+  <img src="https://github.com/wilson-labs/cola/assets/6753639/8b02c51e-0e1e-44f5-a52a-47ad428688e4.svg" width="300" height="139.29">
+</p>-->
 
 
 # Compositional Linear Algebra (CoLA)
@@ -84,7 +93,6 @@ Qs = cola.SelfAdjoint(Q)
 3. **JAX and PyTorch**. We support both ML frameworks.
 ```python
 import torch
-
 A = cola.ops.Dense(torch.Tensor([[1., 2.], [3., 4.]]))
 print(cola.linalg.trace(cola.kron(A, A)))
 
@@ -98,9 +106,10 @@ tensor(25.)
 25.0
 ```
 
-and both support autograd (and jit):
+CoLA also supports autograd (and jit):
 ```python
 from jax import grad, jit, vmap
+
 
 def myloss(x):
     A = cola.ops.Dense(jnp.array([[1., 2.], [3., x]]))
@@ -146,6 +155,10 @@ If you use CoLA, please cite the following paper:
 ## Contributing
 See the contributing guidelines [docs/CONTRIBUTING.md](https://cola.readthedocs.io/en/latest/contributing.html) for information on submitting issues
 and pull requests.
+
+To easily and automatically follow the format used in CoLA (contained in  `setup.cfg`), you can
+add a pre-commit hook that applies the format to the committed files by running (only
+once) `source hooks/add_pre-commit_hook.sh`.
 
 CoLA is Apache 2.0 licensed.
 

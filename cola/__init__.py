@@ -1,12 +1,10 @@
 from cola.utils import import_from_all
-from .ops import LinearOperator
 
 # Read version number as written by setuptools_scm
 try:
     from .version import version as __version__
 except Exception:  # pragma: no cover
     __version__ = "Unknown"  # pragma: no cover
-
 
 __all__ = []
 # for loader, module_name, is_pkg in  pkgutil.walk_packages(__path__):

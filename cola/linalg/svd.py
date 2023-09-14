@@ -19,9 +19,10 @@ def svd(X: LinearOperator, rank=None, top=True, tol=1e-7, method='auto') -> Tupl
         tol: The tolerance to use for the svd
         method: The method to use for the svd (auto, dense, lanczos)
 
-    Returns: A tuple of (U, S, VH) where U is shape (m, k), S is shape (k, k), and VH is shape (k, n)
+    Returns: A tuple of (U, S, VH) where U is shape (m, k), S is shape (k, k),
+    and VH is shape (k, n)
 
-    .. warning:: 
+    .. warning::
         This function is not yet well tested and does not yet include composition rules.
     """
     # kws = dict(k: int, top=True, tol=1e-7, method='auto')

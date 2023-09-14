@@ -71,8 +71,7 @@ def test_nys_sqrt_inverse(backend):
     assert rel_error < _tol * 10
 
     approx = inverse(Nys).to_dense()
-    rel_error = relative_error(xnp.eye(Nys.shape[0], Nys.shape[0], dtype=dtype, device=None),
-                               approx @ Nys.to_dense())
+    rel_error = relative_error(xnp.eye(Nys.shape[0], Nys.shape[0], dtype=dtype, device=None), approx @ Nys.to_dense())
     assert rel_error < _tol * 10
 
     approx = inverse(sqrt(inverse(sqrt(Nys)))).to_dense()
@@ -87,8 +86,7 @@ def test_nys_precond(backend):
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
     A = xnp.diag(xnp.array(diag, dtype=dtype, device=None))
     basis = [
-        xnp.array(construct_e_vec(i=i, size=A.shape[0]), dtype=dtype, device=None)[:, None]
-        for i in range(A.shape[0])
+        xnp.array(construct_e_vec(i=i, size=A.shape[0]), dtype=dtype, device=None)[:, None] for i in range(A.shape[0])
     ]
     mu = 1e-8
     rank = A.shape[0] // 2
@@ -122,7 +120,7 @@ def test_get_nys_approx_random(backend):
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
     A = soln = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype, device=None)
     rank = A.shape[0]
-    Omega = xnp.fixed_normal_samples(shape=(A.shape[0], rank), dtype=dtype, device=None)
+    Omega = xnp.randn(*(A.shape[0], rank), dtype=dtype, device=None)
 
     B = lazify(A)
     fn = xnp.jit(get_nys_approx, static_argnums=(0, 2))

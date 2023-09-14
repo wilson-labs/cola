@@ -178,8 +178,9 @@ def is_array(array):
 
 
 def convolve(in1, in2, mode='same'):
-    in12 = jnp.pad(in1, ((in2.shape[0] // 2, (in2.shape[0] + 1) // 2 - 1),
-                         (in2.shape[1] // 2, (in2.shape[1] + 1) // 2 - 1)), 'symmetric')
+    in12 = jnp.pad(in1,
+                   ((in2.shape[0] // 2, (in2.shape[0] + 1) // 2 - 1), (in2.shape[1] // 2, (in2.shape[1] + 1) // 2 - 1)),
+                   'symmetric')
     out = jax.scipy.signal.convolve2d(in12, in2, mode='valid')
     return out  # ,boundary='symm')
 
@@ -213,15 +214,8 @@ def randn(*shape, dtype, device, key=None):
             out = out.astype(dtype)
         return out
     else:
-        z = normal(key, shape, dtype=dtype)
+        z = normal(key, shape=shape, dtype=dtype)
         return z
-
-
-def fixed_normal_samples(shape, dtype, device):
-    del device
-    key = PRNGKey(4)
-    z = normal(key, shape, dtype=dtype)
-    return z
 
 
 def jvp_derivs(fun, primals, tangents, create_graph=True):
@@ -262,7 +256,7 @@ def is_leaf(value):
 
 
 def tree_flatten(value):
-    return tu.tree_flatten(value)  #leaves, treedef
+    return tu.tree_flatten(value)  # leaves, treedef
 
 
 def tree_unflatten(treedef, value):

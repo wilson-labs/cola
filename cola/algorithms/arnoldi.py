@@ -3,7 +3,6 @@ from cola.ops import Array
 from cola.ops import Householder, Product
 from cola.utils.control_flow import for_loop
 from cola.utils import export
-from cola.utils.custom_autodiff import iterative_autograd
 import cola
 from cola import Stiefel, lazify
 
@@ -36,8 +35,8 @@ from cola import Stiefel, lazify
 # @export
 # @iterative_autograd(arnoldi_eigs_bwd)
 @export
-def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int = 100,
-                 tol: float = 1e-7, use_householder: bool = False, pbar: bool = False):
+def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7,
+                 use_householder: bool = False, pbar: bool = False):
     """
     Computes eigenvalues and eigenvectors using Arnoldi.
 
@@ -56,8 +55,8 @@ def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
             - eigvectors (LinearOperator): eigenvectors of shape (n, max_iters).
             - info (dict): General information about the iterative procedure.
     """
-    Q, H, info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
-                         use_householder=use_householder, pbar=pbar)
+    Q, H, info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, use_householder=use_householder,
+                         pbar=pbar)
     xnp = A.xnp
     eigvals, vs = xnp.eig(H)
     eigvectors = Stiefel(lazify(xnp.cast(Q, dtype=vs.dtype))) @ lazify(vs)
@@ -67,8 +66,8 @@ def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
 
 
 @export
-def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7,
-            use_householder: bool = False, pbar: bool = False):
+def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7, use_householder: bool = False,
+            pbar: bool = False):
     """
     Computes the Arnoldi decomposition of the linear operator A, A = QHQ^*.
 
@@ -90,22 +89,21 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e
     xnp = A.xnp
     xnp = A.xnp
     if start_vector is None:
-        start_vector = xnp.fixed_normal_samples((A.shape[-1], 1), dtype=A.dtype, device=A.device)
+        start_vector = xnp.randn(*(A.shape[-1], 1), dtype=A.dtype, device=A.device)
     if use_householder:
         Q, H, infodict = run_householder_arnoldi(A=A, rhs=start_vector, max_iters=max_iters)
     else:
-        Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=start_vector, max_iters=max_iters, tol=tol,
-                                               pbar=pbar)
+        Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
         Q, H = Q[:, :, 0], H[:, :, 0]
     return Q, H, infodict
 
 
-def ArnoldiDecomposition(A: LinearOperator, start_vector=None, max_iters=100, tol=1e-7,
-                         use_householder=False, pbar=False):
+def ArnoldiDecomposition(A: LinearOperator, start_vector=None, max_iters=100, tol=1e-7, use_householder=False,
+                         pbar=False):
     """ Provides the Arnoldi decomposition of a matrix A = Q H Q^H. LinearOperator form of arnoldi,
         see arnoldi for arguments."""
-    Q, H, info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol,
-                         use_householder=use_householder, pbar=pbar)
+    Q, H, info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, use_householder=use_householder,
+                         pbar=pbar)
     A_approx = cola.UnitaryDecomposition(Q, H)
     A_approx.info = info
     return A_approx
@@ -147,10 +145,7 @@ def run_householder_arnoldi(A: LinearOperator, rhs: Array, max_iters: int):
     xnp = A.xnp
     dtype = A.dtype
     device = A.device
-    Ps = [
-        Householder(xnp.zeros((rhs.shape[-2], 1), dtype=dtype, device=device))
-        for _ in range(max_iters + 2)
-    ]
+    Ps = [Householder(xnp.zeros((rhs.shape[-2], 1), dtype=dtype, device=device)) for _ in range(max_iters + 2)]
 
     def body_fun(idx, state):
         Q, H, zj = state
@@ -205,8 +200,7 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
     def body_fun(state):
         Q, H, idx, _ = state
         new_vec = A @ Q[..., idx, :]
-        h_vec = xnp.zeros(shape=(max_iters + 1, rhs.shape[-1]), dtype=new_vec.dtype,
-                          device=xnp.get_device(new_vec))
+        h_vec = xnp.zeros(shape=(max_iters + 1, rhs.shape[-1]), dtype=new_vec.dtype, device=xnp.get_device(new_vec))
 
         def inner_loop(jdx, result):
             new_vec, h_vec = result

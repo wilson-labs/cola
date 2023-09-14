@@ -15,7 +15,7 @@ def test_inverse(backend, precision, op_name):
     A3 = cola.PSD(A2) if A.isa(cola.PSD) else A2
     Ainv2 = inv(A3, tol=tol, method='dense')
     Ainv3 = inv(A3, tol=tol, method='iterative')
-    B = xnp.fixed_normal_samples((A.shape[-1], 10), dtype=dtype, device=None)
+    B = xnp.randn(*(A.shape[-1], 10), dtype=dtype, device=None)
     B = xnp.array(B, dtype=dtype, device=None)
     X = Ainv @ B
     rel_error = relative_error(A @ X, B)

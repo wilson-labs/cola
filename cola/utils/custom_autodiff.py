@@ -1,5 +1,6 @@
 from functools import wraps
 
+
 def iterative_autograd(iterative_bwd):
     """ Autograd wrapper for iterative solvers like CG, Lanczos, SLQ, etc.
         Will construct a custom autograd rule for the iterative solver on every call
@@ -22,7 +23,8 @@ def iterative_autograd(iterative_bwd):
         """ Inner level wrapper """
         @wraps(iterative_fn)
         def iterative_w_A_arg(A, *args, **kwargs):
-            """ Version of iterative_fn that takes A as first argument and has a custom autograd rule."""
+            """ Version of iterative_fn that takes A as first argument and
+            has a custom autograd rule."""
             par, unflatten = A.flatten()
 
             # construct a fwd function that maps params -> (output, (params, output))
@@ -49,7 +51,6 @@ def iterative_autograd(iterative_bwd):
 
                     @staticmethod
                     def setup_context(ctx, inputs, output):
-                        params = inputs
                         res = (inputs, output)
                         all_tensors, tree = A.xnp.tree_flatten(res)
                         is_torch = [A.xnp.is_array(x) for x in all_tensors]
@@ -85,7 +86,7 @@ def iterative_autograd(iterative_bwd):
     return wrap_iterative
 
 
-def combine(torch_tensors,non_torch_tensors,is_torch):
+def combine(torch_tensors, non_torch_tensors, is_torch):
     iter1 = iter(torch_tensors)
     iter2 = iter(non_torch_tensors)
     return [next(iter1) if x else next(iter2) for x in is_torch]
