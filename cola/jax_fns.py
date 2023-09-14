@@ -89,7 +89,9 @@ softmax = jax.nn.softmax
 log_softmax = jax.nn.log_softmax
 promote_types = jnp.promote_types
 finfo = jnp.finfo
-iscomplex = jnp.iscomplexobj
+
+def iscomplexobj(x):
+    return jnp.iscomplex(x).any()
 
 def get_array_device(array):
     return array.device()
