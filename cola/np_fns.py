@@ -71,6 +71,7 @@ ifft = np.fft.ifft
 slogdet = np.linalg.slogdet
 promote_types = np.promote_types
 finfo = np.finfo
+iscomplexobj = np.iscomplexobj
 
 def PRNGKey(key):
     raise NumpyNotImplementedError()

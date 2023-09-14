@@ -64,7 +64,7 @@ prod = torch.prod
 moveaxis = torch.moveaxis
 promote_types = torch.promote_types
 finfo = torch.finfo
-
+iscomplexobj = torch.is_complex
 
 def softmax(x, axis=-1):
     return torch.nn.functional.softmax(x, dim=axis)
