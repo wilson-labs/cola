@@ -87,6 +87,8 @@ finfo = jnp.finfo
 fft = jnp.fft.fft
 ifft = jnp.fft.ifft
 slogdet = jnp.linalg.slogdet
+softmax = jax.nn.softmax
+log_softmax = jax.nn.log_softmax
 
 
 def get_array_device(array):

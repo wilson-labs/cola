@@ -70,7 +70,7 @@ promote_types = np.promote_types
 finfo = np.finfo
 fft = np.fft.fft
 ifft = np.fft.ifft
-logdet = np.linalg.logdet
+slogdet = np.linalg.slogdet
 
 
 def PRNGKey(key):
