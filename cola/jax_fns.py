@@ -84,6 +84,9 @@ prod = jnp.prod
 moveaxis = jnp.moveaxis
 promote_types = jnp.promote_types
 finfo = jnp.finfo
+fft = jnp.fft.fft
+ifft = jnp.fft.ifft
+slogdet = jnp.linalg.slogdet
 
 
 def get_array_device(array):

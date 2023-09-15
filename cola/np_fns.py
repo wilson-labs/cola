@@ -68,6 +68,9 @@ svd = np.linalg.svd
 where = np.where
 promote_types = np.promote_types
 finfo = np.finfo
+fft = np.fft.fft
+ifft = np.fft.ifft
+logdet = np.linalg.logdet
 
 
 def PRNGKey(key):

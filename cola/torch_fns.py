@@ -64,6 +64,7 @@ prod = torch.prod
 moveaxis = torch.moveaxis
 promote_types = torch.promote_types
 finfo = torch.finfo
+slogdet = torch.linalg.slogdet
 
 
 def get_array_device(array):
@@ -73,6 +74,14 @@ def get_array_device(array):
 def max(array, axis, keepdims=False):
     maxval, _ = torch.max(array, dim=axis, keepdim=keepdims)
     return maxval
+
+
+def fft(x, n=None, axis=-1, norm=None):
+    return torch.fft.fft(x, n=n, dim=axis, norm=norm)
+
+
+def ifft(x, n=None, axis=-1, norm=None):
+    return torch.fft.ifft(x, n=n, dim=axis, norm=norm)
 
 
 def is_cuda_available():
