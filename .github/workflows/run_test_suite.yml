@@ -62,7 +62,7 @@ jobs:
         else
           CODECOV_ARGS="";
         fi
-        cmd="pytest -m '${MARK}' -k '${FILTER}' ${CODECOV_ARGS} tests/"
+        cmd="pytest -m '${MARK}' ${CODECOV_ARGS} tests/"
         echo $cmd
         eval $cmd
 
