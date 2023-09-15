@@ -145,7 +145,7 @@ If you use CoLA, please cite the following paper:
 
 | LinearOperators   | Diag | BlockDiag | Kronecker | KronSum | Sparse | Jacobian | Hessian | Fisher | Concatenated | Triangular | FFT | Tridiagonal |
 |:-----------------:|:----:|:---------:|:---------:|:-------:|:------:|:--------:|:-------:|:------:|:------------:|:----------:|:---:|:-----------:|
-| **Implementation**|   ✓  |     ✓     |     ✓     |    ✓    |   ✓   |    ✓     |    ✓    |        |      ✓       |     ✓      |     |      ✓      |
+| **Implementation**|   ✓  |     ✓     |     ✓     |    ✓    |   ✓   |    ✓     |    ✓    |   ✓    |      ✓       |     ✓      |   ✓  |      ✓      |
 
 | Annotations      | SelfAdjoint | PSD | Unitary |
 |:----------------:|:-----------:|:---:|:-------:|
