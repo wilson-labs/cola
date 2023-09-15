@@ -173,8 +173,9 @@ def is_array(array):
 
 
 def convolve(in1, in2, mode='same'):
-    in12 = jnp.pad(in1, ((in2.shape[0] // 2, (in2.shape[0] + 1) // 2 - 1),
-                         (in2.shape[1] // 2, (in2.shape[1] + 1) // 2 - 1)), 'symmetric')
+    in12 = jnp.pad(in1,
+                   ((in2.shape[0] // 2, (in2.shape[0] + 1) // 2 - 1), (in2.shape[1] // 2, (in2.shape[1] + 1) // 2 - 1)),
+                   'symmetric')
     out = jax.scipy.signal.convolve2d(in12, in2, mode='valid')
     return out  # ,boundary='symm')
 
@@ -250,7 +251,7 @@ def is_leaf(value):
 
 
 def tree_flatten(value):
-    return tu.tree_flatten(value)  #leaves, treedef
+    return tu.tree_flatten(value)  # leaves, treedef
 
 
 def tree_unflatten(treedef, value):

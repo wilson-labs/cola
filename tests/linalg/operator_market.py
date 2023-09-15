@@ -35,8 +35,7 @@ op_names: set[str] = {
 }
 
 
-def get_test_operator(backend: str, precision: str, op_name: str,
-                      device: str = 'cpu') -> LinearOperator:
+def get_test_operator(backend: str, precision: str, op_name: str, device: str = 'cpu') -> LinearOperator:
     xnp = get_xnp(backend)
     dtype = getattr(xnp, precision)
     if backend == 'torch':
@@ -92,12 +91,18 @@ def get_test_operator(backend: str, precision: str, op_name: str,
                     op = Tridiagonal(alpha, beta, gamma)
 
         case ('selfadj', 'hessian'):
-            f2 = lambda x: (x[1] - .1)**3 + xnp.cos(x[2]) + (x[0] + .2)**2
+
+            def f2(x):
+                return (x[1] - .1)**3 + xnp.cos(x[2]) + (x[0] + .2)**2
+
             x = xnp.array([1., 2., 3.], dtype=dtype, device=device)
             op = Hessian(f2, x)
 
         case ('square', 'jacobian'):
-            f1 = lambda x: xnp.array([x[0]**2, x[1]**3, xnp.sin(x[2])], dtype=dtype)
+
+            def f1(x):
+                return xnp.array([x[0]**2, x[1]**3, xnp.sin(x[2])], dtype=dtype)
+
             x = xnp.array([1, 2, 3], dtype=dtype, device=device)
             op = Jacobian(f1, x)
 
@@ -130,12 +135,12 @@ def get_test_operator(backend: str, precision: str, op_name: str,
                 case 'product':
                     op = Product(lazify(M1), lazify(M2))
 
-        case ('square', 'sparse'):
-            data = xnp.array([1, 2, 3, 4, 5, 6], dtype=dtype, device=device)
-            indices = xnp.array([0, 2, 1, 0, 2, 1], dtype=dtype, device=device)
-            indptr = xnp.array([0, 2, 4, 6], dtype=dtype, device=device)
-            shape = (3, 3)
-            sparse = Sparse(data, indices, indptr, shape)
+        # case ('square', 'sparse'):
+        #     data = xnp.array([1, 2, 3, 4, 5, 6], dtype=dtype, device=device)
+        #     indices = xnp.array([0, 2, 1, 0, 2, 1], dtype=dtype, device=device)
+        #     indptr = xnp.array([0, 2, 4, 6], dtype=dtype, device=device)
+        #     shape = (3, 3)
+        #     sparse = Sparse(data, indices, indptr, shape)
 
         case ('diagonal', 'plus_uv'):
             D = Diagonal(xnp.array([.1, .5, .22, 8.], dtype=dtype, device=device))
@@ -167,8 +172,7 @@ def get_test_operator(backend: str, precision: str, op_name: str,
 
 def get_test_operators(backend: str, precision: str, device: str = 'cpu') -> list[LinearOperator]:
     return [
-        get_test_operator(backend=backend, precision=precision, device=device, op_name=op_name)
-        for op_name in op_names
+        get_test_operator(backend=backend, precision=precision, device=device, op_name=op_name) for op_name in op_names
     ]
 
 

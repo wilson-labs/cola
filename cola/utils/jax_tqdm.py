@@ -78,9 +78,7 @@ def loop_tqdm(n: int, message: typing.Optional[str] = None) -> typing.Callable:
     return _loop_tqdm
 
 
-def build_tqdm(
-        n: int,
-        message: typing.Optional[str] = None) -> typing.Tuple[typing.Callable, typing.Callable]:
+def build_tqdm(n: int, message: typing.Optional[str] = None) -> typing.Tuple[typing.Callable, typing.Callable]:
     """
     Build the tqdm progress bar on the host
     """
@@ -141,63 +139,6 @@ def build_tqdm(
     return _update_progress_bar, close_tqdm
 
 
-# def _body_pbar(errorfn, tol, desc='', every=1, hide=False):
-#     if hide: return lambda body: body
-
-#     def decorated_body(body):
-#         info = {'progval': 0, 'count': 0, 'pbar': None}
-#         default_desc = f"Running {body.__name__}"
-
-#         def construct_tqdm(arg, transform):
-#             print(f'constructing pbar')
-#             if info['pbar'] is None:
-#                 info['pbar'] = tqdm(
-#                     total=100, desc=f'{desc or default_desc}', bar_format=
-#                     "{l_bar}{bar}| {n:.3g}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}{postfix}]"
-#                 )
-
-#         def update_tqdm(arg, transform):
-#             error = errorfn(arg)
-#             errstart = info.setdefault('errstart', error)
-#             progress = max(
-#                 100 * np.log(error / errstart) / np.log(tol / errstart) - info['progval'], 0)
-#             progress = min(100 - info['progval'], progress)
-#             if progress > 0:
-#                 info['progval'] += progress
-#                 info['pbar'].update(progress)
-#             if error < tol:
-#                 info['pbar'].close()
-
-#         def increment_count(arg, transform):
-#             info['count'] += 1
-#             print(info['count'])
-
-#         @functools.wraps(body)
-#         def newbody(val):
-#             _ = jax.lax.cond(
-#                 info['count'] == 0,
-#                 lambda _: host_callback.id_tap(construct_tqdm, None, result=info['count']),
-#                 lambda _: info['count'],
-#                 operand=None,
-#             )
-#             nextval = body(val)
-
-#             _ = jax.lax.cond(
-#                 info['count'] % every == 0,
-#                 lambda _: host_callback.id_tap(update_tqdm, val, result=info['count']),
-#                 lambda _: info['count'],
-#                 operand=None,
-#             )
-#             _ = host_callback.id_tap(increment_count, None, result=info['count'])
-#             return nextval
-
-#         return newbody
-
-#     return decorated_body
-
-# while loop with progress bar
-
-
 def pbar_while(errorfn, tol, desc='', every=1, hide=False):
     """ Decorator for while loop with progress bar. Assumes that
         errorfn is a function of the loop variable and returns a scalar
@@ -210,15 +151,14 @@ def pbar_while(errorfn, tol, desc='', every=1, hide=False):
         default_desc = f"Running {body_fun.__name__}"
 
         def construct_tqdm(arg, transform):
-            info['pbar'] = tqdm(
-                total=100, desc=f'{desc or default_desc}', bar_format=
-                "{l_bar}{bar}| {n:.3g}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}{postfix}]")
+            _bar_format = "{l_bar}{bar}| {n:.3g}/{total_fmt} [{elapsed}<{remaining}, "
+            _bar_format += "{rate_fmt}{postfix}]"
+            info['pbar'] = tqdm(total=100, desc=f'{desc or default_desc}', bar_format=_bar_format)
 
         def update_tqdm(arg, transform):
             error = errorfn(arg)
             errstart = info.setdefault('errstart', error)
-            progress = max(
-                100 * np.log(error / errstart) / np.log(tol / errstart) - info['progval'], 0)
+            progress = max(100 * np.log(error / errstart) / np.log(tol / errstart) - info['progval'], 0)
             progress = min(100 - info['progval'], progress)
             if progress > 0:
                 info['progval'] += progress
@@ -241,8 +181,7 @@ def pbar_while(errorfn, tol, desc='', every=1, hide=False):
         def newcond(ival):
             i, val = ival
             out = jax.lax.cond(cond_fun(val), lambda _: True,
-                               lambda _: host_callback.id_tap(close_tqdm, val, result=False),
-                               operand=None)
+                               lambda _: host_callback.id_tap(close_tqdm, val, result=False), operand=None)
             return out
 
         host_callback.id_tap(construct_tqdm, None)
@@ -252,7 +191,7 @@ def pbar_while(errorfn, tol, desc='', every=1, hide=False):
     return new_while
 
 
-def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,  **kwargs):
+def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False, **kwargs):
     """ Decorator for while loop with progress bar.
 
         Assumes that errorfn is a function of the loop variable and returns a scalar
@@ -282,8 +221,7 @@ def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,
             if pbar:
                 bar_format = "{l_bar}{bar}| {n:.3g}/{total_fmt} [{elapsed}<{remaining},"
                 bar_format += "{rate_fmt}{postfix}]"
-                info['pbar'] = tqdm(total=100, desc=f'{desc or default_desc}',
-                                    bar_format=bar_format)
+                info['pbar'] = tqdm(total=100, desc=f'{desc or default_desc}', bar_format=bar_format)
 
         def update_info(ival, _):
             i, arg = ival
@@ -294,7 +232,7 @@ def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,
                 howclose = np.log(error / errstart) / np.log(tol / errstart)
                 if max_iters is not None:
                     howclose = max((i + 1) / max_iters, howclose)
-                progress = min(100 - info['progval'], max(100*howclose - info['progval'], 0))
+                progress = min(100 - info['progval'], max(100 * howclose - info['progval'], 0))
                 if progress > 0:
                     info['progval'] += progress
                     info['pbar'].update(progress)

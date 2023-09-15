@@ -43,8 +43,7 @@ def test_general(backend):
     diag = generate_spectrum(coeff=0.75, scale=1.0, size=15)
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
     A = SelfAdjoint(lazify(A))
-    soln = xnp.array(generate_pd_from_diag(diag**0.5, dtype=diag.dtype, seed=21), dtype=dtype,
-                     device=None)
+    soln = xnp.array(generate_pd_from_diag(diag**0.5, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
     approx = sqrt(A).to_dense()
 
     rel_error = relative_error(soln, approx)

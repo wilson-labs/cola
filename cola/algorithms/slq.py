@@ -58,8 +58,8 @@ def slq_fwd(A, fun, num_samples, max_iters, tol, pbar, key):
 
 
 @export
-def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, max_iters: int = 100,
-                            tol: float = 1e-5, vtol=0.1, pbar: bool = False, key=None):
+def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, max_iters: int = 100, tol: float = 1e-5, vtol=0.1,
+                            pbar: bool = False, key=None):
     """
     Approximates trace(f(A)) for a positive definite operator A and a given function
     f().
@@ -77,5 +77,4 @@ def stochastic_lanczos_quad(A: LinearOperator, fun: Callable, max_iters: int = 1
     """
     # TODO: bwds has a bug because it assumes f is log
     num_samples = max(int(1 / vtol**2), 1)
-    return slq_fwd(A, fun, num_samples=num_samples, max_iters=max_iters, tol=tol, pbar=pbar,
-                   key=key)
+    return slq_fwd(A, fun, num_samples=num_samples, max_iters=max_iters, tol=tol, pbar=pbar, key=key)

@@ -7,8 +7,8 @@ from cola.utils.custom_autodiff import iterative_autograd
 
 
 @export
-def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=100, tol=1e-7, P=None,
-          use_householder=False, use_triangular=False, pbar=False):
+def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=100, tol=1e-7, P=None, use_householder=False,
+          use_triangular=False, pbar=False):
     """
     Solves Ax=b or AX=B using GMRES.
 
@@ -36,9 +36,8 @@ def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=100, tol=1e-7, P=Non
     if is_vector:
         rhs = rhs[..., None]
         x0 = x0[..., None]
-    soln, infodict = gmres_fwd(A=A, rhs=rhs, x0=x0, max_iters=max_iters, tol=tol, P=P,
-                               use_householder=use_householder, use_triangular=use_triangular,
-                               pbar=pbar)
+    soln, infodict = gmres_fwd(A=A, rhs=rhs, x0=x0, max_iters=max_iters, tol=tol, P=P, use_householder=use_householder,
+                               use_triangular=use_triangular, pbar=pbar)
     if is_vector:
         soln = soln[:, 0]
     return soln, infodict
@@ -68,8 +67,7 @@ def gmres_fwd(A, rhs, x0, max_iters, tol, P, use_householder, use_triangular, pb
     if use_householder:
         Q, H, infodict = run_householder_arnoldi(A=A, rhs=res, max_iters=max_iters)
     else:
-        Q, H, idx, infodict = get_arnoldi_matrix(A=A, rhs=res, max_iters=max_iters, tol=tol,
-                                                 pbar=pbar)
+        Q, H, idx, infodict = get_arnoldi_matrix(A=A, rhs=res, max_iters=max_iters, tol=tol, pbar=pbar)
         Q, H = Q[:, :idx, :], H[:idx, :idx, :]
     beta = xnp.norm(res, axis=-2)
     e1 = xnp.zeros(shape=(H.shape[0], beta.shape[0]), dtype=rhs.dtype, device=A.device)

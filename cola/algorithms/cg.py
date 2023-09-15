@@ -163,8 +163,7 @@ def run_batched_tracking_cg(A, b, x0, max_iters, tol, preconditioner):
     xnp = A.xnp
     mult = xnp.norm(b, axis=-2, keepdims=True)
     b_norm = do_safe_div(b, mult, xnp=xnp)
-    init_val = initialize_track(A=A, b=b_norm, preconditioner=preconditioner, x0=x0,
-                                max_iters=max_iters, xnp=xnp)
+    init_val = initialize_track(A=A, b=b_norm, preconditioner=preconditioner, x0=x0, max_iters=max_iters, xnp=xnp)
 
     def cond(state):
         flag = cond_fun_track(state, tol, max_iters, xnp=xnp)

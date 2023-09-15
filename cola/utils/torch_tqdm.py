@@ -69,7 +69,7 @@ def update_pbar(error, tol, info, max_iters):
     howclose = np.log(error / errstart) / np.log(tol / errstart)
     if max_iters is not None:
         howclose = max(info['iterations'] / max_iters, howclose)
-    progress = min(100 - info['progval'], max(100*howclose - info['progval'], 0))
+    progress = min(100 - info['progval'], max(100 * howclose - info['progval'], 0))
     if progress > 0:
         info['progval'] += progress
         info['pbar'].update(progress)
@@ -92,6 +92,7 @@ def pbar_while(errorfn, tol, max_iters=None, desc='', every=1, hide=False):
         while cond_fun(val):
             val = newbody(val)
         return val
+
     return new_while
 
 
@@ -108,8 +109,7 @@ def body_pbar(errorfn, tol, desc='', every=1, hide=False, max_iters=None):
             if info['pbar'] is None:
                 _bar_format = "{l_bar}{bar}| {n:.3g}/{total_fmt} [{elapsed}<{remaining},"
                 _bar_format += " {rate_fmt}{postfix}]"
-                info['pbar'] = tqdm(total=100, desc=f'{desc or default_desc}',
-                                    bar_format=_bar_format)
+                info['pbar'] = tqdm(total=100, desc=f'{desc or default_desc}', bar_format=_bar_format)
             val = body(*args, **kwargs)
             info['count'] += 1
             if info['count'] % every != 0:
@@ -121,7 +121,7 @@ def body_pbar(errorfn, tol, desc='', every=1, hide=False, max_iters=None):
             howclose = np.log(error / errstart) / np.log(tol / errstart)
             if max_iters is not None:
                 howclose = max(info['count'] / max_iters, howclose)
-            progress = min(100 - info['progval'], max(100*howclose - info['progval'], 0))
+            progress = min(100 - info['progval'], max(100 * howclose - info['progval'], 0))
             if progress > 0:
                 info['progval'] += progress
                 info['pbar'].update(progress)

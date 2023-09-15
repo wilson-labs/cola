@@ -65,8 +65,7 @@ def test_arnoldi(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex64
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=4, dtype=np.float32)
-    A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype,
-                  device=None)
+    A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype, device=None)
     zr = xnp.randn(A.shape[1], 1, dtype=xnp.float32, device=None, key=xnp.PRNGKey(123))
     rhs = xnp.cast(zr, dtype=dtype)
     eigvals, eigvecs, _ = arnoldi_eigs(lazify(A), rhs, max_iters=A.shape[-1])
@@ -136,6 +135,7 @@ def test_get_arnoldi_matrix(backend):
 @parametrize(['jax'])
 def test_numpy_arnoldi(backend):
     xnp = get_xnp(backend)
+    del xnp
     float_formatter = "{:.2f}".format
     np.set_printoptions(formatter={'float_kind': float_formatter})
     # dtype = np.complex64

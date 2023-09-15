@@ -169,7 +169,7 @@ def parametric(original_class=None):
         # Only create a new subclass if it doesn't exist already.
         if ps not in subclasses:
 
-            if not original_class.__new__ is object.__new__:
+            if original_class.__new__ is not object.__new__:
 
                 def __new__(cls, *args, **kw_args):
                     return original_class.__new__(cls, *args, **kw_args)
@@ -338,4 +338,4 @@ class Val:
         return repr_short(type(self)) + "()"
 
     def __eq__(self, other):
-        return type(self) == type(other)
+        return type(self) is type(other)

@@ -3,10 +3,9 @@ from typing import Set, Union
 from collections.abc import Iterable
 from plum import dispatch
 from cola.ops import LinearOperator, Array
-from cola.ops import Dense
 from cola.ops import Kronecker, Product, Sum
 from cola.ops import Transpose, Adjoint
-from cola.ops import BlockDiag, Identity, Diagonal, ScalarMul
+from cola.ops import BlockDiag, Identity, ScalarMul
 from cola.ops import Hessian, Permutation, Sliced
 from cola.utils import export
 
@@ -34,6 +33,7 @@ class WrapMeta(type):
 class Annotation(metaclass=WrapMeta):
     pass
 
+
 class SelfAdjoint(Annotation):
     """ Annotation for Self-Adjoint (Hermitian) matrices. A^H=A
         Means symmetric for real matrices. A^T = A"""
@@ -48,10 +48,13 @@ class PSD(SelfAdjoint):
         all eigenvalues are greater than or equal to zero,
         and the matrix should be self-adjoint. """
     pass
+
+
 class Stiefel(Annotation):
     """ Annotation for Stiefel matrices (incomplete unitary).
         A^H A = I but A A^H != I. """
     pass
+
 
 class Unitary(Stiefel):
     """ Annotation for Unitary matrices. A^H A = I
@@ -65,7 +68,7 @@ class Unitary(Stiefel):
 @dispatch
 @export
 def get_annotations(A: LinearOperator) -> Set[str]:
-    """ Return the get_annotations of a linear operator. 
+    """ Return the get_annotations of a linear operator.
         Called in the constructor of LinearOperator."""
     return set()
 
@@ -79,10 +82,8 @@ def get_annotations(A: Kronecker):
     return intersect_annotations(A.Ms)
 
 
-inferred_self_adjoint_types = Union[Product[LinearOperator, Union[Transpose[LinearOperator],
-                                                                  Adjoint[LinearOperator]]],
-                                    Product[Union[Transpose[LinearOperator],
-                                                  Adjoint[LinearOperator]], LinearOperator]]
+inferred_self_adjoint_types = Union[Product[LinearOperator, Union[Transpose[LinearOperator], Adjoint[LinearOperator]]],
+                                    Product[Union[Transpose[LinearOperator], Adjoint[LinearOperator]], LinearOperator]]
 
 
 def are_the_same(A1, A1T):

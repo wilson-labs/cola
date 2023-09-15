@@ -34,13 +34,13 @@ def test_ops_to(backend, precision, op_name):
     # device_gpu = xnp.device("cuda:0")
 
     assert Op.device == device_cpu
-    ones = xnp.ones((Op.shape[0],), dtype=dtype, device=device_cpu)
+    ones = xnp.ones((Op.shape[0], ), dtype=dtype, device=device_cpu)
     aux = Op @ ones
     assert xnp.get_array_device(aux) == device_cpu
 
     Op = Op.to(device_gpu)
     assert Op.device == device_gpu
-    ones = xnp.ones((Op.shape[0],), dtype=dtype, device=device_gpu)
+    ones = xnp.ones((Op.shape[0], ), dtype=dtype, device=device_gpu)
     aux = Op @ ones
     assert xnp.get_array_device(aux) == device_gpu
 
@@ -75,8 +75,7 @@ def test_sparse(backend):
     indptr = xnp.array([0, 1, 3, 3, 5], dtype=xnp.int64, device=None)
     shape = (4, 5)
     As = Sparse(data, indices, indptr, shape)
-    x = xnp.array([0.29466099, 0.71853315, -0.06172857, -0.0432496, 0.44698924], dtype=dtype,
-                  device=None)
+    x = xnp.array([0.29466099, 0.71853315, -0.06172857, -0.0432496, 0.44698924], dtype=dtype, device=None)
     rel_error = relative_error(A @ x, As @ x)
     assert rel_error < _tol
 
@@ -98,8 +97,7 @@ def test_jacobian(backend):
 def test_householder(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    x = xnp.array([0.29466099, 0.71853315, -0.06172857, -0.0432496, 0.44698924], dtype=dtype,
-                  device=None)
+    x = xnp.array([0.29466099, 0.71853315, -0.06172857, -0.0432496, 0.44698924], dtype=dtype, device=None)
     w = x / xnp.norm(x)
     R = Householder(w[:, None])
     rel_error = relative_error(-x, R @ x)
@@ -180,8 +178,8 @@ def test_get_item(backend):
 def test_sliced(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    A = [[-1.0165, -1.9161, 0.8602, -0.4597], [1.1470, 0.9879, -1.0831, 1.2768],
-         [1.0912, 0.6360, -0.8962, 0.7849], [-0.4359, 0.5612, 1.4560, 0.0682]]
+    A = [[-1.0165, -1.9161, 0.8602, -0.4597], [1.1470, 0.9879, -1.0831, 1.2768], [1.0912, 0.6360, -0.8962, 0.7849],
+         [-0.4359, 0.5612, 1.4560, 0.0682]]
     A = xnp.array(A, dtype=dtype, device=None)
     slices = (slice(1, 3, None), slice(0, 3, None))
     rhs = [[-0.3018, 0.0266, -2.4584], [0.3041, -1.2548, 0.0115], [-0.4590, -3.0145, 0.5659]]
@@ -206,11 +204,11 @@ def test_sliced(backend):
 def test_product_op(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    A = [[-1.0165, -1.9161, 0.8602, -0.4597], [1.1470, 0.9879, -1.0831, 1.2768],
-         [1.0912, 0.6360, -0.8962, 0.7849], [-0.4359, 0.5612, 1.4560, 0.0682]]
+    A = [[-1.0165, -1.9161, 0.8602, -0.4597], [1.1470, 0.9879, -1.0831, 1.2768], [1.0912, 0.6360, -0.8962, 0.7849],
+         [-0.4359, 0.5612, 1.4560, 0.0682]]
     A = xnp.array(A, dtype=dtype, device=None)
-    B = [[-1.3213, 0.8053, -0.4334, 0.6765], [0.5056, 0.5160, 0.6120, -0.8747],
-         [-1.8671, -0.1413, 1.6811, -0.5727], [-1.7080, 0.0548, -0.1522, -0.2481]]
+    B = [[-1.3213, 0.8053, -0.4334, 0.6765], [0.5056, 0.5160, 0.6120, -0.8747], [-1.8671, -0.1413, 1.6811, -0.5727],
+         [-1.7080, 0.0548, -0.1522, -0.2481]]
     D = [[0.3105, 0.2883, 0.4809, -0.0063], [0.6082, 1.0688, -1.6521, -1.4216]]
     D = xnp.array(D, dtype=dtype, device=None)
     B = xnp.array(B, dtype=dtype, device=None)
@@ -234,11 +232,11 @@ def test_product_op(backend):
 def test_sum_and_scalar_op(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    A = [[-1.0165, -1.9161, 0.8602, -0.4597], [1.1470, 0.9879, -1.0831, 1.2768],
-         [1.0912, 0.6360, -0.8962, 0.7849], [-0.4359, 0.5612, 1.4560, 0.0682]]
+    A = [[-1.0165, -1.9161, 0.8602, -0.4597], [1.1470, 0.9879, -1.0831, 1.2768], [1.0912, 0.6360, -0.8962, 0.7849],
+         [-0.4359, 0.5612, 1.4560, 0.0682]]
     A = xnp.array(A, dtype=dtype, device=None)
-    B = [[-1.3213, 0.8053, -0.4334, 0.6765], [0.5056, 0.5160, 0.6120, -0.8747],
-         [-1.8671, -0.1413, 1.6811, -0.5727], [-1.7080, 0.0548, -0.1522, -0.2481]]
+    B = [[-1.3213, 0.8053, -0.4334, 0.6765], [0.5056, 0.5160, 0.6120, -0.8747], [-1.8671, -0.1413, 1.6811, -0.5727],
+         [-1.7080, 0.0548, -0.1522, -0.2481]]
     B = xnp.array(B, dtype=dtype, device=None)
     rhs = [[1., 3.], [4., 5.], [6., -8.], [-1., 0.2]]
     rhs = xnp.array(rhs, dtype=dtype, device=None)
@@ -347,10 +345,9 @@ def test_tridiagonal(backend):
     alpha = [-0.5, 4., 5.]
     beta = [0.1, 0.2, -0.1, 0.4]
     gamma = [-1.0, 2., 3.]
-    A = [[beta[0], gamma[0], 0, 0], [alpha[0], beta[1], gamma[1], 0],
-         [0., alpha[1], beta[2], gamma[2]], [0., 0., alpha[2], beta[3]]]
-    X = [[-0.23742934, -1.28097845], [-0.4654211, -0.42619589], [-1.78554193, -1.01728456],
-         [-0.85312595, -0.52601772]]
+    A = [[beta[0], gamma[0], 0, 0], [alpha[0], beta[1], gamma[1], 0], [0., alpha[1], beta[2], gamma[2]],
+         [0., 0., alpha[2], beta[3]]]
+    X = [[-0.23742934, -1.28097845], [-0.4654211, -0.42619589], [-1.78554193, -1.01728456], [-0.85312595, -0.52601772]]
 
     A_j = xnp.array(A, dtype=dtype, device=None)
     alpha_j = xnp.array(alpha, dtype=dtype, device=None)
@@ -368,8 +365,7 @@ def test_adjoint_property(backend):
     dtype = xnp.complex64
     A = xnp.array([[1 + 1j, 2 - 2j, 7 - 3j], [3 + 1j, 4 - 1j, 5 + 2j]], dtype=dtype, device=None)
     B = LinearOperator(shape=A.shape, matmat=lambda x: A @ x, dtype=A.dtype)
-    X = xnp.array([1. + 1j, 4. - 2j, 2.5 + 1j, -.1 - 1j, -3. + 1j, -7. - 3j], dtype=dtype,
-                  device=None)
+    X = xnp.array([1. + 1j, 4. - 2j, 2.5 + 1j, -.1 - 1j, -3. + 1j, -7. - 3j], dtype=dtype, device=None)
     X = X.reshape(2, 3)
     rel_error = relative_error(xnp.conj(A).T @ X, B.H @ X)
     assert rel_error < _tol
