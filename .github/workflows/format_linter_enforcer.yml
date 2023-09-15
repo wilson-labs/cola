@@ -21,6 +21,9 @@ jobs:
       - name: Install YAPF, autope8 and flake8
         run: pip install yapf autopep8 flake8
 
+      - name: Run Flake8
+        run: flake8
+
       - name: Check formatting
         run: |
           autopep8 -ir .
