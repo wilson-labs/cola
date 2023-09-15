@@ -35,7 +35,7 @@ setup(
         'optree',
     ],
     extras_require={
-        'dev': ['pytest', 'pytest-cov', 'setuptools_scm'],
+        'dev': ['pytest', 'pytest-cov', 'setuptools_scm', 'pre-commit'],
     },
     packages=find_packages(),
     long_description=open('README.md').read(),
