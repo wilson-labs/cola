@@ -65,6 +65,7 @@ moveaxis = torch.moveaxis
 promote_types = torch.promote_types
 finfo = torch.finfo
 slogdet = torch.linalg.slogdet
+iscomplexobj = torch.is_complex
 
 
 def get_array_device(array):
