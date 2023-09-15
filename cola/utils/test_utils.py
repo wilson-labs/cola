@@ -2,7 +2,7 @@ import inspect
 import itertools
 import pytest
 
-from cola.backends import get_library_fns, get_xnp
+from cola.backends import get_library_fns, get_xnp, all_backends
 import numpy as np
 
 get_xnp = get_xnp
@@ -22,6 +22,9 @@ def _add_marks(case, is_tricky=False):
         marks.append(pytest.mark.big)
     if is_tricky:
         marks.append(pytest.mark.tricky)
+    for backend in all_backends:
+        if any(backend in arg for arg in args):
+            marks.append(getattr(pytest.mark,backend))
     return pytest.param(*case, marks=marks)
 
 

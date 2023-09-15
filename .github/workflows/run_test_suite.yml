@@ -51,12 +51,11 @@ jobs:
     - name: Run unit tests
       run: |
         MARK="not big and not tricky"
-        FILTER=""
         if [[ ${{ matrix.jax }} == "none" ]]; then
-          FILTER="not jax";
+          MARK="${MARK} and not jax";
         fi
         if [[ ${{ matrix.torch }} == "none" ]]; then
-          FILTER="not torch";
+          MARK="${MARK} and not torch";
         fi
         if [[ ${{ matrix.codecov || 'none' }} == "upload" ]]; then
           CODECOV_ARGS=" --cov cola --cov-report xml:cov.xml";
