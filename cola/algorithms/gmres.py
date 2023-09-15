@@ -80,7 +80,7 @@ def gmres_fwd(A, rhs, x0, max_iters, tol, P, use_householder, use_triangular, pb
         pred = Q[:, :, 0] @ y
     else:
         nH = xnp.permute(H, axes=[2, 0, 1])
-        nHT = xnp.permute(H, axes=[2, 1, 0])
+        nHT = xnp.conj(xnp.permute(H, axes=[2, 1, 0]))
         ne1 = xnp.permute(e1[None], axes=[2, 1, 0])
         nQ = xnp.permute(Q, axes=[2, 0, 1])
 
