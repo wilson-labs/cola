@@ -4,6 +4,7 @@ import hashlib
 import numpy as np
 from scipy.linalg import block_diag as _block_diag, lu as _lu, solve_triangular
 from scipy.signal import convolve2d
+from cola.utils.torch_tqdm import while_loop_winfo
 import optree
 
 
@@ -12,7 +13,7 @@ class NumpyNotImplementedError(NotImplementedError):
         fn_name = sys._getframe(1).f_code.co_name
         super().__init__(f"{fn_name} is not implemented for the numpy backend.")
 
-
+while_loop_winfo = while_loop_winfo
 abs = np.abs
 all = np.all
 allclose = np.allclose
@@ -21,7 +22,6 @@ arange = np.arange
 argsort = np.argsort
 block_diag = _block_diag
 cholesky = np.linalg.cholesky
-clip = np.clip
 complex64 = np.complex64
 concat = np.concatenate
 concatenate = np.concatenate
@@ -52,7 +52,6 @@ norm = np.linalg.norm
 normal = np.random.normal
 ones_like = np.ones_like
 prod = np.prod
-qr = np.linalg.qr
 reshape = np.reshape
 roll = np.roll
 sign = np.sign
@@ -70,10 +69,16 @@ promote_types = np.promote_types
 finfo = np.finfo
 zeros_like = np.zeros_like
 
+def lu(a):
+    p_ids, L, U = _lu(a, p_indices=True)
+    return p_ids, L, U
 
-def PRNGKey(key):
-    raise NumpyNotImplementedError()
+def clip(array, a_min=None, a_max=None):
+    return np.clip(array, a_min=a_min, a_max=a_max)
 
+def qr(a, full_matrices=False):
+    mode = "reduced" if not full_matrices else "complete"
+    return np.linalg.qr(a, mode=mode)
 
 def Parameter(array):
     return array
@@ -83,9 +88,9 @@ def array(arr, dtype=None, device=None):
     return np.array(arr, dtype=dtype)
 
 
-def canonical(loc, shape, dtype, device=None):
-    vec = np.zeros(shape=shape, dtype=dtype)
-    vec = vec.at[loc].set(1.0)
+def canonical(loc, shape, dtype, device):
+    vec = np.zeros(shape, dtype=dtype)
+    vec[loc] = 1.
     return vec
 
 
@@ -134,7 +139,7 @@ def dynamic_slice(operand, start_indices, slice_sizes):
 
 
 def expand(array, axis):
-    return np.expand_dims(array, dimensions=(axis, ))
+    return np.expand_dims(array, (axis, ))
 
 
 def eye(n, m=None, dtype=None, device=None):
@@ -191,10 +196,6 @@ def move_to(arr, device, dtype):
     if device is not None:
         raise RuntimeError("move_to does not take in a device argument for the numpy backend.")
     return arr
-
-
-def next_key(key):
-    raise NumpyNotImplementedError()
 
 
 def ones(shape, dtype, device):

@@ -21,6 +21,7 @@ def test_unary(backend, precision, op_name, fn_name):
     Anp = np.array(Adense)
     fv = spfn(Anp) @ np.array(v)
     fv1 = np.array(fn(A, tol=tol, method='auto') @ v)
+    Q = fn(A, tol=tol, method='auto')
     e1 = relative_error(fv, fv1)
     assert e1 < 3 * tol, f"Dispatch rules failed on {type(A)} with error {e1}"
     A3 = cola.SelfAdjoint(A2) if A.isa(cola.SelfAdjoint) else A2

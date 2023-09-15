@@ -14,7 +14,7 @@ export(Array)
 class LinearOperator(metaclass=AutoRegisteringPyTree):
     """ Linear Operator base class """
     _dynamic = {key: False for key in ['xnp', 'shape', 'dtype', 'device', 'annotations']}
-
+    __array_ufunc__ = None
     def __new__(cls, *args, **kwargs):
         """ Creates attributes for the flatten and unflatten functionality. """
         obj = super().__new__(cls)

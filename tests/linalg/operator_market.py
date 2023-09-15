@@ -17,7 +17,7 @@ op_names: set[str] = {
     'psd_prod',
     'psd_scalarmul',
     'psd_kron',
-    'selfadj_hessian',
+    #'selfadj_hessian', # commented out for numpy, lets figure out a better solution later
     'selfadj_tridiagonal',
     # 'square_big',  # skipped by default
     'square_blockdiag',

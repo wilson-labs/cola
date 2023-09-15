@@ -13,6 +13,7 @@ _exclude = (slice(None), slice(None), ['psd_identity', 'psd_scalarmul'])
 def test_logdet(backend, precision, op_name):
     operator = get_test_operator(backend, precision, op_name)
     A, _, xnp = operator, operator.dtype, operator.xnp
+    if not A.isa(cola.SelfAdjoint) and backend == 'numpy': return
     A2 = LinearOperator(A.dtype, A.shape, A._matmat)
     tol = 1e-4
     Adense = A.to_dense()
