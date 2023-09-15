@@ -3,7 +3,7 @@ from functools import reduce
 from cola.utils import export, dispatch
 from cola.ops import LinearOperator, I_like, Diagonal, Identity
 from cola.ops import BlockDiag, ScalarMul, Sum, Dense, Array
-from cola.ops import Kronecker, KronSum
+from cola.ops import Kronecker, KronSum, Product
 from cola.algorithms import exact_diag, approx_diag
 
 
@@ -141,3 +141,9 @@ def trace(A: LinearOperator, **kwargs):
 @dispatch
 def trace(A: Kronecker, **kwargs):
     return product([trace(M, **kwargs) for M in A.Ms])
+
+
+@dispatch(cond=lambda A, **kwargs: A.Ms[0].shape[0] > min(M.shape[0] for M in A.Ms))
+def trace(A: Product, **kwargs):
+    shift_idx = min(enumerate(M.shape[0] for M in A.Ms), key= lambda x: x[1])[0]
+    return trace(Product(*(A.Ms[shift_idx::] + A.Ms[:shift_idx:])), **kwargs)

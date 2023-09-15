@@ -2,7 +2,7 @@ from cola.fns import lazify
 from cola.ops import LinearOperator, Tridiagonal, Diagonal, Identity
 from cola.ops import KronSum, Product
 from cola.ops import Triangular, Kronecker, Permutation
-from cola.ops import Dense, BlockDiag, Jacobian, Hessian
+from cola.ops import Dense, BlockDiag, Jacobian, Hessian, Sparse
 from cola.annotations import SelfAdjoint
 from cola.annotations import PSD
 from cola.utils_test import get_xnp
@@ -30,6 +30,8 @@ op_names: set[str] = {
     'square_product',
     # 'square_sparse',
     'square_tridiagonal',
+    'diagonal_plus_uv',
+    'uv_plus_diagonal',
 }
 
 
@@ -72,6 +74,7 @@ def get_test_operator(backend: str, precision: str, op_name: str, device: str = 
                     op = BlockDiag(M1, M2, multiplicities=[2, 3])
                 case 'prod':
                     op = M1 @ M1.T
+    
         case ('psd', 'kron'):
             M1 = Dense(xnp.array([[6., 2], [2, 4]], dtype=dtype, device=device))
             M2 = Dense(xnp.array([[7, 6], [6, 8]], dtype=dtype, device=device))
@@ -138,6 +141,18 @@ def get_test_operator(backend: str, precision: str, op_name: str, device: str = 
         #     indptr = xnp.array([0, 2, 4, 6], dtype=dtype, device=device)
         #     shape = (3, 3)
         #     sparse = Sparse(data, indices, indptr, shape)
+
+        case ('diagonal', 'plus_uv'):
+            D = Diagonal(xnp.array([.1, .5, .22, 8.], dtype=dtype, device=device))
+            U = Dense(xnp.array([[6., 2], [2, 4], [1.2, 2], [5, 10]], dtype=dtype, device=device))
+            V = Dense(xnp.array([[7, 6, 6, 8.7], [3., .2, 13, 4]], dtype=dtype, device=device))
+            op = D + U @ V
+
+        case ('uv', 'plus_diagonal'):
+            D = Diagonal(xnp.array([.1, .5, .22, 8.], dtype=dtype, device=device))
+            U = Dense(xnp.array([[6., 2], [2, 4], [1.2, 2], [5, 10]], dtype=dtype, device=device))
+            V = Dense(xnp.array([[7, 6, 6, 8.7], [3., .2, 13, 4]], dtype=dtype, device=device))
+            op = U @ V + D
 
     # Check to sure that we hit a case statement
     if op is None:
