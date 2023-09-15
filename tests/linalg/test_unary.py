@@ -13,7 +13,6 @@ def test_unary(backend, precision, op_name, fn_name):
     fn = getattr(cola.linalg, fn_name)
     spfn = getattr(scipy.linalg, fn_name + 'm')
     A, dtype, xnp = operator, operator.dtype, operator.xnp
-
     A2 = LinearOperator(A.dtype, A.shape, A._matmat)
     tol = 1e-4
     v = xnp.randn(A.shape[-1], dtype=dtype, device=None)
