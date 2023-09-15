@@ -60,7 +60,6 @@ class ArnoldiUnary(LinearOperator):
         Pinv0 = self.xnp.solve(P, e0.T)  # (bs, m, m) vs (bs, m)
         out = Pinv0 * norms[:, None]  # (bs, m)
         Q = self.xnp.cast(Q, dtype=P.dtype)  # (bs, n, m)
-        
         # (bs,n,m) @ (bs,m,m) @ (bs, m) -> (bs, n)
         out = (Q @ P @ (self.f(eigvals) * out)[..., None])[..., 0]
         return out.T

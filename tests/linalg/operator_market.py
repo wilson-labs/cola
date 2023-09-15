@@ -80,9 +80,9 @@ def get_test_operator(backend: str, precision: str, op_name: str, device: str = 
             op = Kronecker(M1, M2)
 
         case ('square', 'complex'):
-            U,_, V = xnp.svd(xnp.array([[6.+1e-1j, 2j], [2, 4j]],dtype=xnp.complex64,device=device))
-            d = xnp.array([1, 2.+0j], dtype=xnp.complex64, device=device)
-            op = Dense((d*V) @ xnp.conj(U.T))
+            U, _, V = xnp.svd(xnp.array([[6. + 1e-1j, 2j], [2, 4j]], dtype=xnp.complex64, device=device))
+            d = xnp.array([1, 2. + 0j], dtype=xnp.complex64, device=device)
+            op = Dense((d * V) @ xnp.conj(U.T))
 
         case (('selfadj' | 'square') as op_prop, 'tridiagonal'):
             alpha = xnp.array([1, 2, 3], dtype=dtype, device=device)[:2]

@@ -1,4 +1,4 @@
-name: YAPF and Autopep8 Format Enforcer
+name: Format enforcer and Flake8 linting
 
 on:
   pull_request:
@@ -21,13 +21,12 @@ jobs:
       - name: Install YAPF, autope8 and flake8
         run: pip install yapf autopep8 flake8
 
-      - name: Run Flake
+      - name: Run Flake8
         run: flake8
 
       - name: Check formatting
         run: |
           autopep8 -ir .
           yapf -ir .
-
       - name: Check for changes
         run: git diff --exit-code --name-only || (echo "Code is not formatted correctly. Please run formatter locally on the files above." && exit 1)

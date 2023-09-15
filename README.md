@@ -1,6 +1,6 @@
 <p align="center">
  <img src="https://user-images.githubusercontent.com/6753639/251633368-1ec42732-1759-45d7-b949-51df6429a90a.svg"  width="300" height="150">
-</p> 
+</p>
 
 <!--
 <p align="center">
@@ -21,7 +21,7 @@
 [![Paper](https://img.shields.io/badge/arXiv-2309.03060-red)](https://arxiv.org/abs/2309.03060)
 <!-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wilson-labs/cola/blob/master/docs/notebooks/colabs/all.ipynb) -->
 
-CoLA is a framework for scalable linear algebra, automatically exploiting the structure often found in machine learning problems and beyond. 
+CoLA is a framework for scalable linear algebra, automatically exploiting the structure often found in machine learning problems and beyond.
 CoLA supports both PyTorch and JAX.
 
 ## Installation
@@ -157,8 +157,8 @@ See the contributing guidelines [docs/CONTRIBUTING.md](https://cola.readthedocs.
 and pull requests.
 
 To easily and automatically follow the format used in CoLA (contained in  `setup.cfg`), you can
-add a pre-commit hook that applies the format to the committed files by running (only
-once) `source hooks/add_pre-commit_hook.sh`.
+run `pre-commit install`. This command would create a list of pre-commit hooks which
+would run the format and linting automatically.
 
 CoLA is Apache 2.0 licensed.
 
