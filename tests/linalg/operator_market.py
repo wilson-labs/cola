@@ -2,7 +2,7 @@ from cola.fns import lazify
 from cola.ops import LinearOperator, Tridiagonal, Diagonal, Identity
 from cola.ops import KronSum, Product
 from cola.ops import Triangular, Kronecker, Permutation
-from cola.ops import Dense, BlockDiag, Jacobian, Hessian
+from cola.ops import Dense, BlockDiag, Jacobian, Hessian, FFT
 from cola.annotations import SelfAdjoint
 from cola.annotations import PSD
 from cola.utils_test import get_xnp
@@ -30,6 +30,7 @@ op_names: set[str] = {
     'square_product',
     # 'square_sparse',
     'square_tridiagonal',
+    'square_fft',
 }
 
 
@@ -106,6 +107,8 @@ def get_test_operator(backend: str, precision: str, op_name: str, device: str = 
         case ('square', 'permutation'):
             op = Permutation(xnp.array([1, 0, 2, 3, 6, 5, 4], dtype=xnp.int32, device=device))
 
+        case ('square', 'fft'):
+            op = FFT(36, dtype=dtype).to(device)
         case ('square', sub_op_name):
             M1 = xnp.array([[1, 0], [3, 4]], dtype=dtype, device=device)
             M2 = xnp.array([[5, 6], [7, 8]], dtype=dtype, device=device)

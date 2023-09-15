@@ -604,7 +604,6 @@ def FIM(logits_fn, theta):
     probs = xnp.softmax(logits_fn(theta), axis=-1)
 
     def entropy(theta):
-        xnp = get_library_fns(theta.dtype)
         log_probs = xnp.log_softmax(logits_fn(theta), axis=-1)
         return -xnp.sum(probs * log_probs, axis=-1).mean()
 
