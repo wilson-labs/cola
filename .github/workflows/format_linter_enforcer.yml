@@ -1,4 +1,4 @@
-name: YAPF and Autopep8 Format Enforcer
+name: Format enforcer and Flake8 linting
 
 on:
   pull_request:
