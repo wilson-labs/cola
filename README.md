@@ -156,10 +156,6 @@ If you use CoLA, please cite the following paper:
 See the contributing guidelines [docs/CONTRIBUTING.md](https://cola.readthedocs.io/en/latest/contributing.html) for information on submitting issues
 and pull requests.
 
-To easily and automatically follow the format used in CoLA (contained in  `setup.cfg`), you can
-run `pre-commit install`. This command would create a list of pre-commit hooks which
-would run the format and linting automatically.
-
 CoLA is Apache 2.0 licensed.
 
 ## Support and contact

@@ -16,6 +16,9 @@ pip install -r docs/requirements.txt
 In order to properly develop for CoLA, you will need to have both [JaX](https://github.com/google/jax#installation)
 and [PyTorch](https://pytorch.org/get-started/locally/) installed.
 
+**To easily and automatically follow the format used in CoLA** (contained in  `setup.cfg`), you can
+run `pre-commit install`. This command would create a list of pre-commit hooks which
+would run the format and linting automatically.
 
 ## Our Development Process
 
