@@ -16,13 +16,13 @@ from cola.ops import Jacobian
 from cola.ops import LinearOperator
 from cola.algorithms.arnoldi import get_householder_vec
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.backends import all_backends
+from cola.backends import all_backends, tracing_backends
 from linalg.operator_market import op_names, get_test_operator
 
 _tol = 1e-6
 
 
-@parametrize(all_backends, ['float32'], op_names)
+@parametrize(tracing_backends, ['float32'], op_names)
 def test_ops_to(backend, precision, op_name):
     Op = get_test_operator(backend, precision, op_name)
     xnp = get_xnp(backend)
@@ -46,7 +46,7 @@ def test_ops_to(backend, precision, op_name):
     assert xnp.get_array_device(aux) == device_gpu
 
 
-@parametrize(all_backends)
+@parametrize(tracing_backends)
 def test_find_device(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
