@@ -24,7 +24,7 @@ def _add_marks(case, is_tricky=False):
         marks.append(pytest.mark.tricky)
     for backend in all_backends:
         if any(backend in arg for arg in args):
-            marks.append(getattr(pytest.mark,backend))
+            marks.append(getattr(pytest.mark, backend))
     return pytest.param(*case, marks=marks)
 
 
