@@ -2,7 +2,7 @@ from cola.fns import lazify
 from cola.ops import LinearOperator, Tridiagonal, Diagonal, Identity
 from cola.ops import KronSum, Product
 from cola.ops import Triangular, Kronecker, Permutation
-from cola.ops import Dense, BlockDiag, Jacobian, Hessian
+from cola.ops import Dense, BlockDiag, Jacobian, Hessian, FFT
 from cola.annotations import SelfAdjoint
 from cola.annotations import PSD
 from cola.utils.test_utils import get_xnp
@@ -17,7 +17,8 @@ op_names: set[str] = {
     'psd_prod',
     'psd_scalarmul',
     'psd_kron',
-    #'selfadj_hessian', # commented out for numpy, lets figure out a better solution later
+    # 'selfadj_hessian', # commented out for numpy, lets figure out a better solution later
+    # 'square_complex',
     'selfadj_tridiagonal',
     # 'square_big',  # skipped by default
     'square_blockdiag',
@@ -30,6 +31,7 @@ op_names: set[str] = {
     'square_product',
     # 'square_sparse',
     'square_tridiagonal',
+    'square_fft',
 }
 
 
@@ -72,6 +74,11 @@ def get_test_operator(backend: str, precision: str, op_name: str, device: str = 
             M2 = Dense(xnp.array([[7, 6], [6, 8]], dtype=dtype, device=device))
             op = Kronecker(M1, M2)
 
+        case ('square', 'complex'):
+            U, _, V = xnp.svd(xnp.array([[6. + 1e-1j, 2j], [2, 4j]], dtype=xnp.complex64, device=device))
+            d = xnp.array([1, 2. + 0j], dtype=xnp.complex64, device=device)
+            op = Dense((d * V) @ xnp.conj(U.T))
+
         case (('selfadj' | 'square') as op_prop, 'tridiagonal'):
             alpha = xnp.array([1, 2, 3], dtype=dtype, device=device)[:2]
             beta = xnp.array([4, 5, 6], dtype=dtype, device=device)
@@ -101,6 +108,8 @@ def get_test_operator(backend: str, precision: str, op_name: str, device: str = 
         case ('square', 'permutation'):
             op = Permutation(xnp.array([1, 0, 2, 3, 6, 5, 4], dtype=xnp.int32, device=device))
 
+        case ('square', 'fft'):
+            op = FFT(36, dtype=xnp.complex64).to(device)
         case ('square', sub_op_name):
             M1 = xnp.array([[1, 0], [3, 4]], dtype=dtype, device=device)
             M2 = xnp.array([[5, 6], [7, 8]], dtype=dtype, device=device)

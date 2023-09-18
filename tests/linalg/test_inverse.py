@@ -20,8 +20,8 @@ def test_inverse(backend, precision, op_name):
     B = xnp.array(B, dtype=dtype, device=None)
     X = Ainv @ B
     rel_error = relative_error(A @ X, B)
-    assert rel_error < 3 * tol, f"Dispatch rules failed on {type(A)}"
+    assert rel_error < 3 * tol, f"Dispatch rules failed on {type(A)} with {rel_error}"
     rel_error = relative_error(X, Ainv2 @ B)
-    assert rel_error < 3 * tol, f"Dense inversion failed on {type(A)}"
+    assert rel_error < 3 * tol, f"Dense inversion failed on {type(A)} with {rel_error}"
     rel_error = relative_error(X, Ainv3 @ B)
-    assert rel_error < 10 * tol, f"Krylov inversion failed on {type(A)}"
+    assert rel_error < 10 * tol, f"Krylov inversion failed on {type(A)} with {rel_error}"

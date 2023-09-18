@@ -577,3 +577,36 @@ class Householder(LinearOperator):
         angle = xnp.sum(X * self.vec, axis=-2, keepdims=True)
         out = X - self.beta * angle * self.vec
         return out
+
+
+class FFT(LinearOperator):
+    """ FFT matrix. Uses convention so matrix is unitary."""
+    def __init__(self, n, dtype=None):
+        super().__init__(shape=(n, n), dtype=dtype, annotations={cola.Unitary})
+
+    def _matmat(self, X):
+        return self.xnp.fft(X, axis=0, norm='ortho')
+
+    def _rmatmat(self, X):
+        return self.xnp.ifft(X.conj(), axis=1, norm='ortho').conj()
+
+
+def FIM(logits_fn, theta):
+    """ Fisher information matrix for a probability model log p(y|theta)
+        where p is a classifier probability distribution. Averages over batch dimensions.
+
+        Args:
+            logit_fn (function that maps parameters to logits of shape (*, n_classes)
+            theta (array_like): parameter vector to eval Fisher at
+
+        Returns:
+            Hessian(KL(p(y|theta')||p(y|theta))) (w.r.t. theta)
+    """
+    xnp = get_library_fns(theta.dtype)
+    probs = xnp.softmax(logits_fn(theta), axis=-1)
+
+    def entropy(theta):
+        log_probs = xnp.log_softmax(logits_fn(theta), axis=-1)
+        return -xnp.sum(probs * log_probs, axis=-1).mean()
+
+    return cola.PSD(Hessian(entropy, theta))

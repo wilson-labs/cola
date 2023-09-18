@@ -13,6 +13,7 @@ class NumpyNotImplementedError(NotImplementedError):
         fn_name = sys._getframe(1).f_code.co_name
         super().__init__(f"{fn_name} is not implemented for the numpy backend.")
 
+
 while_loop_winfo = while_loop_winfo
 abs = np.abs
 all = np.all
@@ -40,7 +41,6 @@ isreal = np.isreal
 kron = np.kron
 log = np.log
 long = np.int64
-lu = _lu
 max = np.max
 maximum = np.maximum
 mean = np.mean
@@ -65,20 +65,33 @@ stack = np.stack
 sum = np.sum
 svd = np.linalg.svd
 where = np.where
+fft = np.fft.fft
+ifft = np.fft.ifft
+slogdet = np.linalg.slogdet
 promote_types = np.promote_types
 finfo = np.finfo
 zeros_like = np.zeros_like
+fft = np.fft.fft
+ifft = np.fft.ifft
+slogdet = np.linalg.slogdet
+promote_types = np.promote_types
+finfo = np.finfo
+iscomplexobj = np.iscomplexobj
+
 
 def lu(a):
     p_ids, L, U = _lu(a, p_indices=True)
     return p_ids, L, U
 
+
 def clip(array, a_min=None, a_max=None):
     return np.clip(array, a_min=a_min, a_max=a_max)
+
 
 def qr(a, full_matrices=False):
     mode = "reduced" if not full_matrices else "complete"
     return np.linalg.qr(a, mode=mode)
+
 
 def Parameter(array):
     return array
