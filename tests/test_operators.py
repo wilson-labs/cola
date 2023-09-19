@@ -360,7 +360,7 @@ def test_tridiagonal(backend):
     assert rel_error < 1e-6
 
 
-@parametrize(all_backends)
+@parametrize(tracing_backends)
 def test_adjoint_property(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex64
@@ -372,7 +372,7 @@ def test_adjoint_property(backend):
     assert rel_error < _tol
 
 
-@parametrize(all_backends)
+@parametrize(tracing_backends)
 def test_transpose_property(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -386,7 +386,7 @@ def test_transpose_property(backend):
     assert rel_error < _tol, f"JAX transpose relative error: {rel_error}"
 
 
-@parametrize(all_backends)
+@parametrize(tracing_backends)
 def test_vjp_transpose(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32

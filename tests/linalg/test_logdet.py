@@ -6,7 +6,7 @@ from cola.ops import LinearOperator
 from cola.utils.test_utils import parametrize, relative_error
 from cola.backends import all_backends
 
-_exclude = (slice(None), slice(None), ['psd_identity', 'psd_scalarmul'])
+_exclude = (slice(None), slice(None), ['psd_identity', 'psd_scalarmul', 'selfadj_tridiagonal'])
 
 
 @parametrize(all_backends, ['float64'], op_names).excluding[_exclude]

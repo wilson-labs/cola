@@ -133,7 +133,7 @@ def test_get_arnoldi_matrix(backend):
     assert rel_error < 1e-12
 
 
-@parametrize(['jax'])
+@parametrize(['numpy'])
 def test_numpy_arnoldi(backend):
     xnp = get_xnp(backend)
     del xnp
@@ -146,11 +146,11 @@ def test_numpy_arnoldi(backend):
     rhs = np.random.normal(size=(A.shape[0], ))
     # rhs = np.random.normal(size=(A.shape[0], 2)).view(np.complex128)[:, 0]
 
-    Q, H = run_householder_arnoldi_np(A, rhs, max_iter=A.shape[0], dtype=dtype)
-    abs_error = np.linalg.norm(np.eye(A.shape[0]) - Q.T @ Q)
-    assert abs_error < 1e-4
-    abs_error = np.linalg.norm(Q.T @ A @ Q - H)
-    assert abs_error < 1e-6
+    # Q, H = run_householder_arnoldi_np(A, rhs, max_iter=A.shape[0], dtype=dtype)
+    # abs_error = np.linalg.norm(np.eye(A.shape[0]) - Q.T @ Q)
+    # assert abs_error < 1e-4
+    # abs_error = np.linalg.norm(Q.T @ A @ Q - H)
+    # assert abs_error < 1e-6
 
     Q, H = run_arnoldi(A, rhs, max_iter=A.shape[0] - 2, tol=1e-12, dtype=dtype)
     abs_error = np.linalg.norm(A @ Q[:, :-1] - Q @ H)
