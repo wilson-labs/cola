@@ -1,8 +1,116 @@
 from typing import Union
 from cola.ops import LinearOperator
 from cola.algorithms import power_iteration
-from plum import dispatch
+# from plum import dispatch
 from cola.utils import export
+# from cola.compositions import UnitaryDecomposition
+
+
+@export
+class NystromPrecond(LinearOperator):
+    """
+    Constructs the Nystrom Preconditioner of a linear operator A.
+
+    Args:
+        A (LinearOperator): A positive definite linear operator of size (n, n).
+        rank (int): The rank of the Nystrom approximation.
+        mu (float): Regularization of the linear system (A + mu)x = b.
+         Usually, this preconditioner is used to solve linear systems and
+         therefore its construction accomodates for the regularization.
+        eps (float): Shift used when constructing the preconditioner.
+        adjust_mu (bool, optional): Whether to adjust the regularization with the
+         estimatted dominant eigenvalue.
+    """
+    def __init__(self, A, rank, mu=1e-7, eps=1e-8, adjust_mu=True, key=None):
+        super().__init__(dtype=A.dtype, shape=A.shape)
+        key = A.xnp.PNRGKey(42) if key is None else key
+        Omega = A.xnp.randn(*(A.shape[0], rank), dtype=A.dtype, device=A.device, key=key)
+        Lambda, U = get_nys_approx(A=A, Omega=Omega, eps=eps)
+        self.adjusted_mu = amu = mu * A.xnp.max(self.Lambda, axis=0) if adjust_mu else mu
+        # Num and denom help for defining inverse and sqrt
+        subspace_num = A.xnp.min(Lambda) + amu
+        subspace_denom = Lambda + amu
+        subspace_scaling = subspace_num / subspace_denom - 1
+        subspace_scaling = subspace_scaling[:, None]
+        preconditioned_eigmax = A.xnp.min(Lambda) + amu
+        preconditioned_eigmin = amu
+        self.U = U
+        self.subspace_scaling = subspace_scaling
+
+    def _matmat(self, V):
+        subspace_term = self.U @ (self.subspace_scaling * (self.U.T @ V))
+        return subspace_term + V
+
+
+@export
+class NystromPrecond(LinearOperator):
+    """
+    Constructs the Nystrom Preconditioner of a linear operator A.
+
+    Args:
+        A (LinearOperator): A positive definite linear operator of size (n, n).
+        rank (int): The rank of the Nystrom approximation.
+        mu (float): Regularization of the linear system (A + mu)x = b.
+         Usually, this preconditioner is used to solve linear systems and
+         therefore its construction accomodates for the regularization.
+        eps (float): Shift used when constructing the preconditioner.
+        adjust_mu (bool, optional): Whether to adjust the regularization with the
+         estimatted dominant eigenvalue.
+
+    Returns:
+        LinearOperator: Nystrom Preconditioner.
+    """
+    def __init__(self, A, rank, mu=1e-7, eps=1e-8, adjust_mu=True, key=None):
+        super().__init__(dtype=A.dtype, shape=A.shape)
+        key = self.xnp.PNRGKey(42) if key is None else key
+        Omega = self.xnp.randn(*(A.shape[0], rank), dtype=A.dtype, device=A.device, key=key)
+        self._create_approx(A=A, Omega=Omega, mu=mu, eps=eps, adjust_mu=adjust_mu)
+
+    def _create_approx(self, A, Omega, mu, eps, adjust_mu):
+        xnp = self.xnp
+        self.Lambda, self.U = get_nys_approx(A=A, Omega=Omega, eps=eps)
+        self.adjusted_mu = amu = mu * xnp.max(self.Lambda, axis=0) if adjust_mu else mu
+        # Num and denom help for defining inverse and sqrt
+        self.subspace_num = xnp.min(self.Lambda) + amu
+        self.subspace_denom = self.Lambda + amu
+        self.subspace_scaling = self.subspace_num / self.subspace_denom - 1
+        self.subspace_scaling = self.subspace_scaling[:, None]
+        self.preconditioned_eigmax = xnp.min(self.Lambda) + amu
+        self.preconditioned_eigmin = amu
+
+    def _matmat(self, V):
+        subspace_term = self.U @ (self.subspace_scaling * (self.U.T @ V))
+        return subspace_term + V
+
+
+def get_nys_approx(A, Omega, eps):
+    xnp = A.xnp
+    Omega, _ = xnp.qr(Omega, full_matrices=False)
+    Y = A @ Omega
+    nu = eps * xnp.norm(Y, ord="fro")
+    Y += nu * Omega
+    C = xnp.cholesky(Omega.T @ Y)
+    aux = xnp.solvetri(C, Y.T, lower=True)
+    B = aux.T  # shape (params, rank)
+    U, Sigma, _ = xnp.svd(B, full_matrices=False)
+    Lambda = xnp.clip(Sigma**2.0 - nu, a_min=0.0)
+    return Lambda, U
+
+
+# @dispatch
+# def sqrt(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
+#     xnp = A.xnp
+#     subspace_num = xnp.sqrt(xnp.copy(A.subspace_num))
+#     subspace_denom = xnp.sqrt(xnp.copy(A.subspace_denom))
+#     B = NystromPrecondLazy(A.dtype, A.shape, xnp.copy(A.U), subspace_num, subspace_denom)
+#     return B
+
+# @dispatch
+# def inv(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
+#     xnp = A.xnp
+#     subspace_num, subspace_denom = xnp.copy(A.subspace_denom), xnp.copy(A.subspace_num)
+#     B = NystromPrecondLazy(A.dtype, A.shape, xnp.copy(A.U), subspace_num, subspace_denom)
+#     return B
 
 
 class AdaNysPrecond(LinearOperator):
@@ -80,88 +188,3 @@ def estimate_approx_error(A, Lambda, U, tol, max_iter):
     E = LinearOperator(dtype=A.dtype, shape=A.shape, matmat=matmat)
     _, error, _ = power_iteration(E, tol=tol, max_iter=max_iter)
     return xnp.abs(error)
-
-
-@export
-class NystromPrecond(LinearOperator):
-    """
-    Constructs the Nystrom Preconditioner of a linear operator A.
-
-    Args:
-        A (LinearOperator): A positive definite linear operator of size (n, n).
-        rank (int): The rank of the Nystrom approximation.
-        mu (float): Regularization of the linear system (A + mu)x = b.
-         Usually, this preconditioner is used to solve linear systems and
-         therefore its construction accomodates for the regularization.
-        eps (float): Shift used when constructing the preconditioner.
-        adjust_mu (bool, optional): Whether to adjust the regularization with the
-         estimatted dominant eigenvalue.
-
-    Returns:
-        LinearOperator: Nystrom Preconditioner.
-    """
-    def __init__(self, A, rank, mu=1e-7, eps=1e-8, adjust_mu=True):
-        super().__init__(dtype=A.dtype, shape=A.shape)
-        Omega = self.xnp.randn(*(A.shape[0], rank), dtype=A.dtype, device=A.device)
-        self._create_approx(A=A, Omega=Omega, mu=mu, eps=eps, adjust_mu=adjust_mu)
-
-    def _create_approx(self, A, Omega, mu, eps, adjust_mu):
-        xnp = self.xnp
-        self.Lambda, self.U = get_nys_approx(A=A, Omega=Omega, eps=eps)
-        self.adjusted_mu = amu = mu * xnp.max(self.Lambda, axis=0) if adjust_mu else mu
-        # Num and denom help for defining inverse and sqrt
-        self.subspace_num = xnp.min(self.Lambda) + amu
-        self.subspace_denom = self.Lambda + amu
-        self.subspace_scaling = self.subspace_num / self.subspace_denom - 1
-        self.subspace_scaling = self.subspace_scaling[:, None]
-        self.preconditioned_eigmax = xnp.min(self.Lambda) + amu
-        self.preconditioned_eigmin = amu
-
-    def _matmat(self, V):
-        subspace_term = self.U @ (self.subspace_scaling * (self.U.T @ V))
-        return subspace_term + V
-
-
-class NystromPrecondLazy(LinearOperator):
-    def __init__(self, dtype, shape, U, subspace_num, subspace_denom):
-        super().__init__(dtype=dtype, shape=shape)
-        self.subspace_num = subspace_num
-        self.subspace_denom = subspace_denom
-        subspace_scaling = subspace_num / subspace_denom - 1
-        self.subspace_scaling = subspace_scaling[:, None]
-        self.U = U
-
-    def _matmat(self, V):
-        subspace_term = self.U @ (self.subspace_scaling * (self.U.T @ V))
-        return subspace_term + V
-
-
-def get_nys_approx(A, Omega, eps):
-    xnp = A.xnp
-    Omega, _ = xnp.qr(Omega, full_matrices=False)
-    Y = A @ Omega
-    nu = eps * xnp.norm(Y, ord="fro")
-    Y += nu * Omega
-    C = xnp.cholesky(Omega.T @ Y)
-    aux = xnp.solvetri(C, Y.T, lower=True)
-    B = aux.T  # shape (params, rank)
-    U, Sigma, _ = xnp.svd(B, full_matrices=False)
-    Lambda = xnp.clip(Sigma**2.0 - nu, a_min=0.0)
-    return Lambda, U
-
-
-@dispatch
-def sqrt(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
-    xnp = A.xnp
-    subspace_num = xnp.sqrt(xnp.copy(A.subspace_num))
-    subspace_denom = xnp.sqrt(xnp.copy(A.subspace_denom))
-    B = NystromPrecondLazy(A.dtype, A.shape, xnp.copy(A.U), subspace_num, subspace_denom)
-    return B
-
-
-@dispatch
-def inverse(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
-    xnp = A.xnp
-    subspace_num, subspace_denom = xnp.copy(A.subspace_denom), xnp.copy(A.subspace_num)
-    B = NystromPrecondLazy(A.dtype, A.shape, xnp.copy(A.U), subspace_num, subspace_denom)
-    return B

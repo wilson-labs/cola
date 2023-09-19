@@ -3,11 +3,10 @@ from cola.algorithms.preconditioners import get_nys_approx
 from cola.algorithms.preconditioners import select_rank_adaptively
 from cola.algorithms.preconditioners import NystromPrecond
 from cola.algorithms.preconditioners import AdaNysPrecond
-from cola.algorithms.preconditioners import sqrt
-from cola.algorithms.preconditioners import inverse
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag, construct_e_vec
+from cola.linalg import sqrt, inv
 
 _tol = 1e-7
 
@@ -71,11 +70,11 @@ def test_nys_sqrt_inverse(backend):
     rel_error = relative_error(Nys.to_dense(), approx @ approx)
     assert rel_error < _tol * 10
 
-    approx = inverse(Nys).to_dense()
+    approx = inv(Nys).to_dense()
     rel_error = relative_error(xnp.eye(Nys.shape[0], Nys.shape[0], dtype=dtype, device=None), approx @ Nys.to_dense())
     assert rel_error < _tol * 10
 
-    approx = inverse(sqrt(inverse(sqrt(Nys)))).to_dense()
+    approx = inv(sqrt(inv(sqrt(Nys)))).to_dense()
     rel_error = relative_error(Nys.to_dense(), approx @ approx @ approx @ approx)
     assert rel_error < _tol * 10
 
