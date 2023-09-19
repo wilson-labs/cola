@@ -9,7 +9,7 @@ linting, testing, and building the documentation, run the following:
 ```bash
 git clone https://github.com/wilson-labs/cola.git
 cd cola
-pip install -e .
+pip install -e ".[dev]"
 pip install -r docs/requirements.txt
 ```
 
