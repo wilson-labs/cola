@@ -16,7 +16,7 @@ def test_inverse(backend, precision, op_name):
     Ainv = inv(A, tol=tol)
     Ainv.xnp = operator.xnp
     A3 = cola.PSD(A2) if A.isa(cola.PSD) else A2
-    A3 = operator.xnp
+    A3.xnp = operator.xnp
     Ainv2 = inv(A3, tol=tol, method='dense')
     Ainv3 = inv(A3, tol=tol, method='iterative')
     B = xnp.randn(*(A.shape[-1], 10), dtype=dtype, device=None)
