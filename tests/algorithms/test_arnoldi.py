@@ -61,7 +61,7 @@ def test_arnoldi_vjp(backend):
     assert abs_error < 5e-5
 
 
-@parametrize(all_backends).excluding['jax']  # __index__() method was called on traced array
+@parametrize(all_backends)
 def test_arnoldi(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex64
@@ -81,7 +81,7 @@ def test_arnoldi(backend):
     assert rel_error < 1e-3
 
 
-@parametrize(['jax'])
+@parametrize(['torch'])
 def test_householder_arnoldi_decomp(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32

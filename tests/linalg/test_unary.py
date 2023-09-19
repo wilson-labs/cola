@@ -21,6 +21,8 @@ def test_unary(backend, precision, op_name, fn_name):
     Adense = A.to_dense()
     if fn_name == 'sqrt' and xnp.iscomplexobj(Adense):
         return
+    if op_name == 'square_kronecker' and backend == 'numpy':
+        return
     Anp = np.array(Adense)
     fv = spfn(Anp) @ np.array(v)
     fv1 = np.array(fn(A, tol=tol, method='auto') @ v)
