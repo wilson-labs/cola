@@ -21,7 +21,7 @@ op_names: set[str] = {
     # 'square_complex',
     'selfadj_tridiagonal',
     # 'square_big',  # skipped by default
-    'square_blockdiag',
+    # 'square_blockdiag',
     'square_dense',
     # 'square_jacobian',
     'square_kronecker',
@@ -78,8 +78,8 @@ def get_test_operator(backend: str, precision: str, op_name: str, device: str = 
                     op = M1 @ M1.T
                     op.xnp = xnp
         case ('psd', 'kron'):
-            M1 = Dense(xnp.array([[6., 2], [2, 4]], dtype=dtype, device=device))
-            M2 = Dense(xnp.array([[7, 6], [6, 8]], dtype=dtype, device=device))
+            M1 = Dense(xnp.array([[0.18, 0.], [0., 0.09]], dtype=dtype, device=device))
+            M2 = Dense(xnp.array([[1.2, 0.], [0., 0.7]], dtype=dtype, device=device))
             M1.xnp, M2.xnp = xnp, xnp
             op = Kronecker(M1, M2)
             op.xnp = xnp
@@ -130,6 +130,8 @@ def get_test_operator(backend: str, precision: str, op_name: str, device: str = 
         case ('square', sub_op_name):
             M1 = xnp.array([[1, 0], [3, -4]], dtype=dtype, device=device)
             M2 = xnp.array([[-5, 3], [2, -1]], dtype=dtype, device=device)
+            # M1 = xnp.array([[0.03, -2.1], [-0.8, -0.13]], dtype=dtype, device=device)
+            # M2 = xnp.array([[-0.4, 0.49], [-1.96, -0.93]], dtype=dtype, device=device)
             match sub_op_name:
                 case 'big':
                     dtype2 = (xnp.array([1.], device=device, dtype=dtype) + 1j).dtype

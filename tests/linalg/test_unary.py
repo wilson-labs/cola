@@ -15,6 +15,7 @@ def test_unary(backend, precision, op_name, fn_name):
     spfn = getattr(scipy.linalg, fn_name + 'm')
     A, dtype, xnp = operator, operator.dtype, operator.xnp
     A2 = LinearOperator(A.dtype, A.shape, A._matmat)
+    A2.xnp = xnp
     tol = 1e-4
     v = xnp.randn(A.shape[-1], dtype=dtype, device=None)
     Adense = A.to_dense()
@@ -24,9 +25,10 @@ def test_unary(backend, precision, op_name, fn_name):
     fv = spfn(Anp) @ np.array(v)
     fv1 = np.array(fn(A, tol=tol, method='auto') @ v)
     # Q = fn(A, tol=tol, method='auto')
-    e1 = relative_error(fv, fv1)
+    e1 = relative_error(fv, fv1, xnp)
     assert e1 < 3 * tol, f"Dispatch rules failed on {type(A)} with error {e1}"
     A3 = cola.SelfAdjoint(A2) if A.isa(cola.SelfAdjoint) else A2
+    A3.xnp = xnp
     if np.prod(A.shape) < 1000:
         fv2 = np.array(fn(A3, tol=tol, method='dense') @ v)
         e2 = relative_error(fv, fv2)
@@ -35,5 +37,5 @@ def test_unary(backend, precision, op_name, fn_name):
     not_scalarmul = relative_error(xnp.diag(diag.mean() + 0. * diag), Adense) > 1e-5
     if not_scalarmul:
         fv3 = np.array(fn(A3, tol=tol, method='iterative') @ v)
-        e3 = relative_error(fv, fv3)
+        e3 = relative_error(fv, fv3, xnp)
         assert e3 < 3 * tol, f"SLQ logdet failed on {type(A)} with error {e3}"

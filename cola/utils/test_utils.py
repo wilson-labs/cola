@@ -133,8 +133,9 @@ class parametrize:
 #     return decorator
 
 
-def relative_error(v, w):
-    xnp = get_library_fns(v.dtype)
+def relative_error(v, w, xnp=None):
+    if xnp is None:
+        xnp = get_library_fns(v.dtype)
     abs_err = xnp.norm(v - w)
     denom = (xnp.norm(v) + xnp.norm(w)) / 2.
     rel_err = abs_err / max(denom, 1e-16)
