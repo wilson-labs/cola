@@ -41,11 +41,6 @@ compare with alternatives.
 .. image:: ./CoLA_Table2.png
    :alt: Example Image
 
-``PyLops`` only supports propagating gradients through vectors but not
-through the linear operator’s parameters. Moreover, ``PyLops`` has limited GPU
-support through CUPY, but lacks support for ``PyTorch``, ``JAX`` or ``TensorFlow`` which
-are necessary for modern machine learning applications.
-
 Installation
 ------------
 We recommend installing via ``pip``:
@@ -67,6 +62,8 @@ To install locally instead, clone the repository and install via ``pip``:
 
 The installation requires ``PyTorch`` or ``JAX`` to be installed,
  and these requirements will not be installed automatically.
+If ``JAX`` is not installed, ``CoLA``  can also use a ``Numpy`` backend for most operations,
+excluding advanced features like automatic differentiation and GPU support, vmap, jit, and autograd transposes.
 
 Design Choices
 --------------
