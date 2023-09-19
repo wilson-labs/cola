@@ -1,4 +1,4 @@
-from typing import Union
+# from typing import Union
 from cola.ops import LinearOperator
 from cola.algorithms import power_iteration
 # from plum import dispatch
@@ -32,8 +32,8 @@ class NystromPrecond(LinearOperator):
         subspace_denom = Lambda + amu
         subspace_scaling = subspace_num / subspace_denom - 1
         subspace_scaling = subspace_scaling[:, None]
-        preconditioned_eigmax = A.xnp.min(Lambda) + amu
-        preconditioned_eigmin = amu
+        # preconditioned_eigmax = A.xnp.min(Lambda) + amu
+        # preconditioned_eigmin = amu
         self.U = U
         self.subspace_scaling = subspace_scaling
 
@@ -42,45 +42,45 @@ class NystromPrecond(LinearOperator):
         return subspace_term + V
 
 
-@export
-class NystromPrecond(LinearOperator):
-    """
-    Constructs the Nystrom Preconditioner of a linear operator A.
+# @export
+# class NystromPrecond(LinearOperator):
+#     """
+#     Constructs the Nystrom Preconditioner of a linear operator A.
 
-    Args:
-        A (LinearOperator): A positive definite linear operator of size (n, n).
-        rank (int): The rank of the Nystrom approximation.
-        mu (float): Regularization of the linear system (A + mu)x = b.
-         Usually, this preconditioner is used to solve linear systems and
-         therefore its construction accomodates for the regularization.
-        eps (float): Shift used when constructing the preconditioner.
-        adjust_mu (bool, optional): Whether to adjust the regularization with the
-         estimatted dominant eigenvalue.
+#     Args:
+#         A (LinearOperator): A positive definite linear operator of size (n, n).
+#         rank (int): The rank of the Nystrom approximation.
+#         mu (float): Regularization of the linear system (A + mu)x = b.
+#          Usually, this preconditioner is used to solve linear systems and
+#          therefore its construction accomodates for the regularization.
+#         eps (float): Shift used when constructing the preconditioner.
+#         adjust_mu (bool, optional): Whether to adjust the regularization with the
+#          estimatted dominant eigenvalue.
 
-    Returns:
-        LinearOperator: Nystrom Preconditioner.
-    """
-    def __init__(self, A, rank, mu=1e-7, eps=1e-8, adjust_mu=True, key=None):
-        super().__init__(dtype=A.dtype, shape=A.shape)
-        key = self.xnp.PRNGKey(42) if key is None else key
-        Omega = self.xnp.randn(*(A.shape[0], rank), dtype=A.dtype, device=A.device, key=key)
-        self._create_approx(A=A, Omega=Omega, mu=mu, eps=eps, adjust_mu=adjust_mu)
+#     Returns:
+#         LinearOperator: Nystrom Preconditioner.
+#     """
+#     def __init__(self, A, rank, mu=1e-7, eps=1e-8, adjust_mu=True, key=None):
+#         super().__init__(dtype=A.dtype, shape=A.shape)
+#         key = self.xnp.PRNGKey(42) if key is None else key
+#         Omega = self.xnp.randn(*(A.shape[0], rank), dtype=A.dtype, device=A.device, key=key)
+#         self._create_approx(A=A, Omega=Omega, mu=mu, eps=eps, adjust_mu=adjust_mu)
 
-    def _create_approx(self, A, Omega, mu, eps, adjust_mu):
-        xnp = self.xnp
-        self.Lambda, self.U = get_nys_approx(A=A, Omega=Omega, eps=eps)
-        self.adjusted_mu = amu = mu * xnp.max(self.Lambda, axis=0) if adjust_mu else mu
-        # Num and denom help for defining inverse and sqrt
-        self.subspace_num = xnp.min(self.Lambda) + amu
-        self.subspace_denom = self.Lambda + amu
-        self.subspace_scaling = self.subspace_num / self.subspace_denom - 1
-        self.subspace_scaling = self.subspace_scaling[:, None]
-        self.preconditioned_eigmax = xnp.min(self.Lambda) + amu
-        self.preconditioned_eigmin = amu
+#     def _create_approx(self, A, Omega, mu, eps, adjust_mu):
+#         xnp = self.xnp
+#         self.Lambda, self.U = get_nys_approx(A=A, Omega=Omega, eps=eps)
+#         self.adjusted_mu = amu = mu * xnp.max(self.Lambda, axis=0) if adjust_mu else mu
+#         # Num and denom help for defining inverse and sqrt
+#         self.subspace_num = xnp.min(self.Lambda) + amu
+#         self.subspace_denom = self.Lambda + amu
+#         self.subspace_scaling = self.subspace_num / self.subspace_denom - 1
+#         self.subspace_scaling = self.subspace_scaling[:, None]
+#         self.preconditioned_eigmax = xnp.min(self.Lambda) + amu
+#         self.preconditioned_eigmin = amu
 
-    def _matmat(self, V):
-        subspace_term = self.U @ (self.subspace_scaling * (self.U.T @ V))
-        return subspace_term + V
+#     def _matmat(self, V):
+#         subspace_term = self.U @ (self.subspace_scaling * (self.U.T @ V))
+#         return subspace_term + V
 
 
 def get_nys_approx(A, Omega, eps):
