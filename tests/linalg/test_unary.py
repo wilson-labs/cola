@@ -25,7 +25,7 @@ def test_unary(backend, precision, op_name, fn_name):
     fv = spfn(Anp) @ np.array(v)
     fv1 = np.array(fn(A, tol=tol, method='auto') @ v)
     # Q = fn(A, tol=tol, method='auto')
-    e1 = relative_error(fv, fv1, xnp)
+    e1 = relative_error(fv, fv1)
     assert e1 < 3 * tol, f"Dispatch rules failed on {type(A)} with error {e1}"
     A3 = cola.SelfAdjoint(A2) if A.isa(cola.SelfAdjoint) else A2
     A3.xnp = xnp
@@ -37,5 +37,5 @@ def test_unary(backend, precision, op_name, fn_name):
     not_scalarmul = relative_error(xnp.diag(diag.mean() + 0. * diag), Adense) > 1e-5
     if not_scalarmul:
         fv3 = np.array(fn(A3, tol=tol, method='iterative') @ v)
-        e3 = relative_error(fv, fv3, xnp)
+        e3 = relative_error(fv, fv3)
         assert e3 < 3 * tol, f"SLQ logdet failed on {type(A)} with error {e3}"
