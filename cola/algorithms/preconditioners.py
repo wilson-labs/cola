@@ -100,9 +100,10 @@ class NystromPrecond(LinearOperator):
     Returns:
         LinearOperator: Nystrom Preconditioner.
     """
-    def __init__(self, A, rank, mu=1e-7, eps=1e-8, adjust_mu=True):
+    def __init__(self, A, rank, mu=1e-7, eps=1e-8, adjust_mu=True, key=None):
         super().__init__(dtype=A.dtype, shape=A.shape)
-        Omega = self.xnp.randn(*(A.shape[0], rank), dtype=A.dtype, device=A.device)
+        key = self.xnp.PNRGKey(42) if key is None else key
+        Omega = self.xnp.randn(*(A.shape[0], rank), dtype=A.dtype, device=A.device, key=key)
         self._create_approx(A=A, Omega=Omega, mu=mu, eps=eps, adjust_mu=adjust_mu)
 
     def _create_approx(self, A, Omega, mu, eps, adjust_mu):
@@ -122,18 +123,18 @@ class NystromPrecond(LinearOperator):
         return subspace_term + V
 
 
-class NystromPrecondLazy(LinearOperator):
-    def __init__(self, dtype, shape, U, subspace_num, subspace_denom):
-        super().__init__(dtype=dtype, shape=shape)
-        self.subspace_num = subspace_num
-        self.subspace_denom = subspace_denom
-        subspace_scaling = subspace_num / subspace_denom - 1
-        self.subspace_scaling = subspace_scaling[:, None]
-        self.U = U
+# class NystromPrecondLazy(LinearOperator):
+#     def __init__(self, dtype, shape, U, subspace_num, subspace_denom):
+#         super().__init__(dtype=dtype, shape=shape)
+#         self.subspace_num = subspace_num
+#         self.subspace_denom = subspace_denom
+#         subspace_scaling = subspace_num / subspace_denom - 1
+#         self.subspace_scaling = subspace_scaling[:, None]
+#         self.U = U
 
-    def _matmat(self, V):
-        subspace_term = self.U @ (self.subspace_scaling * (self.U.T @ V))
-        return subspace_term + V
+#     def _matmat(self, V):
+#         subspace_term = self.U @ (self.subspace_scaling * (self.U.T @ V))
+#         return subspace_term + V
 
 
 def get_nys_approx(A, Omega, eps):
@@ -150,18 +151,18 @@ def get_nys_approx(A, Omega, eps):
     return Lambda, U
 
 
-@dispatch
-def sqrt(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
-    xnp = A.xnp
-    subspace_num = xnp.sqrt(xnp.copy(A.subspace_num))
-    subspace_denom = xnp.sqrt(xnp.copy(A.subspace_denom))
-    B = NystromPrecondLazy(A.dtype, A.shape, xnp.copy(A.U), subspace_num, subspace_denom)
-    return B
+# @dispatch
+# def sqrt(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
+#     xnp = A.xnp
+#     subspace_num = xnp.sqrt(xnp.copy(A.subspace_num))
+#     subspace_denom = xnp.sqrt(xnp.copy(A.subspace_denom))
+#     B = NystromPrecondLazy(A.dtype, A.shape, xnp.copy(A.U), subspace_num, subspace_denom)
+#     return B
 
 
-@dispatch
-def inverse(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
-    xnp = A.xnp
-    subspace_num, subspace_denom = xnp.copy(A.subspace_denom), xnp.copy(A.subspace_num)
-    B = NystromPrecondLazy(A.dtype, A.shape, xnp.copy(A.U), subspace_num, subspace_denom)
-    return B
+# @dispatch
+# def inv(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
+#     xnp = A.xnp
+#     subspace_num, subspace_denom = xnp.copy(A.subspace_denom), xnp.copy(A.subspace_num)
+#     B = NystromPrecondLazy(A.dtype, A.shape, xnp.copy(A.U), subspace_num, subspace_denom)
+#     return B
