@@ -6,13 +6,14 @@ from cola.algorithms.lanczos import construct_tridiagonal
 from cola.linalg.nullspace import nullspace
 from cola.linalg.eigs import power_iteration
 from cola.fns import kron
-from cola.utils_test import get_xnp, parametrize, relative_error
-from cola.utils_test import generate_spectrum, generate_pd_from_diag
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.backends import all_backends
+from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 
 _tol = 1e-7
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_inv(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -27,7 +28,7 @@ def test_inv(backend):
     assert rel_error < _tol * 10
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_power_iteration(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -40,7 +41,7 @@ def test_power_iteration(backend):
     assert rel_error < tol * 100
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_get_lu_from_tridiagonal(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -51,6 +52,7 @@ def test_get_lu_from_tridiagonal(backend):
     beta_j = xnp.array([beta], dtype=dtype, device=None).T
     gamma_j = xnp.array([gamma], dtype=dtype, device=None).T
     B = Tridiagonal(alpha=alpha_j, beta=beta_j, gamma=gamma_j)
+    B.xnp = xnp
     eigenvals = xnp.jit(get_lu_from_tridiagonal, static_argnums=(0, ))(B)
     actual = xnp.array([1 / 4, 4 / 3, 3 / 2, 2], dtype=dtype, device=None)
     sorted_eigenvals = xnp.sort(eigenvals)
@@ -58,7 +60,7 @@ def test_get_lu_from_tridiagonal(backend):
     assert rel_error < _tol
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_construct_tridiagonal(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -78,7 +80,7 @@ def test_construct_tridiagonal(backend):
     assert rel_error < _tol
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def ignore_test_nullspace(backend):
     xnp = get_xnp(backend)
     # TODO: add test for double precision (pytorch fails with nan while jax succeeds)

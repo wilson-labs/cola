@@ -4,126 +4,17 @@ from numbers import Number
 import numpy as np
 import cola
 from cola.utils import export
-import cola.np_fns as np_fns
+from cola.backends import np_fns, get_library_fns, AutoRegisteringPyTree
 
 Array = Dtype = Any
 export(Array)
-
-
-def get_library_fns(dtype: Dtype):
-    """ Given a dtype e.g. jnp.float32 or torch.complex64, returns the appropriate
-        namespace for standard array functionality (either torch_fns or jax_fns)."""
-    try:
-        from jax import numpy as jnp
-        if dtype in [jnp.float32, jnp.float64, jnp.complex64, jnp.complex128, jnp.int32, jnp.int64]:
-            import cola.jax_fns as fns
-            return fns
-    except ImportError:
-        pass
-    try:
-        import torch
-        if dtype in [torch.float32, torch.float64, torch.complex64, torch.complex128, torch.int32, torch.int64]:
-            import cola.torch_fns as fns
-            return fns
-        elif dtype in [np.float32, np.float64, np.complex64, np.complex128, np.int32, np.int64]:
-            import cola.np_fns as fns
-            return fns
-    except ImportError:
-        pass
-    raise ImportError("No supported array library found")
-
-
-def is_array(obj):
-    if not hasattr(obj, 'dtype'):
-        return False
-    if get_library_fns(obj.dtype).is_array(obj):
-        return True
-    return False
-
-
-def is_xnp_array(obj, xnp):
-    if not hasattr(obj, 'dtype'):
-        return False
-    if xnp.is_array(obj):
-        return True
-    return False
-
-
-class AutoRegisteringPyTree(type):
-    def __init__(cls, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        cls._dynamic = cls._dynamic.copy()
-        import optree
-        optree.register_pytree_node_class(cls, namespace='cola')
-        try:
-            import jax
-            jax.tree_util.register_pytree_node_class(cls)
-        except ImportError:
-            pass
-        try:
-            # TODO: when pytorch migrates to optree, switch as well
-            import torch
-
-            def tree_flatten(self):
-                return self.tree_flatten()
-
-            def tree_unflatten(ctx, children):
-                return cls.tree_unflatten(children, ctx)
-
-            torch.utils._pytree._register_pytree_node(cls, tree_flatten, tree_unflatten)
-        except ImportError:
-            pass
-
-
-def find_xnp(obj):
-    if is_array(obj):
-        return get_library_fns(obj.dtype)
-    elif isinstance(obj, LinearOperator) and obj.xnp is not None:
-        return obj.xnp
-    elif isinstance(obj, (tuple, list, set)):
-        for ob in obj:
-            xnp = find_xnp(ob)
-            if xnp is not None:
-                return xnp
-    elif isinstance(obj, dict):
-        for _, ob in obj.items():
-            xnp = find_xnp(ob)
-            if xnp is not None:
-                return xnp
-    try:
-        return get_library_fns(obj)
-    except (ImportError, AttributeError):
-        pass
-    return None
-
-
-def find_device(obj):
-    if is_array(obj):
-        xnp = get_library_fns(obj.dtype)
-        return xnp.get_device(obj)
-    elif isinstance(obj, LinearOperator):
-        return obj.device
-    elif isinstance(obj, (tuple, list, set)):
-        for ob in obj:
-            device = find_device(ob)
-            if device is not None:
-                return device
-    elif isinstance(obj, dict):
-        for _, ob in obj.items():
-            device = find_device(ob)
-            if device is not None:
-                return device
-    return None
-
-
-def definitely_dynamic(obj):
-    return is_array(obj) or isinstance(obj, LinearOperator)
 
 
 @export
 class LinearOperator(metaclass=AutoRegisteringPyTree):
     """ Linear Operator base class """
     _dynamic = {key: False for key in ['xnp', 'shape', 'dtype', 'device', 'annotations']}
+    __array_ufunc__ = None
 
     def __new__(cls, *args, **kwargs):
         """ Creates attributes for the flatten and unflatten functionality. """
@@ -331,3 +222,63 @@ def maybe_get_dtype(obj):
         return obj.dtype
     except AttributeError:
         return None
+
+
+def is_array(obj):
+    try:
+        return get_library_fns(obj.dtype).is_array(obj)
+    except (ImportError, AttributeError):
+        return False
+
+
+def is_xnp_array(obj, xnp):
+    if not hasattr(obj, 'dtype'):
+        return False
+    if xnp.is_array(obj):
+        return True
+    return False
+
+
+def find_xnp(obj):
+    if is_array(obj):
+        return get_library_fns(obj.dtype)
+    elif isinstance(obj, LinearOperator) and obj.xnp is not None:
+        return obj.xnp
+    elif isinstance(obj, (tuple, list, set)):
+        for ob in obj:
+            xnp = find_xnp(ob)
+            if xnp is not None:
+                return xnp
+    elif isinstance(obj, dict):
+        for _, ob in obj.items():
+            xnp = find_xnp(ob)
+            if xnp is not None:
+                return xnp
+    try:
+        return get_library_fns(obj)
+    except (ImportError, AttributeError):
+        pass
+    return None
+
+
+def find_device(obj):
+    if is_array(obj):
+        xnp = get_library_fns(obj.dtype)
+        return xnp.get_device(obj)
+    elif isinstance(obj, LinearOperator):
+        return obj.device
+    elif isinstance(obj, (tuple, list, set)):
+        for ob in obj:
+            device = find_device(ob)
+            if device is not None:
+                return device
+    elif isinstance(obj, dict):
+        for _, ob in obj.items():
+            device = find_device(ob)
+            if device is not None:
+                return device
+    return None
+
+
+def definitely_dynamic(obj):
+    return is_array(obj) or isinstance(obj, LinearOperator)

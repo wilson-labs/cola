@@ -42,10 +42,10 @@ def diag(A: LinearOperator, k=0, **kwargs):
     method = kws.pop('method')
     exact_faster = (kws['tol'] < 1 / np.sqrt(10 * A.shape[-1]))
     if method == 'exact' or (method == 'auto' and exact_faster):
-        out, info = exact_diag(A, k=k, **kws)
+        out, _ = exact_diag(A, k=k, **kws)
     elif method == 'approx' or (method == 'auto' and exact_faster):
-        out, info = approx_diag(A, k=k, **kws)
-    out.info = info
+        out, _ = approx_diag(A, k=k, **kws)
+    # out.info = info
     return out
 
 

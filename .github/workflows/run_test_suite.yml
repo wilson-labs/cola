@@ -15,8 +15,6 @@ jobs:
             jax: "stable"
             codecov: "upload"  # Upload to codecov only if we're testing both jax and torch
         exclude:
-          - torch: "none"
-            jax: "none"
           - torch: "latest"
             jax: "stable"
           #- torch: "stable"
@@ -64,7 +62,7 @@ jobs:
         else
           CODECOV_ARGS="";
         fi
-        cmd="pytest -m '${MARK}'${CODECOV_ARGS} tests/"
+        cmd="pytest -m '${MARK}' ${CODECOV_ARGS} tests/"
         echo $cmd
         eval $cmd
 

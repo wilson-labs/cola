@@ -22,7 +22,7 @@
 <!-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wilson-labs/cola/blob/master/docs/notebooks/colabs/all.ipynb) -->
 
 CoLA is a framework for scalable linear algebra, automatically exploiting the structure often found in machine learning problems and beyond.
-CoLA supports both PyTorch and JAX.
+CoLA natively supports PyTorch, Jax, as well as (limited) Numpy if Jax is not installed.
 
 ## Installation
 ```shell
@@ -151,6 +151,10 @@ If you use CoLA, please cite the following paper:
 |:----------------:|:-----------:|:---:|:-------:|
 | **Implementation**|      ✓      |  ✓  |    ✓   |
 
+
+| Backends      | PyTorch | Jax | Numpy |
+|:----------------:|:-----------:|:---:|:-------:|
+| **Implementation**|      ✓      |  ✓  |Most operations|
 
 ## Contributing
 See the contributing guidelines [docs/CONTRIBUTING.md](https://cola.readthedocs.io/en/latest/contributing.html) for information on submitting issues

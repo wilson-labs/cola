@@ -5,13 +5,14 @@ from cola.ops import Identity
 from cola.ops import Triangular
 from cola.annotations import SelfAdjoint
 from cola.linalg.eigs import eig
-from cola.utils_test import get_xnp, parametrize, relative_error
-from cola.utils_test import generate_spectrum, generate_pd_from_diag
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.backends import all_backends
+from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 
 _tol = 1e-6
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_general(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -52,7 +53,7 @@ def test_general(backend):
     assert rel_error < 5e-2
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_adjoint(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -81,7 +82,7 @@ def test_adjoint(backend):
     assert rel_error < _tol
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_triangular(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -97,7 +98,7 @@ def test_triangular(backend):
     assert relative_error(A.to_dense() @ soln_vecs, soln_vals[None, :] * soln_vecs) < _tol
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_identity(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -111,7 +112,7 @@ def test_identity(backend):
     assert relative_error(soln_vecs[:, eig_slice], eig_vecs.to_dense()) < _tol
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_diagonal(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32

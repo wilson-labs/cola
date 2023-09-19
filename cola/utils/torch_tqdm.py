@@ -1,7 +1,6 @@
-import functools
 import time
 import numpy as np
-from torch import Tensor
+
 from tqdm.auto import tqdm
 
 
@@ -37,8 +36,12 @@ def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,
             if info['iterations'] == 0:
                 info['iteration_time'] = time.time()
             error = errorfn(state)
-            if isinstance(error, Tensor):
-                error = error.cpu().data.item()
+            try:
+                from torch import Tensor
+                if isinstance(error, Tensor):
+                    error = error.cpu().data.item()
+            except ImportError:
+                pass
             if not (info['iterations'] % every):
                 info['errors'].append(error)
                 if pbar:
@@ -49,8 +52,12 @@ def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,
         out = while_loop(newcond, body_fun, init_val)
         info['iteration_time'] = (time.time() - info['iteration_time']) / info['iterations']
         error = errorfn(out)
-        if isinstance(error, Tensor):
-            error = error.cpu().data.item()
+        try:
+            from torch import Tensor
+            if isinstance(error, Tensor):
+                error = error.cpu().data.item()
+        except ImportError:
+            pass
         info['errors'].append(error)
         info['errors'] = np.array(info['errors'][2:])
         if pbar:
@@ -80,55 +87,3 @@ def while_loop(cond_fun, body_fun, init_val):
     while cond_fun(val):
         val = body_fun(val)
     return val
-
-
-def pbar_while(errorfn, tol, max_iters=None, desc='', every=1, hide=False):
-    """ Decorator for while loop with progress bar. Assumes that
-        errorfn is a function of the loop variable and returns a scalar
-        that starts at a given value and decreases to tol as the loop progresses."""
-    def new_while(cond_fun, body_fun, init_val):
-        newbody = body_pbar(errorfn, tol, desc, every, hide, max_iters)(body_fun)
-        val = init_val
-        while cond_fun(val):
-            val = newbody(val)
-        return val
-
-    return new_while
-
-
-def body_pbar(errorfn, tol, desc='', every=1, hide=False, max_iters=None):
-    if hide:
-        return lambda body: body
-
-    def decorated_body(body):
-        info = {'progval': 0, 'count': 0, 'pbar': None}
-        default_desc = f"Running {body.__name__}"
-
-        @functools.wraps(body)
-        def wrapper(*args, **kwargs):
-            if info['pbar'] is None:
-                _bar_format = "{l_bar}{bar}| {n:.3g}/{total_fmt} [{elapsed}<{remaining},"
-                _bar_format += " {rate_fmt}{postfix}]"
-                info['pbar'] = tqdm(total=100, desc=f'{desc or default_desc}', bar_format=_bar_format)
-            val = body(*args, **kwargs)
-            info['count'] += 1
-            if info['count'] % every != 0:
-                return val
-            error = errorfn(val)
-            if isinstance(error, Tensor):
-                error = error.cpu().data.item()
-            errstart = info.setdefault('errstart', error)
-            howclose = np.log(error / errstart) / np.log(tol / errstart)
-            if max_iters is not None:
-                howclose = max(info['count'] / max_iters, howclose)
-            progress = min(100 - info['progval'], max(100 * howclose - info['progval'], 0))
-            if progress > 0:
-                info['progval'] += progress
-                info['pbar'].update(progress)
-            if error < tol:
-                info['pbar'].close()
-            return val
-
-        return wrapper
-
-    return decorated_body

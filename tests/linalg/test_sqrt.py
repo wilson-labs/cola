@@ -3,13 +3,14 @@ from cola.fns import lazify
 from cola.linalg import sqrt
 from cola.ops import Diagonal
 from cola.annotations import SelfAdjoint
-from cola.utils_test import get_xnp, parametrize, relative_error
-from cola.utils_test import generate_spectrum, generate_pd_from_diag
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.backends import all_backends
+from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 
 _tol = 1e-6
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_diagonal(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -21,7 +22,7 @@ def test_diagonal(backend):
     assert rel_error < _tol
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_kronecker(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
@@ -36,7 +37,7 @@ def test_kronecker(backend):
     assert rel_error < _tol
 
 
-@parametrize(['torch', 'jax'])
+@parametrize(all_backends)
 def test_general(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
