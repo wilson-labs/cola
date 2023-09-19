@@ -149,7 +149,7 @@ def get_test_operator(backend: str, precision: str, op_name: str, device: str = 
                     op = Dense(M1)
                     op.xnp = xnp
                 case 'kronecker':
-                    M1, M2 = lazify(M1), lazify(M2)
+                    M1, M2 = lazify(M1 @ M2), lazify(M2 @ M1)
                     M1.xnp, M2.xnp = xnp, xnp
                     op = Kronecker(M1, M2)
                     op.xnp = xnp

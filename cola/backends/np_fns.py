@@ -29,7 +29,6 @@ concatenate = np.concatenate
 conj = np.conj
 copy = np.copy
 cos = np.cos
-eig = np.linalg.eig
 eigh = np.linalg.eigh
 exp = np.exp
 float32 = np.float32
@@ -77,6 +76,12 @@ slogdet = np.linalg.slogdet
 promote_types = np.promote_types
 finfo = np.finfo
 iscomplexobj = np.iscomplexobj
+
+
+def eig(array):
+    eigvals, eigvecs = np.linalg.eig(array)
+    eigvals, eigvecs = eigvals.astype(complex), eigvecs.astype(complex)
+    return eigvals, eigvecs
 
 
 def lu(a):
