@@ -573,8 +573,7 @@ class Householder(LinearOperator):
 
     def _matmat(self, X: Array) -> Array:
         xnp = self.xnp
-        # angle = xnp.sum(X * xnp.conj(self.vec), axis=-2, keepdims=True)
-        angle = xnp.sum(X * self.vec, axis=-2, keepdims=True)
+        angle = xnp.sum(X * xnp.conj(self.vec), axis=-2, keepdims=True)
         out = X - self.beta * angle * self.vec
         return out
 
