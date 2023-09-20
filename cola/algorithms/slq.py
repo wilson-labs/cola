@@ -40,6 +40,7 @@ def slq_fwd(A, fun, num_samples, max_iters, tol, pbar, key):
     _mp = xnp.finfo(A.dtype).eps
     rhs = xnp.randn(A.shape[1], num_samples, dtype=A.dtype, key=key, device=A.device)
     _, T, _ = lanczos(A, rhs, max_iters, tol, pbar)
+    T = xnp.vmap(T.__class__.to_dense)(T)
     eigvals, Q = xnp.eigh(T)
     tau = Q[..., 0, :]
     # approx = xnp.sum(tau**2 * fun(eigvals), axis=-1)

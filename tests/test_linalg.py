@@ -2,7 +2,6 @@ import cola as co
 from cola.fns import lazify
 from cola.ops import Tridiagonal
 from cola.algorithms.lanczos import get_lu_from_tridiagonal
-from cola.algorithms.lanczos import construct_tridiagonal
 from cola.linalg.nullspace import nullspace
 from cola.linalg.eigs import power_iteration
 from cola.fns import kron
@@ -58,27 +57,6 @@ def test_get_lu_from_tridiagonal(backend):
     sorted_eigenvals = xnp.sort(eigenvals)
     rel_error = relative_error(actual, sorted_eigenvals)
     assert rel_error < _tol
-
-
-@parametrize(all_backends)
-def test_construct_tridiagonal(backend):
-    xnp = get_xnp(backend)
-    dtype = xnp.float32
-    alpha = [0.73, 1.5, 0.4]
-    beta = [0.8, 0.29, -0.6, 0.9]
-    gamma = [0.04, 0.59, 1.1]
-    T = [[beta[0], gamma[0], 0, 0], [alpha[0], beta[1], gamma[1], 0], [0., alpha[1], beta[2], gamma[2]],
-         [0., 0., alpha[2], beta[3]]]
-    alpha = xnp.array(alpha, dtype=dtype, device=None)
-    beta = xnp.array(beta, dtype=dtype, device=None)
-    gamma = xnp.array(gamma, dtype=dtype, device=None)
-    T_actual = xnp.array(T, dtype=dtype, device=None)
-    fn = xnp.jit(construct_tridiagonal)
-    T_soln = fn(alpha, beta, gamma)
-    rel_error = relative_error(T_actual, T_soln)
-    assert T_actual.shape == T_soln.shape
-    assert rel_error < _tol
-
 
 @parametrize(all_backends)
 def ignore_test_nullspace(backend):

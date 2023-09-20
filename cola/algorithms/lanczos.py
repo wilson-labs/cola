@@ -69,9 +69,9 @@ def lanczos_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
     """
     xnp = A.xnp
     Q, T, info = lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
-    eigvals, eigvectors = xnp.eigh(T)
+    eigvals, eigvectors = xnp.eigh(T.to_dense())
     idx = xnp.argsort(eigvals, axis=-1)
-    V = lazify(Q) @ lazify(eigvectors[:, idx])
+    V = Q @ lazify(eigvectors[:, idx])
     eigvals = eigvals[..., idx]
     return eigvals, V, info
 
@@ -162,7 +162,8 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
         return Unitary(Dense(Q)), T, info
     else:
         T = xnp.vmap(Tridiagonal)(alpha, beta, alpha)
-        return xnp.vmap(Unitary(Dense(Q))), T, info
+        Q = Unitary(xnp.vmap(Dense)(Q))
+        return Q, T, info
 
 
 def initialize_lanczos_vec(xnp, rhs, max_iters, dtype):
