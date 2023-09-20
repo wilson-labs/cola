@@ -81,19 +81,24 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e
 
     Returns:
         tuple:
-            - Q (Array): Unitary matrix of size (n, max_iters).
-            - H (Array): The upper Hessenberg matrix of size (max_iters, max_iters).
+            - Q (Array): Unitary matrix of size (n, max_iters) or (b, n, max_iters)
+            - H (Array): The upper Hessenberg matrix of size (max_iters, max_iters) or (b, max_iters, max_iters)
             - info (dict): General information about the iterative procedure.
     """
     xnp = A.xnp
     xnp = A.xnp
     if start_vector is None:
-        start_vector = xnp.randn(*(A.shape[-1], 1), dtype=A.dtype, device=A.device)
-    if use_householder:
-        Q, H, infodict = run_householder_arnoldi(A=A, rhs=start_vector, max_iters=max_iters)
+        start_vector = xnp.randn(A.shape[-1], dtype=A.dtype, device=A.device)
+    if len(start_vector.shape) == 1:
+        rhs = start_vector[:, None]
     else:
-        Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
-        Q, H = Q[:, :, 0], H[:, :, 0]
+        rhs = start_vector
+    if use_householder:
+        Q, H, infodict = run_householder_arnoldi(A=A, rhs=rhs, max_iters=max_iters)
+    else:
+        Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=rhs, max_iters=max_iters, tol=tol, pbar=pbar)
+    if len(start_vector.shape) == 1:
+        return Q[0], H[0], infodict
     return Q, H, infodict
 
 
@@ -173,7 +178,10 @@ def run_householder_arnoldi(A: LinearOperator, rhs: Array, max_iters: int):
     state = last_iter_fun(state)
     Q, H, *_ = state
     infodict = {}
-    return Q[:, 1:], H[:, 1:], infodict
+    Q, H = Q[:, 1:], H[:, 1:]
+    Q = xnp.permute(Q, (2, 0, 1))
+    H = xnp.permute(H, (2, 0, 1))
+    return Q, H, infodict
 
 
 def initialize_householder_arnoldi(xnp, rhs, max_iters, dtype):
@@ -221,7 +229,10 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
     while_fn, info = xnp.while_loop_winfo(lambda s: s[-1][0], tol, max_iters, pbar=pbar)
     state = while_fn(cond_fun, body_fun, init_val)
     Q, H, idx, _ = state
-    return Q[:, :-1], H[:-1, :], idx, info
+    Q, H = Q[:, :-1], H[:-1, :]
+    Q = xnp.permute(Q, (2, 0, 1))
+    H = xnp.permute(H, (2, 0, 1))
+    return Q, H, idx, info
 
 
 def initialize_arnoldi(xnp, rhs, max_iters, dtype):
