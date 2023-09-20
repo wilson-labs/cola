@@ -339,12 +339,11 @@ class Tridiagonal(LinearOperator):
 
     def _matmat(self, X: Array) -> Array:
         xnp = self.xnp
-        aux_alpha = xnp.zeros(shape=X.shape, dtype=X.dtype, device=xnp.get_device(X))
-        aux_gamma = xnp.zeros(shape=X.shape, dtype=X.dtype, device=xnp.get_device(X))
-
         output = self.beta * X
-        aux_gamma = xnp.update_array(aux_gamma, self.gamma * X[1:], np.s_[:-1])
-        aux_alpha = xnp.update_array(aux_alpha, self.alpha * X[:-1], np.s_[1:])
+        zeros = xnp.zeros(shape=(1, X.shape[-1]), dtype=X.dtype, device=xnp.get_device(X))
+        aux_gamma = xnp.concat([self.gamma * X[1:], zeros], dim=0)
+        zeros = xnp.zeros(shape=(1, X.shape[-1]), dtype=X.dtype, device=xnp.get_device(X))
+        aux_alpha = xnp.concat([zeros, self.alpha * X[:-1]], dim=0)
         return output + aux_alpha + aux_gamma
 
 

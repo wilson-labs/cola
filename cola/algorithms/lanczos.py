@@ -1,8 +1,6 @@
-from cola import SelfAdjoint
+from cola import SelfAdjoint, Unitary
 from cola.fns import lazify
-from cola.ops import LinearOperator
-from cola.ops import Array
-from cola.backends import get_library_fns
+from cola.ops import Array, LinearOperator, Dense, Tridiagonal
 from cola.utils import export
 import cola
 
@@ -154,15 +152,17 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
 
     init_val = initialize_lanczos_vec(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
     while_fn, info = xnp.while_loop_winfo(error, tol, max_iters, pbar=pbar)
-    state = while_fn(cond_fun, body_fun, init_val)
-    i, vec, beta, alpha = state
-    alpha, beta, Q, iters, info = alpha[..., 1:-1], beta, vec[..., 1:-1], i - 1, info
+    i, vec, beta, alpha = while_fn(cond_fun, body_fun, init_val)
+    alpha, beta, Q, iters = alpha[..., 1:-1], beta, vec[..., 1:-1], i - 1
     if xnp.__name__.find("jax") < 0:
         alpha, beta, Q = alpha[..., :iters - 1], beta[..., :iters], Q[..., :iters]
-    T = construct_tridiagonal(alpha, beta, alpha)
     if len(start_vector.shape) == 1:
-        return Q[0], T[0], info
-    return Q, T, info
+        alpha, beta = alpha[0], beta[0]
+        T = Tridiagonal(alpha, beta, alpha)
+        return Unitary(Dense(Q)), T, info
+    else:
+        T = xnp.vmap(Tridiagonal)(alpha, beta, alpha)
+        return xnp.vmap(Unitary(Dense(Q))), T, info
 
 
 def initialize_lanczos_vec(xnp, rhs, max_iters, dtype):
@@ -188,38 +188,6 @@ def do_gram(vec, new_vec, xnp):
     return new_vec
 
 
-def get_lanczos_coeffs(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7):
-    xnp = A.xnp
-
-    def body_fun(state):
-        i, vec, vec_prev, beta, alpha = state
-
-        new_vec = A @ vec
-        update = xnp.sum(new_vec * vec, axis=-2)
-        beta = xnp.update_array(beta, update, i - 1)
-        new_vec -= beta[i - 1] * vec
-        new_vec -= alpha[i - 1] * vec_prev
-        update = xnp.norm(new_vec, axis=-2)
-        alpha = xnp.update_array(alpha, update, i)
-        new_vec /= update
-
-        vec_prev = xnp.copy(vec)
-        vec = xnp.copy(new_vec)
-        return i + 1, vec, vec_prev, beta, alpha
-
-    def cond_fun(state):
-        i, *_, alpha = state
-        is_max = i <= max_iters
-        is_tol = (alpha[i - 1, 0] >= tol) | (i <= 1)
-        flag = (is_max) & is_tol
-        return flag
-
-    init_val = initialize_lanczos(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-    state = xnp.while_loop(cond_fun, body_fun, init_val)
-    i, *_, beta, alpha = state
-    return alpha[1:], beta[:-1], i - 1
-
-
 def initialize_lanczos(xnp, vec, max_iters, dtype):
     device = xnp.get_device(vec)
     i = xnp.array(1, dtype=xnp.int32, device=device)
@@ -228,28 +196,6 @@ def initialize_lanczos(xnp, vec, max_iters, dtype):
     vec /= xnp.norm(vec)
     vec_prev = xnp.copy(vec)
     return i, vec, vec_prev, beta, alpha
-
-
-def construct_tridiagonal(alpha: Array, beta: Array, gamma: Array) -> Array:
-    """ Constructs a (possibly batched) tridiagonal matrix from the given coefficients.
-
-    Args:
-        alpha (Array): (n-1,) or (b,n-1) array
-        beta (Array): (n,) or (b,n) array
-        gamma (Array): (n-1,) or (b,n-1) array
-
-    Returns:
-        Array: (n,n) or (b,n,n) array
-    """
-    xnp = get_library_fns(beta.dtype)
-    device = xnp.get_device(beta)
-    T = xnp.zeros(shape=beta.shape + beta.shape[-1:], dtype=beta.dtype, device=device)
-    diag_ind = xnp.array([idx for idx in range(beta.shape[-1])], dtype=xnp.int64, device=device)
-    T = xnp.update_array(T, beta, ..., diag_ind, diag_ind)
-    shifted_ind = xnp.array([idx + 1 for idx in range(gamma.shape[-1])], dtype=xnp.int64, device=device)
-    T = xnp.update_array(T, gamma, ..., diag_ind[:-1], shifted_ind)
-    T = xnp.update_array(T, alpha, ..., shifted_ind, diag_ind[:-1])
-    return T
 
 
 def get_lu_from_tridiagonal(A: LinearOperator) -> Array:
