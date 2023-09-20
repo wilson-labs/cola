@@ -69,9 +69,9 @@ def test_construct_tridiagonal(backend):
     gamma = [0.04, 0.59, 1.1]
     T = [[beta[0], gamma[0], 0, 0], [alpha[0], beta[1], gamma[1], 0], [0., alpha[1], beta[2], gamma[2]],
          [0., 0., alpha[2], beta[3]]]
-    alpha = xnp.array([alpha], dtype=dtype, device=None).T
-    beta = xnp.array([beta], dtype=dtype, device=None).T
-    gamma = xnp.array([gamma], dtype=dtype, device=None).T
+    alpha = xnp.array(alpha, dtype=dtype, device=None)
+    beta = xnp.array(beta, dtype=dtype, device=None)
+    gamma = xnp.array(gamma, dtype=dtype, device=None)
     T_actual = xnp.array(T, dtype=dtype, device=None)
     fn = xnp.jit(construct_tridiagonal)
     T_soln = fn(alpha, beta, gamma)

@@ -74,9 +74,7 @@ def lanczos_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
     eigvals, eigvectors = xnp.eigh(T)
     idx = xnp.argsort(eigvals, axis=-1)
     V = lazify(Q) @ lazify(eigvectors[:, idx])
-
     eigvals = eigvals[..., idx]
-    # V = V[..., idx]
     return eigvals, V, info
 
 
@@ -89,48 +87,38 @@ def LanczosDecomposition(A: LinearOperator, start_vector=None, max_iters=100, to
     return A_approx
 
 
-@export
 def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7, pbar=False):
     """
     Computes the Lanczos decomposition of a the operator A, A = Q T Q^*.
 
     Args:
         A (LinearOperator): A symmetric linear operator of size (n, n).
-        start_vector (Array, optional): An initial vector to start Lanczos of size (n, ).
-         Defaults to a random probe.
+        start_vector (Array, optional): An initial vector to start Lanczos of size (n, ) or (b, n)
+         Defaults to a random probe vector (n, ).
         max_iters (int, optional): The maximum number of iterations to run.
         tol (float, optional): Stopping criteria.
 
     Returns:
         tuple:
-            - Q (Array): Orthogonal matrix of size (n, max_iters).
-            - T (Array): Tridiagonal matrix of size (max_iters, max_iters).
+            - Q (Array): Orthogonal matrix of size (n, max_iters) or (b, n, max_iters) if start vector has a batch dim
+            - T (Array): Tridiagonal matrix of size (max_iters, max_iters) or (b, max_iters, max_iters) if batch dim
             - info (dict): General information about the iterative procedure.
-    """
-    xnp = A.xnp
-    if start_vector is None:
-        start_vector = xnp.randn(*(A.shape[0], 1), dtype=A.dtype, device=A.device)
-    alpha, beta, vec, iters, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
-    alpha, beta, Q = alpha[..., :iters - 1], beta[..., :iters], vec[0, :, :iters]
-    T = construct_tridiagonal_batched(alpha, beta, alpha)[0]
-    return Q, T, info
 
-
-def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pbar: bool):
-    """
-    Runs lanczos and saves the tridiagional matrix diagonal (beta) and bands (alpha) as
-    well as the number of iterations (iter) and the ortonormal vectors found (vec)
-
-    A: LinearOperator (n, n) positive definite
-    rhs: Array (n, b) multiple right hands or (n,) single vector (usually randomly sampled)
-    max_iters: int maximum number of iters to run lanczos
-    tol: float: tolerance criteria to stop lanczos
-    pbar: bool: flag to print progress bar
+    Notes:
+        On jax backend, T will be padded with 0s to size of max_iters since jax does not
+         support dynamic sized outputs if traced.
 
     https://en.wikipedia.org/wiki/Lanczos_algorithm
     """
     xnp = A.xnp
     max_iters = min(max_iters, A.shape[0])
+    if start_vector is None:
+        start_vector = xnp.randn(A.shape[0], dtype=A.dtype, device=A.device)
+
+    if len(start_vector.shape) == 1:
+        rhs = start_vector[:, None]
+    else:
+        rhs = start_vector
 
     def body_fun(state):
         i, vec, beta, alpha = state
@@ -168,7 +156,13 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
     while_fn, info = xnp.while_loop_winfo(error, tol, max_iters, pbar=pbar)
     state = while_fn(cond_fun, body_fun, init_val)
     i, vec, beta, alpha = state
-    return alpha[..., 1:], beta, vec[..., 1:-1], i - 1, info
+    alpha, beta, Q, iters, info = alpha[..., 1:-1], beta, vec[..., 1:-1], i - 1, info
+    if xnp.__name__.find("jax") < 0:
+        alpha, beta, Q = alpha[..., :iters - 1], beta[..., :iters], Q[..., :iters]
+    T = construct_tridiagonal(alpha, beta, alpha)
+    if len(start_vector.shape) == 1:
+        return Q[0], T[0], info
+    return Q, T, info
 
 
 def initialize_lanczos_vec(xnp, rhs, max_iters, dtype):
@@ -237,14 +231,19 @@ def initialize_lanczos(xnp, vec, max_iters, dtype):
 
 
 def construct_tridiagonal(alpha: Array, beta: Array, gamma: Array) -> Array:
-    T = construct_tridiagonal_batched(alpha.T, beta.T, gamma.T)
-    return T[0, :, :]
+    """ Constructs a (possibly batched) tridiagonal matrix from the given coefficients.
 
+    Args:
+        alpha (Array): (n-1,) or (b,n-1) array
+        beta (Array): (n,) or (b,n) array
+        gamma (Array): (n-1,) or (b,n-1) array
 
-def construct_tridiagonal_batched(alpha: Array, beta: Array, gamma: Array) -> Array:
+    Returns:
+        Array: (n,n) or (b,n,n) array
+    """
     xnp = get_library_fns(beta.dtype)
     device = xnp.get_device(beta)
-    T = xnp.zeros(shape=(beta.shape[-2], beta.shape[-1], beta.shape[-1]), dtype=beta.dtype, device=device)
+    T = xnp.zeros(shape=beta.shape + beta.shape[-1:], dtype=beta.dtype, device=device)
     diag_ind = xnp.array([idx for idx in range(beta.shape[-1])], dtype=xnp.int64, device=device)
     T = xnp.update_array(T, beta, ..., diag_ind, diag_ind)
     shifted_ind = xnp.array([idx + 1 for idx in range(gamma.shape[-1])], dtype=xnp.int64, device=device)
