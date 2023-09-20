@@ -9,7 +9,7 @@ from cola.ops import Kronecker, Product
 from cola.algorithms.cg import cg
 from cola.algorithms.gmres import gmres
 from cola.algorithms.svrg import solve_svrg_symmetric
-from cola.utils.dispatch import parametric
+from plum import parametric
 from cola.utils import export
 from cola.annotations import PSD, Unitary
 import cola

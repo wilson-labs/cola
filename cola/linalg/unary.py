@@ -7,7 +7,7 @@ import cola
 from cola.ops import LinearOperator
 from cola.utils import export
 from cola.annotations import SelfAdjoint, PSD
-from cola.utils.dispatch import parametric
+from plum import parametric
 from cola.algorithms.lanczos import lanczos_parts, construct_tridiagonal_batched
 from cola.algorithms.arnoldi import get_arnoldi_matrix
 from cola.ops import Diagonal, Identity, ScalarMul

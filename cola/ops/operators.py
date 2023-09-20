@@ -1,7 +1,7 @@
 from functools import reduce, partial
 from cola.ops.operator_base import LinearOperator, Array
 from cola.backends import get_library_fns
-from cola.utils.dispatch import parametric
+from plum import parametric
 import cola
 import numpy as np
 
