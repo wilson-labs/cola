@@ -54,7 +54,7 @@ jobs:
         if [[ ${{ matrix.jax }} == "none" ]]; then
           MARK="${MARK} and not jax";
         else
-          MARK="${MAR} and not numpy";
+          MARK="${MARK} and not numpy";
         fi
         if [[ ${{ matrix.torch }} == "none" ]]; then
           MARK="${MARK} and not torch";
