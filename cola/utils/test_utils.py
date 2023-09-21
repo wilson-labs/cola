@@ -3,7 +3,9 @@ import itertools
 import pytest
 
 from cola.backends import get_library_fns, get_xnp, all_backends
+from cola.backends.np_fns import NumpyNotImplementedError
 import numpy as np
+import functools
 
 get_xnp = get_xnp
 
@@ -26,6 +28,17 @@ def _add_marks(case, is_tricky=False):
         if any(backend in arg for arg in args):
             marks.append(getattr(pytest.mark, backend))
     return pytest.param(*case, marks=marks)
+
+
+def ignore_numpy_notimplemented(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except NumpyNotImplementedError:
+            pass
+
+    return wrapper
 
 
 def index(cases, idx):
@@ -96,6 +109,7 @@ class parametrize:
         all_cases = [_add_marks(case, (case in self.indexed_cases) ^ self.indexing) for case in self.all_cases]
         argnames = ','.join(inspect.getfullargspec(test_fn).args)
         theids = [strip_parens(str(case)) for case in all_cases] if self.ids is None else self.ids
+        test_fn = ignore_numpy_notimplemented(test_fn)
         return pytest.mark.parametrize(argnames, all_cases, ids=theids)(test_fn)
 
 

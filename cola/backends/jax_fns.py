@@ -46,7 +46,6 @@ long = jnp.int64
 reshape = jnp.reshape
 kron = jnp.kron
 moveaxis = jnp.moveaxis
-concatenate = jnp.concatenate
 block_diag = block_diag
 sqrt = jnp.sqrt
 pbar_while = pbar_while
@@ -94,10 +93,6 @@ softmax = jax.nn.softmax
 log_softmax = jax.nn.log_softmax
 promote_types = jnp.promote_types
 finfo = jnp.finfo
-
-
-def iscomplexobj(x):
-    return jnp.iscomplex(x).any()
 
 
 def iscomplexobj(x):

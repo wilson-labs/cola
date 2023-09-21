@@ -2,7 +2,6 @@ import cola as co
 from cola.fns import lazify
 from cola.ops import Tridiagonal
 from cola.algorithms.lanczos import get_lu_from_tridiagonal
-from cola.algorithms.lanczos import construct_tridiagonal
 from cola.linalg.nullspace import nullspace
 from cola.linalg.eigs import power_iteration
 from cola.fns import kron
@@ -52,31 +51,10 @@ def test_get_lu_from_tridiagonal(backend):
     beta_j = xnp.array([beta], dtype=dtype, device=None).T
     gamma_j = xnp.array([gamma], dtype=dtype, device=None).T
     B = Tridiagonal(alpha=alpha_j, beta=beta_j, gamma=gamma_j)
-    B.xnp = xnp
     eigenvals = xnp.jit(get_lu_from_tridiagonal, static_argnums=(0, ))(B)
     actual = xnp.array([1 / 4, 4 / 3, 3 / 2, 2], dtype=dtype, device=None)
     sorted_eigenvals = xnp.sort(eigenvals)
     rel_error = relative_error(actual, sorted_eigenvals)
-    assert rel_error < _tol
-
-
-@parametrize(all_backends)
-def test_construct_tridiagonal(backend):
-    xnp = get_xnp(backend)
-    dtype = xnp.float32
-    alpha = [0.73, 1.5, 0.4]
-    beta = [0.8, 0.29, -0.6, 0.9]
-    gamma = [0.04, 0.59, 1.1]
-    T = [[beta[0], gamma[0], 0, 0], [alpha[0], beta[1], gamma[1], 0], [0., alpha[1], beta[2], gamma[2]],
-         [0., 0., alpha[2], beta[3]]]
-    alpha = xnp.array([alpha], dtype=dtype, device=None).T
-    beta = xnp.array([beta], dtype=dtype, device=None).T
-    gamma = xnp.array([gamma], dtype=dtype, device=None).T
-    T_actual = xnp.array(T, dtype=dtype, device=None)
-    fn = xnp.jit(construct_tridiagonal)
-    T_soln = fn(alpha, beta, gamma)
-    rel_error = relative_error(T_actual, T_soln)
-    assert T_actual.shape == T_soln.shape
     assert rel_error < _tol
 
 

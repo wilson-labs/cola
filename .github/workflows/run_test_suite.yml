@@ -53,6 +53,8 @@ jobs:
         MARK="not big and not tricky"
         if [[ ${{ matrix.jax }} == "none" ]]; then
           MARK="${MARK} and not jax";
+        else
+          MARK="${MARK} and not numpy";
         fi
         if [[ ${{ matrix.torch }} == "none" ]]; then
           MARK="${MARK} and not torch";

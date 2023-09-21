@@ -7,8 +7,8 @@ import cola
 from cola.ops import LinearOperator
 from cola.utils import export
 from cola.annotations import SelfAdjoint, PSD
-from cola.utils.dispatch import parametric
-from cola.algorithms.lanczos import lanczos_parts, construct_tridiagonal_batched
+from plum import parametric
+from cola.algorithms.lanczos import lanczos  # , construct_tridiagonal
 from cola.algorithms.arnoldi import get_arnoldi_matrix
 from cola.ops import Diagonal, Identity, ScalarMul
 from cola.ops import BlockDiag, Kronecker, KronSum, I_like, Transpose, Adjoint
@@ -28,14 +28,17 @@ class LanczosUnary(LinearOperator):
         self.info = {}
 
     def _matmat(self, V):
-        alpha, beta, Q, iters, info = lanczos_parts(self.A, V, **self.kwargs)
+        xnp = self.xnp
+        Q, T, info = lanczos(self.A, V, **self.kwargs)  # outputs are batched
         self.info.update(info)
-        alpha, beta, Q = alpha[:, :iters - 1], beta[:, :iters], Q[:, :, :iters]
-        T = construct_tridiagonal_batched(alpha, beta, alpha)
-        eigvals, P = self.xnp.eigh(T)
+        eigvals, P = self.xnp.eigh(xnp.vmap(T.__class__.to_dense)(T))
+        Q = xnp.vmap(Q.__class__.to_dense)(Q)
         norms = self.xnp.norm(V, axis=0)
+        zero_thresh = 10 * xnp.finfo(self.dtype).eps * xnp.max(xnp.abs(eigvals), axis=1, keepdims=True)
+        # truncate zero padded values (generating spurious eigenvalues)
+        f_eigvals = xnp.where(xnp.abs(eigvals) > zero_thresh, self.f(eigvals), xnp.zeros_like(eigvals))
         out = self.A.xnp.conj(P)[:, 0, :] * norms[:, None]  # (bs,k)
-        out = (Q @ P @ (self.f(eigvals) * out)[..., None])[..., 0]
+        out = (Q @ P @ (f_eigvals * out)[..., None])[..., 0]
         return out.T
 
 
@@ -49,19 +52,21 @@ class ArnoldiUnary(LinearOperator):
         self.info = {}
 
     def _matmat(self, V):  # (n,bs)
+        xnp = self.xnp
         Q, H, _, info = get_arnoldi_matrix(A=self.A, rhs=V, **self.kwargs)
-        Q = self.xnp.moveaxis(Q, 2, 0)
-        H = self.xnp.moveaxis(H, 2, 0)
         # Q of shape (n, m, bs) H of shape (m,m,bs)
         self.info.update(info)
         eigvals, P = self.xnp.eig(H)
         norms = self.xnp.norm(V, axis=0)
+
         e0 = self.xnp.canonical(0, (P.shape[1], V.shape[-1]), dtype=P.dtype, device=self.device)
         Pinv0 = self.xnp.solve(P, e0.T)  # (bs, m, m) vs (bs, m)
         out = Pinv0 * norms[:, None]  # (bs, m)
         Q = self.xnp.cast(Q, dtype=P.dtype)  # (bs, n, m)
         # (bs,n,m) @ (bs,m,m) @ (bs, m) -> (bs, n)
-        out = (Q @ P @ (self.f(eigvals) * out)[..., None])[..., 0]
+        zero_thresh = 10 * xnp.finfo(self.dtype).eps * xnp.max(xnp.abs(eigvals), axis=1, keepdims=True)
+        f_eigvals = xnp.where(xnp.abs(eigvals) > zero_thresh, self.f(eigvals), xnp.zeros_like(eigvals))
+        out = (Q @ P @ (f_eigvals * out)[..., None])[..., 0]
         return out.T
 
 

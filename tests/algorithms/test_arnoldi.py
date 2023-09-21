@@ -67,7 +67,7 @@ def test_arnoldi(backend):
     dtype = xnp.complex64
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=4, dtype=np.float32)
     A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype, device=None)
-    zr = xnp.randn(A.shape[1], 1, dtype=xnp.float32, device=None, key=xnp.PRNGKey(123))
+    zr = xnp.randn(A.shape[1], dtype=xnp.float32, device=None, key=xnp.PRNGKey(123))
     rhs = xnp.cast(zr, dtype=dtype)
     eigvals, eigvecs, _ = arnoldi_eigs(lazify(A), rhs, max_iters=A.shape[-1])
     approx = xnp.sort(xnp.cast(eigvals, xnp.float32))
@@ -109,19 +109,21 @@ def test_get_arnoldi_matrix(backend):
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=20, dtype=np.float32) - 0.5
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
     rhs = xnp.randn(A.shape[1], 1, dtype=dtype, device=None, key=xnp.PRNGKey(1256))
-    rhs = xnp.concatenate((rhs, rhs), axis=-1)
+    rhs = xnp.concat((rhs, rhs), axis=-1)
     max_iter = A.shape[0]
     A_np, rhs_np = np.array(A, dtype=np.complex128), np.array(rhs[:, 0], dtype=np.complex128)
     Q_sol, H_sol = run_arnoldi(A_np, rhs_np, max_iter=max_iter, tol=1e-7, dtype=np.complex128)
 
-    fn = xnp.jit(get_arnoldi_matrix, static_argnums=(0, 2, 3, 4))
+    fn = xnp.jit(get_arnoldi_matrix, static_argnums=(2, 3, 4))
     Q_approx, H_approx, *_ = fn(lazify(A), rhs, max_iter, tol=1e-12, pbar=False)
-
-    rel_error = relative_error(Q_approx[:, :, 0], Q_approx[:, :, 1])
-    rel_error += relative_error(H_approx[:, :, 0], H_approx[:, :, 1])
+    todense = xnp.vmap(lambda A: A.to_dense())
+    Q_approx = todense(Q_approx)
+    H_approx = todense(H_approx)
+    rel_error = relative_error(Q_approx[0, :, :], Q_approx[1, :, :])
+    rel_error += relative_error(H_approx[0, :, :], H_approx[1, :, :])
     assert rel_error < 1e-12
 
-    Q_approx, H_approx = Q_approx[:, :, 0], H_approx[:, :, 0]
+    Q_approx, H_approx = Q_approx[0, :, :], H_approx[0, :, :]
     for soln, approx in ((Q_sol[:, :-1], Q_approx), (H_sol[:-1, :], H_approx)):
         rel_error = relative_error(xnp.array(soln, dtype=dtype, device=None), approx)
         assert rel_error < 1e-12

@@ -1,4 +1,5 @@
-from .dispatch import dispatch, parametric
+# from .dispatch import dispatch, parametric
+from plum import dispatch, parametric
 import sys
 import inspect
 import importlib

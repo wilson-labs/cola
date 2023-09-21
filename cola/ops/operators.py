@@ -1,7 +1,7 @@
 from functools import reduce, partial
 from cola.ops.operator_base import LinearOperator, Array
 from cola.backends import get_library_fns
-from cola.utils.dispatch import parametric
+from plum import parametric
 import cola
 import numpy as np
 
@@ -282,7 +282,7 @@ class BlockDiag(LinearOperator):
             elems = M @ v[i:i_end].T.reshape(k * multiplicity, M.shape[-1]).T
             y.append(elems.T.reshape(k, multiplicity * M.shape[0]).T)
             i = i_end
-        y = self.xnp.concatenate(y, axis=0)  # concatenate over rep axis
+        y = self.xnp.concat(y, axis=0)  # concatenate over rep axis
         return y
 
     def to_dense(self):
@@ -339,12 +339,11 @@ class Tridiagonal(LinearOperator):
 
     def _matmat(self, X: Array) -> Array:
         xnp = self.xnp
-        aux_alpha = xnp.zeros(shape=X.shape, dtype=X.dtype, device=xnp.get_device(X))
-        aux_gamma = xnp.zeros(shape=X.shape, dtype=X.dtype, device=xnp.get_device(X))
-
         output = self.beta * X
-        aux_gamma = xnp.update_array(aux_gamma, self.gamma * X[1:], np.s_[:-1])
-        aux_alpha = xnp.update_array(aux_alpha, self.alpha * X[:-1], np.s_[1:])
+        zeros = xnp.zeros(shape=(1, X.shape[-1]), dtype=X.dtype, device=xnp.get_device(X))
+        aux_gamma = xnp.concat([self.gamma * X[1:], zeros], axis=0)
+        zeros = xnp.zeros(shape=(1, X.shape[-1]), dtype=X.dtype, device=xnp.get_device(X))
+        aux_alpha = xnp.concat([zeros, self.alpha * X[:-1]], axis=0)
         return output + aux_alpha + aux_gamma
 
 
@@ -545,7 +544,7 @@ class Concatenated(LinearOperator):
         super().__init__(Ms[0].dtype, shape)
 
     def _matmat(self, V):
-        return self.xnp.concatenate([M @ V for M in self.Ms], axis=self.axis)
+        return self.xnp.concat([M @ V for M in self.Ms], axis=self.axis)
 
 
 class ConvolveND(LinearOperator):
@@ -573,8 +572,7 @@ class Householder(LinearOperator):
 
     def _matmat(self, X: Array) -> Array:
         xnp = self.xnp
-        # angle = xnp.sum(X * xnp.conj(self.vec), axis=-2, keepdims=True)
-        angle = xnp.sum(X * self.vec, axis=-2, keepdims=True)
+        angle = xnp.sum(X * xnp.conj(self.vec), axis=-2, keepdims=True)
         out = X - self.beta * angle * self.vec
         return out
 

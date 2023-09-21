@@ -47,7 +47,6 @@ zeros_like = torch.zeros_like
 cholesky = torch.linalg.cholesky
 min = torch.min
 while_loop_winfo = while_loop_winfo
-concat = torch.cat
 log = torch.log
 nan_to_num = torch.nan_to_num
 is_array = torch.is_tensor
@@ -282,7 +281,7 @@ def linear_transpose(fun, primals, duals):
     return vjp_derivs(fun, (primals, ), duals)[0]
 
 
-def concatenate(arrays, axis=0):
+def concat(arrays, axis=0):
     return torch.cat(arrays, dim=axis)
 
 

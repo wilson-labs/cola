@@ -1,7 +1,7 @@
 from cola.ops import LinearOperator
 from cola.ops import Array
-from cola.algorithms.arnoldi import run_householder_arnoldi
-from cola.algorithms.arnoldi import get_arnoldi_matrix
+# from cola.algorithms.arnoldi import run_householder_arnoldi
+from cola.algorithms.arnoldi import arnoldi
 from cola.utils import export
 from cola.utils.custom_autodiff import iterative_autograd
 
@@ -63,29 +63,31 @@ def gmres_bwd(res, grads, unflatten, *args, **kwargs):
 @iterative_autograd(gmres_bwd)
 def gmres_fwd(A, rhs, x0, max_iters, tol, P, use_householder, use_triangular, pbar):
     xnp = A.xnp
-    res = rhs - A @ x0
-    if use_householder:
-        Q, H, infodict = run_householder_arnoldi(A=A, rhs=res, max_iters=max_iters)
-    else:
-        Q, H, idx, infodict = get_arnoldi_matrix(A=A, rhs=res, max_iters=max_iters, tol=tol, pbar=pbar)
-        Q, H = Q[:, :idx, :], H[:idx, :idx, :]
+    res = rhs - A @ x0  # (m,k)
+    Q, H, infodict = arnoldi(A=A, start_vector=res, max_iters=max_iters, tol=tol, pbar=pbar,
+                             use_householder=use_householder)
+
     beta = xnp.norm(res, axis=-2)
-    e1 = xnp.zeros(shape=(H.shape[0], beta.shape[0]), dtype=rhs.dtype, device=A.device)
+    e1 = xnp.zeros(shape=(H.shape[1], beta.shape[0]), dtype=rhs.dtype, device=A.device)
     e1 = xnp.update_array(e1, beta, 0)
 
     if use_triangular:
-        R, Gs = get_hessenberg_triangular_qr(H[:, :, 0], xnp=xnp)
+        # NOTE::: this will not work with multiple rhs Andres to fix
+        R, Gs = get_hessenberg_triangular_qr(H[0, :, :], xnp=xnp)
         target = apply_givens_fwd(Gs, e1, xnp)
         y = xnp.solvetri(R, target, lower=False)
-        pred = Q[:, :, 0] @ y
+        pred = Q[0, :, :] @ y
     else:
-        nH = xnp.permute(H, axes=[2, 0, 1])
-        nHT = xnp.conj(xnp.permute(H, axes=[2, 1, 0]))
-        ne1 = xnp.permute(e1[None], axes=[2, 1, 0])
-        nQ = xnp.permute(Q, axes=[2, 0, 1])
-
-        y = xnp.solve(nHT @ nH, nHT @ ne1)
-        pred = xnp.permute(nQ @ y, axes=[1, 0, 2])[:, :, 0]
+        HT = xnp.conj(xnp.permute(H, axes=[0, 2, 1]))
+        largest_vals = xnp.max(xnp.abs(H), -1)
+        overall_max = xnp.max(largest_vals.reshape(largest_vals.shape[0], -1), -1)
+        zero_thresh = 10 * tol * overall_max[:, None]
+        padding = xnp.where(largest_vals < zero_thresh, xnp.ones_like(largest_vals), xnp.zeros_like(largest_vals))
+        added_diag = xnp.vmap(xnp.diag)(padding)
+        y = xnp.solve(HT @ H + added_diag, HT[..., 0]) * beta[:, None]
+        zeros = xnp.zeros_like(y)
+        y = xnp.where(largest_vals < zero_thresh, zeros, y)
+        pred = xnp.permute(Q @ y[..., None], axes=[1, 0, 2])[:, :, 0]
 
     soln = x0 + pred
     return soln, infodict

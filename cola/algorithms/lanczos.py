@@ -1,8 +1,6 @@
-from cola import SelfAdjoint
+from cola import SelfAdjoint, Unitary
 from cola.fns import lazify
-from cola.ops import LinearOperator
-from cola.ops import Array
-from cola.backends import get_library_fns
+from cola.ops import Array, LinearOperator, Dense, Tridiagonal
 from cola.utils import export
 import cola
 
@@ -70,13 +68,13 @@ def lanczos_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
 
     """
     xnp = A.xnp
+    if start_vector is None:
+        start_vector = xnp.randn(A.shape[0], dtype=A.dtype, device=A.device)
     Q, T, info = lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
-    eigvals, eigvectors = xnp.eigh(T)
+    eigvals, eigvectors = xnp.eigh(T.to_dense())
     idx = xnp.argsort(eigvals, axis=-1)
-    V = lazify(Q) @ lazify(eigvectors[:, idx])
-
+    V = Q @ lazify(eigvectors[:, idx])
     eigvals = eigvals[..., idx]
-    # V = V[..., idx]
     return eigvals, V, info
 
 
@@ -89,48 +87,38 @@ def LanczosDecomposition(A: LinearOperator, start_vector=None, max_iters=100, to
     return A_approx
 
 
-@export
 def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7, pbar=False):
     """
     Computes the Lanczos decomposition of a the operator A, A = Q T Q^*.
 
     Args:
         A (LinearOperator): A symmetric linear operator of size (n, n).
-        start_vector (Array, optional): An initial vector to start Lanczos of size (n, ).
-         Defaults to a random probe.
+        start_vector (Array, optional): An initial vector to start Lanczos of size (n, ) or (b, n)
+         Defaults to a random probe vector (n, ).
         max_iters (int, optional): The maximum number of iterations to run.
         tol (float, optional): Stopping criteria.
 
     Returns:
         tuple:
-            - Q (Array): Orthogonal matrix of size (n, max_iters).
-            - T (Array): Tridiagonal matrix of size (max_iters, max_iters).
+            - Q (Array): Orthogonal matrix of size (n, max_iters) or (b, n, max_iters) if start vector has a batch dim
+            - T (Array): Tridiagonal matrix of size (max_iters, max_iters) or (b, max_iters, max_iters) if batch dim
             - info (dict): General information about the iterative procedure.
-    """
-    xnp = A.xnp
-    if start_vector is None:
-        start_vector = xnp.randn(*(A.shape[0], 1), dtype=A.dtype, device=A.device)
-    alpha, beta, vec, iters, info = lanczos_parts(A=A, rhs=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
-    alpha, beta, Q = alpha[..., :iters - 1], beta[..., :iters], vec[0, :, :iters]
-    T = construct_tridiagonal_batched(alpha, beta, alpha)[0]
-    return Q, T, info
 
-
-def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pbar: bool):
-    """
-    Runs lanczos and saves the tridiagional matrix diagonal (beta) and bands (alpha) as
-    well as the number of iterations (iter) and the ortonormal vectors found (vec)
-
-    A: LinearOperator (n, n) positive definite
-    rhs: Array (n, b) multiple right hands or (n,) single vector (usually randomly sampled)
-    max_iters: int maximum number of iters to run lanczos
-    tol: float: tolerance criteria to stop lanczos
-    pbar: bool: flag to print progress bar
+    Notes:
+        On jax backend, T will be padded with 0s to size of max_iters since jax does not
+         support dynamic sized outputs if traced.
 
     https://en.wikipedia.org/wiki/Lanczos_algorithm
     """
     xnp = A.xnp
     max_iters = min(max_iters, A.shape[0])
+    if start_vector is None:
+        start_vector = xnp.randn(A.shape[0], dtype=A.dtype, device=A.device)
+
+    if len(start_vector.shape) == 1:
+        rhs = start_vector[:, None]
+    else:
+        rhs = start_vector
 
     def body_fun(state):
         i, vec, beta, alpha = state
@@ -166,9 +154,18 @@ def lanczos_parts(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pba
 
     init_val = initialize_lanczos_vec(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
     while_fn, info = xnp.while_loop_winfo(error, tol, max_iters, pbar=pbar)
-    state = while_fn(cond_fun, body_fun, init_val)
-    i, vec, beta, alpha = state
-    return alpha[..., 1:], beta, vec[..., 1:-1], i - 1, info
+    i, vec, beta, alpha = while_fn(cond_fun, body_fun, init_val)
+    alpha, beta, Q, iters = alpha[..., 1:-1], beta, vec[..., 1:-1], i - 1
+    if xnp.__name__.find("jax") < 0:
+        alpha, beta, Q = alpha[..., :iters - 1], beta[..., :iters], Q[..., :iters]
+    if len(start_vector.shape) == 1:
+        alpha, beta = alpha[0], beta[0]
+        T = Tridiagonal(alpha, beta, alpha)
+        return Unitary(Dense(Q[0, :, :])), T, info
+    else:
+        T = xnp.vmap(Tridiagonal)(alpha, beta, alpha)
+        Q = Unitary(xnp.vmap(Dense)(Q))
+        return Q, T, info
 
 
 def initialize_lanczos_vec(xnp, rhs, max_iters, dtype):
@@ -194,38 +191,6 @@ def do_gram(vec, new_vec, xnp):
     return new_vec
 
 
-def get_lanczos_coeffs(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7):
-    xnp = A.xnp
-
-    def body_fun(state):
-        i, vec, vec_prev, beta, alpha = state
-
-        new_vec = A @ vec
-        update = xnp.sum(new_vec * vec, axis=-2)
-        beta = xnp.update_array(beta, update, i - 1)
-        new_vec -= beta[i - 1] * vec
-        new_vec -= alpha[i - 1] * vec_prev
-        update = xnp.norm(new_vec, axis=-2)
-        alpha = xnp.update_array(alpha, update, i)
-        new_vec /= update
-
-        vec_prev = xnp.copy(vec)
-        vec = xnp.copy(new_vec)
-        return i + 1, vec, vec_prev, beta, alpha
-
-    def cond_fun(state):
-        i, *_, alpha = state
-        is_max = i <= max_iters
-        is_tol = (alpha[i - 1, 0] >= tol) | (i <= 1)
-        flag = (is_max) & is_tol
-        return flag
-
-    init_val = initialize_lanczos(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-    state = xnp.while_loop(cond_fun, body_fun, init_val)
-    i, *_, beta, alpha = state
-    return alpha[1:], beta[:-1], i - 1
-
-
 def initialize_lanczos(xnp, vec, max_iters, dtype):
     device = xnp.get_device(vec)
     i = xnp.array(1, dtype=xnp.int32, device=device)
@@ -234,23 +199,6 @@ def initialize_lanczos(xnp, vec, max_iters, dtype):
     vec /= xnp.norm(vec)
     vec_prev = xnp.copy(vec)
     return i, vec, vec_prev, beta, alpha
-
-
-def construct_tridiagonal(alpha: Array, beta: Array, gamma: Array) -> Array:
-    T = construct_tridiagonal_batched(alpha.T, beta.T, gamma.T)
-    return T[0, :, :]
-
-
-def construct_tridiagonal_batched(alpha: Array, beta: Array, gamma: Array) -> Array:
-    xnp = get_library_fns(beta.dtype)
-    device = xnp.get_device(beta)
-    T = xnp.zeros(shape=(beta.shape[-2], beta.shape[-1], beta.shape[-1]), dtype=beta.dtype, device=device)
-    diag_ind = xnp.array([idx for idx in range(beta.shape[-1])], dtype=xnp.int64, device=device)
-    T = xnp.update_array(T, beta, ..., diag_ind, diag_ind)
-    shifted_ind = xnp.array([idx + 1 for idx in range(gamma.shape[-1])], dtype=xnp.int64, device=device)
-    T = xnp.update_array(T, gamma, ..., diag_ind[:-1], shifted_ind)
-    T = xnp.update_array(T, alpha, ..., shifted_ind, diag_ind[:-1])
-    return T
 
 
 def get_lu_from_tridiagonal(A: LinearOperator) -> Array:
