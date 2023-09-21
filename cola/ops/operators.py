@@ -282,7 +282,7 @@ class BlockDiag(LinearOperator):
             elems = M @ v[i:i_end].T.reshape(k * multiplicity, M.shape[-1]).T
             y.append(elems.T.reshape(k, multiplicity * M.shape[0]).T)
             i = i_end
-        y = self.xnp.concatenate(y, axis=0)  # concatenate over rep axis
+        y = self.xnp.concat(y, axis=0)  # concatenate over rep axis
         return y
 
     def to_dense(self):
@@ -341,9 +341,9 @@ class Tridiagonal(LinearOperator):
         xnp = self.xnp
         output = self.beta * X
         zeros = xnp.zeros(shape=(1, X.shape[-1]), dtype=X.dtype, device=xnp.get_device(X))
-        aux_gamma = xnp.concat([self.gamma * X[1:], zeros], dim=0)
+        aux_gamma = xnp.concat([self.gamma * X[1:], zeros], axis=0)
         zeros = xnp.zeros(shape=(1, X.shape[-1]), dtype=X.dtype, device=xnp.get_device(X))
-        aux_alpha = xnp.concat([zeros, self.alpha * X[:-1]], dim=0)
+        aux_alpha = xnp.concat([zeros, self.alpha * X[:-1]], axis=0)
         return output + aux_alpha + aux_gamma
 
 
@@ -544,7 +544,7 @@ class Concatenated(LinearOperator):
         super().__init__(Ms[0].dtype, shape)
 
     def _matmat(self, V):
-        return self.xnp.concatenate([M @ V for M in self.Ms], axis=self.axis)
+        return self.xnp.concat([M @ V for M in self.Ms], axis=self.axis)
 
 
 class ConvolveND(LinearOperator):

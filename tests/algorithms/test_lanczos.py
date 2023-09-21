@@ -147,6 +147,8 @@ def test_lanczos_manual(backend):
         alpha, beta = T.alpha[:, :, 0], T.beta[:, :, 0]
         Q, T = Q.to_dense(), xnp.vmap(T.__class__.to_dense)(T)
         idx = info["iterations"] - 1
+        if backend == "jax":
+            alpha, beta = alpha[:, :idx - 1], beta[:, :idx]
 
         assert idx == idx_soln
         rel_error = relative_error(beta_soln, beta.T)

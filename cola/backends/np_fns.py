@@ -25,7 +25,6 @@ block_diag = _block_diag
 cholesky = np.linalg.cholesky
 complex64 = np.complex64
 concat = np.concatenate
-concatenate = np.concatenate
 conj = np.conj
 copy = np.copy
 cos = np.cos
