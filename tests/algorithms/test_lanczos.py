@@ -82,8 +82,10 @@ def test_lanczos_complex(backend):
     rhs = xnp.randn(A.shape[0], 1, dtype=dtype, device=None)
     alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
 
+    B = lazify(A)
+    B.xnp = xnp
     max_iters, tol = A.shape[0], 1e-7
-    Q, T, info = lanczos(lazify(A), rhs, max_iters=max_iters, tol=tol, pbar=False)
+    Q, T, info = lanczos(B, rhs, max_iters=max_iters, tol=tol, pbar=False)
     idx = info["iterations"] - 1
     alpha, beta = T.alpha[:, :, 0], T.beta[:, :, 0]
     Q, T = Q.to_dense(), xnp.vmap(T.__class__.to_dense)(T)
@@ -112,6 +114,7 @@ def test_lanczos_random(backend):
     alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
 
     B, max_iters, tol = lazify(A), A.shape[0], 1e-7
+    B.xnp = xnp
     Q, T, info = lanczos(B, rhs, max_iters=max_iters, tol=tol, pbar=False)
     idx = info["iterations"] - 1
     alpha, beta = T.alpha[:, :, 0], T.beta[:, :, 0]
@@ -143,7 +146,9 @@ def test_lanczos_manual(backend):
         A, rhs, beta_soln, alpha_soln, idx_soln = out
 
         max_iters, tol = A.shape[0], 1e-7
-        Q, T, info = lanczos(lazify(A), rhs, max_iters=max_iters, tol=tol, pbar=False)
+        B = lazify(A)
+        B.xnp = xnp
+        Q, T, info = lanczos(B, rhs, max_iters=max_iters, tol=tol, pbar=False)
         alpha, beta = T.alpha[:, :, 0], T.beta[:, :, 0]
         Q, T = Q.to_dense(), xnp.vmap(T.__class__.to_dense)(T)
         idx = info["iterations"] - 1
@@ -167,7 +172,9 @@ def test_lanczos_iter(backend):
     alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp)
 
     max_iters, tol = A.shape[0], 1e-7
-    Q, T, info = lanczos(lazify(A), rhs, max_iters=max_iters, tol=tol, pbar=False)
+    B = lazify(A)
+    B.xnp = xnp
+    Q, T, info = lanczos(B, rhs, max_iters=max_iters, tol=tol, pbar=False)
     idx, Q = info["iterations"] - 1, Q.to_dense()
     alpha, beta = T.alpha[:, :, 0], T.beta[:, :, 0]
     T = xnp.vmap(T.__class__.to_dense)(T)

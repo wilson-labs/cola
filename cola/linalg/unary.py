@@ -45,7 +45,9 @@ class LanczosUnary(LinearOperator):
 @parametric
 class ArnoldiUnary(LinearOperator):
     def __init__(self, A: LinearOperator, f: Callable, **kwargs):
+        xnp = A.xnp
         super().__init__(A.dtype, A.shape)
+        self.xnp = xnp
         self.A = A
         self.f = f
         self.kwargs = kwargs
