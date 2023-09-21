@@ -71,8 +71,6 @@ def test_adjoint(backend):
     assert rel_error < _tol
 
     eig_vals, eig_vecs = eig(A, method="lanczos", max_iters=A.shape[-1])
-    print(eig_vals.shape, eig_vecs.shape)
-    print(soln_vals.shape)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
 
     rel_error = relative_error(soln_vals, eig_vals)
