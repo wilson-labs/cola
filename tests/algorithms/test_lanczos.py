@@ -3,11 +3,11 @@ from cola.fns import lazify
 from cola.ops import Dense
 from cola.algorithms.lanczos import lanczos
 from cola.algorithms.lanczos import lanczos_eigs
-# from cola.algorithms.lanczos import lanczos_max_eig
+from cola.algorithms.lanczos import lanczos_max_eig
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends, tracing_backends
-# from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
-# from cola.utils.test_utils import generate_diagonals
+from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
+from cola.utils.test_utils import generate_diagonals
 
 _tol = 1e-6
 
@@ -72,78 +72,87 @@ def test_lanczos_vjp(backend):
     assert abs_error < _tol * 50
 
 
-# @parametrize(all_backends)
-# def test_lanczos_complex(backend):
-#     xnp = get_xnp(backend)
-#     dtype = xnp.complex64
-#     np_dtype = np.complex64
-#     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
-#     A = xnp.array(generate_diagonals(diag, seed=21), dtype=dtype, device=None)
-#     rhs = xnp.randn(A.shape[0], 1, dtype=dtype, device=None)
-#     alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
+@parametrize(all_backends)
+def test_lanczos_complex(backend):
+    xnp = get_xnp(backend)
+    dtype = xnp.complex64
+    np_dtype = np.complex64
+    diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
+    A = xnp.array(generate_diagonals(diag, seed=21), dtype=dtype, device=None)
+    rhs = xnp.randn(A.shape[0], 1, dtype=dtype, device=None)
+    alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
 
-#     B = lazify(A)
-#     max_iters, tolerance = A.shape[0], 1e-7
-#     fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
-#     pbar = False
-#     alpha, beta, Q, idx, _ = fn(B, rhs, max_iters, tolerance, pbar)
-#     alpha, Q = alpha[..., :idx - 1], Q[0]
-#     T = construct_tridiagonal(alpha.T, beta.T, alpha.T)
+    max_iters, tol = A.shape[0], 1e-7
+    Q, T, info = lanczos(lazify(A), rhs, max_iters=max_iters, tol=tol, pbar=False)
+    idx = info["iterations"] - 1
+    alpha, beta = T.alpha[:, :, 0], T.beta[:, :, 0]
+    Q, T = Q.to_dense(), xnp.vmap(T.__class__.to_dense)(T)
 
-#     assert idx == idx_np
-#     comparisons = [(T_np, T), (Q_np, Q), (Q @ T, A @ Q)]
-#     for soln, approx in comparisons:
-#         rel_error = relative_error(soln, approx)
-#         assert rel_error < 5e-5
+    assert idx == idx_np
+    comparisons = [
+        (T_np, T),
+        (Q_np, Q),
+        (Q @ T, A @ Q),
+        (alpha_np, alpha[0]),
+        (beta_np, beta[0]),
+    ]
+    for soln, approx in comparisons:
+        rel_error = relative_error(soln, approx)
+        assert rel_error < 5e-5
 
-# @parametrize(all_backends)
-# def test_lanczos_random(backend):
-#     xnp = get_xnp(backend)
-#     dtype = xnp.float32
-#     np_dtype = np.float32
-#     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
-#     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
-#     rhs = xnp.ones(shape=(A.shape[0], 1), dtype=dtype, device=None)
-#     alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
 
-#     B = lazify(A)
-#     max_iters, tolerance = A.shape[0], 1e-7
-#     fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
-#     pbar = False
-#     alpha, beta, Q, idx, _ = fn(B, rhs, max_iters, tolerance, pbar)
-#     alpha, Q = alpha[..., :idx - 1], Q[0]
-#     T = construct_tridiagonal(alpha.T, beta.T, alpha.T)
+@parametrize(all_backends)
+def test_lanczos_random(backend):
+    xnp = get_xnp(backend)
+    dtype = xnp.float32
+    np_dtype = np.float32
+    diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
+    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
+    rhs = xnp.ones(shape=(A.shape[0], 1), dtype=dtype, device=None)
+    alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
 
-#     max_eig = lanczos_max_eig(B, rhs, B.shape[-1])
+    B, max_iters, tol = lazify(A), A.shape[0], 1e-7
+    Q, T, info = lanczos(B, rhs, max_iters=max_iters, tol=tol, pbar=False)
+    idx = info["iterations"] - 1
+    alpha, beta = T.alpha[:, :, 0], T.beta[:, :, 0]
+    Q, T = Q.to_dense(), xnp.vmap(T.__class__.to_dense)(T)
 
-#     assert idx == idx_np
-#     comparisons = [(T_np, T), (Q_np, Q), (Q @ T, A @ Q), (xnp.array(1., dtype, None), max_eig), (alpha_np, alpha[0]),
-#                    (beta_np, beta[0])]
-#     for soln, approx in comparisons:
-#         rel_error = relative_error(soln, approx)
-#         assert rel_error < 5e-5
+    max_eig = lanczos_max_eig(B, rhs[:, 0], B.shape[-1])
 
-# @parametrize(all_backends)
-# def test_lanczos_manual(backend):
-#     xnp = get_xnp(backend)
-#     dtype = xnp.float32
-#     cases = [case_2, case_3, case_early]
-#     for case in cases:
-#         out = case(xnp, dtype)
-#         A, rhs, beta_soln, alpha_soln, idx_soln = out
+    assert idx == idx_np
+    comparisons = [
+        (T_np, T),
+        (Q_np, Q),
+        (Q @ T, A @ Q),
+        (xnp.array(1., dtype, None), max_eig),
+        (alpha_np, alpha[0]),
+        (beta_np, beta[0]),
+    ]
+    for soln, approx in comparisons:
+        rel_error = relative_error(soln, approx)
+        assert rel_error < 5e-5
 
-#         B = lazify(A)
-#         max_iters, tolerance = A.shape[0], 1e-7
-#         fn = xnp.jit(lanczos_parts, static_argnums=(0, 2, 3, 4))
-#         pbar = False
-#         alpha, beta, Q, idx, _ = fn(B, rhs, max_iters, tolerance, pbar)
-#         Q = Q[0]
 
-#         assert idx == idx_soln
-#         rel_error = relative_error(beta_soln, beta.T)
-#         assert rel_error < _tol
-#         rel_error = relative_error(alpha_soln, alpha[..., :-1].T)
-#         assert rel_error < _tol
+@parametrize(all_backends)
+def test_lanczos_manual(backend):
+    xnp = get_xnp(backend)
+    dtype = xnp.float32
+    cases = [case_2, case_3, case_early]
+    for case in cases:
+        out = case(xnp, dtype)
+        A, rhs, beta_soln, alpha_soln, idx_soln = out
+
+        max_iters, tol = A.shape[0], 1e-7
+        Q, T, info = lanczos(lazify(A), rhs, max_iters=max_iters, tol=tol, pbar=False)
+        alpha, beta = T.alpha[:, :, 0], T.beta[:, :, 0]
+        Q, T = Q.to_dense(), xnp.vmap(T.__class__.to_dense)(T)
+        idx = info["iterations"] - 1
+
+        assert idx == idx_soln
+        rel_error = relative_error(beta_soln, beta.T)
+        assert rel_error < _tol
+        rel_error = relative_error(alpha_soln, alpha.T)
+        assert rel_error < _tol
 
 
 @parametrize(all_backends)
@@ -157,11 +166,12 @@ def test_lanczos_iter(backend):
 
     max_iters, tol = A.shape[0], 1e-7
     Q, T, info = lanczos(lazify(A), rhs, max_iters=max_iters, tol=tol, pbar=False)
-    idx, alpha, Q = info["iterations"], T.alpha, Q.to_dense()
-    eigvals, _ = xnp.eigh(T.to_dense())
+    idx, Q = info["iterations"] - 1, Q.to_dense()
+    alpha, beta = T.alpha[:, :, 0], T.beta[:, :, 0]
+    T = xnp.vmap(T.__class__.to_dense)(T)
+    eigvals, _ = xnp.eigh(T)
 
     assert idx == idx_np[0]
-    beta = 0
     comparisons = [(T_np, T), (Q_np, Q), (Q @ T, A @ Q), (alpha_np, alpha), (beta_np, beta),
                    (xnp.array(max_eig, dtype=dtype, device=None), eigvals[0, -1])]
     for soln, check in comparisons:
@@ -171,8 +181,10 @@ def test_lanczos_iter(backend):
 
 def case_early(xnp, dtype):
     A = xnp.diag(xnp.array([4, 2, 1], dtype=dtype, device=None))
-    beta_soln = xnp.array([[4, 0., 0.]], dtype=dtype, device=None).T
-    alpha_soln = xnp.array([[0, 0.]], dtype=dtype, device=None).T
+    # beta_soln = xnp.array([[4, 0., 0.]], dtype=dtype, device=None).T
+    # alpha_soln = xnp.array([[0, 0.]], dtype=dtype, device=None).T
+    beta_soln = xnp.array([[4]], dtype=dtype, device=None).T
+    alpha_soln = xnp.array([], dtype=dtype, device=None).T
     rhs = xnp.array([[1.0, 0.0, 0.]], dtype=dtype, device=None).T
     idx_soln = 1
     return A, rhs, beta_soln, alpha_soln, idx_soln

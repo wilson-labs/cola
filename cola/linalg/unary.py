@@ -17,6 +17,7 @@ from cola.ops import BlockDiag, Kronecker, KronSum, I_like, Transpose, Adjoint
 def product(As):
     return reduce(lambda x, y: x @ y, As)
 
+
 @parametric
 class LanczosUnary(LinearOperator):
     def __init__(self, A: LinearOperator, f: Callable, **kwargs):
@@ -57,7 +58,7 @@ class ArnoldiUnary(LinearOperator):
         self.info.update(info)
         eigvals, P = self.xnp.eig(H)
         norms = self.xnp.norm(V, axis=0)
-        
+
         e0 = self.xnp.canonical(0, (P.shape[1], V.shape[-1]), dtype=P.dtype, device=self.device)
         Pinv0 = self.xnp.solve(P, e0.T)  # (bs, m, m) vs (bs, m)
         out = Pinv0 * norms[:, None]  # (bs, m)

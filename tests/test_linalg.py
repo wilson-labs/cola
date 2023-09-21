@@ -58,6 +58,7 @@ def test_get_lu_from_tridiagonal(backend):
     rel_error = relative_error(actual, sorted_eigenvals)
     assert rel_error < _tol
 
+
 @parametrize(all_backends)
 def ignore_test_nullspace(backend):
     xnp = get_xnp(backend)
