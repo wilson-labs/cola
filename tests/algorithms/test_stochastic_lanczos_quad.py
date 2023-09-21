@@ -58,7 +58,6 @@ def test_stochastic_lanczos_quad_random(backend):
     soln = xnp.sum(fun(xnp.array(diag, dtype=dtype, device=None)))
     vtol, max_iters, tol = 1 / np.sqrt(70), A.shape[0], 1e-7
     B = lazify(A)
-    B.xnp = xnp
     approx = stochastic_lanczos_quad(B, fun, max_iters=max_iters, tol=tol, vtol=vtol)
 
     rel_error = relative_error(soln, approx)

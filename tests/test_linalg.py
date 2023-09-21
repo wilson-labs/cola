@@ -51,7 +51,6 @@ def test_get_lu_from_tridiagonal(backend):
     beta_j = xnp.array([beta], dtype=dtype, device=None).T
     gamma_j = xnp.array([gamma], dtype=dtype, device=None).T
     B = Tridiagonal(alpha=alpha_j, beta=beta_j, gamma=gamma_j)
-    B.xnp = xnp
     eigenvals = xnp.jit(get_lu_from_tridiagonal, static_argnums=(0, ))(B)
     actual = xnp.array([1 / 4, 4 / 3, 3 / 2, 2], dtype=dtype, device=None)
     sorted_eigenvals = xnp.sort(eigenvals)
