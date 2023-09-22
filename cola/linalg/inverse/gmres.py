@@ -4,9 +4,30 @@ from cola.ops import Array
 from cola.algorithms.arnoldi import arnoldi
 from cola.utils import export
 from cola.utils.custom_autodiff import iterative_autograd
+from cola.linalg.algorithm_base import Algorithm, IterativeOperatorWInfo
+from dataclasses import dataclass
+import cola
+from ..inv import inv
 
 
 @export
+@dataclass
+class GMRES(Algorithm):
+    tol: float = 1e-6
+    max_iters: int = 1000
+    pbar: bool = False
+    x0: Array = None
+    P: LinearOperator = None
+
+    def __call__(self, A, b):
+        return gmres(A, b, **self.__dict__)
+
+
+@inv.dispatch
+def inv(A: LinearOperator, alg: GMRES):
+    return IterativeOperatorWInfo(A, alg)
+
+
 def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=100, tol=1e-7, P=None, use_householder=False,
           use_triangular=False, pbar=False):
     """
