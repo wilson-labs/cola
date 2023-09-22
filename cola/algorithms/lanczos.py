@@ -140,15 +140,15 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
 
     def error(state):
         i, *_, alpha = state
-        # rel_err = alpha[..., i - 1].real / xnp.max(alpha[..., 1].real, 1e-30)
-        rel_err = alpha[..., i - 1].real
+        err = xnp.array(1e-30, dtype=alpha.real.dtype, device=xnp.get_device(alpha))
+        rel_err = alpha[..., i - 1].real / xnp.maximum(alpha[..., 1].real, err)
+        # rel_err = alpha[..., i - 1].real
         return xnp.max(rel_err, axis=0) + (i <= 1) * 1.
 
     def cond_fun(state):
         i, *_, alpha = state
         is_max = i <= max_iters
-        # is_tol = (alpha[..., i - 1].real >= tol * alpha[..., 1].real) | (i <= 1)
-        is_tol = (alpha[..., i - 1].real >= tol) | (i <= 1)
+        is_tol = (alpha[..., i - 1].real > tol * alpha[..., 1].real) | (i <= 1)
         flag = is_max & xnp.any(is_tol)
         return flag
 

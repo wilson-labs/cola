@@ -67,22 +67,6 @@ slogdet = torch.linalg.slogdet
 iscomplexobj = torch.is_complex
 
 
-def softmax(x, axis=-1):
-    return torch.nn.functional.softmax(x, dim=axis)
-
-
-def log_softmax(x, axis=-1):
-    return torch.nn.functional.log_softmax(x, dim=axis)
-
-
-def fft(x, n=None, axis=-1, norm=None):
-    return torch.fft.fft(x, n=n, dim=axis, norm=norm)
-
-
-def ifft(x, n=None, axis=-1, norm=None):
-    return torch.fft.ifft(x, n=n, dim=axis, norm=norm)
-
-
 def get_array_device(array):
     return array.device
 

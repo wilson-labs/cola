@@ -138,7 +138,7 @@ def test_lanczos_random(backend):
 def test_lanczos_manual(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    cases = [case_2, case_3, case_early]
+    cases = [case_early, case_3, case_2]
     for case in cases:
         out = case(xnp, dtype)
         A, rhs, beta_soln, alpha_soln, idx_soln = out
