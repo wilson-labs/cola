@@ -102,7 +102,7 @@ def ignore_test_householder_arnoldi_decomp(backend):
         assert rel_error < 1e-5
 
 
-@parametrize(['torch'])  # jax does not have complex128 # yeah it does ?
+@parametrize(['torch'])
 def test_get_arnoldi_matrix(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex128  # double precision on real and complex coordinates to achieve 1e-12 tol
