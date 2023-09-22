@@ -61,18 +61,16 @@ def inv(A: LinearOperator, alg: Auto = Auto()):
     from .gmres import GMRES
     match (A.isa(PSD), bool(np.prod(A.shape) <= 1e6)):
         case (True, True):
-            return inv(A, Cholesky())
-
+            alg = Cholesky()
         case (True, False):
-            return inv(A, CG(**alg.__dict__))
-
+            alg = CG(**alg.__dict__)
         case (False, True):
-            return inv(A, LU())
-
+            alg = LU()
         case (False, False):
-            return inv.invoke(LinearOperator, GMRES)(A, alg)
+            alg = GMRES(**alg.__dict__)
         case _:
             assert False
+    return inv(A, alg)
 
 
 @export

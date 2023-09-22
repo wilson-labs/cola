@@ -87,19 +87,14 @@ def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Auto = Auto()):
     from cola.linalg.decompositions import Lanczos, Arnoldi
     match (A.isa(cola.SelfAdjoint), bool(np.prod(A.shape) <= 1e6)):
         case (True, True):
-            return eig(A, k, which, EighDense())
-
+            algorithm = EighDense()
         case (True, False):
-            return eig(A, k, which, Lanczos(**alg.__dict__))
-
+            algorithm = Lanczos(**alg.__dict__)
         case (False, True):
-            return eig(A, k, which, EigDense())
-
+            algorithm = EigDense()
         case (False, False):
-            return eig(A, k, which, Arnoldi(**alg.__dict__))
-        case _:
-            assert False
-
+            algorithm = Arnoldi(**alg.__dict__)
+    return eig(A, k, which, algorithm)
 
 @dispatch(precedence=-1)
 def eig(A: LinearOperator, k: int, which: str = 'LM', alg: EigDense = None):
