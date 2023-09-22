@@ -4,7 +4,6 @@ from cola.ops import Identity
 from cola.ops import Diagonal
 from cola.algorithms.preconditioners import NystromPrecond
 from cola.algorithms.cg import run_batched_cg
-from cola.algorithms.cg import run_batched_tracking_cg
 from cola.algorithms.cg import run_cg
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends, tracing_backends
@@ -143,67 +142,6 @@ def test_cg_repeated_eig(backend):
     assert k < 7
     rel_error = relative_error(soln, approx)
     assert rel_error < _tol * 10
-
-
-@parametrize(all_backends)
-def test_cg_track_easy(backend):
-    xnp = get_xnp(backend)
-    dtype = xnp.float64
-    A = xnp.diag(xnp.array([3., 4., 5.], dtype=dtype, device=None))
-    rhs = [[1, 3], [1, 4], [1, 5]]
-    rhs = xnp.array(rhs, dtype=dtype, device=None)
-    soln = [[1 / 3, 1], [1 / 4, 1], [1 / 5, 1]]
-    soln = xnp.array(soln, dtype=dtype, device=None)
-
-    max_iters, tolerance = 5, 1e-8
-    fn = xnp.jit(run_batched_tracking_cg, static_argnums=(0, 3, 4, 5, 6))
-    x0 = xnp.zeros_like(rhs)
-    precond_fn = Identity(dtype=A.dtype, shape=A.shape)
-    approx, *_ = fn(lazify(A), rhs, x0, max_iters, tolerance, precond_fn)
-
-    rel_error = relative_error(soln, approx)
-    assert rel_error < _tol
-
-
-# Marc: I disabled this test because it seems to test batched linear operators?
-# @parametrize(all_backends)
-# def test_cg_easy_case(backend):
-#     xnp = get_xnp(backend)
-#     dtype = xnp.float64
-#     A = xnp.diag(xnp.array([3., 4., 5.], dtype=dtype))
-#     rhs = xnp.array([[1.0 for _ in range(A.shape[0])]], dtype=dtype).T
-#     soln = xnp.array([[1 / 3, 1 / 4, 1 / 5]]).T
-#     rhs = [[1, 3], [1, 4], [1, 5]]
-#     rhs = xnp.array(rhs, dtype=dtype)
-#     soln = [[1 / 3, 1], [1 / 4, 1], [1 / 5, 1]]
-#     soln = xnp.array(soln, dtype=dtype)
-
-#     out = []
-#     for vec in [A, rhs, soln]:
-#         vec = vec[None, ...]
-#         vec = xnp.concatenate((vec, vec), 0)
-#         out.append(vec)
-#     A, rhs, soln = out
-
-#     def matmat(x):
-#         v1 = A[0, :, :] @ x[0, :, :]
-#         v2 = A[1, :, :] @ x[1, :, :]
-#         return xnp.concatenate((v1[None, ...], v2[None, ...]), 0)
-
-#     A_fn = LinearOperator(dtype=dtype, shape=A.shape, matmat=matmat)
-
-#     fn = xnp.jit(cg, static_argnums=(0, 3, 4, 5, 6, 7, 8))
-#     approx, _ = fn(A_fn, rhs)
-
-#     rel_error = relative_error(soln, approx)
-#     assert rel_error < _tol
-
-#     _, info = cg(A_fn, rhs, info=True)
-#     assert all([key in info.keys() for key in ['iterations', 'residuals']])
-
-#     approx, _ = cg(lazify(A[0, :, :]), rhs[0, :, 0], info=False)
-#     rel_error = relative_error(soln[0, :, 0], approx)
-#     assert rel_error < _tol
 
 
 def test_cg_lanczos():
