@@ -42,6 +42,7 @@ int64 = jnp.int64
 float32 = jnp.float32
 float64 = jnp.float64
 complex64 = jnp.complex64
+complex128 = jnp.complex128
 long = jnp.int64
 reshape = jnp.reshape
 kron = jnp.kron

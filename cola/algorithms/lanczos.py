@@ -147,9 +147,9 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
 
     def cond_fun(state):
         i, *_, alpha = state
-        is_max = i <= max_iters
-        is_tol = (alpha[..., i - 1].real > tol * alpha[..., 1].real) | (i <= 1)
-        flag = is_max & xnp.any(is_tol)
+        is_not_max = i <= max_iters
+        is_large = (alpha[..., i - 1].real > tol * alpha[..., 1].real) | (i <= 1)
+        flag = is_not_max & xnp.any(is_large)
         return flag
 
     init_val = initialize_lanczos_vec(xnp, rhs, max_iters=max_iters, dtype=A.dtype)

@@ -199,10 +199,11 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float
     max_iters = min(max_iters, A.shape[0])
 
     def cond_fun(state):
-        *_, idx, norm = state
+        _, H, idx, norm = state
         is_not_max = idx < max_iters
-        is_large = xnp.all(norm >= tol)
-        return is_not_max & is_large
+        is_large = (norm > tol * H[1, 0, :].real) | (idx <= 0)
+        # is_large = norm > tol
+        return is_not_max & xnp.any(is_large)
 
     def body_fun(state):
         Q, H, idx, _ = state

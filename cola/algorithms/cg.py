@@ -70,7 +70,7 @@ def run_batched_cg(A, b, x0, max_iters, tol, preconditioner, pbar):
     init_val = initialize(A=A, b=b_norm, preconditioner=preconditioner, x0=x0, xnp=xnp)
     _, _, r0, *_ = init_val
     init_tol = tol
-    tol = tol * xnp.norm(r0, axis=-2, keepdims=True)
+    tol = tol * xnp.norm(r0, axis=-2, keepdims=True) + tol
 
     @xnp.jit
     def cond(state):
