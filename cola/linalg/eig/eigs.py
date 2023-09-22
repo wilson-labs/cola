@@ -15,10 +15,43 @@ from cola.algorithms.lanczos import lanczos_eigs
 from cola.algorithms.arnoldi import arnoldi_eigs
 from cola.utils import export
 
+import numpy as np
+from plum import dispatch
+from cola import SelfAdjoint, Unitary, Stiefel
+from cola.fns import lazify
+from cola.linalg import diag
+from cola.ops import LinearOperator, I_like, Identity, Triangular, Diagonal
+from cola.algorithms import power_iteration
+from cola.algorithms.lanczos import lanczos_eigs
+from cola.algorithms.arnoldi import arnoldi_eigs
+from cola.utils import export
+from cola.linalg.algorithm_base import Algorithm, Auto
+from dataclasses import dataclass
+import cola
 
-@dispatch
+
+@dataclass
+class EighDense(Algorithm):
+    pass
+
+
+@dataclass
+class EigDense(Algorithm):
+    pass
+
+
+@dataclass
+class Arnoldi(Algorithm):
+    pass
+
+
+@dataclass
+class Lanczos(Algorithm):
+    pass
+
+
 @export
-def eig(A: LinearOperator, **kwargs):
+def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Algorithm = Auto()):
     """
     Computes eigenvalues and eigenvectors of a linear operator.
 
@@ -29,14 +62,7 @@ def eig(A: LinearOperator, **kwargs):
         which (str): From what part of the spectrum would de eigenvalues be fetched.
          Default is 'LM' (largest in magnitude) but alternatively you can use 'SM'
          (smallest in magnitude).
-        tol (float): Optional. Tolerance for convergence. Default is 1e-6.
-        pbar (bool): Optional. Whether to display a progress bar during computation.
-         Default is False.
-        method (str): Optional. Method to use for computation.
-         'dense' computes eigenvalues and eigenvectors using dense matrix operations.
-         'iterative' computes using Lanczos or Arnoldi iteration. 'auto' automatically selects the
-          method based on the size of the linear operator. Default is 'auto'.
-        max_iters (int): Optional. Maximum number of iterations for Arnoldi method. Default is 1000.
+        alg (Algorithm): (Auto, EigDense, EighDense, Arnoldi, Lanczos)
 
     Returns:
         Tuple[Array, Array]: A tuple containing eigenvalues and eigenvectors.
@@ -47,42 +73,65 @@ def eig(A: LinearOperator, **kwargs):
         >>> A = MyLinearOperator()
         >>> eig_vals, eig_vecs = eig(A, num=6, which='LM', tol=1e-4)
     """
-    kws = dict(num=None, which="LM", tol=1e-6, pbar=False, method='auto', max_iters=1000)
-    assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
-    kws.update(kwargs)
-    method = kws.pop('method')
-    eig_slice = get_slice(kws.pop('num'), kws.pop('which'))
-    xnp = A.xnp
-    if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
-        eig_vals, eig_vecs = xnp.eig(A.to_dense())
-        return eig_vals[eig_slice], lazify(eig_vecs[:, eig_slice])
-    elif method in ('arnoldi', 'iterative') or (method == 'auto' and prod(A.shape) >= 1e6):
-        eig_vals, eig_vecs, _ = arnoldi_eigs(A, **kws)
-        return eig_vals, eig_vecs
-    else:
-        raise ValueError(f"Unknown method {method}")
 
 
-@dispatch(cond=lambda A, **kwargs: A.isa(SelfAdjoint))
-def eig(A: LinearOperator, **kwargs):
-    kws = dict(num=None, which="LM", tol=1e-6, pbar=False, method='auto', max_iters=1000)
-    assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
-    kws.update(kwargs)
-    method = kws.pop('method')
-    eig_slice = get_slice(kws.pop('num'), kws.pop('which'))
-    xnp = A.xnp
-    if method == 'dense' or (method == 'auto' and prod(A.shape) < 1e6):
-        eig_vals, eig_vecs = xnp.eigh(A.to_dense())
-        return eig_vals[eig_slice], Stiefel(lazify(eig_vecs[:, eig_slice]))
-    elif method in ('lanczos', 'iterative') or (method == 'auto' and prod(A.shape) >= 1e6):
-        eig_vals, eig_vecs, _ = lanczos_eigs(A, **kws)
-        return eig_vals, eig_vecs
-    else:
-        raise ValueError(f"Unknown method {method} for SelfAdjoint operator")
+############ BASE CASES #############
 
 
 @dispatch
-def eig(A: Identity, num=None, which="LM", **kwargs):
+def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Auto = Auto()):
+    """ Auto:
+        - if A is Hermitian and small, use EighDense
+        - if A is Hermitian and large, use Lanczos
+        - if A is not Hermitian and small, use EigDense
+        - if A is not Hermitian and large, use Arnoldi
+    """
+    from cola.linalg.decompositions import Lanczos, Arnoldi
+    match (A.isa(cola.SelfAdjoint), bool(np.prod(A.shape) <= 1e6)):
+        case (True, True):
+            return eig(A, k, which, EighDense())
+
+        case (True, False):
+            return eig(A, k, which, Lanczos(**alg.__dict__))
+
+        case (False, True):
+            return eig(A, k, which, EigDense())
+
+        case (False, False):
+            return eig(A, k, which, Arnoldi(**alg.__dict__))
+        case _:
+            assert False
+
+
+@dispatch
+def eig(A: LinearOperator, k: int, which: str = 'LM', alg: EigDense = None):
+    eig_slice = get_slice(k, which)
+    eig_vals, eig_vecs = A.xnp.eig(A.to_dense())
+    return eig_vals[eig_slice], lazify(eig_vecs[:, eig_slice])
+
+
+@dispatch
+def eig(A: LinearOperator, k: int, which: str = 'LM', alg: EighDense = None):
+    eig_slice = get_slice(k, which)
+    eig_vals, eig_vecs = A.xnp.eigh(A.to_dense())
+    return eig_vals[eig_slice], Stiefel(lazify(eig_vecs[:, eig_slice]))
+
+
+@dispatch
+def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Arnoldi = None):
+    eig_vals, eig_vecs, _ = arnoldi_eigs(A, num=k, which=which, **alg.__dict__)
+    return eig_vals, eig_vecs
+
+
+@dispatch
+def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Lanczos = None):
+    eig_vals, eig_vecs, _ = lanczos_eigs(A, num=k, which=which, **alg.__dict__)
+    return eig_vals, eig_vecs
+
+
+############# Dispatch Rules ############
+@dispatch
+def eig(A: Identity, num=None, which="LM", alg=Auto()):
     eig_slice = get_slice(num, which)
     xnp = A.xnp
     eig_vals = xnp.ones(shape=(A.shape[0], ), dtype=A.dtype, device=A.device)
@@ -91,7 +140,7 @@ def eig(A: Identity, num=None, which="LM", **kwargs):
 
 
 @dispatch
-def eig(A: Triangular, num=None, which="LM", **kwargs):
+def eig(A: Triangular, num=None, which="LM", alg=Auto()):
     # TODO: take out compute_lower_triangular_eigvecs
     eig_slice = get_slice(num, which)
     xnp = A.xnp
@@ -114,7 +163,7 @@ def compute_lower_triangular_eigvecs(L):
 
 
 @dispatch
-def eig(A: Diagonal, num=None, which="LM", **kwargs):
+def eig(A: Diagonal, num=None, which="LM", alg=Auto()):
     eig_slice = get_slice(num, which)
     xnp = A.xnp
     sorted_ind = xnp.argsort(A.diag)
@@ -123,36 +172,35 @@ def eig(A: Diagonal, num=None, which="LM", **kwargs):
     return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
 
 
-@export
-def eigmax(A: LinearOperator, tol=1e-7, max_iters=1000, pbar=False, return_vec=False):
-    """ Returns eigenvalue with largest magnitude of A up to specified tolerance tol.
-        If return_vec=True, also returns the corresponding eigenvector.
-
-        Args:
-            A (LinearOperator): The linear operator for which to compute the eigenvalue.
-            tol (float, optional): Tolerance for convergence. Default is 1e-7.
-            max_iters (int, optional): Maximum number of iterations. Default is 1000.
-            pbar (bool, optional): Whether to display a progress bar. Default is False.
-            return_vec (bool, optional): Whether to compute and return the
-             corresponding eigenvector. Default is False.
-
-        Returns:
-            float or tuple: The eigenvalue with the largest magnitude of A.
-             If `return_vec` is True, a tuple (eigenvalue, eigenvector) is returned.
-
-        Example:
-            >>> eig = eigmax(A, tol=1e-3)
-            >>> eig, vec = eigmax(A, tol=1e-3, return_vec=True)
-    """
-    v0, e0, _ = power_iteration(A, tol=tol, max_iter=max_iters, pbar=pbar)
-    return e0 if not return_vec else (e0, v0)
-
-
 # @export
-def eigmin(A: LinearOperator, tol=1e-7):
-    """ Returns eigenvalue with smallest magnitude of A
-        up to specified tolerance tol."""
-    raise NotImplementedError
+# def eigmax(A: LinearOperator, tol=1e-7, max_iters=1000, pbar=False, return_vec=False):
+#     """ Returns eigenvalue with largest magnitude of A up to specified tolerance tol.
+#         If return_vec=True, also returns the corresponding eigenvector.
+
+#         Args:
+#             A (LinearOperator): The linear operator for which to compute the eigenvalue.
+#             tol (float, optional): Tolerance for convergence. Default is 1e-7.
+#             max_iters (int, optional): Maximum number of iterations. Default is 1000.
+#             pbar (bool, optional): Whether to display a progress bar. Default is False.
+#             return_vec (bool, optional): Whether to compute and return the
+#              corresponding eigenvector. Default is False.
+
+#         Returns:
+#             float or tuple: The eigenvalue with the largest magnitude of A.
+#              If `return_vec` is True, a tuple (eigenvalue, eigenvector) is returned.
+
+#         Example:
+#             >>> eig = eigmax(A, tol=1e-3)
+#             >>> eig, vec = eigmax(A, tol=1e-3, return_vec=True)
+#     """
+#     v0, e0, _ = power_iteration(A, tol=tol, max_iter=max_iters, pbar=pbar)
+#     return e0 if not return_vec else (e0, v0)
+
+# # @export
+# def eigmin(A: LinearOperator, tol=1e-7):
+#     """ Returns eigenvalue with smallest magnitude of A
+#         up to specified tolerance tol."""
+#     raise NotImplementedError
 
 
 def get_slice(num, which):
