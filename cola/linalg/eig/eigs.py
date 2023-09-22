@@ -76,9 +76,7 @@ def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Algorithm = Auto()):
 
 
 ############ BASE CASES #############
-
-
-@dispatch
+@dispatch(precedence=-1)
 def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Auto = Auto()):
     """ Auto:
         - if A is Hermitian and small, use EighDense
@@ -103,27 +101,27 @@ def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Auto = Auto()):
             assert False
 
 
-@dispatch
+@dispatch(precedence=-1)
 def eig(A: LinearOperator, k: int, which: str = 'LM', alg: EigDense = None):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs = A.xnp.eig(A.to_dense())
     return eig_vals[eig_slice], lazify(eig_vecs[:, eig_slice])
 
 
-@dispatch
+@dispatch(precedence=-1)
 def eig(A: LinearOperator, k: int, which: str = 'LM', alg: EighDense = None):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs = A.xnp.eigh(A.to_dense())
     return eig_vals[eig_slice], Stiefel(lazify(eig_vecs[:, eig_slice]))
 
 
-@dispatch
+@dispatch(precedence=-1)
 def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Arnoldi = None):
     eig_vals, eig_vecs, _ = arnoldi_eigs(A, num=k, which=which, **alg.__dict__)
     return eig_vals, eig_vecs
 
 
-@dispatch
+@dispatch(precedence=-1)
 def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Lanczos = None):
     eig_vals, eig_vecs, _ = lanczos_eigs(A, num=k, which=which, **alg.__dict__)
     return eig_vals, eig_vecs
