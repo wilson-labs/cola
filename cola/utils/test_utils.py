@@ -113,40 +113,6 @@ class parametrize:
         return pytest.mark.parametrize(argnames, all_cases, ids=theids)(test_fn)
 
 
-# def parametrize(*cases, tricky=None, ids=None):
-#     """ Expands test cases with pytest.mark.parametrize but with argnames
-#         assumed and ids given by the ids=[str(case) for case in cases]
-
-#     Certain cases can be marked as tricky, and will be marked with pytest.mark.tricky
-#     Tricky can be specified as a list of argument combinations
-#     [[(arg1,arg2,...), (arg1,arg2,...), ...]]
-#     or as a list of slices [slice(None), slice(None), ["dense","square",...], ...]
-#     with lists expanded using the cartesian product (as in cases)."""
-#     if len(cases) > 1:
-#         all_cases = [tuple(elem) for elem in itertools.product(*cases)]
-#     else:
-#         all_cases = cases[0]
-
-#     if tricky is not None:
-#         if len(tricky)>1:
-#             expanded_tricky = [(c[t] if isinstance(t,slice) else t) for t,c in zip(tricky,cases)]
-#             tricky = {tuple(elem) for elem in itertools.product(*expanded_tricky)}
-#         else:
-#             tricky = set(tricky[0])
-#     else:
-#         tricky = set()
-#     # Potentially add marks
-#     assert tricky-set(all_cases) == set(), "Tricky cases must be in the list of cases"
-#     all_cases = [_add_marks(case, case in tricky) for case in all_cases]
-
-#     def decorator(test_fn):
-#         argnames = ','.join(inspect.getfullargspec(test_fn).args)
-#         theids = [strip_parens(str(case)) for case in all_cases] if ids is None else ids
-#         return pytest.mark.parametrize(argnames, all_cases, ids=theids)(test_fn)
-
-#     return decorator
-
-
 def relative_error(v, w, xnp=None):
     if xnp is None:
         xnp = get_library_fns(v.dtype)
@@ -160,6 +126,13 @@ def construct_e_vec(i, size):
     e_vec = np.zeros(shape=(size, ))
     e_vec[i] = 1.0
     return e_vec
+
+
+def transform_to_csr(sparse_matrix, xnp, dtype):
+    data = xnp.array(sparse_matrix.data, dtype=dtype, device=None)
+    indices = xnp.array(sparse_matrix.indices, dtype=xnp.int64, device=None)
+    indptr = xnp.array(sparse_matrix.indptr, dtype=xnp.int64, device=None)
+    return data, indices, indptr, sparse_matrix.shape
 
 
 def generate_lower_from_diag(diag, dtype=np.float32, seed=None, orthogonalize=True):
