@@ -116,11 +116,10 @@ Design Choices
    :caption: 📚 API Reference
 
    package/cola.linalg
+   package/cola.decompositions
    package/cola.ops
    package/cola.linear_operators
    package/cola.fns
-   package/cola.algorithms
-   package/cola.decompositions
    package/cola.annotations
 
 .. toctree::
