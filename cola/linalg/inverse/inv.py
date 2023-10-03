@@ -10,15 +10,10 @@ from plum import parametric
 from cola.utils import export
 from cola.annotations import PSD, Unitary
 import cola
-from cola.linalg.algorithm_base import Algorithm
+from cola.linalg.algorithm_base import Algorithm, Auto
 from dataclasses import dataclass
+from cola.linalg.decompositions import Cholesky, LU
 
-from types import SimpleNamespace
-
-
-@export
-class Auto(SimpleNamespace, Algorithm):
-    pass
 
 
 @export
@@ -29,7 +24,7 @@ def solve(A, b, alg=Auto()):
 
 @dispatch.abstract
 @export
-def inv(A: LinearOperator, alg: Algorithm = Auto()) -> LinearOperator:
+def inv(A: LinearOperator, alg: Algorithm = Auto()):
     """(lazily) computes the inverse of a linear operator, equivalent to solve.
 
     Args:
@@ -47,8 +42,6 @@ def inv(A: LinearOperator, alg: Algorithm = Auto()) -> LinearOperator:
 
 
 ############ BASE CASES #############
-
-
 @dispatch(precedence=-1)
 def inv(A: LinearOperator, alg: Auto = Auto()):
     """ Auto:
@@ -73,23 +66,11 @@ def inv(A: LinearOperator, alg: Auto = Auto()):
     return inv(A, alg)
 
 
-@export
-class Cholesky(Algorithm):
-    """ TODO: docstring"""
-    pass
-
 
 @dispatch(precedence=-1)
 def inv(A: LinearOperator, alg: Cholesky):
     L = cola.linalg.cholesky(A)
     return inv(L) @ inv(L.H)
-
-
-@export
-class LU(Algorithm):
-    """ TODO: docstring"""
-    pass
-
 
 @dispatch(precedence=-1)
 def inv(A: LinearOperator, alg: LU):

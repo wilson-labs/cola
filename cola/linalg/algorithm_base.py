@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from plum import parametric
 from cola import LinearOperator
 from cola.utils import export
-
+from types import SimpleNamespace
 
 @export
 @dataclass
@@ -24,3 +24,7 @@ class IterativeOperatorWInfo(LinearOperator):
 
     def __str__(self):
         return f"{self.alg}({str(self.A)})"
+
+@export
+class Auto(SimpleNamespace, Algorithm):
+    pass

@@ -11,7 +11,20 @@ from cola.ops import Identity, ScalarMul, Kronecker, BlockDiag
 from cola.utils import export
 # from cola.linalg import inv, eig, trace, apply_unary
 import cola.linalg
+from cola.linalg.algorithm_base import Algorithm, Auto
 
+
+@export
+class Cholesky(Algorithm):
+    """ TODO: docstring"""
+    def __call__(self, A: LinearOperator):
+        return cholesky(A)
+
+@export
+class LU(Algorithm):
+    """ TODO: docstring"""
+    def __call__(self, A: LinearOperator):
+        return plu(A)
 
 @dispatch
 @export
@@ -43,7 +56,6 @@ def cholesky(A: Kronecker):
 @dispatch
 def cholesky(A: BlockDiag):
     return BlockDiag(*[cholesky(Ai) for Ai in A.Ms], multiplicities=A.multiplicities)
-
 
 @dispatch
 @export

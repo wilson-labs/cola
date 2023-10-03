@@ -71,7 +71,7 @@ def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Algorithm = Auto()):
 
     Example:
         >>> A = MyLinearOperator()
-        >>> eig_vals, eig_vecs = eig(A, num=6, which='LM', tol=1e-4)
+        >>> eig_vals, eig_vecs = eig(A, k=6, which='LM', tol=1e-4)
     """
 
 
@@ -112,20 +112,20 @@ def eig(A: LinearOperator, k: int, which: str = 'LM', alg: EighDense = None):
 
 @dispatch(precedence=-1)
 def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Arnoldi = None):
-    eig_vals, eig_vecs, _ = arnoldi_eigs(A, num=k, which=which, **alg.__dict__)
+    eig_vals, eig_vecs, _ = arnoldi_eigs(A, k=k, which=which, **alg.__dict__)
     return eig_vals, eig_vecs
 
 
 @dispatch(precedence=-1)
 def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Lanczos = None):
-    eig_vals, eig_vecs, _ = lanczos_eigs(A, num=k, which=which, **alg.__dict__)
+    eig_vals, eig_vecs, _ = lanczos_eigs(A, k=k, which=which, **alg.__dict__)
     return eig_vals, eig_vecs
 
 
 ############# Dispatch Rules ############
 @dispatch
-def eig(A: Identity, num=None, which="LM", alg=Auto()):
-    eig_slice = get_slice(num, which)
+def eig(A: Identity, k, which="LM", alg=Auto()):
+    eig_slice = get_slice(k, which)
     xnp = A.xnp
     eig_vals = xnp.ones(shape=(A.shape[0], ), dtype=A.dtype, device=A.device)
     eig_vecs = A.to_dense()
@@ -133,9 +133,9 @@ def eig(A: Identity, num=None, which="LM", alg=Auto()):
 
 
 @dispatch
-def eig(A: Triangular, num=None, which="LM", alg=Auto()):
+def eig(A: Triangular, k, which="LM", alg=Auto()):
     # TODO: take out compute_lower_triangular_eigvecs
-    eig_slice = get_slice(num, which)
+    eig_slice = get_slice(k, which)
     xnp = A.xnp
     eig_vals = diag(A)
     sorted_ind = xnp.argsort(eig_vals)
@@ -156,8 +156,8 @@ def compute_lower_triangular_eigvecs(L):
 
 
 @dispatch
-def eig(A: Diagonal, num=None, which="LM", alg=Auto()):
-    eig_slice = get_slice(num, which)
+def eig(A: Diagonal, k, which="LM", alg=Auto()):
+    eig_slice = get_slice(k, which)
     xnp = A.xnp
     sorted_ind = xnp.argsort(A.diag)
     eig_vals = A.diag[sorted_ind]

@@ -7,14 +7,16 @@ from cola.algorithms import stochastic_lanczos_quad
 import cola
 import numpy as np
 from functools import reduce
-
+from cola.linalg.algorithm_base import Algorithm, Auto
+from cola.linalg.decompositions import Cholesky, LU, Arnoldi, Lanczos
+#from cola.linalg.unary import log
 
 def product(xs):
     return reduce(lambda x, y: x * y, xs, 1)
 
 
 @export
-def logdet(A: LinearOperator, **kwargs):
+def logdet(A: LinearOperator, log_alg=Auto(), trace_alg=Auto()):
     r""" Computes logdet of a linear operator.
 
     For large inputs (or with method='iterative'),
@@ -36,13 +38,13 @@ def logdet(A: LinearOperator, **kwargs):
     Returns:
         Array: logdet
     """
-    _, ld = slogdet(A, **kwargs)
+    _, ld = slogdet(A, log_alg, trace_alg)
     return ld
 
 
-@dispatch
+@dispatch.abstract
 @export
-def slogdet(A: LinearOperator, **kwargs):
+def slogdet(A: LinearOperator, log_alg:Algorithm=Auto(), trace_alg:Algorithm=Auto()):
     r""" Computes sign and logdet of a linear operator. such that det(A) = sign(A) exp(logdet(A))
 
     For large inputs (or with method='iterative'),
@@ -64,60 +66,59 @@ def slogdet(A: LinearOperator, **kwargs):
     Returns:
         Tuple[Array, Array]: sign, logdet
     """
-    kws = dict(method="auto", tol=1e-6, vtol=1e-6, pbar=False, max_iters=300)
-    # assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
-    kws.update(kwargs)
-    method = kws.pop('method', 'auto')
-    shape_prod = np.prod(A.shape)
-    if method == 'dense' or (method == 'auto' and (np.prod(A.shape) <= 1e6 or kws['tol'] < 3e-2)):
-        return slogdet(cola.decompositions.lu_decomposed(A), method='dense', **kws)
-    elif 'iterative' in method or (method == 'auto' and (shape_prod > 1e6 and kws['tol'] >= 3e-2)):
-        A2 = PSD((A.H @ A) + 0. * cola.ops.I_like(A))
-        return ValueError("Unknown phase"), logdet(A2, method='iterative', **kws) / 2.
-    else:
-        raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
 
 
-@dispatch(cond=lambda A: A.isa(PSD))
-def slogdet(A: LinearOperator, **kwargs):
-    kws = dict(method="auto", tol=1e-6, vtol=1e-6, pbar=False, max_iters=300)
-    # assert not kwargs.keys() - kws.keys(), f"Unknown kwargs {kwargs.keys()-kws.keys()}"
-    kws.update(kwargs)
-    method = kws.pop('method', 'auto')
-    if method == 'dense' or (method == 'auto' and np.prod(A.shape) <= 1e6):
-        return slogdet(cola.decompositions.cholesky_decomposed(A), method='dense', **kws)
-    elif 'iterative' in method or (method == 'auto' and np.prod(A.shape) > 1e6):
-        tol, vtol = kws.pop('tol'), kws.pop('vtol')
-        stochastic_faster = (vtol >= 1 / np.sqrt(10 * A.shape[-1]))
-        if 'stochastic' in method or (stochastic_faster and 'exact' not in method):
-            trlogA = stochastic_lanczos_quad(A, A.xnp.log, tol=tol, vtol=vtol, **kws)
-        elif 'exact' in method or not stochastic_faster:
-            # TODO: explicit autograd rule for this case?
-            logA = cola.linalg.log(A, tol=tol, method='iterative', **kws)
-            trlogA = cola.linalg.trace(logA, method='exact', **kws)
-        else:
-            raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
-        one = A.xnp.array(1., dtype=A.dtype, device=A.device)
-        return one, trlogA
-    else:
-        raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
+############ BASE CASES #############
+@dispatch(precedence=-1)
+def slogdet(A: LinearOperator, log_alg:Auto=Auto(), trace_alg: Algorithm=Auto()):
+    PSD = A.isa(cola.PSD)
+    small = np.prod(A.shape) <= 1e6
+    if PSD and small:
+        log_alg = Cholesky()
+    elif not PSD and small:
+        log_alg = LU()
+    elif PSD and not small:
+        log_alg = Lanczos(**log_alg.__dict__)
+    elif not PSD and not small:
+        log_alg = Arnoldi(**log_alg.__dict__)
+    return slogdet(A, log_alg, trace_alg)
+
+@dispatch(precedence=-1)
+def slogdet(A: LinearOperator, log_alg: Cholesky, trace_alg: Algorithm=Auto()):
+    L = cola.linalg.cholesky(A)
+    sign, logdet = slogdet(L)
+    return sign * A.xnp.conj(sign), 2 * logdet
+
+@dispatch(precedence=-1)
+def slogdet(A: LinearOperator, log_alg: LU, trace_alg: Algorithm=Auto()):
+    P, L, U = cola.linalg.plu(A)
+    return slogdet(P @ L @ U)
+
+@dispatch(precedence=-1)
+def slogdet(A: LinearOperator, log_alg: Lanczos | Arnoldi, trace_alg: Algorithm=Auto()):
+    logA = cola.linalg.log(A, log_alg)
+    trlogA = cola.linalg.trace(logA, trace_alg)
+    mag = A.xnp.abs(trlogA)
+    phase = trlogA / mag
+    return phase, mag
 
 
-@dispatch(cond=lambda A, **kwargs: all([(Ai.shape[-2] == Ai.shape[-1]) for Ai in A.Ms]))
-def slogdet(A: Product, **kwargs):
-    signs, logdets = zip(*[slogdet(Ai, **kwargs) for Ai in A.Ms])
+############# Dispatch Rules ############
+@dispatch(cond=lambda A, *_: all([(Ai.shape[-2] == Ai.shape[-1]) for Ai in A.Ms]))
+def slogdet(A: Product, log_alg=Auto(), trace_alg=Auto()):
+    signs, logdets = zip(*[slogdet(Ai, log_alg, trace_alg) for Ai in A.Ms])
     return product(signs), sum(logdets)
 
 
 @dispatch
-def slogdet(A: Identity, **kwargs):
+def slogdet(A: Identity, log_alg=Auto(), trace_alg=Auto()):
     xnp = A.xnp
     zero = xnp.array(0., dtype=A.dtype, device=A.device)
     return 1. + zero, zero
 
 
 @dispatch
-def slogdet(A: ScalarMul, **kwargs):
+def slogdet(A: ScalarMul, log_alg=Auto(), trace_alg=Auto()):
     xnp = A.xnp
     c = A.c
     phase = c / xnp.abs(c)
@@ -125,7 +126,7 @@ def slogdet(A: ScalarMul, **kwargs):
 
 
 @dispatch
-def slogdet(A: Diagonal, **kwargs):
+def slogdet(A: Diagonal, log_alg=Auto(), trace_alg=Auto()):
     xnp = A.xnp
     mag = xnp.abs(A.diag)
     phase = A.diag / mag
@@ -133,9 +134,9 @@ def slogdet(A: Diagonal, **kwargs):
 
 
 @dispatch
-def slogdet(A: Kronecker, **kwargs):
+def slogdet(A: Kronecker, log_alg=Auto(), trace_alg=Auto()):
     # logdet(Pi A_i \otimes I) = sum_i logdet(A_i)
-    signs, logdets = zip(*[slogdet(Ai, **kwargs) for Ai in A.Ms])
+    signs, logdets = zip(*[slogdet(Ai, log_alg, trace_alg) for Ai in A.Ms])
     sizes = [Ai.shape[-1] for Ai in A.Ms]
     prod = product(sizes)
     scaled_logdets = [logdets[i] * prod / sizes[i] for i in range(len(sizes))]
@@ -144,16 +145,16 @@ def slogdet(A: Kronecker, **kwargs):
 
 
 @dispatch
-def slogdet(A: BlockDiag, **kwargs):
+def slogdet(A: BlockDiag, log_alg=Auto(), trace_alg=Auto()):
     # logdet(\bigoplus A_i) = log \prod det(A_i) = sum_i logdet(A_i)
-    signs, logdets = zip(*[slogdet(Ai, **kwargs) for Ai in A.Ms])
+    signs, logdets = zip(*[slogdet(Ai, log_alg, trace_alg) for Ai in A.Ms])
     scaled_logdets = sum(ld * n for ld, n in zip(logdets, A.multiplicities))
     scaled_signs = product(s**n for s, n in zip(signs, A.multiplicities))
     return scaled_signs, scaled_logdets
 
 
 @dispatch
-def slogdet(A: Triangular, **kwargs):
+def slogdet(A: Triangular, log_alg=Auto(), trace_alg=Auto()):
     xnp = A.xnp
     diag = xnp.diag(A.A)
     mag = xnp.abs(diag)
@@ -162,7 +163,7 @@ def slogdet(A: Triangular, **kwargs):
 
 
 @dispatch
-def slogdet(A: Permutation, **kwargs):
+def slogdet(A: Permutation, log_alg=Auto(), trace_alg=Auto()):
     # TODO: count the parity of the permutation and return an error if it is odd
     xnp = A.xnp
     zero = xnp.array(0., dtype=A.dtype, device=A.device)

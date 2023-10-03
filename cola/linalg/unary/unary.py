@@ -12,7 +12,9 @@ from cola.algorithms.lanczos import lanczos  # , construct_tridiagonal
 from cola.algorithms.arnoldi import get_arnoldi_matrix
 from cola.ops import Diagonal, Identity, ScalarMul
 from cola.ops import BlockDiag, Kronecker, KronSum, I_like, Transpose, Adjoint
-
+from cola.linalg.algorithm_base import Algorithm, Auto
+from cola.linalg.decompositions import Arnoldi, Lanczos, LU, Cholesky
+from cola.linalg import CG, GMRES
 
 def product(As):
     return reduce(lambda x, y: x @ y, As)
@@ -70,146 +72,144 @@ class ArnoldiUnary(LinearOperator):
         return out.T
 
 
-@dispatch
+@dispatch.abstract
 @export
-def apply_unary(f: Callable, A: LinearOperator, **kwargs):
+def apply_unary(f: Callable, A: LinearOperator, alg: Algorithm):
     """ Generic apply a unary function f to a linear operator A: f(A)
 
     Args:
         f (Callable): The function to apply.
         A (LinearOperator): The linear operator to compute f(A) with.
-        tol (float, optional): The tolerance criteria. Defaults to 1e-6.
-        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
-        max_iters (int, optional): The maximum number of iterations. Defaults to 300.
-        method (str, optional): Method to use, defaults to 'auto',
-            options are 'auto', 'dense', 'iterative'.
+        alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
 
     Returns:
         LinearOperator: the lazily implemented f(A)"""
-    kws = dict(method="auto", tol=1e-6, pbar=False, max_iters=300)
-    kws.update(kwargs)
-    method = kws.pop('method', 'auto')
-    xnp = A.xnp
-    if method == 'dense' or (method == 'auto' and (np.prod(A.shape) <= 1e6)):
-        Adense = A.to_dense()
-        eigs, V = xnp.eig(Adense)
-        V = cola.lazify(V)
-        D = cola.diag(f(eigs))
-        return V @ D @ cola.inv(V)
-    elif method == 'iterative' or (method == 'auto' and (np.prod(A.shape) > 1e6)):
-        return ArnoldiUnary(A, f, **kws)
-    else:
-        raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
+
+############ BASE CASES #############
+@dispatch(precedence=-1)
+def apply_unary(f: Callable, A: LinearOperator, alg: Auto):
+    psd, small = A.isa(PSD), np.prod(A.shape) <= 1e6
+    if psd and small:
+        alg = Eigh()
+    elif not psd and small:
+        alg = Eig()
+    elif psd and not small:
+        alg = Lanczos(**alg.__dict__)
+    elif not psd and not small:
+        alg = Arnoldi(**alg.__dict__)
+    return apply_unary(f, A, alg)
 
 
-@dispatch(cond=lambda _, A, **kwargs: A.isa(SelfAdjoint))
-def apply_unary(f: Callable, A: LinearOperator, **kwargs):
-    kws = dict(method="auto", tol=1e-6, pbar=False, max_iters=300)
-    kws.update(kwargs)
-    method = kws.pop('method', 'auto')
-    xnp = A.xnp
-    if method == 'dense' or (method == 'auto' and (np.prod(A.shape) <= 1e6)):
-        Adense = A.to_dense()
-        eigs, V = xnp.eigh(Adense)
-        V = cola.lazify(V)
-        D = cola.diag(f(eigs))
-        return V @ D @ V.H
-    elif method == 'iterative' or (method == 'auto' and (np.prod(A.shape) > 1e6)):
-        return LanczosUnary(A, f, **kws)
-    else:
-        raise ValueError(f"Unknown method {method} or CoLA didn't fit any selection criteria")
+@dispatch(precedence=-1)
+def apply_unary(f: Callable, A: LinearOperator, alg: Lanczos):
+    return LanczosUnary(A, f, **alg.__dict__)
 
 
+@dispatch(precedence=-1)
+def apply_unary(f: Callable, A: LinearOperator, alg: Arnoldi):
+    return ArnoldiUnary(A, f, **alg.__dict__)
+
+
+class Eigh(Algorithm):
+    """ Docstring here"""
+
+
+class Eig(Algorithm):
+    """ Docstring here"""
+
+
+@dispatch(precedence=-1)
+def apply_unary(f: Callable, A: LinearOperator, alg: Eigh):
+    Adense = A.to_dense()
+    eigs, V = A.xnp.eigh(Adense)
+    V = cola.lazify(V)
+    D = cola.diag(f(eigs))
+    return V @ D @ V.H
+
+@dispatch(precedence=-1)
+def apply_unary(f: Callable, A: LinearOperator, alg: Eig):
+    Adense = A.to_dense()
+    eigs, V = A.xnp.eig(Adense)
+    V = cola.lazify(V)
+    D = cola.diag(f(eigs))
+    return V @ D @ cola.inv(V)
+
+############# Dispatch Rules ############
 @dispatch
-def apply_unary(f: Callable, A: Diagonal, **kwargs):
+def apply_unary(f: Callable, A: Diagonal, alg=Auto()):
     return Diagonal(f(A.diag))
 
 
 @dispatch
-def apply_unary(f: Callable, A: BlockDiag, **kwargs):
-    fAs = [apply_unary(f, a, **kwargs) for a in A.Ms]
+def apply_unary(f: Callable, A: BlockDiag, alg=Auto()):
+    fAs = [apply_unary(f, a, alg) for a in A.Ms]
     return BlockDiag(*fAs, multiplicities=A.multiplicities)
 
 
 @dispatch
-def apply_unary(f: Callable, A: Identity, **kwargs):
+def apply_unary(f: Callable, A: Identity, alg=Auto()):
     one = A.xnp.array(1., dtype=A.dtype, device=A.device)
     return f(one) * A
 
 
 @dispatch
-def apply_unary(f: Callable, A: ScalarMul, **kwargs):
+def apply_unary(f: Callable, A: ScalarMul, alg=Auto()):
     return f(A.c) * I_like(A)
 
 
 @dispatch
-def apply_unary(f: Callable, A: Transpose, **kwargs):
-    return Transpose(apply_unary(f, A.A, **kwargs))
+def apply_unary(f: Callable, A: Transpose, alg=Auto()):
+    return Transpose(apply_unary(f, A.A, alg))
 
 
 @dispatch
-def apply_unary(f: Callable, A: Adjoint, **kwargs):
-    return Adjoint(apply_unary(f, A.A, **kwargs))
+def apply_unary(f: Callable, A: Adjoint, alg=Auto()):
+    return Adjoint(apply_unary(f, A.A, alg))
 
 
 @dispatch
 @export
-def exp(A: LinearOperator, **kwargs):
+def exp(A: LinearOperator, alg=Auto()):
     """ Computes the matrix exponential exp(A) of a matrix A.
 
     Args:
         f (Callable): The function to apply.
         A (LinearOperator): The linear operator to compute f(A) with.
-        tol (float, optional): The tolerance criteria. Defaults to 1e-6.
-        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
-        max_iters (int, optional): The maximum number of iterations. Defaults to 300.
-        method (str, optional): Method to use, defaults to 'auto',
-            options are 'auto', 'dense', 'iterative'.
+        alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
 
     Returns:
         LinearOperator: the lazily implemented exp(A)
     """
-    return apply_unary(A.xnp.exp, A, **kwargs)
+    return apply_unary(A.xnp.exp, A, alg)
 
 
 @dispatch
-def exp(A: KronSum, **kwargs):
-    return Kronecker(*[exp(a, **kwargs) for a in A.Ms])
+def exp(A: KronSum, alg=Auto()):
+    return Kronecker(*[exp(a, alg) for a in A.Ms])
 
-
-@dispatch(cond=lambda A: A.isa(PSD))
+@dispatch
 @export
-def log(A: LinearOperator, **kwargs):
+def log(A: LinearOperator, alg=Auto()):
     """ Computes the matrix logarithm log(A) of PSD matrix A
 
     Args:
-        f (Callable): The function to apply.
         A (LinearOperator): The linear operator to compute f(A) with.
-        tol (float, optional): The tolerance criteria. Defaults to 1e-6.
-        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
-        max_iters (int, optional): The maximum number of iterations. Defaults to 300.
-        method (str, optional): Method to use, defaults to 'auto',
-            options are 'auto', 'dense', 'iterative'.
+        alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
 
     Returns:
         LinearOperator: the lazily implemented log(A)
     """
-    return apply_unary(A.xnp.log, A, **kwargs)
+    return apply_unary(A.xnp.log, A, alg)
 
 
 @dispatch
 @export
-def pow(A: LinearOperator, alpha: Number, **kwargs):
+def pow(A: LinearOperator, alpha: Number, alg=Auto()):
     """ Computes the matrix power A^alpha of a matrix A.
 
     Args:
-        f (Callable): The function to apply.
         A (LinearOperator): The linear operator to compute f(A) with.
-        tol (float, optional): The tolerance criteria. Defaults to 1e-6.
-        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
-        max_iters (int, optional): The maximum number of iterations. Defaults to 300.
-        method (str, optional): Method to use, defaults to 'auto',
-            options are 'auto', 'dense', 'iterative'.
+        alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
 
     Returns:
         LinearOperator: the lazily implemented A^alpha
@@ -221,47 +221,48 @@ def pow(A: LinearOperator, alpha: Number, **kwargs):
         if k > 0 and k < 10:
             return product([A] * k)
         if k == -1:
-            return cola.inv(A)
+            match alg:
+                case Lanczos():
+                    new_alg = CG(**alg.__dict__)
+                case Arnoldi():
+                    new_alg = GMRES(**alg.__dict__)
+                case Eigh():
+                    new_alg = Cholesky()
+                case Eig():
+                    new_alg = LU()
+                case _:
+                    new_alg = alg
+            return cola.inv(A, new_alg)
 
-    return apply_unary(lambda x: x**alpha, A, **kwargs)
+    return apply_unary(lambda x: x**alpha, A, alg)
 
 
 @dispatch
-def pow(A: Kronecker, alpha: Number, **kwargs):
-    return Kronecker(*[pow(a, alpha, **kwargs) for a in A.Ms])
+def pow(A: Kronecker, alpha: Number, alg=Auto()):
+    return Kronecker(*[pow(a, alpha, alg) for a in A.Ms])
 
-
+@dispatch
 @export
-def sqrt(A: LinearOperator, **kwargs):
+def sqrt(A: LinearOperator, alg=Auto()):
     """ Computes the matrix sqrt A^{1/2} of a matrix A using the principal branch.
 
     Args:
-        f (Callable): The function to apply.
         A (LinearOperator): The linear operator to compute f(A) with.
-        tol (float, optional): The tolerance criteria. Defaults to 1e-6.
-        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
-        max_iters (int, optional): The maximum number of iterations. Defaults to 300.
-        method (str, optional): Method to use, defaults to 'auto',
-            options are 'auto', 'dense', 'iterative'.
+        alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
 
     Returns: LinearOperator: the lazily implemented sqrt(A)
     """
-    return pow(A, 0.5, **kwargs)
+    return pow(A, 0.5, alg)
 
-
+@dispatch
 @export
-def isqrt(A: LinearOperator, **kwargs):
+def isqrt(A: LinearOperator, alg=Auto()):
     """ Computes the matrix inverse sqrt A^{-1/2} of a matrix A using the principal branch.
 
     Args:
-        f (Callable): The function to apply.
         A (LinearOperator): The linear operator to compute f(A) with.
-        tol (float, optional): The tolerance criteria. Defaults to 1e-6.
-        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
-        max_iters (int, optional): The maximum number of iterations. Defaults to 300.
-        method (str, optional): Method to use, defaults to 'auto',
-            options are 'auto', 'dense', 'iterative'.
+        alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
 
     Returns: LinearOperator: the lazily implemented A^{-1/2}
     """
-    return pow(A, -0.5, **kwargs)
+    return pow(A, -0.5, alg)
