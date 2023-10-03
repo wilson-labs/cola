@@ -29,27 +29,6 @@ from cola.linalg.algorithm_base import Algorithm, Auto
 from dataclasses import dataclass
 import cola
 
-
-@dataclass
-class EighDense(Algorithm):
-    pass
-
-
-@dataclass
-class EigDense(Algorithm):
-    pass
-
-
-@dataclass
-class Arnoldi(Algorithm):
-    pass
-
-
-@dataclass
-class Lanczos(Algorithm):
-    pass
-
-
 @export
 def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Algorithm = Auto()):
     """
@@ -62,7 +41,7 @@ def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Algorithm = Auto()):
         which (str): From what part of the spectrum would de eigenvalues be fetched.
          Default is 'LM' (largest in magnitude) but alternatively you can use 'SM'
          (smallest in magnitude).
-        alg (Algorithm): (Auto, EigDense, EighDense, Arnoldi, Lanczos)
+        alg (Algorithm): (Auto, Eig, Eigh, Arnoldi, Lanczos)
 
     Returns:
         Tuple[Array, Array]: A tuple containing eigenvalues and eigenvectors.
@@ -79,32 +58,32 @@ def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Algorithm = Auto()):
 @dispatch(precedence=-1)
 def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Auto = Auto()):
     """ Auto:
-        - if A is Hermitian and small, use EighDense
+        - if A is Hermitian and small, use Eigh
         - if A is Hermitian and large, use Lanczos
-        - if A is not Hermitian and small, use EigDense
+        - if A is not Hermitian and small, use Eig
         - if A is not Hermitian and large, use Arnoldi
     """
     from cola.linalg.decompositions import Lanczos, Arnoldi
     match (A.isa(cola.SelfAdjoint), bool(np.prod(A.shape) <= 1e6)):
         case (True, True):
-            algorithm = EighDense()
+            algorithm = Eigh()
         case (True, False):
             algorithm = Lanczos(**alg.__dict__)
         case (False, True):
-            algorithm = EigDense()
+            algorithm = Eig()
         case (False, False):
             algorithm = Arnoldi(**alg.__dict__)
     return eig(A, k, which, algorithm)
 
 @dispatch(precedence=-1)
-def eig(A: LinearOperator, k: int, which: str = 'LM', alg: EigDense = None):
+def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Eig = None):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs = A.xnp.eig(A.to_dense())
     return eig_vals[eig_slice], lazify(eig_vecs[:, eig_slice])
 
 
 @dispatch(precedence=-1)
-def eig(A: LinearOperator, k: int, which: str = 'LM', alg: EighDense = None):
+def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Eigh = None):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs = A.xnp.eigh(A.to_dense())
     return eig_vals[eig_slice], Stiefel(lazify(eig_vecs[:, eig_slice]))

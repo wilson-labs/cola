@@ -6,8 +6,7 @@ from cola.utils.custom_autodiff import iterative_autograd
 from cola.utils import export
 from cola.linalg.algorithm_base import Algorithm, IterativeOperatorWInfo
 import cola
-from dataclasses import dataclass
-
+import pytreeclass.autoinit as dataclass
 _small_value = 1e-40
 
 

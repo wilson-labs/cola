@@ -3,10 +3,10 @@ from plum import parametric
 from cola import LinearOperator
 from cola.utils import export
 from types import SimpleNamespace
+import pytreeclass as tc
 
 @export
-@dataclass
-class Algorithm:
+class Algorithm(tc.TreeClass):
     pass
 
 

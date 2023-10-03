@@ -92,7 +92,6 @@ Log Algs
     :show-inheritance:
    .. autoclass:: cola.linalg.Arnoldi
     :members:
-    :show-inheritance:
    .. autoclass:: cola.linalg.Cholesky
     :members:
     :show-inheritance:
@@ -105,7 +104,6 @@ Trace Algs
 
    .. autoclass:: cola.linalg.Auto
     :members:
-    :show-inheritance:
    .. autoclass:: cola.linalg.Hutchinson
     :members:
    .. autoclass:: cola.linalg.ExactTrace

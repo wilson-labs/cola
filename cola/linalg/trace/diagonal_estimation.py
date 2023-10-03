@@ -1,7 +1,46 @@
 import numpy as np
 from cola.utils import export
 from cola.ops import I_like, LinearOperator
+from cola.linalg.algorithm_base import Algorithm, Auto
+import pytreeclass.autoinit as dataclass
+from ..diag_trace import diag
 
+@diag.dispatch(precedence=-1)
+def diag(A: LinearOperator, k=0, alg:(Hutch|HutchPP|Exact)=Auto()):
+    return alg(A, k)
+
+@export
+@dataclass
+class Hutch(Algorithm):
+    tol = 3e-2
+    max_iters = 10000
+    bs = 100
+    pbar = False
+    rand = 'normal' # or 'rademacher'
+    
+    def __call__(self, A, k):
+        return hutchinson_diag_estimate(A, k, **self.__dict__)[0]
+
+@export
+@dataclass
+class Exact(Algorithm):
+    bs = 100
+    pbar = False
+    def __call__(self, A, k):
+        return exact_diag(A, k, **self.__dict__)
+
+@export
+@dataclass
+class HutchPP(Algorithm):
+    tol = 3e-2
+    max_iters = 10000
+    bs = 100
+    pbar = False
+    rand = 'normal' # or 'rademacher'
+
+    def __call__(self, A, k):
+        raise NotImplementedError
+        #return hutchpp_diag_estimate(A, k, **self.__dict__)[0]
 
 def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):
     xnp = A.xnp
@@ -28,6 +67,20 @@ def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):
         shifted_chunk = padded_chunk[:, :bs]
     return chunk, shifted_chunk
 
+# disable backwards for now, TODO: add tests then add back in
+# @iterative_autograd(exact_diag_bwd)
+def exact_diag(A, k, bs, tol, max_iters, pbar):
+    bs = min(100, A.shape[0])
+    # lazily create chunks of the identity matrix of size bs
+    diag_sum = 0.
+    for i in range(0, A.shape[0], bs):
+        chunk, shifted_chunk = get_I_chunk_like(A, i, bs, k)
+        diag_sum += ((A @ chunk) * shifted_chunk).sum(-1)
+    if k <= 0:
+        out = diag_sum[abs(k):]
+    else:
+        out = diag_sum[:(-k or None)]
+    return out
 
 def exact_diag_bwd(res, grads, unflatten, *args, **kwargs):
     v = grads[0] if isinstance(grads, (tuple, list)) else grads
@@ -59,43 +112,9 @@ def exact_diag_bwd(res, grads, unflatten, *args, **kwargs):
     return (dA, )
 
 
-# disable backwards for now, TODO: add tests then add back in
-# @iterative_autograd(exact_diag_bwd)
-def exact_diag_fwd(A, k, bs, tol, max_iters, pbar):
-    bs = min(100, A.shape[0])
-    # lazily create chunks of the identity matrix of size bs
-    diag_sum = 0.
-    for i in range(0, A.shape[0], bs):
-        chunk, shifted_chunk = get_I_chunk_like(A, i, bs, k)
-        diag_sum += ((A @ chunk) * shifted_chunk).sum(-1)
-    if k <= 0:
-        out = diag_sum[abs(k):]
-    else:
-        out = diag_sum[:(-k or None)]
-    return out
-
 
 @export
-def exact_diag(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=False):
-    """Extracts the (kth) diagonal of a linear operator.
-
-    Args:
-        A (LinearOperator): Linear operator.
-        k (int, optional): Index of the diagonal to extract (default 0).
-        bs (int, optional): Chunk size (default 100).
-        tol (float, optional): (doesn't do anything)
-        max_iters (int, optional): (doesn't do anything).
-        pbar (bool, optional): Flag for showing progress bar.
-
-    Returns:
-        Array: Extracted diagonal elements.
-        Info: Dictionary with information about the method used.
-    """
-    return exact_diag_fwd(A, k=k, bs=bs, tol=tol, max_iters=max_iters, pbar=pbar), {'method': 'exact'}
-
-
-@export
-def approx_diag(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=False):
+def hutchinson_diag_estimate(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=False, rand='normal'):
     """ Extract the (kth) diagonal of a linear operator using stochastic estimation
 
     Args:
@@ -114,13 +133,15 @@ def approx_diag(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=
     # lazily create chunks of the identity matrix of size bs
     xnp = A.xnp
     assert tol > 1e-3, "tolerance chosen too high for stochastic diagonal estimation"
-
+    assert rand in ['normal', 'rademacher'], "rand must be 'normal' or 'rademacher'"
     @xnp.jit
     def body(state):
         # TODO: fix randomness when using with jax
         i, diag_sum, diag_sumsq, key = state
         key = xnp.next_key(key)
         z = xnp.randn(A.shape[0], bs, dtype=A.dtype, key=key, device=A.device)
+        if rand == 'rademacher':
+            z = xnp.sign(z)
         z2 = xnp.roll(z, -k, 0)
         z2 = xnp.update_array(z2, 0, slice(0, abs(k)) if k <= 0 else slice(-abs(k), None))
         slc = slice(abs(k), None) if -k > 0 else slice(None, -abs(k) or None)
