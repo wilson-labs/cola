@@ -12,6 +12,9 @@ from cola.annotations import PSD, Unitary
 from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.decompositions.decompositions import Cholesky, LU
 from cola.linalg.decompositions.decompositions import plu, cholesky
+from cola.linalg.algorithm_base import IterativeOperatorWInfo
+from cola.linalg.inverse.cg import CG
+from cola.linalg.inverse.gmres import GMRES
 
 
 @export
@@ -37,6 +40,17 @@ def inv(A: LinearOperator, alg: Algorithm = Auto()):
         >>> x = cola.inverse(A, alg=Auto(tol=1e-3)) @ b
 
     """
+
+
+@inv.dispatch
+def inv(A: LinearOperator, alg: GMRES):
+    return IterativeOperatorWInfo(A, alg)
+
+
+@inv.dispatch(precedence=-1)
+def inv(A: LinearOperator, alg: CG):
+    assert A.isa(PSD), f"CG only valid for PSD matrices, encountered {A}"
+    return IterativeOperatorWInfo(A, alg)
 
 
 @dispatch(precedence=-1)

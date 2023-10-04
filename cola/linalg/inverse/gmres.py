@@ -3,8 +3,7 @@ from cola.ops import Array
 from cola.linalg.decompositions.arnoldi import arnoldi
 from cola.utils import export
 from cola.utils.custom_autodiff import iterative_autograd
-from cola.linalg.algorithm_base import Algorithm, IterativeOperatorWInfo
-from cola.linalg.inverse.inv import inv
+from cola.linalg.algorithm_base import Algorithm
 from dataclasses import dataclass
 
 
@@ -19,11 +18,6 @@ class GMRES(Algorithm):
 
     def __call__(self, A, b):
         return gmres(A, b, **self.__dict__)
-
-
-@inv.dispatch
-def inv(A: LinearOperator, alg: GMRES):
-    return IterativeOperatorWInfo(A, alg)
 
 
 def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=100, tol=1e-7, P=None, use_householder=False,

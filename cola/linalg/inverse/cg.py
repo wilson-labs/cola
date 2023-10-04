@@ -1,11 +1,9 @@
-from cola.linalg.inverse.inv import inv
+from cola.linalg.algorithm_base import Algorithm
 from cola.ops import Array
 from cola.ops import LinearOperator
 from cola.ops import I_like
 from cola.utils.custom_autodiff import iterative_autograd
 from cola.utils import export
-from cola.linalg.algorithm_base import Algorithm, IterativeOperatorWInfo
-from cola.annotations import PSD
 from dataclasses import dataclass
 
 _small_value = 1e-40
@@ -35,12 +33,6 @@ class CG(Algorithm):
 
     def __call__(self, A, b):
         return cg(A, b, **self.__dict__)
-
-
-@inv.dispatch(precedence=-1)
-def inv(A: LinearOperator, alg: CG):
-    assert A.isa(PSD), f"CG only valid for PSD matrices, encountered {A}"
-    return IterativeOperatorWInfo(A, alg)
 
 
 def cg(A: LinearOperator, rhs: Array, x0=None, P=None, tol=1e-6, max_iters=5000, pbar=False):
