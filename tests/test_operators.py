@@ -14,7 +14,7 @@ from cola.ops import Householder
 from cola.ops import Sparse
 from cola.ops import Jacobian
 from cola.ops import LinearOperator
-from cola.algorithms.arnoldi import get_householder_vec
+from cola.linalg.decompositions.arnoldi import get_householder_vec
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends, tracing_backends
 from linalg.operator_market import op_names, get_test_operator
