@@ -1,9 +1,9 @@
 import numpy as np
 from cola.fns import lazify
 from cola.ops import Dense
-from cola.algorithms.lanczos import lanczos
-from cola.algorithms.lanczos import lanczos_eigs
-from cola.algorithms.lanczos import lanczos_max_eig
+from cola.linalg.decompositions.lanczos import lanczos
+from cola.linalg.decompositions.lanczos import lanczos_eigs
+from cola.linalg.decompositions.lanczos import lanczos_max_eig
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends, tracing_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
