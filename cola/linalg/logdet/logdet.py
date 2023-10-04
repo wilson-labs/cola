@@ -9,7 +9,8 @@ import numpy as np
 from functools import reduce
 from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.decompositions import Cholesky, LU, Arnoldi, Lanczos
-#from cola.linalg.unary import log
+# from cola.linalg.unary import log
+
 
 def product(xs):
     return reduce(lambda x, y: x * y, xs, 1)
@@ -44,7 +45,7 @@ def logdet(A: LinearOperator, log_alg=Auto(), trace_alg=Auto()):
 
 @dispatch.abstract
 @export
-def slogdet(A: LinearOperator, log_alg:Algorithm=Auto(), trace_alg:Algorithm=Auto()):
+def slogdet(A: LinearOperator, log_alg: Algorithm = Auto(), trace_alg: Algorithm = Auto()):
     r""" Computes sign and logdet of a linear operator. such that det(A) = sign(A) exp(logdet(A))
 
     For large inputs (or with method='iterative'),
@@ -70,7 +71,7 @@ def slogdet(A: LinearOperator, log_alg:Algorithm=Auto(), trace_alg:Algorithm=Aut
 
 ############ BASE CASES #############
 @dispatch(precedence=-1)
-def slogdet(A: LinearOperator, log_alg:Auto=Auto(), trace_alg: Algorithm=Auto()):
+def slogdet(A: LinearOperator, log_alg: Auto = Auto(), trace_alg: Algorithm = Auto()):
     PSD = A.isa(cola.PSD)
     small = np.prod(A.shape) <= 1e6
     if PSD and small:
@@ -83,19 +84,22 @@ def slogdet(A: LinearOperator, log_alg:Auto=Auto(), trace_alg: Algorithm=Auto())
         log_alg = Arnoldi(**log_alg.__dict__)
     return slogdet(A, log_alg, trace_alg)
 
+
 @dispatch(precedence=-1)
-def slogdet(A: LinearOperator, log_alg: Cholesky, trace_alg: Algorithm=Auto()):
+def slogdet(A: LinearOperator, log_alg: Cholesky, trace_alg: Algorithm = Auto()):
     L = cola.linalg.cholesky(A)
     sign, logdet = slogdet(L)
     return sign * A.xnp.conj(sign), 2 * logdet
 
+
 @dispatch(precedence=-1)
-def slogdet(A: LinearOperator, log_alg: LU, trace_alg: Algorithm=Auto()):
+def slogdet(A: LinearOperator, log_alg: LU, trace_alg: Algorithm = Auto()):
     P, L, U = cola.linalg.plu(A)
     return slogdet(P @ L @ U)
 
+
 @dispatch(precedence=-1)
-def slogdet(A: LinearOperator, log_alg: Lanczos | Arnoldi, trace_alg: Algorithm=Auto()):
+def slogdet(A: LinearOperator, log_alg: Lanczos | Arnoldi, trace_alg: Algorithm = Auto()):
     logA = cola.linalg.log(A, log_alg)
     trlogA = cola.linalg.trace(logA, trace_alg)
     mag = A.xnp.abs(trlogA)

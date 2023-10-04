@@ -32,7 +32,8 @@ setup(
         'scipy',
         'tqdm>=4.38',
         'cola-plum-dispatch==0.1.1',
-        'optree','pytreeclass',
+        'optree',
+        'pytreeclass',
     ],
     extras_require={
         'dev': ['pytest', 'pytest-cov', 'setuptools_scm', 'pre-commit'],

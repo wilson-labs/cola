@@ -5,6 +5,7 @@ from cola.utils import export
 from types import SimpleNamespace
 import pytreeclass as tc
 
+
 @export
 class Algorithm(tc.TreeClass):
     pass
@@ -24,6 +25,7 @@ class IterativeOperatorWInfo(LinearOperator):
 
     def __str__(self):
         return f"{self.alg}({str(self.A)})"
+
 
 @export
 class Auto(SimpleNamespace, Algorithm):

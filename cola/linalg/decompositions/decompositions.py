@@ -20,11 +20,13 @@ class Cholesky(Algorithm):
     def __call__(self, A: LinearOperator):
         return cholesky(A)
 
+
 @export
 class LU(Algorithm):
     """ TODO: docstring"""
     def __call__(self, A: LinearOperator):
         return plu(A)
+
 
 @dispatch
 @export
@@ -56,6 +58,7 @@ def cholesky(A: Kronecker):
 @dispatch
 def cholesky(A: BlockDiag):
     return BlockDiag(*[cholesky(Ai) for Ai in A.Ms], multiplicities=A.multiplicities)
+
 
 @dispatch
 @export

@@ -5,9 +5,11 @@ from cola.linalg.algorithm_base import Algorithm, Auto
 import pytreeclass.autoinit as dataclass
 from ..diag_trace import diag
 
+
 @diag.dispatch(precedence=-1)
-def diag(A: LinearOperator, k=0, alg:(Hutch|HutchPP|Exact)=Auto()):
+def diag(A: LinearOperator, k=0, alg: (Hutch | HutchPP | Exact) = Auto()):
     return alg(A, k)
+
 
 @export
 @dataclass
@@ -16,18 +18,21 @@ class Hutch(Algorithm):
     max_iters = 10000
     bs = 100
     pbar = False
-    rand = 'normal' # or 'rademacher'
-    
+    rand = 'normal'  # or 'rademacher'
+
     def __call__(self, A, k):
         return hutchinson_diag_estimate(A, k, **self.__dict__)[0]
+
 
 @export
 @dataclass
 class Exact(Algorithm):
     bs = 100
     pbar = False
+
     def __call__(self, A, k):
         return exact_diag(A, k, **self.__dict__)
+
 
 @export
 @dataclass
@@ -36,11 +41,12 @@ class HutchPP(Algorithm):
     max_iters = 10000
     bs = 100
     pbar = False
-    rand = 'normal' # or 'rademacher'
+    rand = 'normal'  # or 'rademacher'
 
     def __call__(self, A, k):
         raise NotImplementedError
-        #return hutchpp_diag_estimate(A, k, **self.__dict__)[0]
+        # return hutchpp_diag_estimate(A, k, **self.__dict__)[0]
+
 
 def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):
     xnp = A.xnp
@@ -67,8 +73,11 @@ def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):
         shifted_chunk = padded_chunk[:, :bs]
     return chunk, shifted_chunk
 
+
 # disable backwards for now, TODO: add tests then add back in
 # @iterative_autograd(exact_diag_bwd)
+
+
 def exact_diag(A, k, bs, tol, max_iters, pbar):
     bs = min(100, A.shape[0])
     # lazily create chunks of the identity matrix of size bs
@@ -81,6 +90,7 @@ def exact_diag(A, k, bs, tol, max_iters, pbar):
     else:
         out = diag_sum[:(-k or None)]
     return out
+
 
 def exact_diag_bwd(res, grads, unflatten, *args, **kwargs):
     v = grads[0] if isinstance(grads, (tuple, list)) else grads
@@ -112,7 +122,6 @@ def exact_diag_bwd(res, grads, unflatten, *args, **kwargs):
     return (dA, )
 
 
-
 @export
 def hutchinson_diag_estimate(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=False, rand='normal'):
     """ Extract the (kth) diagonal of a linear operator using stochastic estimation
@@ -134,6 +143,7 @@ def hutchinson_diag_estimate(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters
     xnp = A.xnp
     assert tol > 1e-3, "tolerance chosen too high for stochastic diagonal estimation"
     assert rand in ['normal', 'rademacher'], "rand must be 'normal' or 'rademacher'"
+
     @xnp.jit
     def body(state):
         # TODO: fix randomness when using with jax

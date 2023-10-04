@@ -16,6 +16,7 @@ from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.decompositions import Arnoldi, Lanczos, LU, Cholesky
 from cola.linalg import CG, GMRES
 
+
 def product(As):
     return reduce(lambda x, y: x @ y, As)
 
@@ -85,7 +86,10 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Algorithm):
     Returns:
         LinearOperator: the lazily implemented f(A)"""
 
+
 ############ BASE CASES #############
+
+
 @dispatch(precedence=-1)
 def apply_unary(f: Callable, A: LinearOperator, alg: Auto):
     psd, small = A.isa(PSD), np.prod(A.shape) <= 1e6
@@ -126,6 +130,7 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Eigh):
     D = cola.diag(f(eigs))
     return V @ D @ V.H
 
+
 @dispatch(precedence=-1)
 def apply_unary(f: Callable, A: LinearOperator, alg: Eig):
     Adense = A.to_dense()
@@ -134,7 +139,10 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Eig):
     D = cola.diag(f(eigs))
     return V @ D @ cola.inv(V)
 
+
 ############# Dispatch Rules ############
+
+
 @dispatch
 def apply_unary(f: Callable, A: Diagonal, alg=Auto()):
     return Diagonal(f(A.diag))
@@ -186,6 +194,7 @@ def exp(A: LinearOperator, alg=Auto()):
 @dispatch
 def exp(A: KronSum, alg=Auto()):
     return Kronecker(*[exp(a, alg) for a in A.Ms])
+
 
 @dispatch
 @export
@@ -241,6 +250,7 @@ def pow(A: LinearOperator, alpha: Number, alg=Auto()):
 def pow(A: Kronecker, alpha: Number, alg=Auto()):
     return Kronecker(*[pow(a, alpha, alg) for a in A.Ms])
 
+
 @dispatch
 @export
 def sqrt(A: LinearOperator, alg=Auto()):
@@ -253,6 +263,7 @@ def sqrt(A: LinearOperator, alg=Auto()):
     Returns: LinearOperator: the lazily implemented sqrt(A)
     """
     return pow(A, 0.5, alg)
+
 
 @dispatch
 @export

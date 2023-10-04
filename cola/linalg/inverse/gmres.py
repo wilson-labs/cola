@@ -9,6 +9,7 @@ import cola
 from ..inv import inv
 import pytreeclass.autoinit as dataclass
 
+
 @export
 @dataclass
 class GMRES(Algorithm):

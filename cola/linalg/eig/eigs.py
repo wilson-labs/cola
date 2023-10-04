@@ -29,6 +29,7 @@ from cola.linalg.algorithm_base import Algorithm, Auto
 from dataclasses import dataclass
 import cola
 
+
 @export
 def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Algorithm = Auto()):
     """
@@ -74,6 +75,7 @@ def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Auto = Auto()):
         case (False, False):
             algorithm = Arnoldi(**alg.__dict__)
     return eig(A, k, which, algorithm)
+
 
 @dispatch(precedence=-1)
 def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Eig = None):

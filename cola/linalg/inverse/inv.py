@@ -15,7 +15,6 @@ from dataclasses import dataclass
 from cola.linalg.decompositions import Cholesky, LU
 
 
-
 @export
 def solve(A, b, alg=Auto()):
     """ Inverse expresse das a solve operation"""
@@ -66,11 +65,11 @@ def inv(A: LinearOperator, alg: Auto = Auto()):
     return inv(A, alg)
 
 
-
 @dispatch(precedence=-1)
 def inv(A: LinearOperator, alg: Cholesky):
     L = cola.linalg.cholesky(A)
     return inv(L) @ inv(L.H)
+
 
 @dispatch(precedence=-1)
 def inv(A: LinearOperator, alg: LU):

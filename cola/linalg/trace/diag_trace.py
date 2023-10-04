@@ -6,6 +6,7 @@ from cola.ops import BlockDiag, ScalarMul, Sum, Dense, Array
 from cola.ops import Kronecker, KronSum
 from cola.linalg.algorithm_base import Algorithm, Auto
 
+
 @dispatch
 @export
 def diag(v: Array, k=0):
@@ -50,10 +51,13 @@ def diag(v: Array, k=0):
 
 ############ BASE CASES #############
 @dispatch(precedence=-1)
-def diag(A: LinearOperator, k=0, alg:Hutch|HutchPP|Exact):
+def diag(A: LinearOperator, k=0, alg: Hutch | HutchPP | Exact):
     return alg(A, k)
 
+
 ############# Dispatch Rules ############
+
+
 @dispatch
 def diag(A: Dense, k=0, alg=Auto()):
     xnp = A.xnp
