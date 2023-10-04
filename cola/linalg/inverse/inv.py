@@ -9,9 +9,9 @@ from cola.ops import Kronecker, Product
 from plum import parametric
 from cola.utils import export
 from cola.annotations import PSD, Unitary
-import cola
 from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.decompositions.decompositions import Cholesky, LU
+from cola.linalg.decompositions.decompositions import plu, cholesky
 
 
 @export
@@ -65,13 +65,13 @@ def inv(A: LinearOperator, alg: Auto = Auto()):
 
 @dispatch(precedence=-1)
 def inv(A: LinearOperator, alg: Cholesky):
-    L = cola.linalg.cholesky(A)
+    L = cholesky(A)
     return inv(L) @ inv(L.H)
 
 
 @dispatch(precedence=-1)
 def inv(A: LinearOperator, alg: LU):
-    P, L, U = cola.linalg.plu(A)
+    P, L, U = plu(A)
     return inv(U) @ inv(L) @ inv(P)
 
 
