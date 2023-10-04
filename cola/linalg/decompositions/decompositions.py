@@ -24,6 +24,20 @@ class LU(Algorithm):
         return plu(A)
 
 
+@export
+class Arnoldi(Algorithm):
+    """ TODO: docstring"""
+    def __call__(self, A: LinearOperator):
+        pass
+
+
+@export
+class Lanczos(Algorithm):
+    """ TODO: docstring"""
+    def __call__(self, A: LinearOperator):
+        pass
+
+
 @dispatch
 @export
 def cholesky(A: LinearOperator):

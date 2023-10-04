@@ -8,13 +8,14 @@ from cola.ops import LinearOperator
 from cola.utils import export
 from cola.annotations import SelfAdjoint, PSD
 from plum import parametric
-from cola.algorithms.lanczos import lanczos  # , construct_tridiagonal
-from cola.algorithms.arnoldi import get_arnoldi_matrix
+from cola.linalg.decompositions.lanczos import lanczos
+from cola.linalg.decompositions.arnoldi import get_arnoldi_matrix
 from cola.ops import Diagonal, Identity, ScalarMul
 from cola.ops import BlockDiag, Kronecker, KronSum, I_like, Transpose, Adjoint
 from cola.linalg.algorithm_base import Algorithm, Auto
-from cola.linalg.decompositions import Arnoldi, Lanczos, LU, Cholesky
-from cola.linalg import CG, GMRES
+from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos, LU, Cholesky
+from cola.linalg.inverse.cg import CG
+from cola.linalg.inverse.gmres import GMRES
 
 
 def product(As):

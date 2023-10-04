@@ -4,6 +4,7 @@ from cola.ops import LinearOperator, I_like, Diagonal, Identity
 from cola.ops import BlockDiag, ScalarMul, Sum, Dense, Array
 from cola.ops import Kronecker, KronSum
 from cola.linalg.algorithm_base import Auto
+from cola.linalg.trace.diagonal_estimation import Hutch, HutchPP, Exact
 
 
 @dispatch

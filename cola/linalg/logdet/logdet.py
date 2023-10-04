@@ -1,12 +1,15 @@
+import numpy as np
+from functools import reduce
 from plum import dispatch
+from cola.annotations import PSD
 from cola.ops import LinearOperator, Triangular, Permutation, Identity, ScalarMul
 from cola.ops import Diagonal, Kronecker, BlockDiag, Product
 from cola.utils import export
-import cola
-import numpy as np
-from functools import reduce
 from cola.linalg.algorithm_base import Algorithm, Auto
-from cola.linalg.decompositions import Cholesky, LU, Arnoldi, Lanczos
+from cola.linalg.decompositions.decompositions import Cholesky, LU, Arnoldi, Lanczos
+from cola.linalg.decompositions.decompositions import plu, cholesky
+from cola.linalg.trace.diag_trace import trace
+from cola.linalg.unary.unary import log
 
 
 def product(xs):
@@ -69,36 +72,36 @@ def slogdet(A: LinearOperator, log_alg: Algorithm = Auto(), trace_alg: Algorithm
 # ########### BASE CASES #############
 @dispatch(precedence=-1)
 def slogdet(A: LinearOperator, log_alg: Auto = Auto(), trace_alg: Algorithm = Auto()):
-    PSD = A.isa(cola.PSD)
+    is_PSD = A.isa(PSD)
     small = np.prod(A.shape) <= 1e6
-    if PSD and small:
+    if is_PSD and small:
         log_alg = Cholesky()
-    elif not PSD and small:
+    elif not is_PSD and small:
         log_alg = LU()
-    elif PSD and not small:
+    elif is_PSD and not small:
         log_alg = Lanczos(**log_alg.__dict__)
-    elif not PSD and not small:
+    elif not is_PSD and not small:
         log_alg = Arnoldi(**log_alg.__dict__)
     return slogdet(A, log_alg, trace_alg)
 
 
 @dispatch(precedence=-1)
 def slogdet(A: LinearOperator, log_alg: Cholesky, trace_alg: Algorithm = Auto()):
-    L = cola.linalg.cholesky(A)
+    L = cholesky(A)
     sign, logdet = slogdet(L)
     return sign * A.xnp.conj(sign), 2 * logdet
 
 
 @dispatch(precedence=-1)
 def slogdet(A: LinearOperator, log_alg: LU, trace_alg: Algorithm = Auto()):
-    P, L, U = cola.linalg.plu(A)
+    P, L, U = plu(A)
     return slogdet(P @ L @ U)
 
 
 @dispatch(precedence=-1)
 def slogdet(A: LinearOperator, log_alg: Lanczos | Arnoldi, trace_alg: Algorithm = Auto()):
-    logA = cola.linalg.log(A, log_alg)
-    trlogA = cola.linalg.trace(logA, trace_alg)
+    logA = log(A, log_alg)
+    trlogA = trace(logA, trace_alg)
     mag = A.xnp.abs(trlogA)
     phase = trlogA / mag
     return phase, mag

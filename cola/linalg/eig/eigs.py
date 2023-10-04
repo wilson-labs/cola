@@ -8,10 +8,12 @@ from cola.ops import Diagonal
 from cola.ops import I_like
 from cola.ops import Identity
 from cola.ops import Triangular
-from cola.algorithms.lanczos import lanczos_eigs
-from cola.algorithms.arnoldi import arnoldi_eigs
+from cola.linalg.decompositions.lanczos import lanczos_eigs
+from cola.linalg.decompositions.arnoldi import arnoldi_eigs
 from cola.utils import export
 from cola.linalg.algorithm_base import Algorithm, Auto
+from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos
+from cola.linalg.unary.unary import Eig, Eigh
 import cola
 
 

@@ -1,14 +1,10 @@
 import numpy as np
 from cola.utils import export
 from cola.ops import I_like, LinearOperator
-from cola.linalg.algorithm_base import Algorithm, Auto
-import pytreeclass.autoinit as dataclass
-from ..diag_trace import diag
-
-
-@diag.dispatch(precedence=-1)
-def diag(A: LinearOperator, k=0, alg: (Hutch | HutchPP | Exact) = Auto()):
-    return alg(A, k)
+# from cola.linalg.algorithm_base import Algorithm, Auto
+from cola.linalg.algorithm_base import Algorithm
+from dataclasses import dataclass
+# from cola.linalg.trace.diag_trace import diag
 
 
 @export
@@ -46,6 +42,11 @@ class HutchPP(Algorithm):
     def __call__(self, A, k):
         raise NotImplementedError
         # return hutchpp_diag_estimate(A, k, **self.__dict__)[0]
+
+
+# @diag.dispatch(precedence=-1)
+# def diag(A: LinearOperator, k=0, alg: (Hutch | HutchPP | Exact) = Auto()):
+#     return alg(A, k)
 
 
 def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):

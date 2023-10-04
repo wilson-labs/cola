@@ -11,7 +11,7 @@ from cola.utils import export
 from cola.annotations import PSD, Unitary
 import cola
 from cola.linalg.algorithm_base import Algorithm, Auto
-from cola.linalg.decompositions import Cholesky, LU
+from cola.linalg.decompositions.decompositions import Cholesky, LU
 
 
 @export
