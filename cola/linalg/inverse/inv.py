@@ -1,6 +1,6 @@
 import numpy as np
 from plum import dispatch
-from cola.ops import LinearOperator, Array
+from cola.ops import LinearOperator
 from cola.ops import Diagonal, Permutation
 from cola.ops import Identity
 from cola.ops import ScalarMul
@@ -11,7 +11,6 @@ from cola.utils import export
 from cola.annotations import PSD, Unitary
 import cola
 from cola.linalg.algorithm_base import Algorithm, Auto
-from dataclasses import dataclass
 from cola.linalg.decompositions import Cholesky, LU
 
 
@@ -40,7 +39,6 @@ def inv(A: LinearOperator, alg: Algorithm = Auto()):
     """
 
 
-############ BASE CASES #############
 @dispatch(precedence=-1)
 def inv(A: LinearOperator, alg: Auto = Auto()):
     """ Auto:
@@ -77,7 +75,6 @@ def inv(A: LinearOperator, alg: LU):
     return inv(U) @ inv(L) @ inv(P)
 
 
-############# Dispatch Rules ############
 @dispatch(cond=lambda A, *_: A.isa(Unitary))
 def inv(A: LinearOperator, alg=Auto()):
     return Unitary(A.H)

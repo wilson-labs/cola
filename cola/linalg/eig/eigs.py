@@ -1,7 +1,5 @@
 import numpy as np
-from math import prod
 from plum import dispatch
-from cola import SelfAdjoint
 from cola import Unitary, Stiefel
 from cola.fns import lazify
 from cola.linalg import diag
@@ -10,23 +8,10 @@ from cola.ops import Diagonal
 from cola.ops import I_like
 from cola.ops import Identity
 from cola.ops import Triangular
-from cola.algorithms import power_iteration
-from cola.algorithms.lanczos import lanczos_eigs
-from cola.algorithms.arnoldi import arnoldi_eigs
-from cola.utils import export
-
-import numpy as np
-from plum import dispatch
-from cola import SelfAdjoint, Unitary, Stiefel
-from cola.fns import lazify
-from cola.linalg import diag
-from cola.ops import LinearOperator, I_like, Identity, Triangular, Diagonal
-from cola.algorithms import power_iteration
 from cola.algorithms.lanczos import lanczos_eigs
 from cola.algorithms.arnoldi import arnoldi_eigs
 from cola.utils import export
 from cola.linalg.algorithm_base import Algorithm, Auto
-from dataclasses import dataclass
 import cola
 
 
@@ -55,7 +40,6 @@ def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Algorithm = Auto()):
     """
 
 
-############ BASE CASES #############
 @dispatch(precedence=-1)
 def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Auto = Auto()):
     """ Auto:
@@ -103,7 +87,6 @@ def eig(A: LinearOperator, k: int, which: str = 'LM', alg: Lanczos = None):
     return eig_vals, eig_vecs
 
 
-############# Dispatch Rules ############
 @dispatch
 def eig(A: Identity, k, which="LM", alg=Auto()):
     eig_slice = get_slice(k, which)

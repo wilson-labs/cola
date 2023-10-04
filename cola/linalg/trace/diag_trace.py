@@ -1,10 +1,9 @@
-import numpy as np
 from functools import reduce
 from cola.utils import export, dispatch
 from cola.ops import LinearOperator, I_like, Diagonal, Identity
 from cola.ops import BlockDiag, ScalarMul, Sum, Dense, Array
 from cola.ops import Kronecker, KronSum
-from cola.linalg.algorithm_base import Algorithm, Auto
+from cola.linalg.algorithm_base import Auto
 
 
 @dispatch
@@ -49,13 +48,13 @@ def diag(v: Array, k=0):
 #     return out
 
 
-############ BASE CASES #############
+# ########### BASE CASES #############
 @dispatch(precedence=-1)
-def diag(A: LinearOperator, k=0, alg: Hutch | HutchPP | Exact):
+def diag(A: LinearOperator, k=0, alg: Hutch | HutchPP | Exact = Auto()):
     return alg(A, k)
 
 
-############# Dispatch Rules ############
+# ############ Dispatch Rules ############
 
 
 @dispatch

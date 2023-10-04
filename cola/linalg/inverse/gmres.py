@@ -5,7 +5,6 @@ from cola.algorithms.arnoldi import arnoldi
 from cola.utils import export
 from cola.utils.custom_autodiff import iterative_autograd
 from cola.linalg.algorithm_base import Algorithm, IterativeOperatorWInfo
-import cola
 from ..inv import inv
 import pytreeclass.autoinit as dataclass
 

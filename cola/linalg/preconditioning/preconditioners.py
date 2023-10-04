@@ -1,6 +1,6 @@
 from typing import Union
 from cola.ops import LinearOperator
-from cola.algorithms import power_iteration
+from cola.linalg.eig.power_iteration import power_iteration
 from plum import dispatch
 from cola.utils import export
 

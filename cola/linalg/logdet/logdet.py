@@ -2,14 +2,11 @@ from plum import dispatch
 from cola.ops import LinearOperator, Triangular, Permutation, Identity, ScalarMul
 from cola.ops import Diagonal, Kronecker, BlockDiag, Product
 from cola.utils import export
-from cola.annotations import PSD
-from cola.algorithms import stochastic_lanczos_quad
 import cola
 import numpy as np
 from functools import reduce
 from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.decompositions import Cholesky, LU, Arnoldi, Lanczos
-# from cola.linalg.unary import log
 
 
 def product(xs):
@@ -69,7 +66,7 @@ def slogdet(A: LinearOperator, log_alg: Algorithm = Auto(), trace_alg: Algorithm
     """
 
 
-############ BASE CASES #############
+# ########### BASE CASES #############
 @dispatch(precedence=-1)
 def slogdet(A: LinearOperator, log_alg: Auto = Auto(), trace_alg: Algorithm = Auto()):
     PSD = A.isa(cola.PSD)
@@ -107,7 +104,7 @@ def slogdet(A: LinearOperator, log_alg: Lanczos | Arnoldi, trace_alg: Algorithm 
     return phase, mag
 
 
-############# Dispatch Rules ############
+# ############ Dispatch Rules ############
 @dispatch(cond=lambda A, *_: all([(Ai.shape[-2] == Ai.shape[-1]) for Ai in A.Ms]))
 def slogdet(A: Product, log_alg=Auto(), trace_alg=Auto()):
     signs, logdets = zip(*[slogdet(Ai, log_alg, trace_alg) for Ai in A.Ms])

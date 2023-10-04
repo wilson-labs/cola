@@ -1,6 +1,5 @@
-from dataclasses import dataclass
 from plum import parametric
-from cola import LinearOperator
+from cola.ops import LinearOperator
 from cola.utils import export
 from types import SimpleNamespace
 import pytreeclass as tc

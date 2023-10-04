@@ -1,17 +1,13 @@
 """ Decompositions of linear operators, e.g. LU, Cholesky, Lanczos, Arnoldi, SVD"""
 
-from typing import Callable
 from plum import dispatch
 import cola
-from cola import Unitary
-from cola.fns import lazify
 from cola.ops.operator_base import LinearOperator
 from cola.ops import Triangular, Permutation, Diagonal
 from cola.ops import Identity, ScalarMul, Kronecker, BlockDiag
 from cola.utils import export
-# from cola.linalg import inv, eig, trace, apply_unary
 import cola.linalg
-from cola.linalg.algorithm_base import Algorithm, Auto
+from cola.linalg.algorithm_base import Algorithm
 
 
 @export

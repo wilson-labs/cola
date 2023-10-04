@@ -87,9 +87,6 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Algorithm):
         LinearOperator: the lazily implemented f(A)"""
 
 
-############ BASE CASES #############
-
-
 @dispatch(precedence=-1)
 def apply_unary(f: Callable, A: LinearOperator, alg: Auto):
     psd, small = A.isa(PSD), np.prod(A.shape) <= 1e6
@@ -138,9 +135,6 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Eig):
     V = cola.lazify(V)
     D = cola.diag(f(eigs))
     return V @ D @ cola.inv(V)
-
-
-############# Dispatch Rules ############
 
 
 @dispatch

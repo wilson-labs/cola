@@ -1,12 +1,12 @@
-from ..inv import inv
+from cola.linalg.inverse.inv import inv
 from cola.ops import Array
 from cola.ops import LinearOperator
 from cola.ops import I_like
 from cola.utils.custom_autodiff import iterative_autograd
 from cola.utils import export
 from cola.linalg.algorithm_base import Algorithm, IterativeOperatorWInfo
-import cola
-import pytreeclass.autoinit as dataclass
+from cola.annotations import PSD
+from dataclasses import dataclass
 
 _small_value = 1e-40
 
@@ -16,8 +16,8 @@ _small_value = 1e-40
 class CG(Algorithm):
     """ Conjugate gradients algorithm Solves Ax=b or AX=B (multiple rhs).
 
-    Runs in time :math:`O(\sqrt{\kappa})` and :math:`O(n)` memory,
-    where :math:`\kappa` is the condition number of the linear operator.
+    Runs in time :math:`O(\\ sqrt{\\kappa})` and :math:`O(n)` memory.
+    where :math:`\\kappa` is the condition number of the linear operator.
     Optionally can use a preconditioner (approx of A⁻¹) to accelerate convergence.
 
     Args:
@@ -39,7 +39,7 @@ class CG(Algorithm):
 
 @inv.dispatch(precedence=-1)
 def inv(A: LinearOperator, alg: CG):
-    assert A.isa(cola.PSD), f"CG only valid for PSD matrices, encountered {A}"
+    assert A.isa(PSD), f"CG only valid for PSD matrices, encountered {A}"
     return IterativeOperatorWInfo(A, alg)
 
 
