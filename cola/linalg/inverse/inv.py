@@ -42,12 +42,12 @@ def inv(A: LinearOperator, alg: Algorithm = Auto()):
     """
 
 
-@inv.dispatch
+@dispatch
 def inv(A: LinearOperator, alg: GMRES):
     return IterativeOperatorWInfo(A, alg)
 
 
-@inv.dispatch(precedence=-1)
+@dispatch(precedence=-1)
 def inv(A: LinearOperator, alg: CG):
     assert A.isa(PSD), f"CG only valid for PSD matrices, encountered {A}"
     return IterativeOperatorWInfo(A, alg)
@@ -80,7 +80,7 @@ def inv(A: LinearOperator, alg: Auto = Auto()):
 @dispatch(precedence=-1)
 def inv(A: LinearOperator, alg: Cholesky):
     L = cholesky(A)
-    return inv(L) @ inv(L.H)
+    return inv(L.H) @ inv(L)
 
 
 @dispatch(precedence=-1)
