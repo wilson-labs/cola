@@ -51,7 +51,7 @@ def diag(v: Array, k=0):
 
 # ########### BASE CASES #############
 @dispatch(precedence=-1)
-def diag(A: LinearOperator, k=0, alg: Hutch | HutchPP | Exact = Auto()):
+def diag(A: LinearOperator, k, alg: Hutch | HutchPP | Exact):
     return alg(A, k)
 
 

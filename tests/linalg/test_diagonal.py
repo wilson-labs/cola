@@ -1,8 +1,11 @@
-from cola import kron
+from cola.fns import kron
 from cola.ops import Dense, LinearOperator, Identity, Diagonal
-from cola.algorithms import exact_diag, approx_diag
-from cola.linalg import diag, trace
+from cola.linalg.trace.diagonal_estimation import exact_diag
+from cola.linalg.trace.diagonal_estimation import hutchinson_diag_estimate as approx_diag
+from cola.linalg.trace.diag_trace import trace
+from cola.linalg.trace.diag_trace import diag
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.linalg.trace.diagonal_estimation import Exact, Hutch
 from cola.backends import all_backends
 
 
@@ -11,7 +14,7 @@ def test_exact_diag(backend):
     xnp = get_xnp(backend)
     A = Dense(xnp.array([[1, 2, 3], [4, 5, 6], [7, 8, 9.]], dtype=xnp.float32, device=None))
     for u in [-2, -1, 0, 1, 2]:
-        d1, _ = exact_diag(A, u)
+        d1 = exact_diag(A, u, bs=100)
         d2 = xnp.diag(A.to_dense(), u)
         assert relative_error(d1, d2) < 1e-5
 
@@ -35,7 +38,7 @@ def test_composite_diag(backend):
     B = Dense(xnp.array([[1, 2, 3], [4, 5, 6], [7, 8, 9.]], dtype=dtype, device=None))
     C = Dense(-xnp.ones((3, 3), dtype=dtype, device=None))
     M = kron(A, B + C)
-    d1 = diag(M)
+    d1 = diag(M, k=0, alg=Exact(bs=111))
     d2 = xnp.diag(M.to_dense())
     assert relative_error(d1, d2) < 1e-5
 
@@ -47,8 +50,12 @@ def test_large_trace(backend, method):
     key = xnp.PRNGKey(21)
     array = xnp.randn(*(210, 210), dtype=dtype, device=None, key=key)
     A = Dense(array)
-    A = LinearOperator(A.dtype, A.shape, A._matmat)
-    d1 = trace(A, method=method, tol=2e-2)
+    # A = LinearOperator(A.dtype, A.shape, A._matmat)
+    if method == "exact":
+        alg = Exact()
+    elif method == "approx":
+        alg = Hutch(tol=2e-2)
+    d1 = trace(A, alg)
     d2 = xnp.diag(array).sum()
     assert relative_error(d1, d2) < (1e-1 if method == 'approx' else 1e-5)
 

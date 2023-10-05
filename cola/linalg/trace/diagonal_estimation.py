@@ -10,11 +10,11 @@ from dataclasses import dataclass
 @export
 @dataclass
 class Hutch(Algorithm):
-    tol = 3e-2
-    max_iters = 10000
-    bs = 100
-    pbar = False
-    rand = 'normal'  # or 'rademacher'
+    tol: float = 3e-2
+    max_iters: int = 10000
+    bs: int = 100
+    pbar: bool = False
+    rand: str = 'normal'  # or 'rademacher'
 
     def __call__(self, A, k):
         return hutchinson_diag_estimate(A, k, **self.__dict__)[0]
@@ -23,21 +23,21 @@ class Hutch(Algorithm):
 @export
 @dataclass
 class Exact(Algorithm):
-    bs = 100
-    pbar = False
+    bs: int = 100
+    pbar: bool = False
 
     def __call__(self, A, k):
-        return exact_diag(A, k, **self.__dict__)
+        return exact_diag(A, k, self.bs)
 
 
 @export
 @dataclass
 class HutchPP(Algorithm):
-    tol = 3e-2
-    max_iters = 10000
-    bs = 100
-    pbar = False
-    rand = 'normal'  # or 'rademacher'
+    tol: float = 3e-2
+    max_iters: int = 10000
+    bs: int = 100
+    pbar: bool = False
+    rand: str = 'normal'  # or 'rademacher'
 
     def __call__(self, A, k):
         raise NotImplementedError
@@ -79,7 +79,7 @@ def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):
 # @iterative_autograd(exact_diag_bwd)
 
 
-def exact_diag(A, k, bs, tol, max_iters, pbar):
+def exact_diag(A, k, bs):
     bs = min(100, A.shape[0])
     # lazily create chunks of the identity matrix of size bs
     diag_sum = 0.
