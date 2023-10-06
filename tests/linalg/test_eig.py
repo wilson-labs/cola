@@ -1,10 +1,13 @@
 import numpy as np
 from cola.fns import lazify
-from cola.ops import Diagonal
-from cola.ops import Identity
-from cola.ops import Triangular
+from cola.ops.operators import Diagonal
+from cola.ops.operators import Identity
+from cola.ops.operators import Triangular
 from cola.annotations import SelfAdjoint
-from cola.linalg.eigs import eig
+from cola.linalg.decompositions.decompositions import Lanczos
+from cola.linalg.decompositions.decompositions import Arnoldi
+from cola.linalg.algorithm_base import Auto
+from cola.linalg.eig.eigs import eig
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
@@ -21,21 +24,21 @@ def test_general(backend):
     soln_vals = xnp.sort(xnp.array(diag, dtype=dtype, device=None))
     A = SelfAdjoint(lazify(A))
 
-    eig_vals, eig_vecs = eig(A, num=None, which="LM", tol=1e-6)
+    eig_vals, eig_vecs = eig(A, Auto(tol=1e-6), k=None, which="LM")
     eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs.to_dense(), dtype)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
     rel_error = relative_error(soln_vals, xnp.sort(eig_vals))
     assert rel_error < _tol
     rel_error = relative_error(A.to_dense(), approx)
     assert rel_error < _tol * 5
-    eig_vals, eig_vecs = eig(A, num=2, which="SM", tol=1e-6)
+    eig_vals, eig_vecs = eig(A, Auto(tol=1e-6), k=2, which="SM")
     eig_vals = xnp.cast(eig_vals, dtype)
     rel_error = relative_error(soln_vals[-2:], xnp.sort(eig_vals))
     assert rel_error < _tol
     assert eig_vecs.shape == (10, 2)
 
     A.annotations = set()
-    eig_vals, eig_vecs = eig(A, tol=1e-6, method="arnoldi", max_iters=A.shape[-1])
+    eig_vals, eig_vecs = eig(A, Arnoldi(tol=1e-6, max_iters=A.shape[-1]))
     eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs.to_dense(), dtype)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
     rel_error = relative_error(soln_vals, xnp.sort(eig_vals))
@@ -43,7 +46,7 @@ def test_general(backend):
     rel_error = relative_error(A.to_dense(), approx)
     assert rel_error < 5e-2
 
-    eig_vals, eig_vecs = eig(SelfAdjoint(A), tol=1e-6, method="lanczos", max_iters=A.shape[-1])
+    eig_vals, eig_vecs = eig(SelfAdjoint(A), Lanczos(tol=1e-6, max_iters=A.shape[-1]))
     eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs.to_dense(), dtype)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
     rel_error = relative_error(soln_vals, xnp.sort(eig_vals))
@@ -54,7 +57,7 @@ def test_general(backend):
 
 
 @parametrize(all_backends)
-def test_adjoint(backend):
+def test_Selfadjoint(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
@@ -70,7 +73,7 @@ def test_adjoint(backend):
     rel_error = relative_error(A.to_dense(), approx)
     assert rel_error < _tol
 
-    eig_vals, eig_vecs = eig(A, method="lanczos", max_iters=A.shape[-1])
+    eig_vals, eig_vecs = eig(A, Lanczos(max_iters=A.shape[-1]))
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
 
     rel_error = relative_error(soln_vals, eig_vals)
@@ -104,7 +107,7 @@ def test_identity(backend):
     soln_vals = xnp.array([1., 1., 1., 1.], dtype=dtype, device=None)
     eig_slice = slice(1, None, None)
     soln_vecs = xnp.eye(4, 4, dtype=dtype, device=None)
-    eig_vals, eig_vecs = eig(A, num=3, which="SM")
+    eig_vals, eig_vecs = eig(A, k=3, which="SM")
 
     assert relative_error(soln_vals[eig_slice], eig_vals) < _tol
     assert relative_error(soln_vecs[:, eig_slice], eig_vecs.to_dense()) < _tol
@@ -117,7 +120,8 @@ def test_diagonal(backend):
     diag = xnp.array([0.1, 3., 0.2, 4.], dtype=dtype, device=None)
     soln_vecs = [[1., 0., 0., 0.], [0., 0., 1., 0.], [0., 1., 0., 0.], [0., 0., 0., 1.]]
     soln_vecs = xnp.array(soln_vecs, dtype=dtype, device=None)
-    eig_vals, eig_vecs = eig(Diagonal(diag=diag))
+    D = Diagonal(diag)
+    eig_vals, eig_vecs = eig(D)
     eig_vecs = eig_vecs.to_dense()
 
     rel_error = relative_error(xnp.sort(diag), eig_vals)

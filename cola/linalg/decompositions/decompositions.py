@@ -1,13 +1,14 @@
 """ Decompositions of linear operators, e.g. LU, Cholesky, Lanczos, Arnoldi, SVD"""
-
 from plum import dispatch
-import cola
-from cola.ops.operator_base import LinearOperator
+from dataclasses import dataclass
+from cola.ops import LinearOperator, Array
 from cola.ops import Triangular, Permutation, Diagonal
 from cola.ops import Identity, ScalarMul, Kronecker, BlockDiag
 from cola.utils import export
-import cola.linalg
 from cola.linalg.algorithm_base import Algorithm
+from cola.linalg.decompositions.lanczos import lanczos
+from cola.linalg.decompositions.arnoldi import arnoldi
+import cola.linalg
 
 
 @export
@@ -25,17 +26,29 @@ class LU(Algorithm):
 
 
 @export
+@dataclass
 class Arnoldi(Algorithm):
     """ TODO: docstring"""
+    start_vector: Array = None
+    max_iters: int = 1000
+    tol: float = 1e-6
+    pbar: bool = False
+
     def __call__(self, A: LinearOperator):
-        pass
+        return arnoldi(A, **self.__dict__)
 
 
 @export
+@dataclass
 class Lanczos(Algorithm):
     """ TODO: docstring"""
+    start_vector: Array = None
+    max_iters: int = 1000
+    tol: float = 1e-6
+    pbar: bool = False
+
     def __call__(self, A: LinearOperator):
-        pass
+        return lanczos(A, **self.__dict__)
 
 
 @dispatch

@@ -86,7 +86,6 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e
             - info (dict): General information about the iterative procedure.
     """
     xnp = A.xnp
-    xnp = A.xnp
     if start_vector is None:
         start_vector = xnp.randn(A.shape[-1], dtype=A.dtype, device=A.device)
     if len(start_vector.shape) == 1:

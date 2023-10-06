@@ -1,12 +1,12 @@
 import numpy as np
-from plum import dispatch
-from cola.ops import LinearOperator
-from cola.ops import Diagonal, Permutation
-from cola.ops import Identity
-from cola.ops import ScalarMul
-from cola.ops import BlockDiag, Triangular
-from cola.ops import Kronecker, Product
 from plum import parametric
+from plum import dispatch
+from cola.ops.operators import LinearOperator
+from cola.ops.operators import Diagonal, Permutation
+from cola.ops.operators import Identity
+from cola.ops.operators import ScalarMul
+from cola.ops.operators import BlockDiag, Triangular
+from cola.ops.operators import Kronecker, Product
 from cola.utils import export
 from cola.annotations import PSD, Unitary
 from cola.linalg.algorithm_base import Algorithm, Auto
@@ -61,8 +61,6 @@ def inv(A: LinearOperator, alg: Auto = Auto()):
         - if A is not PSD and small, use LU
         - if A is not PSD and large, use GMRES
     """
-    from .cg import CG
-    from .gmres import GMRES
     match (A.isa(PSD), bool(np.prod(A.shape) <= 1e6)):
         case (True, True):
             alg = Cholesky()
