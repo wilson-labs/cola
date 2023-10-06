@@ -10,7 +10,7 @@ from cola.utils import export
 from cola.annotations import SelfAdjoint, PSD
 from plum import parametric
 from cola.linalg.decompositions.lanczos import lanczos
-from cola.linalg.decompositions.arnoldi import get_arnoldi_matrix
+from cola.linalg.decompositions.arnoldi import arnoldi
 from cola.ops import Diagonal, Identity, ScalarMul
 from cola.ops import BlockDiag, Kronecker, KronSum, I_like, Transpose, Adjoint
 from cola.linalg.inverse.inv import inv
@@ -35,6 +35,8 @@ class LanczosUnary(LinearOperator):
 
     def _matmat(self, V):
         xnp = self.xnp
+        if "start_vector" in self.kwargs.keys():
+            self.kwargs.pop("start_vector")
         Q, T, info = lanczos(self.A, V, **self.kwargs)  # outputs are batched
         self.info.update(info)
         eigvals, P = self.xnp.eigh(xnp.vmap(T.__class__.to_dense)(T))
@@ -59,16 +61,18 @@ class ArnoldiUnary(LinearOperator):
 
     def _matmat(self, V):  # (n,bs)
         xnp = self.xnp
-        Q, H, _, info = get_arnoldi_matrix(A=self.A, rhs=V, **self.kwargs)
+        if "start_vector" in self.kwargs.keys():
+            self.kwargs.pop("start_vector")
+        Q, H, info = arnoldi(A=self.A, start_vector=V, **self.kwargs)
         # Q of shape (n, m, bs) H of shape (m,m,bs)
         self.info.update(info)
-        eigvals, P = self.xnp.eig(H)
+        eigvals, P = self.xnp.eig(H.to_dense())
         norms = self.xnp.norm(V, axis=0)
 
         e0 = self.xnp.canonical(0, (P.shape[1], V.shape[-1]), dtype=P.dtype, device=self.device)
         Pinv0 = self.xnp.solve(P, e0.T)  # (bs, m, m) vs (bs, m)
         out = Pinv0 * norms[:, None]  # (bs, m)
-        Q = self.xnp.cast(Q, dtype=P.dtype)  # (bs, n, m)
+        Q = self.xnp.cast(Q.to_dense(), dtype=P.dtype)  # (bs, n, m)
         # (bs,n,m) @ (bs,m,m) @ (bs, m) -> (bs, n)
         zero_thresh = 10 * xnp.finfo(self.dtype).eps * xnp.max(xnp.abs(eigvals), axis=1, keepdims=True)
         f_eigvals = xnp.where(xnp.abs(eigvals) > zero_thresh, self.f(eigvals), xnp.zeros_like(eigvals))
