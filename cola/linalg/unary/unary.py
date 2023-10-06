@@ -3,7 +3,8 @@ import numpy as np
 from numbers import Number
 from typing import Callable
 from functools import reduce
-import cola
+from cola.fns import lazify
+from cola.linalg.trace.diag_trace import diag
 from cola.ops import LinearOperator
 from cola.utils import export
 from cola.annotations import SelfAdjoint, PSD
@@ -12,6 +13,7 @@ from cola.linalg.decompositions.lanczos import lanczos
 from cola.linalg.decompositions.arnoldi import get_arnoldi_matrix
 from cola.ops import Diagonal, Identity, ScalarMul
 from cola.ops import BlockDiag, Kronecker, KronSum, I_like, Transpose, Adjoint
+from cola.linalg.inverse.inv import inv
 from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos, LU, Cholesky
 from cola.linalg.inverse.cg import CG
@@ -124,8 +126,8 @@ class Eig(Algorithm):
 def apply_unary(f: Callable, A: LinearOperator, alg: Eigh):
     Adense = A.to_dense()
     eigs, V = A.xnp.eigh(Adense)
-    V = cola.lazify(V)
-    D = cola.diag(f(eigs))
+    V = lazify(V)
+    D = diag(f(eigs))
     return V @ D @ V.H
 
 
@@ -133,9 +135,9 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Eigh):
 def apply_unary(f: Callable, A: LinearOperator, alg: Eig):
     Adense = A.to_dense()
     eigs, V = A.xnp.eig(Adense)
-    V = cola.lazify(V)
-    D = cola.diag(f(eigs))
-    return V @ D @ cola.inv(V)
+    V = lazify(V)
+    D = diag(f(eigs))
+    return V @ D @ inv(V)
 
 
 @dispatch
@@ -236,7 +238,7 @@ def pow(A: LinearOperator, alpha: Number, alg=Auto()):
                     new_alg = LU()
                 case _:
                     new_alg = alg
-            return cola.inv(A, new_alg)
+            return inv(A, new_alg)
 
     return apply_unary(lambda x: x**alpha, A, alg)
 
