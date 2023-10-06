@@ -1,6 +1,6 @@
-import cola
 from cola.utils import export
 from cola.ops import LinearOperator
+from cola.linalg.inverse.inv import inv
 
 
 @export
@@ -29,4 +29,4 @@ def solve(A: LinearOperator, rhs, **kwargs):
         >>> x = cola.solve(A, b)
 
     """
-    return cola.inv(A, **kwargs) @ rhs
+    return inv(A, **kwargs) @ rhs

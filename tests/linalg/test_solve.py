@@ -1,4 +1,5 @@
-import cola
+from cola.annotations import PSD
+from cola.linalg.inverse.solve import solve
 from cola.fns import lazify
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends
@@ -14,6 +15,6 @@ def test_random_linear_system(backend):
     rhs = xnp.ones(shape=(A.shape[0], 5), dtype=dtype, device=None)
     soln = xnp.solve(A, rhs)
 
-    approx = cola.solve(cola.PSD(lazify(A)), rhs)
+    approx = solve(PSD(lazify(A)), rhs)
     rel_error = relative_error(soln, approx)
     assert rel_error < 1e-6
