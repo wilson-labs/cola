@@ -2,11 +2,11 @@ from plum import parametric
 from cola.ops import LinearOperator
 from cola.utils import export
 from types import SimpleNamespace
-import pytreeclass as tc
+# import pytreeclass as tc
 
 
 @export
-class Algorithm(tc.TreeClass):
+class Algorithm:
     pass
 
 
