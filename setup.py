@@ -31,7 +31,7 @@ setup(
     install_requires=[
         'scipy',
         'tqdm>=4.38',
-        'cola-plum-dispatch==0.1.1',
+        'cola-plum-dispatch==0.1.2',
         'optree',
         'pytreeclass',
     ],

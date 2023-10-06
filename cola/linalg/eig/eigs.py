@@ -19,7 +19,7 @@ from cola.linalg.unary.unary import Eig, Eigh
 
 @dispatch.abstract
 @export
-def eig(A: LinearOperator, alg: Algorithm = Auto(), k: int = 0, which: str = 'LM'):
+def eig(A: LinearOperator, k: int = -1, which: str = 'LM', alg=Auto()):
     """
     Computes eigenvalues and eigenvectors of a linear operator.
 
@@ -39,26 +39,26 @@ def eig(A: LinearOperator, alg: Algorithm = Auto(), k: int = 0, which: str = 'LM
 
     Example:
         >>> A = MyLinearOperator()
-        >>> eig_vals, eig_vecs = eig(A, k=6, which='LM', tol=1e-4)
+        >>> eig_vals, eig_vecs = eig(A, k=6, which='LM', Auto(tol=1e-4))
     """
 
 
 @dispatch
-def eig(A: LinearOperator, alg: Arnoldi, k=None, which='LM'):
+def eig(A: LinearOperator, k=-1, which='LM', alg: Arnoldi = Arnoldi()):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs, _ = arnoldi_eigs(A, **alg.__dict__)
     return eig_vals[eig_slice], eig_vecs[:, eig_slice]
 
 
 @dispatch
-def eig(A: LinearOperator, alg: Lanczos, k=None, which='LM'):
+def eig(A: LinearOperator, k=-1, which='LM', alg: Lanczos = Lanczos()):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs, _ = lanczos_eigs(A, **alg.__dict__)
     return eig_vals[eig_slice], eig_vecs[:, eig_slice]
 
 
 @dispatch(precedence=-1)
-def eig(A: LinearOperator, alg: Algorithm = Auto(), k=None, which='LM'):
+def eig(A: LinearOperator, k=-1, which='LM', alg: Auto = Auto()):
     """ Auto:
         - if A is Hermitian and small, use Eigh
         - if A is Hermitian and large, use Lanczos
@@ -74,25 +74,25 @@ def eig(A: LinearOperator, alg: Algorithm = Auto(), k=None, which='LM'):
             algorithm = Eig()
         case (False, False):
             algorithm = Arnoldi(**alg.__dict__)
-    return eig(A, algorithm, k, which)
+    return eig(A, k, which, algorithm)
 
 
 @dispatch(precedence=-1)
-def eig(A: LinearOperator, alg: Eig, k=None, which='LM'):
+def eig(A: LinearOperator, k=-1, which='LM', alg: Eig = Eig()):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs = A.xnp.eig(A.to_dense())
     return eig_vals[eig_slice], lazify(eig_vecs[:, eig_slice])
 
 
 @dispatch(precedence=-1)
-def eig(A: LinearOperator, alg: Eigh, k=None, which='LM'):
+def eig(A: LinearOperator, k=-1, which='LM', alg: Eigh = Eigh()):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs = A.xnp.eigh(A.to_dense())
     return eig_vals[eig_slice], Stiefel(lazify(eig_vecs[:, eig_slice]))
 
 
 @dispatch
-def eig(A: Identity, alg: Auto = Auto(), k=0, which="LM"):
+def eig(A: Identity, k=-1, which="LM", alg=Auto()):
     eig_slice = get_slice(k, which)
     xnp = A.xnp
     eig_vals = xnp.ones(shape=(A.shape[0], ), dtype=A.dtype, device=A.device)
@@ -101,7 +101,7 @@ def eig(A: Identity, alg: Auto = Auto(), k=0, which="LM"):
 
 
 @dispatch
-def eig(A: Triangular, alg: Auto = Auto(), k=None, which="LM"):
+def eig(A: Triangular, k=-1, which="LM", alg=Auto()):
     # TODO: take out compute_lower_triangular_eigvecs
     eig_slice = get_slice(k, which)
     xnp = A.xnp
@@ -124,7 +124,7 @@ def compute_lower_triangular_eigvecs(L):
 
 
 @dispatch
-def eig(A: Diagonal, alg: Auto = Auto(), k=None, which="LM"):
+def eig(A: Diagonal, k=-1, which="LM", alg=Auto()):
     eig_slice = get_slice(k, which)
     xnp = A.xnp
     sorted_ind = xnp.argsort(A.diag)
@@ -134,6 +134,8 @@ def eig(A: Diagonal, alg: Auto = Auto(), k=None, which="LM"):
 
 
 def get_slice(num, which):
+    if num == -1:
+        raise ValueError(f"Number of eigenvalues k must be explicitly specified")
     if which == "LM":
         eig_slice = slice(0, num, None)
     elif which == "SM":
