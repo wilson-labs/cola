@@ -24,21 +24,21 @@ def test_general(backend):
     soln_vals = xnp.sort(xnp.array(diag, dtype=dtype, device=None))
     A = SelfAdjoint(lazify(A))
 
-    eig_vals, eig_vecs = eig(A, Auto(tol=1e-6), k=A.shape[0], which="LM")
+    eig_vals, eig_vecs = eig(A, A.shape[0], "LM", Auto(tol=1e-6))
     eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs.to_dense(), dtype)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
     rel_error = relative_error(soln_vals, xnp.sort(eig_vals))
     assert rel_error < _tol
     rel_error = relative_error(A.to_dense(), approx)
     assert rel_error < _tol * 5
-    eig_vals, eig_vecs = eig(A, Auto(tol=1e-6), k=2, which="SM")
+    eig_vals, eig_vecs = eig(A, 2, "SM", Auto(tol=1e-6))
     eig_vals = xnp.cast(eig_vals, dtype)
     rel_error = relative_error(soln_vals[-2:], xnp.sort(eig_vals))
     assert rel_error < _tol
     assert eig_vecs.shape == (10, 2)
 
     A.annotations = set()
-    eig_vals, eig_vecs = eig(A, Arnoldi(tol=1e-6, max_iters=A.shape[-1]), k=A.shape[0])
+    eig_vals, eig_vecs = eig(A, A.shape[0], "LM", Arnoldi(tol=1e-6, max_iters=A.shape[-1]))
     eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs.to_dense(), dtype)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
     rel_error = relative_error(soln_vals, xnp.sort(eig_vals))
@@ -46,7 +46,7 @@ def test_general(backend):
     rel_error = relative_error(A.to_dense(), approx)
     assert rel_error < 5e-2
 
-    eig_vals, eig_vecs = eig(SelfAdjoint(A), Lanczos(tol=1e-6, max_iters=A.shape[-1]), k=A.shape[0])
+    eig_vals, eig_vecs = eig(SelfAdjoint(A), A.shape[0], "LM", Lanczos(tol=1e-6, max_iters=A.shape[-1]))
     eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs.to_dense(), dtype)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
     rel_error = relative_error(soln_vals, xnp.sort(eig_vals))
@@ -64,7 +64,7 @@ def test_Selfadjoint(backend):
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
     soln_vals = xnp.sort(xnp.array(diag, dtype=dtype, device=None))
     A = SelfAdjoint(lazify(A))
-    eig_vals, eig_vecs = eig(A, k=A.shape[0])
+    eig_vals, eig_vecs = eig(A, A.shape[0], "LM", Auto())
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
 
     rel_error = relative_error(soln_vals, eig_vals)
@@ -73,7 +73,7 @@ def test_Selfadjoint(backend):
     rel_error = relative_error(A.to_dense(), approx)
     assert rel_error < _tol
 
-    eig_vals, eig_vecs = eig(A, Lanczos(max_iters=A.shape[-1]), k=A.shape[0])
+    eig_vals, eig_vecs = eig(A, A.shape[0], "LM", Lanczos(max_iters=A.shape[-1]))
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
 
     rel_error = relative_error(soln_vals, eig_vals)
