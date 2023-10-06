@@ -19,6 +19,7 @@
 [![codecov](https://codecov.io/gh/wilson-labs/cola/branch/main/graph/badge.svg?token=bBnkfHv30C)](https://codecov.io/gh/wilson-labs/cola)
 [![PyPI version](https://img.shields.io/pypi/v/cola-ml)](https://pypi.org/project/cola-ml/)
 [![Paper](https://img.shields.io/badge/arXiv-2309.03060-red)](https://arxiv.org/abs/2309.03060)
+[![Downloads](https://static.pepy.tech/badge/cola-ml)](https://pepy.tech/project/cola-ml)
 <!-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wilson-labs/cola/blob/master/docs/notebooks/colabs/all.ipynb) -->
 
 CoLA is a framework for scalable linear algebra, automatically exploiting the structure often found in machine learning problems and beyond.
