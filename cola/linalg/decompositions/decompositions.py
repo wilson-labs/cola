@@ -30,7 +30,7 @@ class LU(Algorithm):
 class Arnoldi(Algorithm):
     """ TODO: docstring"""
     start_vector: Array = None
-    max_iters: int = 1000
+    max_iters: int = 1_000
     tol: float = 1e-6
     pbar: bool = False
 
@@ -43,7 +43,7 @@ class Arnoldi(Algorithm):
 class Lanczos(Algorithm):
     """ TODO: docstring"""
     start_vector: Array = None
-    max_iters: int = 1000
+    max_iters: int = 1_000
     tol: float = 1e-6
     pbar: bool = False
 

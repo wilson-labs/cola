@@ -6,6 +6,7 @@ from cola.utils.test_utils import parametrize, relative_error
 from cola.linalg.logdet.logdet import logdet
 from cola.linalg.algorithm_base import Auto
 from cola.linalg.decompositions.decompositions import Lanczos
+from cola.linalg.trace.diag_trace import Hutch, Exact
 from cola.backends import all_backends
 
 _exclude = (slice(None), slice(None), ['psd_identity', 'psd_scalarmul', 'selfadj_tridiagonal'])
@@ -34,13 +35,16 @@ def test_logdet(backend, precision, op_name):
         assert e2 < 3 * tol, f"Dense logdet failed on {type(A)} with error {e2}"
     diag = xnp.diag(Adense)
     assert relative_error(xnp.diag(diag.mean() + 0. * diag), Adense) > 1e-5
-    A3 = PSD(A2) if A.isa(PSD) else A2
-    # l3 = logdet(A3, tol=tol, method='iterative-stochastic', vtol=3e-2)
-    # l3 = logdet(A3, log_alg=Lanczos(), trace_alg=Auto())
-    l3 = logdet(A3, log_alg=Lanczos(), trace_alg=Auto())
+    if A.isa(PSD):
+        A3 = PSD(A2)
+        alg = Lanczos()
+    else:
+        A3 = A2
+        # alg = Arnoldi()
+        alg = Auto()
+    l3 = logdet(A3, log_alg=alg, trace_alg=Hutch())
     e3 = relative_error(l0, l3)
     assert e3 < 3e-1, f"SLQ logdet failed on {type(A)} with error {e3}"
-    # l4 = logdet(A3, tol=tol, method='iterative-exact', vtol=tol)
-    l4 = logdet(A3, log_alg=Auto(), trace_alg=Auto())
+    l4 = logdet(A3, log_alg=alg, trace_alg=Exact())
     e4 = relative_error(l0, l4)
     assert e4 < 10 * tol, f"Tr(log(A)) logdet failed on {type(A)} with error {e4}"
