@@ -1,57 +1,31 @@
 from functools import reduce
 from cola.utils import export, dispatch
-from cola.ops import LinearOperator, I_like, Diagonal, Identity
-from cola.ops import BlockDiag, ScalarMul, Sum, Dense, Array
-from cola.ops import Kronecker, KronSum
-from cola.linalg.algorithm_base import Auto
+from cola.ops.operators import LinearOperator, I_like, Diagonal, Identity
+from cola.ops.operators import BlockDiag, ScalarMul, Sum, Dense, Array
+from cola.ops.operators import Kronecker, KronSum
+from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.trace.diagonal_estimation import Hutch, HutchPP, Exact
 
 
-@dispatch
+@dispatch.abstract
 @export
-def diag(v: Array, k=0):
+def diag(A: LinearOperator, k: int, alg: Algorithm = Auto()):
+    """
+    Computes diagonal
+    """
+
+
+@dispatch
+def diag(v: Array, k: int = 0, alg: Algorithm = Auto()):
     """ Constructs a diagonal matrix with the given vector on the diagonal. """
     assert k == 0, "Off diagonal diag not yet supported"
     assert len(v.shape) == 1, f"Unknown input {v.shape}"
     return Diagonal(v)
 
 
-# @dispatch
-# def diag(A: LinearOperator, k=0, alg=Auto()):
-#     r""" Extract the (kth) diagonal of a linear operator.
-
-#     Uses either :math:`O(\tfrac{1}{\delta^2})` time stochastic estimation (Hutchinson estimator)
-#     or a deterministic :math:`O(n)` time algorithm if :math:`\delta < 1/\sqrt{10n}`, where
-#     :math:`\delta=` tol is the standard deviation of the estimate.
-#     If you unly need unbiased estimates, set tol to be very high.
-
-#     Args:
-#         A (LinearOperator): The linear operator to compute the logdet of.
-#         tol (float, optional): Tolerance for the variance (std) of the solution,
-#          returns a stochastic estimate if large enough to save a substantial computation.
-#          If you want the stochastic estimate, you will need to choose fairly large values,
-#          e.g. 1e-2. Default: 1e-6.
-#         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
-#         method (str, optional): Directly specify method, defaults to 'auto',
-#          options are 'auto', 'exact', 'approx'.
-
-#     Returns:
-#         Array: diag"""
-#     kws = dict(tol=1e-6, pbar=False, max_iters=5000, method='auto')
-#     kws.update(kwargs)
-#     method = kws.pop('method')
-#     exact_faster = (kws['tol'] < 1 / np.sqrt(10 * A.shape[-1]))
-#     if method == 'exact' or (method == 'auto' and exact_faster):
-#         out, _ = exact_diag(A, k=k, **kws)
-#     elif method == 'approx' or (method == 'auto' and exact_faster):
-#         out, _ = approx_diag(A, k=k, **kws)
-#     # out.info = info
-#     return out
-
-
 # ########### BASE CASES #############
 @dispatch(precedence=-1)
-def diag(A: LinearOperator, k, alg: Hutch | HutchPP | Exact):
+def diag(A: LinearOperator, k: int, alg: Hutch | HutchPP | Exact):
     return alg(A, k)
 
 
@@ -59,13 +33,13 @@ def diag(A: LinearOperator, k, alg: Hutch | HutchPP | Exact):
 
 
 @dispatch
-def diag(A: Dense, k=0, alg=Auto()):
+def diag(A: Dense, k: int = 0, alg: Algorithm = Auto()):
     xnp = A.xnp
     return xnp.diag(A.A, diagonal=k)
 
 
 @dispatch
-def diag(A: Identity, k=0, alg=Auto()):
+def diag(A: Identity, k: int = 0, alg: Algorithm = Auto()):
     if k == 0:
         return A.xnp.ones((A.shape[0], ), A.dtype, device=A.device)
     else:
@@ -73,7 +47,7 @@ def diag(A: Identity, k=0, alg=Auto()):
 
 
 @dispatch
-def diag(A: Diagonal, k=0, alg=Auto()):
+def diag(A: Diagonal, k: int = 0, alg: Algorithm = Auto()):
     if k == 0:
         return A.diag
     else:
@@ -81,21 +55,20 @@ def diag(A: Diagonal, k=0, alg=Auto()):
 
 
 @dispatch
-def diag(A: Sum, k=0, alg=Auto()):
+def diag(A: Sum, k: int = 0, alg: Algorithm = Auto()):
     out = sum(diag(M, k, alg) for M in A.Ms)
-    # out.info = {'sum': [(M.info if hasattr(M,'info') else {}) for M in A.Ms]}
     return out
 
 
 @dispatch
-def diag(A: BlockDiag, k=0, alg=Auto()):
+def diag(A: BlockDiag, k: int = 0, alg: Algorithm = Auto()):
     assert k == 0, "Havent filled this case yet, need to pad with 0s"
     diags = [[diag(M, k, alg)] * m for M, m in zip(A.Ms, A.multiplicities)]
     return A.xnp.concatenate([item for sublist in diags for item in sublist])
 
 
 @dispatch
-def diag(A: ScalarMul, k=0, alg=Auto()):
+def diag(A: ScalarMul, k: int = 0, alg: Algorithm = Auto()):
     return A.c * diag(I_like(A), k, alg)
 
 
@@ -104,7 +77,7 @@ def product(c):
 
 
 @dispatch
-def diag(A: Kronecker, k=0, alg=Auto()):
+def diag(A: Kronecker, k: int = 0, alg: Algorithm = Auto()):
     assert k == 0, "Need to verify correctness of rule for off diagonal case"
     ds = [diag(M, k, alg) for M in A.Ms]
     # compute outer product of the diagonals
@@ -113,7 +86,7 @@ def diag(A: Kronecker, k=0, alg=Auto()):
 
 
 @dispatch
-def diag(A: KronSum, k=0, alg=Auto()):
+def diag(A: KronSum, k: int = 0, alg: Algorithm = Auto()):
     assert k == 0, "Need to verify correctness of rule for off diagonal case"
     ds = [diag(M, k, alg) for M in A.Ms]
     # compute outer product of the diagonals
@@ -123,7 +96,7 @@ def diag(A: KronSum, k=0, alg=Auto()):
 
 @dispatch
 @export
-def trace(A: LinearOperator, alg=Auto()):
+def trace(A: LinearOperator, alg: Algorithm = Auto()):
     r""" Compute the trace of a linear operator tr(A).
 
     Uses either :math:`O(\tfrac{1}{\delta^2})` time stochastic estimation (Hutchinson estimator)
@@ -144,9 +117,9 @@ def trace(A: LinearOperator, alg=Auto()):
     Returns:
         Array: trace"""
     assert A.shape[0] == A.shape[1], "Can't trace non square matrix"
-    return diag(A, k=0, alg=alg).sum()
+    return diag(A, 0, alg).sum()
 
 
 @dispatch
-def trace(A: Kronecker, alg=Auto()):
+def trace(A: Kronecker, alg: Algorithm = Auto()):
     return product([trace(M, alg) for M in A.Ms])
