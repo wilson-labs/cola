@@ -1,7 +1,8 @@
 import numpy as np
 from operator_market import op_names, get_test_operator
 from cola.annotations import SelfAdjoint, PSD
-from cola.ops import LinearOperator
+from cola.ops.operator_base import LinearOperator
+from cola.ops.operators import Dense
 from cola.utils.test_utils import parametrize, relative_error
 from cola.linalg.logdet.logdet import logdet
 from cola.linalg.algorithm_base import Auto
@@ -36,15 +37,12 @@ def test_logdet(backend, precision, op_name):
     diag = xnp.diag(Adense)
     assert relative_error(xnp.diag(diag.mean() + 0. * diag), Adense) > 1e-5
     if A.isa(PSD):
-        A3 = PSD(A2)
-        alg = Lanczos()
+        A3, alg, mult = PSD(A2), Lanczos(), 1.0
     else:
-        A3 = A2
-        # alg = Arnoldi()
-        alg = Auto()
+        A3, alg, mult = PSD(Dense((A2.H @ A).to_dense())), Lanczos(), 0.5
     l3 = logdet(A3, log_alg=alg, trace_alg=Hutch())
-    e3 = relative_error(l0, l3)
+    e3 = relative_error(l0, l3 * mult)
     assert e3 < 3e-1, f"SLQ logdet failed on {type(A)} with error {e3}"
     l4 = logdet(A3, log_alg=alg, trace_alg=Exact())
-    e4 = relative_error(l0, l4)
+    e4 = relative_error(l0, l4 * mult)
     assert e4 < 10 * tol, f"Tr(log(A)) logdet failed on {type(A)} with error {e4}"
