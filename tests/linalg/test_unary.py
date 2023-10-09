@@ -5,6 +5,8 @@ from operator_market import op_names, get_test_operator
 from cola.annotations import SelfAdjoint
 from cola.ops import LinearOperator
 from cola.linalg.algorithm_base import Auto
+from cola.linalg.decompositions.decompositions import Lanczos
+from cola.linalg.decompositions.decompositions import Arnoldi
 from cola.utils.test_utils import parametrize, relative_error
 from cola.backends import all_backends
 
@@ -26,10 +28,14 @@ def test_unary(backend, precision, op_name, fn_name):
     Anp = np.array(Adense)
     fv = spfn(Anp) @ np.array(v)
     fv1 = np.array(fn(A, Auto(tol=tol)) @ v)
-    # Q = fn(A, tol=tol, method='auto')
     e1 = relative_error(fv, fv1)
     assert e1 < 3 * tol, f"Dispatch rules failed on {type(A)} with error {e1}"
-    A3 = SelfAdjoint(A2) if A.isa(SelfAdjoint) else A2
+    if A.isa(SelfAdjoint):
+        A3 = SelfAdjoint(A2)
+        alg = Lanczos(tol=tol)
+    else:
+        A3 = A2
+        alg = Arnoldi(tol=tol)
     if np.prod(A.shape) < 1000:
         fv2 = np.array(fn(A3, Auto(tol=tol)) @ v)
         e2 = relative_error(fv, fv2)
@@ -37,7 +43,6 @@ def test_unary(backend, precision, op_name, fn_name):
     diag = xnp.diag(Adense)
     not_scalarmul = relative_error(xnp.diag(diag.mean() + 0. * diag), Adense) > 1e-5
     if not_scalarmul:
-        # fv3 = np.array(fn(A3, tol=tol, method='iterative') @ v)
-        fv3 = np.array(fn(A3, Auto(tol=tol)) @ v)
+        fv3 = np.array(fn(A3, alg) @ v)
         e3 = relative_error(fv, fv3)
         assert e3 < 3 * tol, f"SLQ logdet failed on {type(A)} with error {e3}"
