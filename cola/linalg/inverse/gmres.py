@@ -10,7 +10,8 @@ from dataclasses import dataclass
 @export
 @dataclass
 class GMRES(Algorithm):
-    """ Generalized Minimal Residual algorith (GMRES) for soving Ax=b or AX=B (multiple rhs).
+    """
+    Generalized Minimal Residual algorith (GMRES) for soving Ax=b or AX=B (multiple rhs).
 
     The runtime is bounded by :math:`O(\\sqrt{\\kappa})` and
     it uses :math:`O(m n)` memory.

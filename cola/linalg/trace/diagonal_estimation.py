@@ -7,20 +7,18 @@ from dataclasses import dataclass
 
 @export
 @dataclass
-class Hutch(Algorithm):
-    tol: float = 3e-2
-    max_iters: int = 10000
-    bs: int = 100
-    pbar: bool = False
-    rand: str = 'normal'  # or 'rademacher'
-
-    def __call__(self, A, k):
-        return hutchinson_diag_estimate(A, k, **self.__dict__)[0]
-
-
-@export
-@dataclass
 class Exact(Algorithm):
+    """
+    Exact algorithm to compute, element-by-element, the diagonal of the matrix.
+    That is, each element of the diagoinal :math:`A_{i,i}` is computed as
+    :math:`e_{i}^{*} A(e_{i})`.
+    For efficiency, this procedure is done through blocks of elements,
+    :math:`A [e_{i_{1}}, \\cdots, e_{i_{B}}]` where :math:`B` is the block size.
+
+    Args:
+        bs (int, optional): Block size.
+        pbar (bool, optional): Whether to show progress bar.
+    """
     bs: int = 100
     pbar: bool = False
 
@@ -30,21 +28,51 @@ class Exact(Algorithm):
 
 @export
 @dataclass
+class Hutch(Algorithm):
+    """
+    Hutchinson's algorithm for estimating the trace of a matrix function.
+    Basically, this algorithm uses random probes to approximate
+    :math:`\\text{tr}(f(A))`.
+
+    Args:
+        tol (float, optional): Approximation relative tolerance.
+        max_iters (int, optional): The maximum number of iterations to run.
+        bs (int, optional): Number of probes.
+        rand (str, optional): type of random probes (either Normal or Rademacher)
+        pbar (bool, optional): Whether to show progress bar.
+    """
+    tol: float = 3e-2
+    max_iters: int = 10_000
+    bs: int = 100
+    rand: str = 'normal'
+    pbar: bool = False
+
+    def __call__(self, A, k):
+        return hutchinson_diag_estimate(A, k, **self.__dict__)[0]
+
+
+@export
+@dataclass
 class HutchPP(Algorithm):
+    """
+    Hutch++ is an improvement on the Hutchinson's estimator introduced in
+    Meyer et al. 2020: Hutch++: Optimal Stochastic Trace Estimator.
+
+    Args:
+        tol (float, optional): Approximation relative tolerance.
+        max_iters (int, optional): The maximum number of iterations to run.
+        bs (int, optional): Number of probes.
+        rand (str, optional): type of random probes (either Normal or Rademacher)
+        pbar (bool, optional): Whether to show progress bar.
+    """
     tol: float = 3e-2
     max_iters: int = 10000
     bs: int = 100
+    rand: str = 'normal'
     pbar: bool = False
-    rand: str = 'normal'  # or 'rademacher'
 
     def __call__(self, A, k):
         raise NotImplementedError
-        # return hutchpp_diag_estimate(A, k, **self.__dict__)[0]
-
-
-# @diag.dispatch(precedence=-1)
-# def diag(A: LinearOperator, k=0, alg: (Hutch | HutchPP | Exact) = Auto()):
-#     return alg(A, k)
 
 
 def get_I_chunk_like(A: LinearOperator, i, bs, shift=0):
@@ -96,7 +124,6 @@ def exact_diag_bwd(res, grads, unflatten, *args, **kwargs):
     op_args, _ = res
     A = unflatten(op_args)
     xnp = A.xnp
-    # k, bs, tol, max_iters, pbar = args[1:]
     k = kwargs.get('k')
     bs = kwargs.get('bs')
 
@@ -116,8 +143,6 @@ def exact_diag_bwd(res, grads, unflatten, *args, **kwargs):
         for i in range(len(d_p)):
             d_p[i] += dp_all[i]
     dA = unflatten(d_p)
-    # print(dA)
-    # print(args,kwargs)
     return (dA, )
 
 
@@ -145,7 +170,7 @@ def hutchinson_diag_estimate(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters
 
     @xnp.jit
     def body(state):
-        # TODO: fix randomness when using with jax
+        # TODO: fix randomness when using with JAX
         i, diag_sum, diag_sumsq, key = state
         key = xnp.next_key(key)
         z = xnp.randn(A.shape[0], bs, dtype=A.dtype, key=key, device=A.device)
@@ -167,7 +192,6 @@ def hutchinson_diag_estimate(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters
         return (state[0] == 0) | ((state[0] < max_iters) & (err(state) > tol))
 
     while_loop, infos = xnp.while_loop_winfo(err, tol, max_iters, pbar=pbar)
-    # while_loop = xnp.while_loop
     zeros = xnp.zeros((A.shape[0] - abs(k), ), dtype=A.dtype, device=A.device)
     n, diag_sum, *_ = while_loop(cond, body, (0, zeros, zeros, xnp.PRNGKey(42)))
     mean = diag_sum / (n * bs)
