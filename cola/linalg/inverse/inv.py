@@ -19,7 +19,20 @@ from cola.linalg.inverse.gmres import GMRES
 
 @export
 def solve(A, b, alg=Auto()):
-    """ Inverse expresse das a solve operation"""
+    """ Computes Linear solve of a linear operator. Equivalent to cola.inv
+
+    Args:
+        A (LinearOperator): The linear operator to compute the inverse of.
+        b (Array): The right hand side of the linear system of shape (d, ) or (d, k)
+        alg (Algorithm, optional): The algorithm to use for the solves.
+
+    Returns:
+        Array: The solution of the linear system of shape (d, ) or (d, k)
+
+    Example:
+        >>> A = MyLinearOperator()
+        >>> x = cola.solve(A, b, alg=Auto(max_iters=10, pbar=True))
+    """
     return inv(A, alg) @ b
 
 
@@ -30,14 +43,14 @@ def inv(A: LinearOperator, alg: Algorithm = Auto()):
 
     Args:
         A (LinearOperator): The linear operator to compute the inverse of.
-        alg (Algorithm, optional): The algorithm to use for non dispatch base case.
+        alg (Algorithm, optional): The algorithm to use for the solves.
 
     Returns:
         LinearOperator: The inverse of the linear operator.
 
     Example:
         >>> A = MyLinearOperator()
-        >>> x = cola.inverse(A, alg=Auto(tol=1e-3)) @ b
+        >>> x = cola.inverse(A, alg=CG(tol=1e-3)) @ b
 
     """
 
