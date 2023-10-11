@@ -1,7 +1,7 @@
 from cola import SelfAdjoint, Unitary
 from cola.fns import lazify
 from cola.ops import Array, LinearOperator, Dense, Tridiagonal
-from cola.utils import export
+# from cola.utils import export
 import cola
 
 
@@ -46,7 +46,7 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
 
 # @export
 # @iterative_autograd(lanczos_eig_bwd)
-@export
+# @export
 def lanczos_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7,
                  pbar: bool = False):
     """

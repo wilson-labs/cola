@@ -27,7 +27,7 @@ Algorithms
     :show-inheritance:
 
 
-Eigs
+Eigenvalues and Eigenvectors
 -----
 
 .. autofunction:: cola.linalg.eig
@@ -67,23 +67,18 @@ Algorithms
 ~~~~~~~~~~
 
    .. autoclass:: cola.linalg.Auto
-    :no-index:
     :members:
     :show-inheritance:
    .. autoclass:: cola.linalg.Lanczos
-    :no-index:
     :members:
     :show-inheritance:
    .. autoclass:: cola.linalg.Arnoldi
-    :no-index:
     :members:
     :show-inheritance:
    .. autoclass:: cola.linalg.Eig
-    :no-index:
     :members:
     :show-inheritance:
    .. autoclass:: cola.linalg.Eigh
-    :no-index:
     :members:
     :show-inheritance:
 
@@ -92,6 +87,7 @@ Trace, Diagonal, Frobenius Norm
 
 .. autofunction:: cola.linalg.trace
 .. autofunction:: cola.linalg.diag
+.. autofunction:: cola.linalg.norm
 
 Algorithms
 ~~~~~~~~~~
@@ -117,23 +113,18 @@ Log Algs
 ~~~~~~~~~~
 
    .. autoclass:: cola.linalg.Auto
-    :no-index:
     :members:
     :show-inheritance:
    .. autoclass:: cola.linalg.Lanczos
-    :no-index:
     :members:
     :show-inheritance:
    .. autoclass:: cola.linalg.Arnoldi
-    :no-index:
     :members:
     :show-inheritance:
    .. autoclass:: cola.linalg.Cholesky
-    :no-index:
     :members:
     :show-inheritance:
    .. autoclass:: cola.linalg.LU
-    :no-index:
     :members:
     :show-inheritance:
 
@@ -141,14 +132,10 @@ Trace Algs
 ~~~~~~~~~~
 
    .. autoclass:: cola.linalg.Auto
-    :no-index:
     :members:
    .. autoclass:: cola.linalg.Hutch
-    :no-index:
     :members:
    .. autoclass:: cola.linalg.Exact
-    :no-index:
     :members:
    .. autoclass:: cola.linalg.HutchPP
-    :no-index:
     :members:

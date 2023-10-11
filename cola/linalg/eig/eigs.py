@@ -17,16 +17,15 @@ from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos
 from cola.linalg.unary.unary import Eig, Eigh
 
 
-@dispatch.abstract
 @export
+@dispatch.abstract
 def eig(A: LinearOperator, k: int = -1, which: str = 'LM', alg: Algorithm = Auto()):
     """
     Computes eigenvalues and eigenvectors of a linear operator.
 
     Args:
         A (LinearOperator): The linear operator for which eigenvalues and eigenvectors are computed.
-        k (int): The desired number of eigenvalues and eigenvectors.
-         Default is None which gets all available.
+        k (int): The desired number of eigenvalues and eigenvectors. Must be specified.
         which (str): From what part of the spectrum would de eigenvalues be fetched.
          Default is 'LM' (largest in magnitude) but alternatively you can use 'SM'
          (smallest in magnitude).

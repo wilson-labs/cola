@@ -2,7 +2,7 @@ from cola import Stiefel
 from cola.ops import LinearOperator
 from cola.ops import Array, Dense
 from cola.ops import Householder, Product
-from cola.utils import export
+# from cola.utils import export
 from cola import lazify
 import cola
 
@@ -34,7 +34,6 @@ import cola
 
 # @export
 # @iterative_autograd(arnoldi_eigs_bwd)
-@export
 def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7,
                  use_householder: bool = False, pbar: bool = False):
     """
@@ -63,7 +62,6 @@ def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
     return eigvals, eigvectors, info
 
 
-@export
 def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7, use_householder: bool = False,
             pbar: bool = False):
     """

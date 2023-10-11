@@ -17,6 +17,10 @@ class Cholesky(Algorithm):
     Cholesky algorithm for decomposing a positive definite operator as
     :math:`A = L L^{*}`,
     where :math:`L` is a lower triangular operator.
+
+    Example:
+        >>> A = MyLinearOperator()
+        >>> L = cola.linalg.decompositions.Cholesky()(A)
     """
     def __call__(self, A: LinearOperator):
         return cholesky(A)
@@ -26,10 +30,14 @@ class Cholesky(Algorithm):
 class LU(Algorithm):
     """
     LU algorithm for decomposing a general square operator as
-    :math:`PA = LU`,
+    :math:`A = PLU`,
     where :math:`P` is a permutation operator,
     :math:`L` is a lower triangular operator
     and :math:`U` is an upper triangular operator.
+
+    Example:
+        >>> A = MyLinearOperator()
+        >>> P,L,U = cola.linalg.decompositions.LU()(A)
     """
     def __call__(self, A: LinearOperator):
         return plu(A)
@@ -49,6 +57,10 @@ class Arnoldi(Algorithm):
         max_iters (int, optional): The maximum number of iterations to run.
         tol (float, optional): Relative error tolerance.
         pbar (bool, optional): Whether to show progress bar.
+
+    Example:
+        >>> A = MyLinearOperator()
+        >>> Q,H,info = Arnoldi(max_iters=100,pbar=True)(A)
     """
     start_vector: Array = None
     max_iters: int = 1_000
@@ -73,6 +85,10 @@ class Lanczos(Algorithm):
         max_iters (int, optional): The maximum number of iterations to run.
         tol (float, optional): Relative error tolerance.
         pbar (bool, optional): Whether to show progress bar.
+
+    Example:
+        >>> A = MyLinearOperator()
+        >>> Q,T,info = Lanczos(max_iters=100,pbar=True)(A)
     """
     start_vector: Array = None
     max_iters: int = 1_000
@@ -84,7 +100,6 @@ class Lanczos(Algorithm):
 
 
 @dispatch
-@export
 def cholesky(A: LinearOperator):
     """ Performs a cholesky decomposition A=LL* of a linear operator A.
         The returned operator L with triangular structure.
@@ -116,7 +131,6 @@ def cholesky(A: BlockDiag):
 
 
 @dispatch
-@export
 def plu(A: LinearOperator):
     """ Performs a cholesky decomposition A=PLU of a linear operator A.
         The returns P, L, U as linear operators, but represented using
