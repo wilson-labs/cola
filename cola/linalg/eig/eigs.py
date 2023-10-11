@@ -33,13 +33,13 @@ def eig(A: LinearOperator, k: int = -1, which: str = 'LM', alg: Algorithm = Auto
         alg (Algorithm): (Auto, Eig, Eigh, Arnoldi, Lanczos)
 
     Returns:
-        Tuple[Array, Array]: A tuple containing eigenvalues and eigenvectors.
+        Tuple[Array, LinearOperator]: A tuple containing eigenvalues and eigenvectors.
          The eigenvalues are given by eig_vals and the eigenvectors are given
          by eig_vecs.
 
     Example:
         >>> A = MyLinearOperator()
-        >>> eig_vals, eig_vecs = eig(A, k=6, which='LM', Auto(tol=1e-4))
+        >>> eig_vals, eig_vecs = eig(A, k=6, which='LM', alg=Auto(tol=1e-4))
     """
 
 

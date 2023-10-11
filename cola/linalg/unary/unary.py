@@ -84,7 +84,8 @@ class ArnoldiUnary(LinearOperator):
 @dispatch.abstract
 @export
 def apply_unary(f: Callable, A: LinearOperator, alg: Algorithm):
-    """ Generic apply a unary function f to a linear operator A: f(A)
+    """ Generic apply a unary function :math:`f` to a linear operator :math:`A`.
+    That is, :math:`f(A)`.
 
     Args:
         f (Callable): The function to apply.
@@ -209,7 +210,8 @@ def exp(A: KronSum, alg=Auto()):
 @dispatch
 @export
 def log(A: LinearOperator, alg=Auto()):
-    """ Computes the matrix logarithm log(A) of PSD matrix A
+    """ Computes the matrix logarithm :math:`log(A)` of positive
+    definite operator :math:`A`.
 
     Args:
         A (LinearOperator): The linear operator to compute f(A) with.
@@ -224,7 +226,8 @@ def log(A: LinearOperator, alg=Auto()):
 @dispatch
 @export
 def pow(A: LinearOperator, alpha: Number, alg=Auto()):
-    """ Computes the matrix power A^alpha of a matrix A.
+    """ Computes the matrix power :math:`A^{\\alpha}` of an operator :math:`A`,
+    where :math:`\\alpha` is the coefficient.
 
     Args:
         A (LinearOperator): The linear operator to compute f(A) with.
@@ -264,7 +267,8 @@ def pow(A: Kronecker, alpha: Number, alg=Auto()):
 @dispatch
 @export
 def sqrt(A: LinearOperator, alg=Auto()):
-    """ Computes the matrix sqrt A^{1/2} of a matrix A using the principal branch.
+    """ Computes the square root, :math:`A^{1/2}`
+    of an operator :math:`A` using the principal branch.
 
     Args:
         A (LinearOperator): The linear operator to compute f(A) with.
@@ -278,7 +282,8 @@ def sqrt(A: LinearOperator, alg=Auto()):
 @dispatch
 @export
 def isqrt(A: LinearOperator, alg=Auto()):
-    """ Computes the matrix inverse sqrt A^{-1/2} of a matrix A using the principal branch.
+    """ Computes the matrix inverse :math:`A^{-1/2}` of an
+    operator :math:`A` using the principal branch.
 
     Args:
         A (LinearOperator): The linear operator to compute f(A) with.

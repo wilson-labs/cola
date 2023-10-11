@@ -14,7 +14,7 @@ _small_value = 1e-40
 class CG(Algorithm):
     """ Conjugate gradients algorithm Solves Ax=b or AX=B (multiple rhs).
 
-    The runtime is bounded by :math:`O(\\ sqrt{\\kappa})` and
+    The runtime is bounded by :math:`O(\\sqrt{\\kappa})` and
     it uses :math:`O(n)` memory.
     Where :math:`\\kappa` is the condition number of the linear operator.
     Optionally, you can use a preconditioner (approx of A⁻¹) to accelerate convergence.
