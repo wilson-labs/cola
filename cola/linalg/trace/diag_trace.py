@@ -5,6 +5,7 @@ from cola.ops.operators import BlockDiag, ScalarMul, Sum, Dense, Array
 from cola.ops.operators import Kronecker, KronSum
 from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.trace.diagonal_estimation import Hutch, HutchPP, Exact
+import numpy as np
 
 
 @dispatch.abstract
@@ -16,16 +17,27 @@ def diag(A: LinearOperator, k: int, alg: Algorithm = Auto()):
 
 
 @dispatch
-def diag(v: Array, k: int = 0, alg: Algorithm = Auto()):
+def diag(v: Array, k: int = 0):
     """ Constructs a diagonal matrix with the given vector on the diagonal. """
     assert k == 0, "Off diagonal diag not yet supported"
+    assert not isinstance(v, LinearOperator), "This diag is for constructing diagonal matrices"
     assert len(v.shape) == 1, f"Unknown input {v.shape}"
     return Diagonal(v)
 
 
 # ########### BASE CASES #############
 @dispatch(precedence=-1)
-def diag(A: LinearOperator, k: int, alg: Hutch | HutchPP | Exact):
+def diag(A: LinearOperator, k: int = 0, alg: Auto = Auto()):
+    tol = alg.__dict__.get("tol", 1e-6)
+    exact_faster = tol < 1 / np.sqrt(10 * np.prod(A.shape))
+    if exact_faster:
+        return diag(A, k, Exact())
+    else:
+        return diag(A, k, Hutch(**alg.__dict__))
+
+
+@dispatch(precedence=-1)
+def diag(A: LinearOperator, k: int = 0, alg: Hutch | HutchPP | Exact = Exact()):
     return alg(A, k)
 
 
