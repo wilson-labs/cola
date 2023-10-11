@@ -1,4 +1,5 @@
 from plum import dispatch
+from dataclasses import dataclass
 import numpy as np
 from numbers import Number
 from typing import Callable
@@ -118,10 +119,14 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Arnoldi):
     return ArnoldiUnary(A, f, **alg.__dict__)
 
 
+@export
+@dataclass
 class Eigh(Algorithm):
     """ Docstring here"""
 
 
+@export
+@dataclass
 class Eig(Algorithm):
     """ Docstring here"""
 

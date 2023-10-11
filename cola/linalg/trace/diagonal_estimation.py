@@ -1,10 +1,8 @@
 import numpy as np
 from cola.utils import export
 from cola.ops import I_like, LinearOperator
-# from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.algorithm_base import Algorithm
 from dataclasses import dataclass
-# from cola.linalg.trace.diag_trace import diag
 
 
 @export

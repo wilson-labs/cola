@@ -27,8 +27,34 @@ Algorithms
     :show-inheritance:
 
 
+Eigs
+-----
+
+.. autofunction:: cola.linalg.eig
+
+Algorithms
+~~~~~~~~~~
+
+   .. autoclass:: cola.linalg.Auto
+    :no-index:
+    :members:
+    :show-inheritance:
+   .. autoclass:: cola.linalg.Arnoldi
+    :members:
+    :show-inheritance:
+   .. autoclass:: cola.linalg.Lanczos
+    :members:
+    :show-inheritance:
+   .. autoclass:: cola.linalg.Eig
+    :members:
+    :show-inheritance:
+   .. autoclass:: cola.linalg.Eigh
+    :members:
+    :show-inheritance:
+
+
 Matrix Functions: exp, log, sqrt, isqrt, etc.
------------------
+----------------------------------------------
 
 .. autofunction:: cola.linalg.exp
 .. autofunction:: cola.linalg.log
@@ -41,23 +67,28 @@ Algorithms
 ~~~~~~~~~~
 
    .. autoclass:: cola.linalg.Auto
+    :no-index:
     :members:
     :show-inheritance:
    .. autoclass:: cola.linalg.Lanczos
+    :no-index:
     :members:
     :show-inheritance:
    .. autoclass:: cola.linalg.Arnoldi
-    :members:
-    :show-inheritance:
-   .. autoclass:: cola.linalg.Eigh
+    :no-index:
     :members:
     :show-inheritance:
    .. autoclass:: cola.linalg.Eig
+    :no-index:
+    :members:
+    :show-inheritance:
+   .. autoclass:: cola.linalg.Eigh
+    :no-index:
     :members:
     :show-inheritance:
 
 Trace, Diagonal, Frobenius Norm
------------------
+--------------------------------
 
 .. autofunction:: cola.linalg.trace
 .. autofunction:: cola.linalg.diag
@@ -66,13 +97,14 @@ Algorithms
 ~~~~~~~~~~
 
    .. autoclass:: cola.linalg.Auto
+    :no-index:
     :members:
     :show-inheritance:
-   .. autoclass:: cola.linalg.Hutchinson
+   .. autoclass:: cola.linalg.Hutch
     :members:
-   .. autoclass:: cola.linalg.ExactTrace
+   .. autoclass:: cola.linalg.Exact
     :members:
-   .. autoclass:: cola.linalg.HutchPlusPlus
+   .. autoclass:: cola.linalg.HutchPP
     :members:
 
 Log Determinants
@@ -85,17 +117,23 @@ Log Algs
 ~~~~~~~~~~
 
    .. autoclass:: cola.linalg.Auto
+    :no-index:
     :members:
     :show-inheritance:
    .. autoclass:: cola.linalg.Lanczos
+    :no-index:
     :members:
     :show-inheritance:
    .. autoclass:: cola.linalg.Arnoldi
+    :no-index:
     :members:
+    :show-inheritance:
    .. autoclass:: cola.linalg.Cholesky
+    :no-index:
     :members:
     :show-inheritance:
    .. autoclass:: cola.linalg.LU
+    :no-index:
     :members:
     :show-inheritance:
 
@@ -103,10 +141,14 @@ Trace Algs
 ~~~~~~~~~~
 
    .. autoclass:: cola.linalg.Auto
+    :no-index:
     :members:
-   .. autoclass:: cola.linalg.Hutchinson
+   .. autoclass:: cola.linalg.Hutch
+    :no-index:
     :members:
-   .. autoclass:: cola.linalg.ExactTrace
+   .. autoclass:: cola.linalg.Exact
+    :no-index:
     :members:
-   .. autoclass:: cola.linalg.HutchPlusPlus
+   .. autoclass:: cola.linalg.HutchPP
+    :no-index:
     :members:
