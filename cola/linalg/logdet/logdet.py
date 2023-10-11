@@ -18,7 +18,7 @@ def product(xs):
 
 
 @export
-def logdet(A: LinearOperator, log_alg=Auto(), trace_alg=Auto()):
+def logdet(A: LinearOperator, log_alg: Auto(), trace_alg: Auto()):
     r""" Computes logdet of a linear operator.
 
     For large inputs (or with method='iterative'),
@@ -44,9 +44,9 @@ def logdet(A: LinearOperator, log_alg=Auto(), trace_alg=Auto()):
     return ld
 
 
-@dispatch.abstract
 @export
-def slogdet(A: LinearOperator, log_alg: Algorithm = Auto(), trace_alg: Algorithm = Auto()):
+@dispatch.abstract
+def slogdet(A: LinearOperator, log_alg: Auto(), trace_alg: Auto()):
     r""" Computes sign and logdet of a linear operator. such that det(A) = sign(A) exp(logdet(A))
 
     For large inputs (or with method='iterative'),
@@ -72,7 +72,7 @@ def slogdet(A: LinearOperator, log_alg: Algorithm = Auto(), trace_alg: Algorithm
 
 # ########### BASE CASES #############
 @dispatch(precedence=-1)
-def slogdet(A: LinearOperator, log_alg: Auto = Auto(), trace_alg: Algorithm = Auto()):
+def slogdet(A: LinearOperator, log_alg: Auto, trace_alg: Algorithm):
     is_PSD = A.isa(PSD)
     small = np.prod(A.shape) <= 1e6
     if is_PSD and small:
@@ -87,20 +87,20 @@ def slogdet(A: LinearOperator, log_alg: Auto = Auto(), trace_alg: Algorithm = Au
 
 
 @dispatch(precedence=-1)
-def slogdet(A: LinearOperator, log_alg: Cholesky, trace_alg: Algorithm = Auto()):
+def slogdet(A: LinearOperator, log_alg: Cholesky, trace_alg: Algorithm):
     L = cholesky(A)
     sign, logdet = slogdet(L)
     return sign * A.xnp.conj(sign), 2 * logdet
 
 
 @dispatch(precedence=-1)
-def slogdet(A: LinearOperator, log_alg: LU, trace_alg: Algorithm = Auto()):
+def slogdet(A: LinearOperator, log_alg: LU, trace_alg: Algorithm):
     P, L, U = plu(A)
     return slogdet(P @ L @ U)
 
 
 @dispatch(precedence=-1)
-def slogdet(A: LinearOperator, log_alg: Lanczos | Arnoldi, trace_alg: Algorithm = Auto()):
+def slogdet(A: LinearOperator, log_alg: Lanczos | Arnoldi, trace_alg: Algorithm):
     logA = log(A, log_alg)
     trlogA = trace(Dense(logA.to_dense()), trace_alg)
     # trlogA = trace(logA, trace_alg)
@@ -111,20 +111,20 @@ def slogdet(A: LinearOperator, log_alg: Lanczos | Arnoldi, trace_alg: Algorithm 
 
 # ############ Dispatch Rules ############
 @dispatch(cond=lambda A, *_: all([(Ai.shape[-2] == Ai.shape[-1]) for Ai in A.Ms]))
-def slogdet(A: Product, log_alg=Auto(), trace_alg=Auto()):
+def slogdet(A: Product, log_alg, trace_alg):
     signs, logdets = zip(*[slogdet(Ai, log_alg, trace_alg) for Ai in A.Ms])
     return product(signs), sum(logdets)
 
 
 @dispatch
-def slogdet(A: Identity, log_alg=Auto(), trace_alg=Auto()):
+def slogdet(A: Identity, log_alg, trace_alg):
     xnp = A.xnp
     zero = xnp.array(0., dtype=A.dtype, device=A.device)
     return 1. + zero, zero
 
 
 @dispatch
-def slogdet(A: ScalarMul, log_alg=Auto(), trace_alg=Auto()):
+def slogdet(A: ScalarMul, log_alg, trace_alg):
     xnp = A.xnp
     c = A.c
     phase = c / xnp.abs(c)
@@ -132,7 +132,7 @@ def slogdet(A: ScalarMul, log_alg=Auto(), trace_alg=Auto()):
 
 
 @dispatch
-def slogdet(A: Diagonal, log_alg=Auto(), trace_alg=Auto()):
+def slogdet(A: Diagonal, log_alg, trace_alg):
     xnp = A.xnp
     mag = xnp.abs(A.diag)
     phase = A.diag / mag
@@ -140,7 +140,7 @@ def slogdet(A: Diagonal, log_alg=Auto(), trace_alg=Auto()):
 
 
 @dispatch
-def slogdet(A: Kronecker, log_alg=Auto(), trace_alg=Auto()):
+def slogdet(A: Kronecker, log_alg, trace_alg):
     # logdet(Pi A_i \otimes I) = sum_i logdet(A_i)
     signs, logdets = zip(*[slogdet(Ai, log_alg, trace_alg) for Ai in A.Ms])
     sizes = [Ai.shape[-1] for Ai in A.Ms]
@@ -151,7 +151,7 @@ def slogdet(A: Kronecker, log_alg=Auto(), trace_alg=Auto()):
 
 
 @dispatch
-def slogdet(A: BlockDiag, log_alg=Auto(), trace_alg=Auto()):
+def slogdet(A: BlockDiag, log_alg, trace_alg):
     # logdet(\bigoplus A_i) = log \prod det(A_i) = sum_i logdet(A_i)
     signs, logdets = zip(*[slogdet(Ai, log_alg, trace_alg) for Ai in A.Ms])
     scaled_logdets = sum(ld * n for ld, n in zip(logdets, A.multiplicities))
@@ -160,7 +160,7 @@ def slogdet(A: BlockDiag, log_alg=Auto(), trace_alg=Auto()):
 
 
 @dispatch
-def slogdet(A: Triangular, log_alg=Auto(), trace_alg=Auto()):
+def slogdet(A: Triangular, log_alg, trace_alg):
     xnp = A.xnp
     diag = xnp.diag(A.A)
     mag = xnp.abs(diag)
@@ -169,7 +169,7 @@ def slogdet(A: Triangular, log_alg=Auto(), trace_alg=Auto()):
 
 
 @dispatch
-def slogdet(A: Permutation, log_alg=Auto(), trace_alg=Auto()):
+def slogdet(A: Permutation, log_alg, trace_alg):
     # TODO: count the parity of the permutation and return an error if it is odd
     xnp = A.xnp
     zero = xnp.array(0., dtype=A.dtype, device=A.device)
