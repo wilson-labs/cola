@@ -10,6 +10,21 @@ from dataclasses import dataclass
 @export
 @dataclass
 class GMRES(Algorithm):
+    """ Generalized Minimal Residual algorith (GMRES) for soving Ax=b or AX=B (multiple rhs).
+
+    The runtime is bounded by :math:`O(\\ sqrt{\\kappa})` and
+    it uses :math:`O(m n)` memory.
+    Where :math:`\\kappa` is the condition number of the linear operator,
+    n is the size of A and m represents the max iters.
+    Optionally, you can use a preconditioner (approx of A⁻¹) to accelerate convergence.
+
+    Args:
+        tol (float, optional): Relative error tolerance for Arnoldi.
+        max_iters (int, optional): The maximum number of iterations to run in Arnoldi.
+        pbar (bool, optional): Whether to show progress bar.
+        x0 (Array, optional): (n,) or (n, b) guess for initial solution.
+        P (LinearOperator, optional): Preconditioner. Defaults to the identity.
+    """
     tol: float = 1e-6
     max_iters: int = 1000
     pbar: bool = False

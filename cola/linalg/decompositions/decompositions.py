@@ -13,14 +13,24 @@ import cola.linalg
 
 @export
 class Cholesky(Algorithm):
-    """ TODO: docstring"""
+    """
+    Cholesky algorithm for decomposing a positive definite operator as
+    :math:`A = L L^{*}`,
+    where :math:`L` is a lower triangular operator.
+    """
     def __call__(self, A: LinearOperator):
         return cholesky(A)
 
 
 @export
 class LU(Algorithm):
-    """ TODO: docstring"""
+    """
+    LU algorithm for decomposing a general square operator as
+    :math:`PA = LU`,
+    where :math:`P` is a permutation operator,
+    :math:`L` is a lower triangular operator
+    and :math:`U` is an upper triangular operator.
+    """
     def __call__(self, A: LinearOperator):
         return plu(A)
 
@@ -28,7 +38,18 @@ class LU(Algorithm):
 @export
 @dataclass
 class Arnoldi(Algorithm):
-    """ TODO: docstring"""
+    """
+    Arnoldi decomposition for a general square operator,
+    :math:`H \\approx Q^{*} A Q`
+    where :math:`H` is an upper Hessenberg operator.
+    This algorithm is used to approximate eig(A) through eig(H).
+
+    Args:
+        start_vector (Array, optional): (n,) or (n, b) vector to start the algorithm.
+        max_iters (int, optional): The maximum number of iterations to run.
+        tol (float, optional): Relative error tolerance.
+        pbar (bool, optional): Whether to show progress bar.
+    """
     start_vector: Array = None
     max_iters: int = 1_000
     tol: float = 1e-6
@@ -41,7 +62,18 @@ class Arnoldi(Algorithm):
 @export
 @dataclass
 class Lanczos(Algorithm):
-    """ TODO: docstring"""
+    """
+    Lanczos decomposition for Symmetric (or Hermitian) operators,
+    :math:`T = Q^{*} A Q`
+    where :math:`T` is a tridiagional operator.
+    This algorithm is used to approximate eig(A) through eig(T).
+
+    Args:
+        start_vector (Array, optional): (n,) or (n, b) vector to start the algorithm.
+        max_iters (int, optional): The maximum number of iterations to run.
+        tol (float, optional): Relative error tolerance.
+        pbar (bool, optional): Whether to show progress bar.
+    """
     start_vector: Array = None
     max_iters: int = 1_000
     tol: float = 1e-6
