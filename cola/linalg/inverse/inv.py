@@ -23,8 +23,8 @@ def solve(A, b, alg=Auto()):
     return inv(A, alg) @ b
 
 
-@dispatch.abstract
 @export
+@dispatch.abstract
 def inv(A: LinearOperator, alg: Algorithm = Auto()):
     """(lazily) computes the inverse of a linear operator, equivalent to solve.
 
@@ -53,8 +53,9 @@ def inv(A: LinearOperator, alg: CG):
     return IterativeOperatorWInfo(A, alg)
 
 
+@export
 @dispatch(precedence=-1)
-def inv(A: LinearOperator, alg: Auto = Auto()):
+def inv(A: LinearOperator, alg: Auto):
     """ Auto:
         - if A is PSD and small, use Cholesky
         - if A is PSD and large, use CG
@@ -88,48 +89,48 @@ def inv(A: LinearOperator, alg: LU):
 
 
 @dispatch(cond=lambda A, *_: A.isa(Unitary))
-def inv(A: LinearOperator, alg=Auto()):
+def inv(A: LinearOperator, alg: Algorithm):
     return Unitary(A.H)
 
 
 @dispatch
-def inv(A: Identity, alg=Auto()):
+def inv(A: Identity, alg: Algorithm):
     return A
 
 
 @dispatch
-def inv(A: ScalarMul, alg=Auto()):
+def inv(A: ScalarMul, alg: Algorithm):
     return ScalarMul(1 / A.c, shape=A.shape, dtype=A.dtype)
 
 
 @dispatch
-def inv(A: Permutation, alg=Auto()):
+def inv(A: Permutation, alg: Algorithm):
     return Permutation(A.xnp.argsort(A.perm), A.dtype)
 
 
 @dispatch(cond=lambda A, *_: all([M.shape[-2] == M.shape[-1] for M in A.Ms]))
-def inv(A: Product, alg=Auto()):
+def inv(A: Product, alg: Algorithm):
     output = reversed([inv(M, alg) for M in A.Ms])
     return Product(*output)
 
 
 @dispatch
-def inv(A: BlockDiag, alg=Auto()):
+def inv(A: BlockDiag, alg: Algorithm):
     return BlockDiag(*[inv(M, alg) for M in A.Ms], multiplicities=A.multiplicities)
 
 
 @dispatch
-def inv(A: Kronecker, alg=Auto()):
+def inv(A: Kronecker, alg: Algorithm):
     return Kronecker(*[inv(M, alg) for M in A.Ms])
 
 
 @dispatch
-def inv(A: Diagonal, alg=Auto()):
+def inv(A: Diagonal, alg: Algorithm):
     return Diagonal(1. / A.diag)
 
 
 @dispatch
-def inv(A: Triangular, alg=Auto()):
+def inv(A: Triangular, alg: Algorithm):
     return TriangularInv(A)
 
 
