@@ -122,13 +122,17 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Arnoldi):
 @export
 @dataclass
 class Eigh(Algorithm):
-    """ Docstring here"""
+    """
+    Solves a standard eigenvalue problem for a real symmetric or complex Hermitian operator.
+    """
 
 
 @export
 @dataclass
 class Eig(Algorithm):
-    """ Docstring here"""
+    """
+    Solves a standard eigenvalue problem for a general square operator.
+    """
 
 
 @dispatch(precedence=-1)
