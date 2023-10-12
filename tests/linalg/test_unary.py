@@ -21,7 +21,10 @@ def test_unary(backend, precision, op_name, fn_name):
     # ###############################################
     # TODO: take this ugly fix
     fnX = A.xnp.exp if fn_name == "exp" else A.xnp.sqrt
-    fn = lambda X, ALG: apply_unary(fnX, X, ALG)
+
+    def fn(X, ALG):
+        return apply_unary(fnX, X, ALG)
+
     # ###############################################
     A2 = LinearOperator(A.dtype, A.shape, A._matmat)
     tol = 1e-4

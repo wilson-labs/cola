@@ -10,7 +10,7 @@ from cola.linalg.algorithm_base import Algorithm
 from cola.linalg.decompositions.decompositions import Cholesky, LU, Arnoldi, Lanczos
 from cola.linalg.decompositions.decompositions import plu, cholesky
 from cola.linalg.trace.diag_trace import trace
-from cola.linalg.unary.unary import log
+# from cola.linalg.unary.unary import log
 from cola.linalg.unary.unary import apply_unary
 
 
