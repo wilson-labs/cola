@@ -84,7 +84,7 @@ def eig(A: LinearOperator, k: int, which: str, alg: Eig):
 
 
 @dispatch(precedence=-1)
-def eig(A: LinearOperator, k: int, which: str, alg: Eigh = Eigh()):
+def eig(A: LinearOperator, k: int, which: str, alg: Eigh):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs = A.xnp.eigh(A.to_dense())
     return eig_vals[eig_slice], Stiefel(lazify(eig_vecs[:, eig_slice]))
