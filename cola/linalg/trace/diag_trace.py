@@ -1,7 +1,7 @@
 from functools import reduce
 from cola.utils import export, dispatch
 from cola.ops.operators import LinearOperator, I_like, Diagonal, Identity
-from cola.ops.operators import BlockDiag, ScalarMul, Sum, Dense  # , Array
+from cola.ops.operators import BlockDiag, ScalarMul, Sum, Dense
 from cola.ops.operators import Kronecker, KronSum
 from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.trace.diagonal_estimation import Hutch, HutchPP, Exact

@@ -74,7 +74,7 @@ def test_vmapped_linalg(backend):
     z1 = xnp.randn(4, 5, 5, key=k0, dtype=dtype, device=device)
     z2 = xnp.randn(4, 2, key=k0, dtype=dtype, device=device)
     Ts = xnp.vmap(make_operator)(z1, z2)
-    logdets = xnp.vmap(partial(logdet, Auto(), Auto()))(Ts)
+    logdets = xnp.vmap(partial(logdet, log_alg=Auto(), trace_alg=Auto()))(Ts)
     logdets2 = xnp.slogdet(xnp.vmap(lambda T: T.to_dense())(Ts))[1]
     assert relative_error(logdets, logdets2) < 1e-6
 

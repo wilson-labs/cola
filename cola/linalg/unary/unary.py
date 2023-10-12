@@ -5,7 +5,7 @@ from numbers import Number
 from typing import Callable
 from functools import reduce
 from cola.fns import lazify
-from cola.linalg.trace.diag_trace import diag
+# from cola.linalg.trace.diag_trace import diag
 from cola.ops import LinearOperator
 from cola.utils import export
 from cola.annotations import SelfAdjoint, PSD
@@ -144,7 +144,7 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Eigh):
     Adense = A.to_dense()
     eigs, V = A.xnp.eigh(Adense)
     V = lazify(V)
-    D = diag(f(eigs))
+    D = Diagonal(f(eigs))
     return V @ D @ V.H
 
 
@@ -153,7 +153,7 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Eig):
     Adense = A.to_dense()
     eigs, V = A.xnp.eig(Adense)
     V = lazify(V)
-    D = diag(f(eigs))
+    D = Diagonal(f(eigs))
     return V @ D @ inv(V)
 
 
