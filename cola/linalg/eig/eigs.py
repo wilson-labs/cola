@@ -43,21 +43,21 @@ def eig(A: LinearOperator, k: int = -1, which: str = 'LM', alg: Algorithm = Auto
 
 
 @dispatch
-def eig(A: LinearOperator, k: int = -1, which: str = 'LM', alg: Arnoldi = Arnoldi()):
+def eig(A: LinearOperator, k: int, which: str, alg: Arnoldi):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs, _ = arnoldi_eigs(A, **alg.__dict__)
     return eig_vals[eig_slice], eig_vecs[:, eig_slice]
 
 
 @dispatch
-def eig(A: LinearOperator, k: int = -1, which: str = 'LM', alg: Lanczos = Lanczos()):
+def eig(A: LinearOperator, k: int, which: str, alg: Lanczos):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs, _ = lanczos_eigs(A, **alg.__dict__)
     return eig_vals[eig_slice], eig_vecs[:, eig_slice]
 
 
 @dispatch(precedence=-1)
-def eig(A: LinearOperator, k: int = -1, which: str = 'LM', alg: Algorithm = Auto()):
+def eig(A: LinearOperator, k: int, which: str, alg: Auto):
     """ Auto:
         - if A is Hermitian and small, use Eigh
         - if A is Hermitian and large, use Lanczos
@@ -77,21 +77,21 @@ def eig(A: LinearOperator, k: int = -1, which: str = 'LM', alg: Algorithm = Auto
 
 
 @dispatch(precedence=-1)
-def eig(A: LinearOperator, k: int = -1, which: str = 'LM', alg: Eig = Eig()):
+def eig(A: LinearOperator, k: int, which: str, alg: Eig):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs = A.xnp.eig(A.to_dense())
     return eig_vals[eig_slice], lazify(eig_vecs[:, eig_slice])
 
 
 @dispatch(precedence=-1)
-def eig(A: LinearOperator, k: int = -1, which: str = 'LM', alg: Eigh = Eigh()):
+def eig(A: LinearOperator, k: int, which: str, alg: Eigh = Eigh()):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs = A.xnp.eigh(A.to_dense())
     return eig_vals[eig_slice], Stiefel(lazify(eig_vecs[:, eig_slice]))
 
 
 @dispatch
-def eig(A: Identity, k: int = -1, which: str = "LM", alg: Algorithm = Auto()):
+def eig(A: Identity, k: int, which: str, alg: Algorithm):
     eig_slice = get_slice(k, which)
     xnp = A.xnp
     eig_vals = xnp.ones(shape=(A.shape[0], ), dtype=A.dtype, device=A.device)
@@ -100,7 +100,7 @@ def eig(A: Identity, k: int = -1, which: str = "LM", alg: Algorithm = Auto()):
 
 
 @dispatch
-def eig(A: Triangular, k: int = -1, which: str = "LM", alg: Algorithm = Auto()):
+def eig(A: Triangular, k: int, which: str, alg: Algorithm):
     # TODO: take out compute_lower_triangular_eigvecs
     eig_slice = get_slice(k, which)
     xnp = A.xnp
@@ -123,7 +123,7 @@ def compute_lower_triangular_eigvecs(L):
 
 
 @dispatch
-def eig(A: Diagonal, k: int = -1, which: str = "LM", alg: Algorithm = Auto()):
+def eig(A: Diagonal, k: int, which: str, alg: Algorithm):
     eig_slice = get_slice(k, which)
     xnp = A.xnp
     sorted_ind = xnp.argsort(A.diag)
