@@ -2,6 +2,7 @@ from cola.fns import kron
 from cola.linalg.logdet.logdet import logdet
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import tracing_backends
+from cola.linalg.algorithm_base import Auto
 from cola.ops import Dense, Diagonal, Product, ScalarMul
 from functools import partial
 
@@ -73,7 +74,7 @@ def test_vmapped_linalg(backend):
     z1 = xnp.randn(4, 5, 5, key=k0, dtype=dtype, device=device)
     z2 = xnp.randn(4, 2, key=k0, dtype=dtype, device=device)
     Ts = xnp.vmap(make_operator)(z1, z2)
-    logdets = xnp.vmap(partial(logdet))(Ts)
+    logdets = xnp.vmap(partial(logdet, Auto(), Auto()))(Ts)
     logdets2 = xnp.slogdet(xnp.vmap(lambda T: T.to_dense())(Ts))[1]
     assert relative_error(logdets, logdets2) < 1e-6
 

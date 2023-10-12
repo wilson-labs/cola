@@ -18,7 +18,7 @@ def product(xs):
 
 
 @export
-def logdet(A: LinearOperator, log_alg: Auto(), trace_alg: Auto()):
+def logdet(A: LinearOperator, log_alg: Algorithm, trace_alg: Algorithm):
     r""" Computes logdet of a linear operator.
 
     For large inputs (or with method='iterative'),
@@ -40,13 +40,13 @@ def logdet(A: LinearOperator, log_alg: Auto(), trace_alg: Auto()):
     Returns:
         Array: logdet
     """
-    _, ld = slogdet(A, log_alg, trace_alg)
+    _, ld = slogdet(A, log_alg=log_alg, trace_alg=trace_alg)
     return ld
 
 
 @export
 @dispatch.abstract
-def slogdet(A: LinearOperator, log_alg: Auto(), trace_alg: Auto()):
+def slogdet(A: LinearOperator, log_alg: Algorithm, trace_alg: Algorithm):
     r""" Computes sign and logdet of a linear operator. such that det(A) = sign(A) exp(logdet(A))
 
     For large inputs (or with method='iterative'),
@@ -83,20 +83,20 @@ def slogdet(A: LinearOperator, log_alg: Auto, trace_alg: Algorithm):
         log_alg = Lanczos(**log_alg.__dict__)
     elif not is_PSD and not small:
         log_alg = Arnoldi(**log_alg.__dict__)
-    return slogdet(A, log_alg, trace_alg)
+    return slogdet(A, log_alg=log_alg, trace_alg=trace_alg)
 
 
 @dispatch(precedence=-1)
 def slogdet(A: LinearOperator, log_alg: Cholesky, trace_alg: Algorithm):
     L = cholesky(A)
-    sign, logdet = slogdet(L)
+    sign, logdet = slogdet(L, log_alg, trace_alg)
     return sign * A.xnp.conj(sign), 2 * logdet
 
 
 @dispatch(precedence=-1)
 def slogdet(A: LinearOperator, log_alg: LU, trace_alg: Algorithm):
     P, L, U = plu(A)
-    return slogdet(P @ L @ U)
+    return slogdet(P @ L @ U, log_alg, trace_alg)
 
 
 @dispatch(precedence=-1)

@@ -15,7 +15,7 @@ from cola.linalg.decompositions.arnoldi import arnoldi
 from cola.ops import Diagonal, Identity, ScalarMul
 from cola.ops import BlockDiag, Kronecker, KronSum, I_like, Transpose, Adjoint
 from cola.linalg.inverse.inv import inv
-from cola.linalg.algorithm_base import Algorithm, Auto
+from cola.linalg.algorithm_base import Algorithm
 from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos, LU, Cholesky
 from cola.linalg.inverse.cg import CG
 from cola.linalg.inverse.gmres import GMRES
@@ -83,7 +83,7 @@ class ArnoldiUnary(LinearOperator):
 
 @export
 @dispatch.abstract
-def apply_unary(f: Callable, A: LinearOperator, alg: Algorithm = Auto()):
+def apply_unary(f: Callable, A: LinearOperator, alg: Algorithm):
     """ Generic apply a unary function :math:`f` to a linear operator :math:`A`.
     That is, :math:`f(A)`.
 
@@ -100,7 +100,7 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Algorithm = Auto()):
 
 
 @dispatch(precedence=-1)
-def apply_unary(f: Callable, A: LinearOperator, alg: Auto):
+def apply_unary(f: Callable, A: LinearOperator, alg: Algorithm):
     psd, small = A.isa(PSD), np.prod(A.shape) <= 1e6
     if psd and small:
         alg = Eigh()
@@ -159,40 +159,40 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Eig):
 
 # ############ Dispatch Rules ############
 @dispatch
-def apply_unary(f: Callable, A: Diagonal, alg):
+def apply_unary(f: Callable, A: Diagonal, alg: Algorithm):
     return Diagonal(f(A.diag))
 
 
 @dispatch
-def apply_unary(f: Callable, A: BlockDiag, alg):
+def apply_unary(f: Callable, A: BlockDiag, alg: Algorithm):
     fAs = [apply_unary(f, a, alg) for a in A.Ms]
     return BlockDiag(*fAs, multiplicities=A.multiplicities)
 
 
 @dispatch
-def apply_unary(f: Callable, A: Identity, alg):
+def apply_unary(f: Callable, A: Identity, alg: Algorithm):
     one = A.xnp.array(1., dtype=A.dtype, device=A.device)
     return f(one) * A
 
 
 @dispatch
-def apply_unary(f: Callable, A: ScalarMul, alg):
+def apply_unary(f: Callable, A: ScalarMul, alg: Algorithm):
     return f(A.c) * I_like(A)
 
 
 @dispatch
-def apply_unary(f: Callable, A: Transpose, alg):
+def apply_unary(f: Callable, A: Transpose, alg: Algorithm):
     return Transpose(apply_unary(f, A.A, alg))
 
 
 @dispatch
-def apply_unary(f: Callable, A: Adjoint, alg):
+def apply_unary(f: Callable, A: Adjoint, alg: Algorithm):
     return Adjoint(apply_unary(f, A.A, alg))
 
 
 @dispatch
 @export
-def exp(A: LinearOperator, alg):
+def exp(A: LinearOperator, alg: Algorithm):
     """ Computes the matrix exponential exp(A) of a matrix A.
 
     Args:
@@ -207,13 +207,13 @@ def exp(A: LinearOperator, alg):
 
 
 @dispatch
-def exp(A: KronSum, alg):
+def exp(A: KronSum, alg: Algorithm):
     return Kronecker(*[exp(a, alg) for a in A.Ms])
 
 
 @dispatch
 @export
-def log(A: LinearOperator, alg):
+def log(A: LinearOperator, alg: Algorithm):
     """ Computes the matrix logarithm :math:`log(A)` of positive
     definite operator :math:`A`.
 
@@ -229,7 +229,7 @@ def log(A: LinearOperator, alg):
 
 @dispatch
 @export
-def pow(A: LinearOperator, alpha: Number, alg):
+def pow(A: LinearOperator, alpha: Number, alg: Algorithm):
     """ Computes the matrix power :math:`A^{\\alpha}` of an operator :math:`A`,
     where :math:`\\alpha` is the coefficient.
 
@@ -264,13 +264,13 @@ def pow(A: LinearOperator, alpha: Number, alg):
 
 
 @dispatch
-def pow(A: Kronecker, alpha: Number, alg):
+def pow(A: Kronecker, alpha: Number, alg: Algorithm):
     return Kronecker(*[pow(a, alpha, alg) for a in A.Ms])
 
 
 @dispatch
 @export
-def sqrt(A: LinearOperator, alg):
+def sqrt(A: LinearOperator, alg: Algorithm):
     """ Computes the square root, :math:`A^{1/2}`
     of an operator :math:`A` using the principal branch.
 
@@ -285,7 +285,7 @@ def sqrt(A: LinearOperator, alg):
 
 @dispatch
 @export
-def isqrt(A: LinearOperator, alg):
+def isqrt(A: LinearOperator, alg: Algorithm):
     """ Computes the matrix inverse :math:`A^{-1/2}` of an
     operator :math:`A` using the principal branch.
 
