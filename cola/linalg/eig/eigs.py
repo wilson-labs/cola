@@ -1,6 +1,6 @@
 import numpy as np
 from plum import dispatch
-from cola import Unitary, Stiefel
+from cola.annotations import Unitary, Stiefel
 from cola.fns import lazify
 from cola.annotations import SelfAdjoint
 from cola.linalg.trace.diag_trace import diag
@@ -11,10 +11,10 @@ from cola.ops.operators import Identity
 from cola.ops.operators import Triangular
 from cola.linalg.decompositions.lanczos import lanczos_eigs
 from cola.linalg.decompositions.arnoldi import arnoldi_eigs
-from cola.utils import export
 from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos
 from cola.linalg.unary.unary import Eig, Eigh
+from cola.utils import export
 
 
 @export

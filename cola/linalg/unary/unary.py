@@ -1,24 +1,23 @@
 from plum import dispatch
 from dataclasses import dataclass
-import numpy as np
 from numbers import Number
 from typing import Callable
 from functools import reduce
-from cola.fns import lazify
-# from cola.linalg.trace.diag_trace import diag
-from cola.ops import LinearOperator
-from cola.utils import export
-from cola.annotations import SelfAdjoint, PSD
+import numpy as np
 from plum import parametric
-from cola.linalg.decompositions.lanczos import lanczos
-from cola.linalg.decompositions.arnoldi import arnoldi
+from cola.fns import lazify
+from cola.ops import LinearOperator
 from cola.ops import Diagonal, Identity, ScalarMul
 from cola.ops import BlockDiag, Kronecker, KronSum, I_like, Transpose, Adjoint
-from cola.linalg.inverse.inv import inv
+from cola.annotations import SelfAdjoint, PSD
 from cola.linalg.algorithm_base import Algorithm
-from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos, LU, Cholesky
+from cola.linalg.inverse.inv import inv
 from cola.linalg.inverse.cg import CG
 from cola.linalg.inverse.gmres import GMRES
+from cola.linalg.decompositions.lanczos import lanczos
+from cola.linalg.decompositions.arnoldi import arnoldi
+from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos, LU, Cholesky
+from cola.utils import export
 
 
 def product(As):
@@ -93,7 +92,8 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Algorithm):
         alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
 
     Returns:
-        LinearOperator: the lazily implemented f(A)"""
+        LinearOperator: a lazy instantiation of :math:`f(A)`
+    """
 
 
 # ########### BASE CASES #############
@@ -157,7 +157,7 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Eig):
     return V @ D @ inv(V)
 
 
-# ############ Dispatch Rules ############
+# ############ ADDITIONAL DISPATCH RULES ############
 @dispatch
 def apply_unary(f: Callable, A: Diagonal, alg: Algorithm):
     return Diagonal(f(A.diag))
@@ -193,7 +193,7 @@ def apply_unary(f: Callable, A: Adjoint, alg: Algorithm):
 @dispatch
 @export
 def exp(A: LinearOperator, alg: Algorithm):
-    """ Computes the matrix exponential exp(A) of a matrix A.
+    """ Computes the matrix exponential :math:`\\exp(A)` of the operator :math:`A`.
 
     Args:
         f (Callable): The function to apply.
@@ -201,7 +201,7 @@ def exp(A: LinearOperator, alg: Algorithm):
         alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
 
     Returns:
-        LinearOperator: the lazily implemented exp(A)
+        LinearOperator: a lazy instantiation of :math:`\\exp(A)`
     """
     return apply_unary(A.xnp.exp, A, alg)
 
@@ -222,7 +222,7 @@ def log(A: LinearOperator, alg: Algorithm):
         alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
 
     Returns:
-        LinearOperator: the lazily implemented log(A)
+        LinearOperator: a lazy instantiation of log(A)
     """
     return apply_unary(A.xnp.log, A, alg)
 
@@ -238,7 +238,7 @@ def pow(A: LinearOperator, alpha: Number, alg: Algorithm):
         alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
 
     Returns:
-        LinearOperator: the lazily implemented A^alpha
+        LinearOperator: a lazy instantiation of :math:`A^{\\alpha}`
     """
     # check if alpha is close to an integer
     if np.isclose(alpha, (k := int(np.round(alpha)))):
@@ -278,7 +278,7 @@ def sqrt(A: LinearOperator, alg: Algorithm):
         A (LinearOperator): The linear operator to compute f(A) with.
         alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
 
-    Returns: LinearOperator: the lazily implemented sqrt(A)
+    Returns: LinearOperator: a lazy instantiation of :math:`A^{1/2}`
     """
     return pow(A, 0.5, alg)
 
@@ -293,6 +293,6 @@ def isqrt(A: LinearOperator, alg: Algorithm):
         A (LinearOperator): The linear operator to compute f(A) with.
         alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
 
-    Returns: LinearOperator: the lazily implemented A^{-1/2}
+    Returns: LinearOperator: a lazy instantiation of :math:`A^{-1/2}`
     """
     return pow(A, -0.5, alg)
