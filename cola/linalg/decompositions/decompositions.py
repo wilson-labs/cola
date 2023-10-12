@@ -117,8 +117,7 @@ def cholesky(A: Identity):
 
 @dispatch
 def cholesky(A: Diagonal | ScalarMul):
-    # return cola.linalg.sqrt(A)
-    return cola.linalg.apply_unary(A.xnp.sqrt, A, alg=Auto())
+    return cola.linalg.sqrt(A, Auto())
 
 
 @dispatch

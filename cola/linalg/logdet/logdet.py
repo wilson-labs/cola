@@ -10,8 +10,7 @@ from cola.linalg.algorithm_base import Algorithm
 from cola.linalg.decompositions.decompositions import Cholesky, LU, Arnoldi, Lanczos
 from cola.linalg.decompositions.decompositions import plu, cholesky
 from cola.linalg.trace.diag_trace import trace
-# from cola.linalg.unary.unary import log
-from cola.linalg.unary.unary import apply_unary
+from cola.linalg.unary.unary import log
 
 
 def product(xs):
@@ -102,8 +101,7 @@ def slogdet(A: LinearOperator, log_alg: LU, trace_alg: Algorithm):
 
 @dispatch(precedence=-1)
 def slogdet(A: LinearOperator, log_alg: Lanczos | Arnoldi, trace_alg: Algorithm):
-    # logA = log(A, log_alg)
-    logA = apply_unary(A.xnp.log, A, log_alg)
+    logA = log(A, log_alg)
     trlogA = trace(Dense(logA.to_dense()), trace_alg)
     # trlogA = trace(logA, trace_alg)
     mag = A.xnp.abs(trlogA)

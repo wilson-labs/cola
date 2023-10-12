@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.linalg
 import cola.linalg.unary.unary as colau
-from cola.linalg.unary.unary import apply_unary
 from operator_market import op_names, get_test_operator
 from cola.annotations import SelfAdjoint
 from cola.ops import LinearOperator
@@ -18,14 +17,6 @@ def test_unary(backend, precision, op_name, fn_name):
     fn = getattr(colau, fn_name)
     spfn = getattr(scipy.linalg, fn_name + 'm')
     A, dtype, xnp = operator, operator.dtype, operator.xnp
-    # ###############################################
-    # TODO: take this ugly fix
-    fnX = A.xnp.exp if fn_name == "exp" else A.xnp.sqrt
-
-    def fn(X, ALG):
-        return apply_unary(fnX, X, ALG)
-
-    # ###############################################
     A2 = LinearOperator(A.dtype, A.shape, A._matmat)
     tol = 1e-4
     v = xnp.randn(A.shape[-1], dtype=dtype, device=None)
