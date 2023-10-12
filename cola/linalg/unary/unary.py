@@ -10,7 +10,7 @@ from cola.ops import LinearOperator
 from cola.ops import Diagonal, Identity, ScalarMul
 from cola.ops import BlockDiag, Kronecker, KronSum, I_like, Transpose, Adjoint
 from cola.annotations import SelfAdjoint, PSD
-from cola.linalg.algorithm_base import Algorithm
+from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.inverse.inv import inv
 from cola.linalg.inverse.cg import CG
 from cola.linalg.inverse.gmres import GMRES
@@ -82,9 +82,10 @@ class ArnoldiUnary(LinearOperator):
 
 @export
 @dispatch.abstract
-def apply_unary(f: Callable, A: LinearOperator, alg: Algorithm):
+def apply_unary(f: Callable, A: LinearOperator, alg: Algorithm = Auto()):
     """ Generic apply a unary function :math:`f` to a linear operator :math:`A`.
-    That is, :math:`f(A)`.
+    That is, :math:`f(A)`, defined through the taylor expansion:
+        :math:`f(A) = \\sum_{k=0}^\\infty \\frac{f^{(k)}(0)}{k!}A^k`.
 
     Args:
         f (Callable): The function to apply.
@@ -127,7 +128,7 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Arnoldi):
 @dataclass
 class Eigh(Algorithm):
     """
-    Solves a standard eigenvalue problem for a real symmetric or complex Hermitian operator.
+    Uses a dense eigendecomposition for a real symmetric or complex Hermitian operator.
     """
 
 
@@ -135,7 +136,7 @@ class Eigh(Algorithm):
 @dataclass
 class Eig(Algorithm):
     """
-    Solves a standard eigenvalue problem for a general square operator.
+    Uses a dense eigendecomposition for a general square operator.
     """
 
 
@@ -192,7 +193,7 @@ def apply_unary(f: Callable, A: Adjoint, alg: Algorithm):
 
 @export
 @dispatch.abstract
-def exp(A: LinearOperator, alg: Algorithm):
+def exp(A: LinearOperator, alg: Algorithm = Auto()):
     """ Computes the matrix exponential :math:`\\exp(A)` of the operator :math:`A`.
 
     Args:
@@ -206,18 +207,7 @@ def exp(A: LinearOperator, alg: Algorithm):
 
 
 @dispatch
-@export
 def exp(A: LinearOperator, alg: Algorithm):
-    """ Computes the matrix exponential :math:`\\exp(A)` of the operator :math:`A`.
-
-    Args:
-        f (Callable): The function to apply.
-        A (LinearOperator): The linear operator to compute f(A) with.
-        alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
-
-    Returns:
-        LinearOperator: a lazy instantiation of :math:`\\exp(A)`
-    """
     return apply_unary(A.xnp.exp, A, alg)
 
 
@@ -228,7 +218,7 @@ def exp(A: KronSum, alg: Algorithm):
 
 @export
 @dispatch.abstract
-def log(A: LinearOperator, alg: Algorithm):
+def log(A: LinearOperator, alg: Algorithm = Auto()):
     """ Computes the matrix logarithm :math:`log(A)` of positive
     definite operator :math:`A`.
 
@@ -242,24 +232,13 @@ def log(A: LinearOperator, alg: Algorithm):
 
 
 @dispatch
-@export
 def log(A: LinearOperator, alg: Algorithm):
-    """ Computes the matrix logarithm :math:`log(A)` of positive
-    definite operator :math:`A`.
-
-    Args:
-        A (LinearOperator): The linear operator to compute f(A) with.
-        alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
-
-    Returns:
-        LinearOperator: a lazy instantiation of log(A)
-    """
     return apply_unary(A.xnp.log, A, alg)
 
 
 @export
 @dispatch.abstract
-def pow(A: LinearOperator, alpha: Number, alg: Algorithm):
+def pow(A: LinearOperator, alpha: Number, alg: Algorithm = Auto()):
     """ Computes the matrix power :math:`A^{\\alpha}` of an operator :math:`A`,
     where :math:`\\alpha` is the coefficient.
 
@@ -273,18 +252,7 @@ def pow(A: LinearOperator, alpha: Number, alg: Algorithm):
 
 
 @dispatch
-@export
 def pow(A: LinearOperator, alpha: Number, alg: Algorithm):
-    """ Computes the matrix power :math:`A^{\\alpha}` of an operator :math:`A`,
-    where :math:`\\alpha` is the coefficient.
-
-    Args:
-        A (LinearOperator): The linear operator to compute f(A) with.
-        alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
-
-    Returns:
-        LinearOperator: a lazy instantiation of :math:`A^{\\alpha}`
-    """
     # check if alpha is close to an integer
     if np.isclose(alpha, (k := int(np.round(alpha)))):
         if k == 0:
@@ -315,7 +283,7 @@ def pow(A: Kronecker, alpha: Number, alg: Algorithm):
 
 @export
 @dispatch.abstract
-def sqrt(A: LinearOperator, alg: Algorithm):
+def sqrt(A: LinearOperator, alg: Algorithm = Auto()):
     """ Computes the square root, :math:`A^{1/2}`
     of an operator :math:`A` using the principal branch.
 
@@ -323,28 +291,19 @@ def sqrt(A: LinearOperator, alg: Algorithm):
         A (LinearOperator): The linear operator to compute f(A) with.
         alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
 
-    Returns: LinearOperator: a lazy instantiation of :math:`A^{1/2}`
+    Returns:
+        LinearOperator: a lazy instantiation of :math:`A^{1/2}`
     """
 
 
 @dispatch
-@export
 def sqrt(A: LinearOperator, alg: Algorithm):
-    """ Computes the square root, :math:`A^{1/2}`
-    of an operator :math:`A` using the principal branch.
-
-    Args:
-        A (LinearOperator): The linear operator to compute f(A) with.
-        alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
-
-    Returns: LinearOperator: a lazy instantiation of :math:`A^{1/2}`
-    """
     return pow(A, 0.5, alg)
 
 
 @export
 @dispatch.abstract
-def isqrt(A: LinearOperator, alg: Algorithm):
+def isqrt(A: LinearOperator, alg: Algorithm = Auto()):
     """ Computes the matrix inverse :math:`A^{-1/2}` of an
     operator :math:`A` using the principal branch.
 
@@ -352,20 +311,11 @@ def isqrt(A: LinearOperator, alg: Algorithm):
         A (LinearOperator): The linear operator to compute f(A) with.
         alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
 
-    Returns: LinearOperator: a lazy instantiation of :math:`A^{-1/2}`
+    Returns:
+        LinearOperator: a lazy instantiation of :math:`A^{-1/2}`
     """
 
 
 @dispatch
-@export
 def isqrt(A: LinearOperator, alg: Algorithm):
-    """ Computes the matrix inverse :math:`A^{-1/2}` of an
-    operator :math:`A` using the principal branch.
-
-    Args:
-        A (LinearOperator): The linear operator to compute f(A) with.
-        alg (Algorithm): The algorithm to use (Auto, Eig, Eigh, Lanczos, Arnoldi).
-
-    Returns: LinearOperator: a lazy instantiation of :math:`A^{-1/2}`
-    """
     return pow(A, -0.5, alg)

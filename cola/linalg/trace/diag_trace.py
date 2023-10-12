@@ -11,15 +11,19 @@ import numpy as np
 @export
 @dispatch.abstract
 def diag(A: LinearOperator, k: int = 0, alg: Algorithm = Auto()):
-    r""" Computes the diagonal of a linear operator :math:`A`.
+    r""" Extract the (kth) diagonal of a linear operator.
 
-    You can select an Exact method which computes one entry of the diagonal at a time,
-    or the Hutchinson's estimator which uses random probes.
-    Additionally, you can use the Hutch++ as an improvement over the Hutchinson's estimator.
+    Can use either the :math:`O(\tfrac{1}{\delta^2})` time stochastic estimation (alg=Hutch())
+    or a deterministic :math:`O(n)` time algorithm (alg =Exact()).
+
+    If only unbiased estimates of the diagonal are needed, use the Hutchinson algorithm.
 
     Args:
         A (LinearOperator): The linear operator to compute the diagonal of.
-        k (int, optional): The number of entries to compute.
+        k (int, optional): Specify to compute the kth off diagonal diagonal.
+
+    Returns:
+        Array: diag
     """
 
 

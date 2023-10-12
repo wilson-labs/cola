@@ -6,7 +6,7 @@ from cola.ops.operators import LinearOperator, Triangular, Permutation, Identity
 from cola.ops.operators import Diagonal, Kronecker, BlockDiag, Product
 from cola.ops.operators import Dense
 from cola.utils import export
-from cola.linalg.algorithm_base import Algorithm
+from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.decompositions.decompositions import Cholesky, LU, Arnoldi, Lanczos
 from cola.linalg.decompositions.decompositions import plu, cholesky
 from cola.linalg.trace.diag_trace import trace
@@ -18,8 +18,8 @@ def product(xs):
 
 
 @export
-def logdet(A: LinearOperator, log_alg: Algorithm, trace_alg: Algorithm):
-    r""" Computes logdet of a linear operator.
+def logdet(A: LinearOperator, log_alg: Algorithm = Auto(), trace_alg: Algorithm = Auto()):
+    r""" Computes log determinant of a linear operator.
 
     For large inputs (or with method='iterative'),
     uses either :math:`O(\tfrac{1}{\delta^2}\log(1/\epsilon))` time stochastic algorithm (SLQ)
@@ -29,13 +29,9 @@ def logdet(A: LinearOperator, log_alg: Algorithm, trace_alg: Algorithm):
 
     Args:
         A (LinearOperator): The linear operator to compute the logdet of.
-        tol (float, optional): Tolerance for the bias of the solution. Defaults to 1e-6.
-        vtol (float, optional): Tolerance for the variance (std) of the solution,
-         returns a stochastic estimate if large that saves considerable computation. . Default: 1e-6
-        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
-        max_iters (int, optional): The maximum number of iterations. Defaults to 300.
-        method (str, optional): Method to use, defaults to 'auto',
-         options are 'auto', 'dense', 'iterative'.
+        log_alg (Algorithm, optional): The algorithm to use for the log.
+            Specify LU() or Cholesky() for a approach.
+        trace_alg (Algorithm, optional): The algorithm to use for the trace computation.
 
     Returns:
         Array: logdet
@@ -46,33 +42,36 @@ def logdet(A: LinearOperator, log_alg: Algorithm, trace_alg: Algorithm):
 
 @export
 @dispatch.abstract
-def slogdet(A: LinearOperator, log_alg: Algorithm, trace_alg: Algorithm):
+def slogdet(A: LinearOperator, log_alg: Algorithm = Auto(), trace_alg: Algorithm = Auto()):
     r""" Computes sign and logdet of a linear operator. such that det(A) = sign(A) exp(logdet(A))
-
-    For large inputs (or with method='iterative'),
-    uses either :math:`O(\tfrac{1}{\delta^2}\log(1/\epsilon))` time stochastic algorithm (SLQ)
-    where :math:`\epsilon=` tol is the bias and :math:`\delta=` vtol
-    is the standard deviation of the estimate,
-    or a deterministic :math:`O(n\log(1/\epsilon))` time algorithm if :math:`\delta < 1/\sqrt{10n}`.
 
     Args:
         A (LinearOperator): The linear operator to compute the logdet of.
-        tol (float, optional): Tolerance for the bias of the solution. Defaults to 1e-6.
-        vtol (float, optional): Tolerance for the variance (std) of the solution,
-         returns a stochastic estimate if large that saves considerable computation. Default: 1e-6
-        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
-        max_iters (int, optional): The maximum number of iterations. Defaults to 300.
-        method (str, optional): Method to use, defaults to 'auto',
-         options are 'auto', 'dense', 'iterative', 'iterative-exact', 'iterative-stochastic'
+        log_alg (Algorithm, optional): The algorithm to use for the log.
+            Specify LU() or Cholesky() for a approach.
+        trace_alg (Algorithm, optional): The algorithm to use for the trace computation.
 
     Returns:
-        Tuple[Array, Array]: sign, logdet
-    """
+        Tuple[Array, Array]: sign, logdet: logdet
+    # """
+    # Args:
+    #     A (LinearOperator): The linear operator to compute the logdet of.
+    #     tol (float, optional): Tolerance for the bias of the solution. Defaults to 1e-6.
+    #     vtol (float, optional): Tolerance for the variance (std) of the solution,
+    #      returns a stochastic estimate if large that saves considerable computation. Default: 1e-6
+    #     pbar (bool, optional): Whether to show a progress bar. Defaults to False.
+    #     max_iters (int, optional): The maximum number of iterations. Defaults to 300.
+    #     method (str, optional): Method to use, defaults to 'auto',
+    #      options are 'auto', 'dense', 'iterative', 'iterative-exact', 'iterative-stochastic'
+
+    # Returns:
+    #     Tuple[Array, Array]: sign, logdet
+    # """
 
 
 # ########### BASE CASES #############
 @dispatch(precedence=-1)
-def slogdet(A: LinearOperator, log_alg: Algorithm, trace_alg: Algorithm):
+def slogdet(A: LinearOperator, log_alg: Auto, trace_alg: Algorithm):
     is_PSD = A.isa(PSD)
     small = np.prod(A.shape) <= 1e6
     if is_PSD and small:
