@@ -11,8 +11,15 @@ import numpy as np
 @export
 @dispatch.abstract
 def diag(A: LinearOperator, k: int = 0, alg: Algorithm = Auto()):
-    """
-    Computes diagonal
+    r""" Computes the diagonal of a linear operator :math:`A`.
+
+    You can select an Exact method which computes one entry of the diagonal at a time,
+    or the Hutchinson's estimator which uses random probes.
+    Additionally, you can use the Hutch++ as an improvement over the Hutchinson's estimator.
+
+    Args:
+        A (LinearOperator): The linear operator to compute the diagonal of.
+        k (int, optional): The number of entries to compute.
     """
 
 
@@ -32,9 +39,7 @@ def diag(A: LinearOperator, k, alg: Hutch | HutchPP | Exact):
     return alg(A, k)
 
 
-# ############ Dispatch Rules ############
-
-
+# ############ DISPATCH RULES ############
 @dispatch
 def diag(A: Dense, k, alg: Algorithm):
     xnp = A.xnp
