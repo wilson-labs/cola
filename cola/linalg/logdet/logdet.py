@@ -6,11 +6,12 @@ from cola.ops.operators import LinearOperator, Triangular, Permutation, Identity
 from cola.ops.operators import Diagonal, Kronecker, BlockDiag, Product
 from cola.ops.operators import Dense
 from cola.utils import export
-from cola.linalg.algorithm_base import Algorithm, Auto
+from cola.linalg.algorithm_base import Algorithm
 from cola.linalg.decompositions.decompositions import Cholesky, LU, Arnoldi, Lanczos
 from cola.linalg.decompositions.decompositions import plu, cholesky
 from cola.linalg.trace.diag_trace import trace
 from cola.linalg.unary.unary import log
+from cola.linalg.unary.unary import apply_unary
 
 
 def product(xs):
@@ -72,7 +73,7 @@ def slogdet(A: LinearOperator, log_alg: Algorithm, trace_alg: Algorithm):
 
 # ########### BASE CASES #############
 @dispatch(precedence=-1)
-def slogdet(A: LinearOperator, log_alg: Auto, trace_alg: Algorithm):
+def slogdet(A: LinearOperator, log_alg: Algorithm, trace_alg: Algorithm):
     is_PSD = A.isa(PSD)
     small = np.prod(A.shape) <= 1e6
     if is_PSD and small:
@@ -101,7 +102,8 @@ def slogdet(A: LinearOperator, log_alg: LU, trace_alg: Algorithm):
 
 @dispatch(precedence=-1)
 def slogdet(A: LinearOperator, log_alg: Lanczos | Arnoldi, trace_alg: Algorithm):
-    logA = log(A, log_alg)
+    # logA = log(A, log_alg)
+    logA = apply_unary(A.xnp.log, A, log_alg)
     trlogA = trace(Dense(logA.to_dense()), trace_alg)
     # trlogA = trace(logA, trace_alg)
     mag = A.xnp.abs(trlogA)
@@ -111,20 +113,20 @@ def slogdet(A: LinearOperator, log_alg: Lanczos | Arnoldi, trace_alg: Algorithm)
 
 # ############ Dispatch Rules ############
 @dispatch(cond=lambda A, *_: all([(Ai.shape[-2] == Ai.shape[-1]) for Ai in A.Ms]))
-def slogdet(A: Product, log_alg, trace_alg):
+def slogdet(A: Product, log_alg: Algorithm, trace_alg: Algorithm):
     signs, logdets = zip(*[slogdet(Ai, log_alg, trace_alg) for Ai in A.Ms])
     return product(signs), sum(logdets)
 
 
 @dispatch
-def slogdet(A: Identity, log_alg, trace_alg):
+def slogdet(A: Identity, log_alg: Algorithm, trace_alg: Algorithm):
     xnp = A.xnp
     zero = xnp.array(0., dtype=A.dtype, device=A.device)
     return 1. + zero, zero
 
 
 @dispatch
-def slogdet(A: ScalarMul, log_alg, trace_alg):
+def slogdet(A: ScalarMul, log_alg: Algorithm, trace_alg: Algorithm):
     xnp = A.xnp
     c = A.c
     phase = c / xnp.abs(c)
@@ -132,7 +134,7 @@ def slogdet(A: ScalarMul, log_alg, trace_alg):
 
 
 @dispatch
-def slogdet(A: Diagonal, log_alg, trace_alg):
+def slogdet(A: Diagonal, log_alg: Algorithm, trace_alg: Algorithm):
     xnp = A.xnp
     mag = xnp.abs(A.diag)
     phase = A.diag / mag
@@ -140,7 +142,7 @@ def slogdet(A: Diagonal, log_alg, trace_alg):
 
 
 @dispatch
-def slogdet(A: Kronecker, log_alg, trace_alg):
+def slogdet(A: Kronecker, log_alg: Algorithm, trace_alg: Algorithm):
     # logdet(Pi A_i \otimes I) = sum_i logdet(A_i)
     signs, logdets = zip(*[slogdet(Ai, log_alg, trace_alg) for Ai in A.Ms])
     sizes = [Ai.shape[-1] for Ai in A.Ms]
@@ -151,7 +153,7 @@ def slogdet(A: Kronecker, log_alg, trace_alg):
 
 
 @dispatch
-def slogdet(A: BlockDiag, log_alg, trace_alg):
+def slogdet(A: BlockDiag, log_alg: Algorithm, trace_alg: Algorithm):
     # logdet(\bigoplus A_i) = log \prod det(A_i) = sum_i logdet(A_i)
     signs, logdets = zip(*[slogdet(Ai, log_alg, trace_alg) for Ai in A.Ms])
     scaled_logdets = sum(ld * n for ld, n in zip(logdets, A.multiplicities))
@@ -160,7 +162,7 @@ def slogdet(A: BlockDiag, log_alg, trace_alg):
 
 
 @dispatch
-def slogdet(A: Triangular, log_alg, trace_alg):
+def slogdet(A: Triangular, log_alg: Algorithm, trace_alg: Algorithm):
     xnp = A.xnp
     diag = xnp.diag(A.A)
     mag = xnp.abs(diag)
@@ -169,7 +171,7 @@ def slogdet(A: Triangular, log_alg, trace_alg):
 
 
 @dispatch
-def slogdet(A: Permutation, log_alg, trace_alg):
+def slogdet(A: Permutation, log_alg: Algorithm, trace_alg: Algorithm):
     # TODO: count the parity of the permutation and return an error if it is odd
     xnp = A.xnp
     zero = xnp.array(0., dtype=A.dtype, device=A.device)
