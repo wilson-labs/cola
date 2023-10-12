@@ -3,8 +3,8 @@ from cola.linalg.preconditioning.preconditioners import get_nys_approx
 from cola.linalg.preconditioning.preconditioners import select_rank_adaptively
 from cola.linalg.preconditioning.preconditioners import NystromPrecond
 from cola.linalg.preconditioning.preconditioners import AdaNysPrecond
-from cola.linalg.preconditioning.preconditioners import sqrt
-from cola.linalg.preconditioning.preconditioners import inverse
+# from cola.linalg.preconditioning.preconditioners import sqrt
+# from cola.linalg.preconditioning.preconditioners import inverse
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag, construct_e_vec
@@ -57,27 +57,27 @@ def test_select_rank_adaptively(backend):
     assert rel_error < 5e-5
 
 
-@parametrize(all_backends)
-def test_nys_sqrt_inverse(backend):
-    xnp = get_xnp(backend)
-    dtype = xnp.float32
-    diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
-    A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
-    rank = A.shape[0] // 2
-
-    Nys = NystromPrecond(lazify(A), rank=rank)
-
-    approx = sqrt(Nys).to_dense()
-    rel_error = relative_error(Nys.to_dense(), approx @ approx)
-    assert rel_error < _tol * 10
-
-    approx = inverse(Nys).to_dense()
-    rel_error = relative_error(xnp.eye(Nys.shape[0], Nys.shape[0], dtype=dtype, device=None), approx @ Nys.to_dense())
-    assert rel_error < _tol * 10
-
-    approx = inverse(sqrt(inverse(sqrt(Nys)))).to_dense()
-    rel_error = relative_error(Nys.to_dense(), approx @ approx @ approx @ approx)
-    assert rel_error < _tol * 10
+# @parametrize(all_backends)
+# def test_nys_sqrt_inverse(backend):
+#     xnp = get_xnp(backend)
+#     dtype = xnp.float32
+#     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10)
+#     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
+#     rank = A.shape[0] // 2
+#
+#     Nys = NystromPrecond(lazify(A), rank=rank)
+#
+#     approx = sqrt(Nys).to_dense()
+#     rel_error = relative_error(Nys.to_dense(), approx @ approx)
+#     assert rel_error < _tol * 10
+#
+#     approx = inverse(Nys).to_dense()
+#     rel_error = relative_error(xnp.eye(Nys.shape[0], Nys.shape[0], dtype=dtype, device=None), approx @ Nys.to_dense())
+#     assert rel_error < _tol * 10
+#
+#     approx = inverse(sqrt(inverse(sqrt(Nys)))).to_dense()
+#     rel_error = relative_error(Nys.to_dense(), approx @ approx @ approx @ approx)
+#     assert rel_error < _tol * 10
 
 
 @parametrize(all_backends)

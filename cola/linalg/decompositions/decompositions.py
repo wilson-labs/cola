@@ -8,6 +8,7 @@ from cola.utils import export
 from cola.linalg.algorithm_base import Algorithm
 from cola.linalg.decompositions.lanczos import lanczos
 from cola.linalg.decompositions.arnoldi import arnoldi
+from cola.linalg.algorithm_base import Auto
 import cola.linalg
 
 
@@ -116,7 +117,8 @@ def cholesky(A: Identity):
 
 @dispatch
 def cholesky(A: Diagonal | ScalarMul):
-    return cola.linalg.sqrt(A)
+    # return cola.linalg.sqrt(A)
+    return cola.linalg.apply_unary(A.xnp.sqrt, A, alg=Auto())
 
 
 @dispatch
