@@ -283,7 +283,6 @@ def pow(A: LinearOperator, alpha: Number, alg: Algorithm = Auto()):
                 case _:
                     new_alg = alg
             return inv(A, new_alg)
-
     return apply_unary(lambda x: x**alpha, A, alg)
 
 

@@ -30,7 +30,7 @@ def diag(A: LinearOperator, k: int = 0, alg: Algorithm = Auto()):
 
 # ########### BASE CASES #############
 @dispatch(precedence=-1)
-def diag(A: LinearOperator, k, alg: Auto):
+def diag(A: LinearOperator, k: int, alg: Auto):
     tol = alg.__dict__.get("tol", 1e-6)
     exact_faster = tol < 1 / np.sqrt(10 * np.prod(A.shape))
     if exact_faster:
@@ -40,19 +40,19 @@ def diag(A: LinearOperator, k, alg: Auto):
 
 
 @dispatch(precedence=-1)
-def diag(A: LinearOperator, k, alg: Hutch | HutchPP | Exact):
+def diag(A: LinearOperator, k: int, alg: Hutch | HutchPP | Exact):
     return alg(A, k)
 
 
 # ############ DISPATCH RULES ############
 @dispatch
-def diag(A: Dense, k, alg: Algorithm):
+def diag(A: Dense, k: int, alg: Algorithm):
     xnp = A.xnp
     return xnp.diag(A.A, diagonal=k)
 
 
 @dispatch
-def diag(A: Identity, k, alg: Algorithm):
+def diag(A: Identity, k: int, alg: Algorithm):
     if k == 0:
         return A.xnp.ones((A.shape[0], ), A.dtype, device=A.device)
     else:
@@ -60,7 +60,7 @@ def diag(A: Identity, k, alg: Algorithm):
 
 
 @dispatch
-def diag(A: Diagonal, k, alg: Algorithm):
+def diag(A: Diagonal, k: int, alg: Algorithm):
     if k == 0:
         return A.diag
     else:
@@ -68,20 +68,20 @@ def diag(A: Diagonal, k, alg: Algorithm):
 
 
 @dispatch
-def diag(A: Sum, k, alg: Algorithm):
+def diag(A: Sum, k: int, alg: Algorithm):
     out = sum(diag(M, k, alg) for M in A.Ms)
     return out
 
 
 @dispatch
-def diag(A: BlockDiag, k, alg: Algorithm):
+def diag(A: BlockDiag, k: int, alg: Algorithm):
     assert k == 0, "Havent filled this case yet, need to pad with 0s"
     diags = [[diag(M, k, alg)] * m for M, m in zip(A.Ms, A.multiplicities)]
     return A.xnp.concat([item for sublist in diags for item in sublist])
 
 
 @dispatch
-def diag(A: ScalarMul, k, alg: Algorithm):
+def diag(A: ScalarMul, k: int, alg: Algorithm):
     return A.c * diag(I_like(A), k, alg)
 
 
@@ -90,7 +90,7 @@ def product(c):
 
 
 @dispatch
-def diag(A: Kronecker, k, alg: Algorithm):
+def diag(A: Kronecker, k: int, alg: Algorithm):
     assert k == 0, "Need to verify correctness of rule for off diagonal case"
     ds = [diag(M, k, alg) for M in A.Ms]
     # compute outer product of the diagonals
@@ -99,7 +99,7 @@ def diag(A: Kronecker, k, alg: Algorithm):
 
 
 @dispatch
-def diag(A: KronSum, k, alg: Algorithm):
+def diag(A: KronSum, k: int, alg: Algorithm):
     assert k == 0, "Need to verify correctness of rule for off diagonal case"
     ds = [diag(M, k, alg) for M in A.Ms]
     # compute outer product of the diagonals
