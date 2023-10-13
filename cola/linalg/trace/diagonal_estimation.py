@@ -43,12 +43,14 @@ class Hutch(Algorithm):
         bs (int, optional): Number of probes.
         rand (str, optional): type of random probes (either Normal or Rademacher)
         pbar (bool, optional): Whether to show progress bar.
+        key (xnp.PRNGKey, optional): Random key (default None).
     """
     tol: float = 3e-2
     max_iters: int = 10_000
     bs: int = 100
     rand: str = 'normal'
     pbar: bool = False
+    key: Optional[PRNGKey] = None
 
     def __call__(self, A, k):
         return hutchinson_diag_estimate(A, k, **self.__dict__)[0]
