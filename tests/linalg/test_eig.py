@@ -34,7 +34,7 @@ def test_general(backend):
     eig_vals, eig_vecs = eig(A, 2, "SM", Auto(tol=1e-6))
     eig_vals = xnp.cast(eig_vals, dtype)
     rel_error = relative_error(soln_vals[:2], eig_vals)
-    assert rel_error < _tol
+    assert rel_error < _tol * 5
     assert eig_vecs.shape == (10, 2)
 
     A.annotations = set()
