@@ -4,7 +4,6 @@ from plum import dispatch
 from cola.annotations import PSD
 from cola.ops.operators import LinearOperator, Triangular, Permutation, Identity, ScalarMul
 from cola.ops.operators import Diagonal, Kronecker, BlockDiag, Product
-from cola.ops.operators import Dense
 from cola.utils import export
 from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.decompositions.decompositions import Cholesky, LU, Arnoldi, Lanczos
@@ -102,8 +101,7 @@ def slogdet(A: LinearOperator, log_alg: LU, trace_alg: Algorithm):
 @dispatch(precedence=-1)
 def slogdet(A: LinearOperator, log_alg: Lanczos | Arnoldi, trace_alg: Algorithm):
     logA = log(A, log_alg)
-    trlogA = trace(Dense(logA.to_dense()), trace_alg)
-    # trlogA = trace(logA, trace_alg)
+    trlogA = trace(logA, trace_alg)
     mag = A.xnp.abs(trlogA)
     phase = trlogA / mag
     return phase, mag

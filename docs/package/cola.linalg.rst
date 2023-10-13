@@ -13,10 +13,11 @@ Algorithms
    .. autoclass:: cola.linalg.Auto
     :members:
     :show-inheritance:
-* if A is PSD and small, uses Cholesky
-* if A is not PSD and small, uses LU
-* if A is PSD and large, uses CG
-* if A is not PSD and large, uses GMRES
+   * if A is PSD and small, uses Cholesky
+   * if A is not PSD and small, uses LU
+   * if A is PSD and large, uses CG
+   * if A is not PSD and large, uses GMRES
+
    .. autoclass:: cola.linalg.CG
     :members:
     :show-inheritance:
@@ -42,10 +43,11 @@ Algorithms
    .. autoclass:: cola.linalg.Auto
     :members:
     :show-inheritance:
-* if A is Hermitian and small, uses Eigh
-* if A is not Hermitian and small, use Eig
-* if A is Hermitian and large, uses Lanczos
-* if A is not Hermitian and large, uses Arnoldi
+   * if A is Hermitian and small, uses Eigh
+   * if A is not Hermitian and small, use Eig
+   * if A is Hermitian and large, uses Lanczos
+   * if A is not Hermitian and large, uses Arnoldi
+
    .. autoclass:: cola.linalg.Arnoldi
     :members:
     :show-inheritance:
@@ -76,10 +78,11 @@ Algorithms
    .. autoclass:: cola.linalg.Auto
     :members:
     :show-inheritance:
-* if A is Hermitian and small, uses Eigh
-* if A is not Hermitian and small, uses Eig
-* if A is Hermitian and large, uses Lanczos
-* if A is not Hermitian and large, uses Arnoldi
+   * if A is Hermitian and small, uses Eigh
+   * if A is not Hermitian and small, uses Eig
+   * if A is Hermitian and large, uses Lanczos
+   * if A is not Hermitian and large, uses Arnoldi
+
    .. autoclass:: cola.linalg.Lanczos
     :members:
     :show-inheritance:
@@ -107,8 +110,9 @@ Algorithms
     :no-index:
     :members:
     :show-inheritance:
-* if :math:`\tfrac{1}{\sqrt{10n}} < \epsilon` use Hutch :math:`O(\tfrac{1}{\delta^2})`
-* otherwise use Exact :math:`O(n)`
+   * if :math:`\tfrac{1}{\sqrt{10n}} < \epsilon` use Hutch :math:`O(\tfrac{1}{\delta^2})`
+   * otherwise use Exact :math:`O(n)`
+
    .. autoclass:: cola.linalg.Hutch
     :members:
    .. autoclass:: cola.linalg.Exact
@@ -128,10 +132,11 @@ Log Algs
    .. autoclass:: cola.linalg.Auto
     :members:
     :show-inheritance:
-* if A is PSD and small, uses Cholesky
-* if A is not PSD and small, uses LU
-* if A is PSD and large, uses Lanczos
-* if A is not PSD and large, uses Arnoldi
+   * if A is PSD and small, uses Cholesky
+   * if A is not PSD and small, uses LU
+   * if A is PSD and large, uses Lanczos
+   * if A is not PSD and large, uses Arnoldi
+
    .. autoclass:: cola.linalg.Lanczos
     :members:
     :show-inheritance:
@@ -150,8 +155,9 @@ Trace Algs
 
    .. autoclass:: cola.linalg.Auto
     :members:
-* if :math:`\tfrac{1}{\sqrt{10n}} < \epsilon` use Hutch :math:`O(\tfrac{1}{\delta^2})`
-* otherwise use Exact :math:`O(n)`
+   * if :math:`\tfrac{1}{\sqrt{10n}} < \epsilon` use Hutch :math:`O(\tfrac{1}{\delta^2})`
+   * otherwise use Exact :math:`O(n)`
+
    .. autoclass:: cola.linalg.Hutch
     :members:
    .. autoclass:: cola.linalg.Exact
