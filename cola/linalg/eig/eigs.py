@@ -96,7 +96,7 @@ def eig(A: Identity, k: int, which: str, alg: Algorithm):
     eig_slice = get_slice(k, which)
     xnp = A.xnp
     eig_vals = xnp.ones(shape=(A.shape[0], ), dtype=A.dtype, device=A.device)
-    eig_vecs = A.to_dense()
+    eig_vecs = A.to_dense()[:, xnp.arange(A.shape[0] - 1, -1, -1)]
     return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
 
 
