@@ -107,7 +107,7 @@ def test_identity(backend):
     soln_vals = xnp.array([1., 1., 1., 1.], dtype=dtype, device=None)
     eig_slice = slice(0, 3, None)
     soln_vecs = xnp.eye(4, 4, dtype=dtype, device=None)
-    soln_vecs = soln_vecs[:, xnp.arange(3, -1, -1)]
+    soln_vecs = soln_vecs[:, eig_slice]
     eig_vals, eig_vecs = eig(A, k=3, which="SM")
 
     assert relative_error(soln_vals[eig_slice], eig_vals) < _tol
