@@ -21,6 +21,7 @@ def diag(A: LinearOperator, k: int = 0, alg: Algorithm = Auto()):
     Args:
         A (LinearOperator): The linear operator to compute the diagonal of.
         k (int, optional): Specify to compute the kth off diagonal diagonal.
+        alg (Algorithm, optional): The algorithm to use for the diagonal computation (Hutch or Exact).
 
     Returns:
         Array: diag
@@ -111,20 +112,14 @@ def diag(A: KronSum, k, alg: Algorithm):
 def trace(A: LinearOperator, alg: Algorithm = Auto()):
     r""" Compute the trace of a linear operator tr(A).
 
-    Uses either :math:`O(\tfrac{1}{\delta^2})` time stochastic estimation (Hutchinson estimator)
-    or a deterministic :math:`O(n)` time algorithm if :math:`\delta < 1/\sqrt{10n}`, where
-    :math:`\delta=` tol is the standard deviation of the estimate.
-    If you unly need unbiased estimates, set tol to be very high.
+    Can use either the :math:`O(\tfrac{1}{\delta^2})` time stochastic estimation (alg=Hutch())
+    or a deterministic :math:`O(n)` time algorithm (alg =Exact()).
+
+    If only unbiased estimates of the diagonal are needed, use the Hutchinson algorithm.
 
     Args:
-        A (LinearOperator): The linear operator to compute the logdet of.
-        tol (float, optional): Tolerance for the variance (std) of the solution,
-         returns a stochastic estimate if large enough to save a substantial computation.
-         If you want the stochastic estimate, you will need to choose fairly large values,
-         e.g. 1e-2. Default: 1e-6.
-        pbar (bool, optional): Whether to show a progress bar. Defaults to False.
-        method (str, optional): Directly specify method, defaults to 'auto',
-         options are 'auto', 'exact', 'approx'.
+        A (LinearOperator): The linear operator to compute the diagonal of.
+        alg (Algorithm, optional): The algorithm to use for the diagonal computation (Hutch or Exact).
 
     Returns:
         Array: trace"""

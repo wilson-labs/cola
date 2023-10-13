@@ -3,6 +3,9 @@ from cola.utils import export
 from cola.ops import I_like, LinearOperator
 from cola.linalg.algorithm_base import Algorithm
 from dataclasses import dataclass
+from typing import Optional, Any
+
+PRNGKey = Any
 
 
 @export
@@ -11,7 +14,7 @@ class Exact(Algorithm):
     """
     Exact algorithm to compute, element-by-element, the diagonal of the matrix.
     That is, each element of the diagoinal :math:`A_{i,i}` is computed as
-    :math:`e_{i}^{*} A(e_{i})`.
+    :math:`e_{i}^{T} A(e_{i})`.
     For efficiency, this procedure is done through blocks of elements,
     :math:`A [e_{i_{1}}, \\cdots, e_{i_{B}}]` where :math:`B` is the block size.
 
@@ -64,12 +67,14 @@ class HutchPP(Algorithm):
         bs (int, optional): Number of probes.
         rand (str, optional): type of random probes (either Normal or Rademacher)
         pbar (bool, optional): Whether to show progress bar.
+        key (xnp.PRNGKey, optional): Random key (default None).
     """
     tol: float = 3e-2
     max_iters: int = 10000
     bs: int = 100
     rand: str = 'normal'
     pbar: bool = False
+    key: Optional[PRNGKey] = None
 
     def __call__(self, A, k):
         raise NotImplementedError
@@ -147,7 +152,8 @@ def exact_diag_bwd(res, grads, unflatten, *args, **kwargs):
 
 
 @export
-def hutchinson_diag_estimate(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=False, rand='normal'):
+def hutchinson_diag_estimate(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters=10000, pbar=False, rand='normal',
+                             key=None):
     """ Extract the (kth) diagonal of a linear operator using stochastic estimation
 
     Args:
@@ -157,6 +163,7 @@ def hutchinson_diag_estimate(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters
         tol (float, optional): Tolerance (default 3e-2).
         max_iters (int, optional): Maximum number of iterations (default 10000).
         pbar (bool, optional): Flag for showing progress bar.
+        key (xnp.PRNGKey, optional): Random key (default None).
 
     Returns:
         Array: Extracted diagonal elements.
@@ -167,6 +174,7 @@ def hutchinson_diag_estimate(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters
     xnp = A.xnp
     assert tol > 1e-3, "tolerance chosen too high for stochastic diagonal estimation"
     assert rand in ['normal', 'rademacher'], "rand must be 'normal' or 'rademacher'"
+    key = xnp.PRNGKey(42) if key is None else key
 
     @xnp.jit
     def body(state):
@@ -193,6 +201,6 @@ def hutchinson_diag_estimate(A: LinearOperator, k=0, bs=100, tol=3e-2, max_iters
 
     while_loop, infos = xnp.while_loop_winfo(err, tol, max_iters, pbar=pbar)
     zeros = xnp.zeros((A.shape[0] - abs(k), ), dtype=A.dtype, device=A.device)
-    n, diag_sum, *_ = while_loop(cond, body, (0, zeros, zeros, xnp.PRNGKey(42)))
+    n, diag_sum, *_ = while_loop(cond, body, (0, zeros, zeros, key))
     mean = diag_sum / (n * bs)
     return mean, infos

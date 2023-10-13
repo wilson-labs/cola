@@ -10,6 +10,9 @@ from cola.linalg.decompositions.lanczos import lanczos
 from cola.linalg.decompositions.arnoldi import arnoldi
 from cola.linalg.algorithm_base import Auto
 import cola.linalg
+from typing import Optional, Any
+
+PRNGKey = Any
 
 
 @export
@@ -58,6 +61,8 @@ class Arnoldi(Algorithm):
         max_iters (int, optional): The maximum number of iterations to run.
         tol (float, optional): Relative error tolerance.
         pbar (bool, optional): Whether to show progress bar.
+        key (PRNGKey, optional): Random key to use for the algorithm.
+            PRNGKey for jax, long integer for numpy or pytorch.
 
     Example:
         >>> A = MyLinearOperator()
@@ -67,6 +72,7 @@ class Arnoldi(Algorithm):
     max_iters: int = 1_000
     tol: float = 1e-6
     pbar: bool = False
+    key: Optional[PRNGKey] = None
 
     def __call__(self, A: LinearOperator):
         return arnoldi(A, **self.__dict__)
@@ -86,6 +92,8 @@ class Lanczos(Algorithm):
         max_iters (int, optional): The maximum number of iterations to run.
         tol (float, optional): Relative error tolerance.
         pbar (bool, optional): Whether to show progress bar.
+        key (PRNGKey, optional): Random key to use for the algorithm.
+            PRNGKey for jax, long integer for numpy or pytorch.
 
     Example:
         >>> A = MyLinearOperator()
@@ -95,6 +103,7 @@ class Lanczos(Algorithm):
     max_iters: int = 1_000
     tol: float = 1e-6
     pbar: bool = False
+    key: Optional[PRNGKey] = None
 
     def __call__(self, A: LinearOperator):
         return lanczos(A, **self.__dict__)
