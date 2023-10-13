@@ -108,7 +108,7 @@ def diag(A: KronSum, k, alg: Algorithm):
 
 @export
 @dispatch.abstract
-def trace(A: LinearOperator, alg: Algorithm):
+def trace(A: LinearOperator, alg: Algorithm = Auto()):
     r""" Compute the trace of a linear operator tr(A).
 
     Uses either :math:`O(\tfrac{1}{\delta^2})` time stochastic estimation (Hutchinson estimator)
