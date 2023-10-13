@@ -87,6 +87,7 @@ def slogdet(A: LinearOperator, log_alg: Auto, trace_alg: Algorithm):
 
 @dispatch(precedence=-1)
 def slogdet(A: LinearOperator, log_alg: Cholesky, trace_alg: Algorithm):
+    assert A.isa(PSD), "Cholesky only valid for PSD matrices, wrap in cola.PSD if necessary"
     L = cholesky(A)
     sign, logdet = slogdet(L, log_alg, trace_alg)
     return sign * A.xnp.conj(sign), 2 * logdet

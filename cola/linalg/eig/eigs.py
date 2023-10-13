@@ -51,6 +51,7 @@ def eig(A: LinearOperator, k: int, which: str, alg: Arnoldi):
 
 @dispatch
 def eig(A: LinearOperator, k: int, which: str, alg: Lanczos):
+    assert A.isa(SelfAdjoint), "Lanczos only valid for SelfAdjoint, wrap in cola.SelfAdjoint if desired"
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs, _ = lanczos_eigs(A, **alg.__dict__)
     return eig_vals[eig_slice], eig_vecs[:, eig_slice]

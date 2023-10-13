@@ -62,7 +62,7 @@ def inv(A: LinearOperator, alg: GMRES):
 
 @dispatch(precedence=-1)
 def inv(A: LinearOperator, alg: CG):
-    assert A.isa(PSD), f"CG only valid for PSD matrices, encountered {A}"
+    assert A.isa(PSD), "CG only valid for PSD matrices, wrap in cola.PSD if desired"
     return IterativeOperatorWInfo(A, alg)
 
 
@@ -91,6 +91,7 @@ def inv(A: LinearOperator, alg: Auto):
 
 @dispatch(precedence=-1)
 def inv(A: LinearOperator, alg: Cholesky):
+    assert A.isa(PSD), "Cholesky only valid for PSD matrices, wrap in cola.PSD if desired"
     L = cholesky(A)
     return inv(L.H) @ inv(L)
 

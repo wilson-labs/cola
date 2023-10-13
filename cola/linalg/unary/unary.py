@@ -122,6 +122,7 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Auto):
 
 @dispatch(precedence=-1)
 def apply_unary(f: Callable, A: LinearOperator, alg: Lanczos):
+    assert A.isa(SelfAdjoint), "Lanczos only valid for SelfAdjoint, wrap in cola.SelfAdjoint if desired"
     return LanczosUnary(A, f, **alg.__dict__)
 
 
@@ -148,6 +149,7 @@ class Eig(Algorithm):
 
 @dispatch(precedence=-1)
 def apply_unary(f: Callable, A: LinearOperator, alg: Eigh):
+    assert A.isa(SelfAdjoint), "Eigh only valid for SelfAdjoint, wrap in cola.SelfAdjoint if desired"
     Adense = A.to_dense()
     eigs, V = A.xnp.eigh(Adense)
     V = lazify(V)
