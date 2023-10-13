@@ -60,6 +60,9 @@ Algorithms
    .. autoclass:: cola.linalg.Eigh
     :members:
     :show-inheritance:
+   .. autoclass:: cola.linalg.PowerIteration
+    :members:
+    :show-inheritance:
 
 
 Matrix Functions: exp, log, sqrt, isqrt, etc.

@@ -1,9 +1,32 @@
 from cola.utils import export
 from cola.ops import LinearOperator
+from cola.linalg.algorithm_base import Algorithm
+from dataclasses import dataclass
 
 
 @export
-def power_iteration(A: LinearOperator, tol=1e-7, max_iter=1000, pbar=False, momentum=None):
+@dataclass
+class PowerIteration(Algorithm):
+    """ Simple power iteration algorithm for finding the largest eigenvalue and eigenvector.
+
+    Args:
+        tol (float, optional): Relative error tolerance.
+        max_iters (int, optional): The maximum number of iterations to run.
+        pbar (bool, optional): Whether to show progress bar.
+
+    Example:
+        >>> A = MyLinearOperator()
+        >>> v, eigmax, info = cola.linalg.eig.PowerIteration(tol=1e-3)(A)
+    """
+    tol: float = 1e-06
+    max_iter: int = 100
+    pbar: bool = False
+
+    def __call__(self, A: LinearOperator):
+        return power_iteration(A, tol=self.tol, max_iter=self.max_iter, pbar=self.pbar)
+
+
+def power_iteration(A: LinearOperator, tol=1e-6, max_iter=1000, pbar=False, momentum=None):
     """
     Performs power iteration to compute the dominant eigenvector and eigenvalue
     of the operator.
@@ -13,7 +36,6 @@ def power_iteration(A: LinearOperator, tol=1e-7, max_iter=1000, pbar=False, mome
         tol (float, optional): Stopping criteria.
         max_iters (int, optional): The maximum number of iterations to run.
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
-        pbar (bool, optional): Show a progress bar.
 
     Returns:
         tuple:

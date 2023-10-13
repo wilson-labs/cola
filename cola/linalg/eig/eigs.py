@@ -13,6 +13,7 @@ from cola.linalg.decompositions.lanczos import lanczos_eigs
 from cola.linalg.decompositions.arnoldi import arnoldi_eigs
 from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos
+from cola.linalg.eig.power_iteration import PowerIteration
 from cola.linalg.unary.unary import Eig, Eigh
 from cola.utils import export
 
@@ -42,6 +43,61 @@ def eig(A: LinearOperator, k: int = -1, which: str = 'LM', alg: Algorithm = Auto
     """
 
 
+@export
+def eigmax(A: LinearOperator, alg: Algorithm = Auto()):
+    """ Find the maximum magnitude eigenvalue.
+        Equivalent to eig(A, k=1, which='LM')
+
+    Args:
+        A (LinearOperator): The linear operator for which eigenvalues and eigenvectors are computed.
+        alg (Algorithm): (Auto, PowerIteration, Eig, Eigh, Arnoldi, Lanczos)
+
+    Returns:
+        float: The maximum magnitude eigenvalue.
+    """
+    es, vs = eig(A, k=1, which='LM', alg=alg)
+    return es[0]
+
+
+@export
+def eigmin(A: LinearOperator, alg: Algorithm = Auto()):
+    """ Find the minimum magnitude eigenvalue.
+        Equivalent to eig(A, k=1, which='SM')
+
+    Args:
+        A (LinearOperator): The linear operator for which eigenvalues and eigenvectors are computed.
+        alg (Algorithm): (Auto, PowerIteration, Eig, Eigh, Arnoldi, Lanczos)
+
+    Returns:
+        float: The minimum magnitude eigenvalue.
+    """
+    es, vs = eig(A, k=1, which='SM', alg=alg)
+    return es[0]
+
+
+@dispatch(precedence=-1)
+def eig(A: LinearOperator, k: int, which: str, alg: Auto):
+    """ Auto:
+        - if A is Hermitian and small, use Eigh
+        - if A is Hermitian and large, use Lanczos
+        - if A is not Hermitian and small, use Eig
+        - if A is not Hermitian and large, use Arnoldi
+    """
+    SA = A.isa(SelfAdjoint)
+    small = bool(np.prod(A.shape) <= 1e6)
+    if k == 1 and which == 'LM':
+        algorithm = PowerIteration(**alg.__dict__)
+    elif SA and small:
+        algorithm = Eigh()
+    elif not SA and small:
+        algorithm = Eig()
+    elif SA and not small:
+        algorithm = Lanczos(**alg.__dict__)
+    elif not SA and not small:
+        algorithm = Arnoldi(**alg.__dict__)
+    return eig(A, k, which, algorithm)
+
+
 @dispatch
 def eig(A: LinearOperator, k: int, which: str, alg: Arnoldi):
     eig_slice = get_slice(k, which)
@@ -58,26 +114,6 @@ def eig(A: LinearOperator, k: int, which: str, alg: Lanczos):
 
 
 @dispatch(precedence=-1)
-def eig(A: LinearOperator, k: int, which: str, alg: Auto):
-    """ Auto:
-        - if A is Hermitian and small, use Eigh
-        - if A is Hermitian and large, use Lanczos
-        - if A is not Hermitian and small, use Eig
-        - if A is not Hermitian and large, use Arnoldi
-    """
-    match (A.isa(SelfAdjoint), bool(np.prod(A.shape) <= 1e6)):
-        case (True, True):
-            algorithm = Eigh()
-        case (True, False):
-            algorithm = Lanczos(**alg.__dict__)
-        case (False, True):
-            algorithm = Eig()
-        case (False, False):
-            algorithm = Arnoldi(**alg.__dict__)
-    return eig(A, k, which, algorithm)
-
-
-@dispatch(precedence=-1)
 def eig(A: LinearOperator, k: int, which: str, alg: Eig):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs = A.xnp.eig(A.to_dense())
@@ -89,6 +125,13 @@ def eig(A: LinearOperator, k: int, which: str, alg: Eigh):
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs = A.xnp.eigh(A.to_dense())
     return eig_vals[eig_slice], Stiefel(lazify(eig_vecs[:, eig_slice]))
+
+
+@dispatch(precedence=-1)
+def eig(A: LinearOperator, k: int, which: str, alg: PowerIteration):
+    assert k == 1 and which == 'LM', "PowerIteration only valid for k=1 and which='LM'"
+    v, emax, _ = alg(A)
+    return emax[None], v[:, None]
 
 
 @dispatch
