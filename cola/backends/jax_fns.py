@@ -123,11 +123,12 @@ def is_cuda_available():
 
 def eig(A):
     # if GPU, convert to CPU first since jax doesn't support it
-    device = A.device_buffer.device()
-    if str(device)[:3] != 'cpu':
-        A = jax.device_put(A, jax.devices("cpu")[0])
+    # device = A.device_buffer.device()
+    # if str(device)[:3] != 'cpu':
+    # A = jax.device_put(A, jax.devices("cpu")[0])
     w, v = jnp.linalg.eig(A)
-    return jax.device_put(w, device), jax.device_put(v, device)
+    return w, v
+    # return jax.device_put(w, device), jax.device_put(v, device)
 
 
 def eye(n, m, dtype, device):
