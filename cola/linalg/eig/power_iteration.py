@@ -2,6 +2,9 @@ from cola.utils import export
 from cola.ops import LinearOperator
 from cola.linalg.algorithm_base import Algorithm
 from dataclasses import dataclass
+from typing import Optional, Any
+
+PRNGKey = Any
 
 
 @export
@@ -13,20 +16,22 @@ class PowerIteration(Algorithm):
         tol (float, optional): Relative error tolerance.
         max_iters (int, optional): The maximum number of iterations to run.
         pbar (bool, optional): Whether to show progress bar.
+        key (PRNGKey, optional): Random key for reproducibility.
 
     Example:
         >>> A = MyLinearOperator()
-        >>> v, eigmax, info = cola.linalg.eig.PowerIteration(tol=1e-3)(A)
+        >>> v, eigmax, info = PowerIteration(tol=1e-3)(A)
     """
     tol: float = 1e-06
     max_iter: int = 100
     pbar: bool = False
+    key: Optional[PRNGKey] = None
 
     def __call__(self, A: LinearOperator):
-        return power_iteration(A, tol=self.tol, max_iter=self.max_iter, pbar=self.pbar)
+        return power_iteration(A, tol=self.tol, max_iter=self.max_iter, pbar=self.pbar, key=self.key)
 
 
-def power_iteration(A: LinearOperator, tol=1e-6, max_iter=1000, pbar=False, momentum=None):
+def power_iteration(A: LinearOperator, tol=1e-6, max_iter=1000, pbar=False, key=None, momentum=None):
     """
     Performs power iteration to compute the dominant eigenvector and eigenvalue
     of the operator.
@@ -36,6 +41,7 @@ def power_iteration(A: LinearOperator, tol=1e-6, max_iter=1000, pbar=False, mome
         tol (float, optional): Stopping criteria.
         max_iters (int, optional): The maximum number of iterations to run.
         pbar (bool, optional): Whether to show a progress bar. Defaults to False.
+        key (PRNGKey, optional): Random key for reproducibility.
 
     Returns:
         tuple:
@@ -44,7 +50,8 @@ def power_iteration(A: LinearOperator, tol=1e-6, max_iter=1000, pbar=False, mome
             - info (dict): General information about the iterative procedure.
     """
     xnp = A.xnp
-    v = xnp.randn(*A.shape[-1:], dtype=A.dtype, device=A.device, key=xnp.PRNGKey(0))
+    key = xnp.PRNGKey(42) if key is None else key
+    v = xnp.randn(*A.shape[-1:], dtype=A.dtype, device=A.device, key=key)
 
     @xnp.jit
     def body(state):
