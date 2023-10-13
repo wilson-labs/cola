@@ -107,7 +107,7 @@ def slogdet(A: LinearOperator, log_alg: Lanczos | Arnoldi, trace_alg: Algorithm)
     return phase, mag
 
 
-# ############ Dispatch Rules ############
+# ############ DISPATCH RULES ############
 @dispatch(cond=lambda A, *_: all([(Ai.shape[-2] == Ai.shape[-1]) for Ai in A.Ms]))
 def slogdet(A: Product, log_alg: Algorithm, trace_alg: Algorithm):
     signs, logdets = zip(*[slogdet(Ai, log_alg, trace_alg) for Ai in A.Ms])

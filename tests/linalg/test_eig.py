@@ -33,7 +33,7 @@ def test_general(backend):
     assert rel_error < _tol * 5
     eig_vals, eig_vecs = eig(A, 2, "SM", Auto(tol=1e-6))
     eig_vals = xnp.cast(eig_vals, dtype)
-    rel_error = relative_error(soln_vals[-2:], xnp.sort(eig_vals))
+    rel_error = relative_error(soln_vals[:2], eig_vals)
     assert rel_error < _tol
     assert eig_vecs.shape == (10, 2)
 
@@ -105,8 +105,9 @@ def test_identity(backend):
     dtype = xnp.float32
     A = Identity(shape=(4, 4), dtype=dtype)
     soln_vals = xnp.array([1., 1., 1., 1.], dtype=dtype, device=None)
-    eig_slice = slice(1, None, None)
+    eig_slice = slice(0, 3, None)
     soln_vecs = xnp.eye(4, 4, dtype=dtype, device=None)
+    soln_vecs = soln_vecs[:, xnp.arange(3, -1, -1)]
     eig_vals, eig_vecs = eig(A, k=3, which="SM")
 
     assert relative_error(soln_vals[eig_slice], eig_vals) < _tol
