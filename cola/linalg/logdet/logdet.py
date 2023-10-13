@@ -30,7 +30,7 @@ def logdet(A: LinearOperator, log_alg: Algorithm = Auto(), trace_alg: Algorithm 
     Args:
         A (LinearOperator): The linear operator to compute the logdet of.
         log_alg (Algorithm, optional): The algorithm to use for the log.
-            Specify LU() or Cholesky() for a approach.
+            Specify LU() or Cholesky() for a dense approach.
         trace_alg (Algorithm, optional): The algorithm to use for the trace computation.
 
     Returns:
@@ -48,7 +48,7 @@ def slogdet(A: LinearOperator, log_alg: Algorithm = Auto(), trace_alg: Algorithm
     Args:
         A (LinearOperator): The linear operator to compute the logdet of.
         log_alg (Algorithm, optional): The algorithm to use for the log.
-            Specify LU() or Cholesky() for a approach.
+            Specify LU() or Cholesky() for a dense approach.
         trace_alg (Algorithm, optional): The algorithm to use for the trace computation.
 
     Returns:

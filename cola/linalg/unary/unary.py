@@ -101,7 +101,13 @@ def apply_unary(f: Callable, A: LinearOperator, alg: Algorithm = Auto()):
 
 
 @dispatch(precedence=-1)
-def apply_unary(f: Callable, A: LinearOperator, alg: Algorithm):
+def apply_unary(f: Callable, A: LinearOperator, alg: Auto):
+    """ Auto:
+        - if A is Hermitian and small, use Eigh
+        - if A is Hermitian and large, use Lanczos
+        - if A is not Hermitian and small, use Eig
+        - if A is not Hermitian and large, use Arnoldi
+    """
     psd, small = A.isa(PSD), np.prod(A.shape) <= 1e6
     if psd and small:
         alg = Eigh()
