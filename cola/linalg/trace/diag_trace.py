@@ -76,7 +76,7 @@ def diag(A: Sum, k, alg: Algorithm):
 def diag(A: BlockDiag, k, alg: Algorithm):
     assert k == 0, "Havent filled this case yet, need to pad with 0s"
     diags = [[diag(M, k, alg)] * m for M, m in zip(A.Ms, A.multiplicities)]
-    return A.xnp.concatenate([item for sublist in diags for item in sublist])
+    return A.xnp.concat([item for sublist in diags for item in sublist])
 
 
 @dispatch
@@ -108,7 +108,7 @@ def diag(A: KronSum, k, alg: Algorithm):
 
 @export
 @dispatch.abstract
-def trace(A: LinearOperator, alg: Algorithm):
+def trace(A: LinearOperator, alg: Algorithm = Auto()):
     r""" Compute the trace of a linear operator tr(A).
 
     Uses either :math:`O(\tfrac{1}{\delta^2})` time stochastic estimation (Hutchinson estimator)
