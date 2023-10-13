@@ -49,6 +49,7 @@ class Hutch(Algorithm):
     bs: int = 100
     rand: str = 'normal'
     pbar: bool = False
+    key: Optional[PRNGKey] = None
 
     def __call__(self, A, k):
         return hutchinson_diag_estimate(A, k, **self.__dict__)[0]
