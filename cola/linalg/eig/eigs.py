@@ -135,9 +135,9 @@ def eig(A: Diagonal, k: int, which: str, alg: Algorithm):
 def get_slice(num, which):
     if num == -1:
         raise ValueError(f"Number of eigenvalues {num} must be explicitly specified")
-    if which == "LM":
+    if which == "SM":
         eig_slice = slice(0, num, None)
-    elif which == "SM":
+    elif which == "LM":
         id = -1 if num is None else -num
         eig_slice = slice(id, None, None)
     else:
