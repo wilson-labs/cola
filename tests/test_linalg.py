@@ -1,9 +1,9 @@
-import cola as co
 from cola.fns import lazify
+from cola.linalg.inverse.inv import inv
 from cola.ops import Tridiagonal
-from cola.algorithms.lanczos import get_lu_from_tridiagonal
-from cola.linalg.nullspace import nullspace
-from cola.linalg.eigs import power_iteration
+from cola.linalg.decompositions.lanczos import get_lu_from_tridiagonal
+from cola.linalg.tbd.nullspace import nullspace
+from cola.linalg.eig.power_iteration import power_iteration
 from cola.fns import kron
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends
@@ -21,7 +21,7 @@ def test_inv(backend):
     rhs = xnp.ones(shape=(A.shape[0], 5), dtype=dtype, device=None)
     soln = xnp.solve(A, rhs)
 
-    approx = co.inv(lazify(A)) @ rhs
+    approx = inv(lazify(A)) @ rhs
 
     rel_error = relative_error(soln, approx)
     assert rel_error < _tol * 10

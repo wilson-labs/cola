@@ -1,12 +1,41 @@
 from cola.ops import LinearOperator
 from cola.ops import Array
-# from cola.algorithms.arnoldi import run_householder_arnoldi
-from cola.algorithms.arnoldi import arnoldi
+from cola.linalg.decompositions.arnoldi import arnoldi
 from cola.utils import export
 from cola.utils.custom_autodiff import iterative_autograd
+from cola.linalg.algorithm_base import Algorithm
+from dataclasses import dataclass
 
 
 @export
+@dataclass
+class GMRES(Algorithm):
+    """
+    Generalized Minimal Residual algorith (GMRES) for soving Ax=b or AX=B (multiple rhs).
+
+    The runtime is bounded by :math:`O(\\sqrt{\\kappa})` and
+    it uses :math:`O(m n)` memory.
+    Where :math:`\\kappa` is the condition number of the linear operator,
+    n is the size of A and m represents the max iters.
+    Optionally, you can use a preconditioner (approx of A⁻¹) to accelerate convergence.
+
+    Args:
+        tol (float, optional): Relative error tolerance for Arnoldi.
+        max_iters (int, optional): The maximum number of iterations to run in Arnoldi.
+        pbar (bool, optional): Whether to show progress bar.
+        x0 (Array, optional): (n,) or (n, b) guess for initial solution.
+        P (LinearOperator, optional): Preconditioner. Defaults to the identity.
+    """
+    tol: float = 1e-6
+    max_iters: int = 1000
+    pbar: bool = False
+    x0: Array = None
+    P: LinearOperator = None
+
+    def __call__(self, A, b):
+        return gmres(A, b, **self.__dict__)
+
+
 def gmres(A: LinearOperator, rhs: Array, x0=None, max_iters=100, tol=1e-7, P=None, use_householder=False,
           use_triangular=False, pbar=False):
     """

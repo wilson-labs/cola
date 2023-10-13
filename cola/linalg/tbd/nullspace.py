@@ -1,10 +1,11 @@
 from cola.ops import LinearOperator, Array
 from cola.backends import get_library_fns
-from cola.linalg.eigs import eigmax
 from cola.utils import export
 import logging
 import numpy as np
 from plum import dispatch
+
+eigmax = None  # TODO: fix
 
 
 def orthogonal_complement(C, tol=1e-5):

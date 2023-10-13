@@ -2,9 +2,8 @@ from cola import Stiefel
 from cola.ops import LinearOperator
 from cola.ops import Array, Dense
 from cola.ops import Householder, Product
-from cola.utils import export
-import cola
-from cola import Stiefel, lazify
+# from cola.utils import export
+from cola import lazify
 
 # def arnoldi_eigs_bwd(res, grads, unflatten, *args, **kwargs):
 #     val_grads, eig_grads, _ = grads
@@ -34,9 +33,8 @@ from cola import Stiefel, lazify
 
 # @export
 # @iterative_autograd(arnoldi_eigs_bwd)
-@export
 def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7,
-                 use_householder: bool = False, pbar: bool = False):
+                 use_householder: bool = False, pbar: bool = False, key=None):
     """
     Computes eigenvalues and eigenvectors using Arnoldi.
 
@@ -48,6 +46,7 @@ def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
         tol (float, optional): Stopping criteria.
         use_householder (bool, optional): Use Householder Arnoldi variant.
         pbar (bool, optional): Show a progress bar.
+        key (PNRGKey, optional): PRNGKey for random number generation.
 
     Returns:
         tuple:
@@ -56,16 +55,15 @@ def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
             - info (dict): General information about the iterative procedure.
     """
     Q, H, info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, use_householder=use_householder,
-                         pbar=pbar)
+                         pbar=pbar, key=key)
     xnp = A.xnp
     eigvals, vs = xnp.eig(H.to_dense())
     eigvectors = Q @ lazify(vs)
     return eigvals, eigvectors, info
 
 
-@export
 def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7, use_householder: bool = False,
-            pbar: bool = False):
+            pbar: bool = False, key=None):
     """
     Computes the Arnoldi decomposition of the linear operator A, A = QHQ^*.
 
@@ -77,6 +75,7 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e
         tol (float, optional): Stopping criteria.
         use_householder (bool, optional): Use Householder Arnoldi iteration.
         pbar (bool, optional): Show a progress bar.
+        key (PNRGKey, optional): PRNGKey for random number generation.
 
     Returns:
         tuple:
@@ -86,7 +85,8 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e
     """
     xnp = A.xnp
     if start_vector is None:
-        start_vector = xnp.randn(A.shape[-1], dtype=A.dtype, device=A.device)
+        key = xnp.PRNGKey(42) if key is None else key
+        start_vector = xnp.randn(A.shape[-1], dtype=A.dtype, device=A.device, key=key)
     if len(start_vector.shape) == 1:
         rhs = start_vector[:, None]
     else:
@@ -101,17 +101,6 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e
         H = xnp.vmap(Dense)(H)
         Q = Stiefel(xnp.vmap(Dense)(Q))
         return Q, H, infodict
-
-
-def ArnoldiDecomposition(A: LinearOperator, start_vector=None, max_iters=100, tol=1e-7, use_householder=False,
-                         pbar=False):
-    """ Provides the Arnoldi decomposition of a matrix A = Q H Q^H. LinearOperator form of arnoldi,
-        see arnoldi for arguments."""
-    Q, H, info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, use_householder=use_householder,
-                         pbar=pbar)
-    A_approx = cola.UnitaryDecomposition(Q, H)
-    A_approx.info = info
-    return A_approx
 
 
 def get_householder_vec_simple(x, idx, xnp):

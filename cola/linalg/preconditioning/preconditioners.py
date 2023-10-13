@@ -1,6 +1,6 @@
 from typing import Union
 from cola.ops import LinearOperator
-from cola.algorithms import power_iteration
+from cola.linalg.eig.power_iteration import power_iteration
 from plum import dispatch
 from cola.utils import export
 
@@ -150,6 +150,14 @@ def get_nys_approx(A, Omega, eps):
     return Lambda, U
 
 
+@export
+@dispatch.abstract
+def sqrt(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
+    """
+    """
+
+
+@export
 @dispatch
 def sqrt(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
     xnp = A.xnp
@@ -159,6 +167,14 @@ def sqrt(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
     return B
 
 
+@export
+@dispatch.abstract
+def inverse(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
+    """
+    """
+
+
+@export
 @dispatch
 def inverse(A: Union[NystromPrecond, NystromPrecondLazy]) -> NystromPrecondLazy:
     xnp = A.xnp

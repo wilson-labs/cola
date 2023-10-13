@@ -1,13 +1,41 @@
+from cola.linalg.algorithm_base import Algorithm
 from cola.ops import Array
 from cola.ops import LinearOperator
 from cola.ops import I_like
 from cola.utils.custom_autodiff import iterative_autograd
 from cola.utils import export
+from dataclasses import dataclass
 
 _small_value = 1e-40
 
 
 @export
+@dataclass
+class CG(Algorithm):
+    """ Conjugate gradients algorithm Solves Ax=b or AX=B (multiple rhs).
+
+    The runtime is bounded by :math:`O(\\sqrt{\\kappa})` and
+    it uses :math:`O(n)` memory.
+    Where :math:`\\kappa` is the condition number of the linear operator.
+    Optionally, you can use a preconditioner (approx of A⁻¹) to accelerate convergence.
+
+    Args:
+        tol (float, optional): Relative error tolerance.
+        max_iters (int, optional): The maximum number of iterations to run.
+        pbar (bool, optional): Whether to show progress bar.
+        x0 (Array, optional): (n,) or (n, b) guess for initial solution.
+        P (LinearOperator, optional): Preconditioner. Defaults to the identity.
+    """
+    tol: float = 1e-6
+    max_iters: int = 1000
+    pbar: bool = False
+    x0: Array = None
+    P: LinearOperator = None
+
+    def __call__(self, A, b):
+        return cg(A, b, **self.__dict__)
+
+
 def cg(A: LinearOperator, rhs: Array, x0=None, P=None, tol=1e-6, max_iters=5000, pbar=False):
     """
     Solves Ax=b or AX=B using conjugate gradients (CG).

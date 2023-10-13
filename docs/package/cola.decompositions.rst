@@ -1,7 +1,7 @@
 Decompositions
 ================
 
-.. automodule:: cola.decompositions
+.. automodule:: cola.linalg.decompositions
     :members:
     :show-inheritance:
     :member-order: bysource

@@ -1,4 +1,3 @@
-""" Low-level algorithms used in CoLA (no dispatch rules). """
 import pkgutil
 from cola.utils import import_from_all
 
