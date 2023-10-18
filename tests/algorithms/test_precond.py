@@ -1,10 +1,10 @@
 from cola.fns import lazify
-from cola.algorithms.preconditioners import get_nys_approx
-from cola.algorithms.preconditioners import select_rank_adaptively
-from cola.algorithms.preconditioners import NystromPrecond
-from cola.algorithms.preconditioners import AdaNysPrecond
-from cola.algorithms.preconditioners import sqrt
-from cola.algorithms.preconditioners import inverse
+from cola.linalg.preconditioning.preconditioners import get_nys_approx
+from cola.linalg.preconditioning.preconditioners import select_rank_adaptively
+from cola.linalg.preconditioning.preconditioners import NystromPrecond
+from cola.linalg.preconditioning.preconditioners import AdaNysPrecond
+from cola.linalg.preconditioning.preconditioners import sqrt
+from cola.linalg.preconditioning.preconditioners import inverse
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag, construct_e_vec

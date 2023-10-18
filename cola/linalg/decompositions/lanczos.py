@@ -1,21 +1,8 @@
 from cola import SelfAdjoint, Unitary
 from cola.fns import lazify
 from cola.ops import Array, LinearOperator, Dense, Tridiagonal
-from cola.utils import export
+# from cola.utils import export
 import cola
-
-
-def lanczos_max_eig(A: LinearOperator, rhs: Array, max_iters: int, tol: float = 1e-7):
-    """
-    Computes the maximum eigenvalue using lanczos
-
-    A: LinearOperator (n, n) positive definite
-    rhs: Array (n, b) multiple right hands or (n,) single vector (usually randomly sampled)
-    max_iters: int maximum number of iters to run lanczos
-    tol: float: tolerance criteria to stop lanczos
-    """
-    eigvals, *_ = lanczos_eigs(A=A, start_vector=rhs, max_iters=max_iters, tol=tol)
-    return eigvals[-1]
 
 
 def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
@@ -46,9 +33,9 @@ def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):
 
 # @export
 # @iterative_autograd(lanczos_eig_bwd)
-@export
+# @export
 def lanczos_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7,
-                 pbar: bool = False):
+                 pbar: bool = False, key=None):
     """
     Computes the eigenvalues and eigenvectors using Lanczos.
 
@@ -59,6 +46,7 @@ def lanczos_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
         max_iters (int): The maximum number of iterations to run.
         tol (float, optional): Stopping criteria.
         pbar (bool, optional): Show a progress bar.
+        key (PNRGKey, optional): PRNGKey for random number generation.
 
     Returns:
         tuple:
@@ -68,9 +56,7 @@ def lanczos_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
 
     """
     xnp = A.xnp
-    if start_vector is None:
-        start_vector = xnp.randn(A.shape[0], dtype=A.dtype, device=A.device)
-    Q, T, info = lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar)
+    Q, T, info = lanczos(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, pbar=pbar, key=key)
     eigvals, eigvectors = xnp.eigh(T.to_dense())
     idx = xnp.argsort(eigvals, axis=-1)
     V = Q @ lazify(eigvectors[:, idx])
@@ -87,7 +73,7 @@ def LanczosDecomposition(A: LinearOperator, start_vector=None, max_iters=100, to
     return A_approx
 
 
-def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7, pbar=False):
+def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7, pbar=False, key=None):
     """
     Computes the Lanczos decomposition of a the operator A, A = Q T Q^*.
 
@@ -97,6 +83,7 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
          Defaults to a random probe vector (n, ).
         max_iters (int, optional): The maximum number of iterations to run.
         tol (float, optional): Stopping criteria.
+        key (PNRGKey, optional): PRNGKey for random number generation.
 
     Returns:
         tuple:
@@ -113,7 +100,8 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
     xnp = A.xnp
     max_iters = min(max_iters, A.shape[0])
     if start_vector is None:
-        start_vector = xnp.randn(A.shape[0], dtype=A.dtype, device=A.device)
+        key = xnp.PRNGKey(42) if key is None else key
+        start_vector = xnp.randn(A.shape[0], dtype=A.dtype, device=A.device, key=key)
 
     if len(start_vector.shape) == 1:
         rhs = start_vector[:, None]

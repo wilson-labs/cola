@@ -1,6 +1,6 @@
 import numpy as np
 from cola.fns import lazify
-from cola.algorithms.lobpcg import lobpcg
+from cola.linalg.eig.lobpcg import lobpcg
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag

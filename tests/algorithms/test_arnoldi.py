@@ -3,9 +3,9 @@ from cola.ops import Householder
 from cola.ops import Product
 from cola.ops import Dense
 from cola.fns import lazify
-from cola.algorithms.arnoldi import get_arnoldi_matrix
-from cola.algorithms.arnoldi import arnoldi_eigs
-from cola.algorithms.arnoldi import run_householder_arnoldi
+from cola.linalg.decompositions.arnoldi import get_arnoldi_matrix
+from cola.linalg.decompositions.arnoldi import arnoldi_eigs
+from cola.linalg.decompositions.arnoldi import run_householder_arnoldi
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag

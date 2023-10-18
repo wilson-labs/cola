@@ -61,7 +61,7 @@ print(F @ v)
 ```
 ```
 [0.2       0.2       2.2       2.2       4.2       4.2       6.2
- 6.2       8.2       8.2       7.8121004 2.062    ]
+ 6.2       8.2       8.2       7.8       2.1    ]
 ```
 
 2. **Performing Linear Algebra**. With these objects we can perform linear algebra operations even when they are very big.
@@ -70,8 +70,8 @@ print(cola.linalg.trace(F))
 Q = F.T @ F + 1e-3 * cola.ops.I_like(F)
 b = cola.linalg.inv(Q) @ v
 print(jnp.linalg.norm(Q @ b - v))
-print(cola.linalg.eig(F)[0][:5])
-print(cola.sqrt(A))
+print(cola.linalg.eig(F, k=F.shape[0])[0][:5])
+print(cola.linalg.sqrt(A))
 ```
 
 ```
@@ -146,7 +146,7 @@ If you use CoLA, please cite the following paper:
 
 | LinearOperators   | Diag | BlockDiag | Kronecker | KronSum | Sparse | Jacobian | Hessian | Fisher | Concatenated | Triangular | FFT | Tridiagonal |
 |:-----------------:|:----:|:---------:|:---------:|:-------:|:------:|:--------:|:-------:|:------:|:------------:|:----------:|:---:|:-----------:|
-| **Implementation**|   ✓  |     ✓     |     ✓     |    ✓    |   ✓   |    ✓     |    ✓    |   ✓    |      ✓       |     ✓      |   ✓  |      ✓      |
+| **Implementation**|   ✓  |     ✓     |     ✓     |    ✓    |      |    ✓     |    ✓    |   ✓    |      ✓       |     ✓      |   ✓  |      ✓      |
 
 | Annotations      | SelfAdjoint | PSD | Unitary |
 |:----------------:|:-----------:|:---:|:-------:|

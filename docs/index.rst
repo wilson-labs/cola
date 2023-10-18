@@ -118,9 +118,8 @@ Design Choices
    package/cola.linalg
    package/cola.ops
    package/cola.linear_operators
-   package/cola.fns
-   package/cola.algorithms
    package/cola.decompositions
+   package/cola.fns
    package/cola.annotations
 
 .. toctree::

@@ -1,6 +1,6 @@
 import numpy as np
 from cola.ops import Diagonal
-from cola.algorithms import stochastic_lanczos_quad
+from cola.linalg.tbd.slq import stochastic_lanczos_quad
 from cola.fns import lazify
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends
