@@ -17,7 +17,7 @@ from cola.utils.test_utils import transform_to_csr
 
 @pytest.mark.market
 @parametrize(['torch'])
-def test_cg_matrix_market(backend):
+def test_matrix_market(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float64
     input_path_s = ["./tests/data/1138_bus.mtx"]
