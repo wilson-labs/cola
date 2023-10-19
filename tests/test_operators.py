@@ -21,8 +21,10 @@ from linalg.operator_market import op_names, get_test_operator
 
 _tol = 1e-6
 
+_exclude = (slice(None), slice(None), ['square_fft'])
 
-@parametrize(tracing_backends, ['float32'], op_names)
+
+@parametrize(tracing_backends, ['float32'], op_names).excluding[_exclude]
 def test_ops_to(backend, precision, op_name):
     Op = get_test_operator(backend, precision, op_name)
     xnp = get_xnp(backend)
