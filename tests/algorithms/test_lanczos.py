@@ -22,9 +22,6 @@ def test_matrix_market(backend):
     dtype = xnp.float64
     input_path_s = [
         "./tests/data/1138_bus.mtx",
-        # "./tests/data/Tre20k.mtx",
-        # "./tests/data/finan512.mtx",
-        # "./tests/data/cfd1.mtx",
     ]
     for input_path in input_path_s:
         print(input_path)
