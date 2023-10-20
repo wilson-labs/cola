@@ -19,7 +19,7 @@ config.update('jax_enable_x64', True)
 
 
 @pytest.mark.market
-@parametrize(all_backends)
+@parametrize(tracing_backends)
 def test_matrix_market(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float64

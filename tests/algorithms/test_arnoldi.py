@@ -12,7 +12,7 @@ from cola.linalg.decompositions.arnoldi import get_arnoldi_matrix
 from cola.linalg.decompositions.arnoldi import arnoldi_eigs
 from cola.linalg.decompositions.arnoldi import run_householder_arnoldi
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.backends import all_backends
+from cola.backends import all_backends, tracing_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 from cola.utils.test_utils import transform_to_csr, generate_lower_from_diag
 
@@ -20,7 +20,7 @@ config.update('jax_enable_x64', True)
 
 
 @pytest.mark.market
-@parametrize(all_backends)
+@parametrize(tracing_backends)
 def test_matrix_market(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float64

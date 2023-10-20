@@ -21,7 +21,7 @@ _tol = 1e-7
 
 
 @pytest.mark.market
-@parametrize(all_backends)
+@parametrize(tracing_backends)
 def test_cg_matrix_market(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float64

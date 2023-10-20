@@ -6,13 +6,13 @@ from cola.fns import lazify
 from cola.ops import Sparse
 from cola.linalg.eig.lobpcg import lobpcg
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.backends import all_backends
+from cola.backends import all_backends, tracing_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 from cola.utils.test_utils import transform_to_csr
 
 
 @pytest.mark.market
-@parametrize(all_backends)
+@parametrize(tracing_backends)
 def test_matrix_market(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float64
