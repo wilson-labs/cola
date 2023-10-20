@@ -15,6 +15,7 @@ from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 from cola.utils.test_utils import transform_to_csr, generate_lower_from_diag
+
 config.update('jax_enable_x64', True)
 
 
