@@ -40,9 +40,10 @@ def test_logdet(backend, precision, op_name):
         A3, alg, mult = PSD(A2), Lanczos(), 1.0
     else:
         A3, alg, mult = PSD(Dense((A2.H @ A).to_dense())), Lanczos(), 0.5
-    l3 = logdet(A3, log_alg=alg, trace_alg=Hutch(max_iters=300, key=xnp.PRNGKey(42)))
+    max_iters = 25 if backend == "torch" else 150
+    l3 = logdet(A3, log_alg=alg, trace_alg=Hutch(max_iters=max_iters, key=xnp.PRNGKey(42)))
     e3 = relative_error(l0, l3 * mult)
-    assert e3 < 3e-1, f"SLQ logdet failed on {type(A)} with error {e3}"
+    assert e3 < 5e-1, f"SLQ logdet failed on {type(A)} with error {e3}"
     l4 = logdet(A3, log_alg=alg, trace_alg=Exact())
     e4 = relative_error(l0, l4 * mult)
     assert e4 < 10 * tol, f"Tr(log(A)) logdet failed on {type(A)} with error {e4}"

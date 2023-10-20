@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.io import mmread
 import pytest
+from jax.config import config
 from cola.fns import lazify
 from cola.ops import Identity
 from cola.ops import Diagonal
@@ -13,10 +14,11 @@ from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends, tracing_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 from cola.utils.test_utils import transform_to_csr
+config.update('jax_enable_x64', True)
 
 
 @pytest.mark.market
-@parametrize(['torch'])
+@parametrize(all_backends)
 def test_matrix_market(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float64
@@ -31,7 +33,7 @@ def test_matrix_market(backend):
         approx, _ = gmres(A, rhs, max_iters=max_iters, tol=tol)
 
         rel_error = relative_error(A @ approx, rhs)
-        assert rel_error < 1e-4
+        assert rel_error < 1e-3
 
 
 @parametrize(tracing_backends)

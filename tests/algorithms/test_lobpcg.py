@@ -12,7 +12,7 @@ from cola.utils.test_utils import transform_to_csr
 
 
 @pytest.mark.market
-@parametrize(['torch'])
+@parametrize(all_backends)
 def test_matrix_market(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float64

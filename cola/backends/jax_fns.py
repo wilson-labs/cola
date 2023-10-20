@@ -15,6 +15,7 @@ from jax.lax import expand_dims
 from jax.lax.linalg import cholesky
 from jax.lax.linalg import svd
 from jax.lax.linalg import qr
+from jax.experimental.sparse import CSR
 from jax.scipy.linalg import block_diag
 from jax.scipy.linalg import lu as lu_lax
 from jax.scipy.linalg import solve_triangular as solvetri
@@ -94,6 +95,12 @@ softmax = jax.nn.softmax
 log_softmax = jax.nn.log_softmax
 promote_types = jnp.promote_types
 finfo = jnp.finfo
+
+
+def sparse_csr(indptr, indices, data):
+    N = indptr.shape[0] - 1
+    out = CSR((data, indices, indptr), shape=(N, N))
+    return out
 
 
 def iscomplexobj(x):

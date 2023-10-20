@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.io import mmread
 import pytest
+from jax.config import config
 from cola.fns import lazify
 from cola.ops import Identity
 from cola.ops import Diagonal
@@ -13,19 +14,24 @@ from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends, tracing_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 from cola.utils.test_utils import generate_diagonals, transform_to_csr
+config.update('jax_enable_x64', True)
 
 _tol = 1e-7
 
 
 @pytest.mark.market
-@parametrize(['torch'])
+@parametrize(all_backends)
 def test_cg_matrix_market(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float64
     input_path_s = [
-        "./tests/data/1138_bus.mtx", "./tests/data/Tre20k.mtx", "./tests/data/finan512.mtx", "./tests/data/cfd1.mtx"
+        "./tests/data/1138_bus.mtx",
+        "./tests/data/Tre20k.mtx",
+        "./tests/data/finan512.mtx",
+        "./tests/data/cfd1.mtx",
     ]
     for input_path in input_path_s:
+        print(input_path)
         matrix = mmread(input_path)
         data, col_ind, rowptr, shape = transform_to_csr(matrix.tocsc(), xnp=xnp, dtype=dtype)
         A = Sparse(data, col_ind, rowptr, shape)
@@ -35,6 +41,7 @@ def test_cg_matrix_market(backend):
         approx, _ = cg(A, rhs, max_iters=max_iters, tol=tol)
 
         rel_error = relative_error(A @ approx, rhs)
+        print(f"Rel error: {rel_error:2.5e}")
         assert rel_error < _tol * 10
 
 
