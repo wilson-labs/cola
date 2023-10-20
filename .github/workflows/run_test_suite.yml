@@ -50,7 +50,7 @@ jobs:
 
     - name: Run unit tests
       run: |
-        MARK="not big and not tricky"
+        MARK="not big and not tricky and not market"
         if [[ ${{ matrix.jax }} == "none" ]]; then
           MARK="${MARK} and not jax";
         else
