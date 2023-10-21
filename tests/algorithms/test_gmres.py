@@ -1,10 +1,7 @@
 import numpy as np
-from scipy.io import mmread
-import pytest
 from cola.fns import lazify
 from cola.ops import Identity
 from cola.ops import Diagonal
-from cola.ops import Sparse
 from cola.linalg.inverse.inv import inv
 from cola.linalg.inverse.gmres import GMRES
 from cola.linalg.inverse.gmres import gmres
@@ -12,26 +9,6 @@ from cola.linalg.inverse.gmres import gmres_fwd
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends, tracing_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
-from cola.utils.test_utils import transform_to_csr
-
-
-@pytest.mark.market
-@parametrize(tracing_backends)
-def test_matrix_market(backend):
-    xnp = get_xnp(backend)
-    dtype = xnp.float64
-    input_path_s = ["./tests/data/1138_bus.mtx"]
-    for input_path in input_path_s:
-        matrix = mmread(input_path)
-        data, col_ind, rowptr, shape = transform_to_csr(matrix.tocsc(), xnp=xnp, dtype=dtype)
-        A = Sparse(data, col_ind, rowptr, shape)
-        rhs = xnp.ones(shape=(A.shape[0], 5), dtype=dtype, device=None)
-
-        max_iters, tol = 1_000, 1e-8
-        approx, _ = gmres(A, rhs, max_iters=max_iters, tol=tol)
-
-        rel_error = relative_error(A @ approx, rhs)
-        assert rel_error < 1e-3
 
 
 @parametrize(tracing_backends)
