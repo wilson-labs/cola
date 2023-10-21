@@ -29,14 +29,15 @@ def test_gmres_matrix_market(backend):
         rhs = xnp.ones(shape=(A.shape[0], 5), dtype=dtype, device=None)
 
         A_inv = inv(A, GMRES(max_iters=1_000, tol=1e-8))
-        rel_error = relative_error(A @ A_inv @ rhs, rhs)
+        approx = A_inv @ rhs
+        rel_error = relative_error(A @ approx, rhs)
         print(f"Rel error: {rel_error:2.5e}")
         assert rel_error < 1e-6
 
 
 @pytest.mark.market
 @parametrize(tracing_backends)
-def test_matrix_market(backend):
+def test_cg_matrix_market(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float64
     input_path_s = [
@@ -53,7 +54,8 @@ def test_matrix_market(backend):
         rhs = xnp.ones(shape=(A.shape[0], 5), dtype=dtype, device=None)
 
         A_inv = inv(PSD(A), CG(max_iters=5_000, tol=1e-8))
-        rel_error = relative_error(A @ A_inv @ rhs, rhs)
+        approx = A_inv @ rhs
+        rel_error = relative_error(A @ approx, rhs)
         print(f"Rel error: {rel_error:2.5e}")
         assert rel_error < 1e-7
 

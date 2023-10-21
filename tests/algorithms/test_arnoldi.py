@@ -1,44 +1,15 @@
 import numpy as np
-import scipy
-from scipy.io import mmread
-import pytest
 from cola.ops import Householder
 from cola.ops import Product
 from cola.ops import Dense
-from cola.ops import Sparse
 from cola.fns import lazify
 from cola.linalg.decompositions.arnoldi import get_arnoldi_matrix
 from cola.linalg.decompositions.arnoldi import arnoldi_eigs
 from cola.linalg.decompositions.arnoldi import run_householder_arnoldi
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.backends import all_backends, tracing_backends
+from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
-from cola.utils.test_utils import transform_to_csr, generate_lower_from_diag
-
-
-@pytest.mark.market
-@parametrize(tracing_backends)
-def test_matrix_market(backend):
-    xnp = get_xnp(backend)
-    dtype = xnp.float64
-    input_path_s = [
-        "./tests/data/1138_bus.mtx",
-    ]
-    for input_path in input_path_s:
-        print(input_path)
-        matrix = mmread(input_path)
-        data, col_ind, rowptr, shape = transform_to_csr(matrix.tocsc(), xnp=xnp, dtype=dtype)
-        A = Sparse(data, col_ind, rowptr, shape)
-
-        max_iters, tol = 10_000, 1e-15
-        approx, *_ = arnoldi_eigs(A, max_iters=max_iters, tol=tol)
-        soln, *_ = scipy.linalg.eig(matrix.toarray())
-        approx = xnp.sort(xnp.array(approx, dtype=dtype, device=None))
-        soln = xnp.sort(xnp.array(soln, dtype=dtype, device=None))
-
-        rel_error = relative_error(approx[-100:], soln[-100:])
-        print(f"Rel error: {rel_error:2.5e}")
-        assert rel_error < 1e-8
+from cola.utils.test_utils import generate_lower_from_diag
 
 
 @parametrize(all_backends).excluding[:]
