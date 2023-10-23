@@ -13,6 +13,7 @@ from cola.linalg.decompositions.lanczos import lanczos_eigs
 from cola.linalg.decompositions.arnoldi import arnoldi_eigs
 from cola.linalg.algorithm_base import Algorithm, Auto
 from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos
+from cola.linalg.eig.lobpcg import LOBPCG, lobpcg
 from cola.linalg.eig.power_iteration import PowerIteration
 from cola.linalg.unary.unary import Eig, Eigh
 from cola.utils import export
@@ -110,6 +111,14 @@ def eig(A: LinearOperator, k: int, which: str, alg: Lanczos):
     assert A.isa(SelfAdjoint), "Lanczos only valid for SelfAdjoint, wrap in cola.SelfAdjoint if desired"
     eig_slice = get_slice(k, which)
     eig_vals, eig_vecs, _ = lanczos_eigs(A, **alg.__dict__)
+    return eig_vals[eig_slice], eig_vecs[:, eig_slice]
+
+
+@dispatch
+def eig(A: LinearOperator, k: int, which: str, alg: LOBPCG):
+    assert A.isa(SelfAdjoint), "LOBPCG only valid for SelfAdjoint, wrap in cola.SelfAdjoint if desired"
+    eig_slice = get_slice(k, which)
+    eig_vals, eig_vecs = lobpcg(A, **alg.__dict__)
     return eig_vals[eig_slice], eig_vecs[:, eig_slice]
 
 

@@ -13,12 +13,37 @@ from cola.linalg.decompositions.decompositions import Lanczos
 from cola.linalg.decompositions.decompositions import Arnoldi
 from cola.linalg.algorithm_base import Auto
 from cola.linalg.eig.eigs import eig
+from cola.linalg.eig.lobpcg import LOBPCG
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends, tracing_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 from cola.utils.test_utils import transform_to_csr
 
 _tol = 1e-6
+
+
+@pytest.mark.market
+@parametrize(tracing_backends)
+def test_lobpcg_matrix_market(backend):
+    xnp = get_xnp(backend)
+    dtype = xnp.float64
+    input_path_s = [
+        "./tests/data/1138_bus.mtx",
+    ]
+    for input_path in input_path_s:
+        print(input_path)
+        matrix = mmread(input_path)
+        data, col_ind, rowptr, shape = transform_to_csr(matrix.tocsc(), xnp=xnp, dtype=dtype)
+        A = Sparse(data, col_ind, rowptr, shape)
+
+        approx, _ = eig(PSD(A), k=A.shape[0], which="LM", alg=LOBPCG(max_iters=A.shape[0]))
+        approx = xnp.sort(xnp.array(approx, dtype=dtype, device=None))
+        soln, *_ = scipy.linalg.eigh(matrix.toarray())
+        soln = xnp.array(soln, dtype=dtype, device=None)
+
+        rel_error = relative_error(approx[-25:], soln[-25:])
+        print(f"Rel error: {rel_error:2.5e}")
+        assert rel_error < 5e-7
 
 
 @pytest.mark.market
