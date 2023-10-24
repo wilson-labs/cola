@@ -12,7 +12,8 @@ _small_value = 1e-40
 @export
 @dataclass
 class CG(Algorithm):
-    """ Conjugate gradients algorithm Solves Ax=b or AX=B (multiple rhs).
+    """
+    Conjugate gradients algorithm Solves Ax=b or AX=B (multiple rhs).
 
     The runtime is bounded by :math:`O(\\sqrt{\\kappa})` and
     it uses :math:`O(n)` memory.

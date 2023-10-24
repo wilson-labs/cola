@@ -1,16 +1,16 @@
 import numpy as np
+from dataclasses import dataclass
+from cola.linalg.algorithm_base import Algorithm
 from scipy.sparse.linalg import LinearOperator as LO
 from scipy.sparse.linalg import lobpcg as lobpcg_sp
 from cola.ops import LinearOperator
-from cola.ops import Array
 from cola.ops import Dense
 from cola.utils import export
 
 
 @export
-def lobpcg(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, tol: float = 1e-7, pbar: bool = False):
+def lobpcg(A: LinearOperator, max_iters: int = 100):
     xnp = A.xnp
-    del pbar, start_vector, tol
 
     def matvec(x):
         X = xnp.array(x, dtype=A.dtype, device=A.device)
@@ -24,5 +24,18 @@ def lobpcg(A: LinearOperator, start_vector: Array = None, max_iters: int = 100, 
     eigvals = xnp.array(np.copy(eigvals), dtype=A.dtype, device=A.device)
     eigvecs = xnp.array(np.copy(eigvecs), dtype=A.dtype, device=A.device)
     idx = xnp.argsort(eigvals, axis=-1)
-    info = {}
-    return eigvals[idx], Dense(eigvecs[:, idx]), info
+    return eigvals[idx], Dense(eigvecs[:, idx])
+
+
+@export
+@dataclass
+class LOBPCG(Algorithm):
+    """
+    Runs Locally Optimal Block Preconditioned Conjugate Gradients (LOBPCG).
+    LOBPCG is a preconditioned eigensolver for large real symmetric and
+    complex Hermitian definite generalized eigenproblems.
+
+    Args:
+        max_iters (int, optional): The maximum number of iterations to run.
+    """
+    max_iters: int = 100
