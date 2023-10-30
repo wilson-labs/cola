@@ -100,9 +100,10 @@ class NystromPrecond(LinearOperator):
     Returns:
         LinearOperator: Nystrom Preconditioner.
     """
-    def __init__(self, A, rank, mu=1e-7, eps=1e-8, adjust_mu=True):
+    def __init__(self, A, rank, mu=1e-7, eps=1e-8, adjust_mu=True, key=None):
         super().__init__(dtype=A.dtype, shape=A.shape)
-        Omega = self.xnp.randn(*(A.shape[0], rank), dtype=A.dtype, device=A.device)
+        key = A.xnp.PRNGKey(42) if key is None else key
+        Omega = self.xnp.randn(*(A.shape[0], rank), dtype=A.dtype, device=A.device, key=key)
         self._create_approx(A=A, Omega=Omega, mu=mu, eps=eps, adjust_mu=adjust_mu)
 
     def _create_approx(self, A, Omega, mu, eps, adjust_mu):
