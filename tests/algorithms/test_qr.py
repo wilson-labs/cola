@@ -20,9 +20,15 @@ def test_shifted_qr_np():
     rel_error = relative_error(approx, A)
     assert rel_error < 1e-12
 
-    A_new, _ = shifted_qr_np(A, shifts=np.zeros((50, )))
+    A_new, _ = shifted_qr_np(A_new, shifts=np.zeros((40, )))
     approx = np.sort(np.diag(A_new))[::-1][:5]
     rel_error = relative_error(approx, diag[:5])
+    assert rel_error < 1e-8
+
+    A_new, _ = shifted_qr_np(A, shifts=diag[2] * np.ones((6, )))
+    approx = np.sort(np.diag(A_new))[::-1][2]
+    rel_error = relative_error(approx, diag[2])
+    print(f"Rel error: {rel_error:2.5e}")
     assert rel_error < 1e-8
 
 
