@@ -68,21 +68,6 @@ def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
 def ira(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7, pbar: bool = False, key=None):
     """
     Computes the Arnoldi decomposition of the linear operator A, A = QHQ^*.
-
-    Args:
-        A (LinearOperator): A linear operator of size (n, n).
-        start_vector (Array, optional): An initial vector to start Arnoldi of size (n, ).
-         Defaults to a random probe.
-        max_iters (int): The maximum number of iterations to run.
-        tol (float, optional): Stopping criteria.
-        pbar (bool, optional): Show a progress bar.
-        key (PNRGKey, optional): PRNGKey for random number generation.
-
-    Returns:
-        tuple:
-            - Q (Array): Unitary matrix of size (n, max_iters) or (b, n, max_iters)
-            - H (Array): The upper Hessenberg matrix of size (max_iters, max_iters) or (b, max_iters, max_iters)
-            - info (dict): General information about the iterative procedure.
     """
     xnp = A.xnp
     if start_vector is None:
@@ -93,16 +78,27 @@ def ira(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7, 
     else:
         rhs = start_vector
 
+    nq = 4
+
     init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-    V, H, *_ = get_arnoldi_matrix(A=A, rhs=rhs, init_val=init_val, max_iters=max_iters, tol=tol, pbar=pbar)
-    eigvals, _ = xnp.eig(H)
-    H, Q = shifted_qr(Dense(H), shifts=eigvals)
-    V = V @ Q
-    rhs = 0.
-    rest = max_iters
-    idx, norm = xnp.array(0, dtype=xnp.int32, device=A.device), xnp.norm(rhs, axis=-2)
-    init_val = (V, H, idx, norm)
-    V, H, _, infodict = get_arnoldi_matrix(A=A, rhs=rhs, init_val=init_val, max_iters=rest, tol=tol, pbar=pbar)
+    V, H, *_ = get_arnoldi_matrix(A=A, init_val=init_val, max_iters=max_iters, tol=tol, pbar=pbar)
+    V, H = V[0], H[0]
+    vec = H[-1, -1] * V[:, -1]
+    eigvals, _ = xnp.eig(H[:-1])
+    eigvals = xnp.sort(eigvals.real)
+    H, Q = shifted_qr(Dense(H[:-1]), shifts=eigvals[:nq])
+    H, Q = H.to_dense(), Q.to_dense()
+    rest = max_iters - nq
+    eta = Q[-1, rest - 1]
+    new_vec = V[:, rest] + eta * vec
+    V = V[:, :-1] @ Q
+    init_val = update_arnoldi(H, V, xnp, new_vec, rest)
+    # qq, hh, *_ = init_val
+    # e_vec = xnp.canonical(max_iters - 1, shape=(max_iters, 1), dtype=H.dtype, device=None)
+    # alter = (hh[0, -1, -1] * qq[0, :, [-1]]) @ e_vec.T
+    # aa = A @ qq[0, :, :-1]
+    # bb = qq[0, :, :-1] @ hh[0, :-1] + alter
+    V, H, _, infodict = get_arnoldi_matrix(A=A, init_val=init_val, max_iters=max_iters, tol=tol, pbar=pbar)
 
     if len(start_vector.shape) == 1:
         return Stiefel(Dense(V[0])), Dense(H[0]), infodict
@@ -110,6 +106,18 @@ def ira(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7, 
         H = xnp.vmap(Dense)(H)
         V = Stiefel(xnp.vmap(Dense)(V))
         return V, H, infodict
+
+
+def update_arnoldi(H, V, xnp, new_vec, rest):
+    max_iters, dtype, device = H.shape[1], H.dtype, H.device
+    idx, norm = xnp.array(rest, dtype=xnp.int32, device=H.device), xnp.norm(new_vec)
+    H1 = xnp.zeros(shape=(1, max_iters + 1, max_iters), dtype=dtype, device=device)
+    Q1 = xnp.zeros(shape=(1, V.shape[0], max_iters + 1), dtype=dtype, device=device)
+
+    H1 = xnp.update_array(H1, H[None][:, :rest, :rest], ..., slice(None, rest, None), slice(None, rest, None))
+    Q1 = xnp.update_array(Q1, V[None][:, :, :rest], ..., slice(None, rest, None))
+    Q1 = xnp.update_array(Q1, new_vec[None], ..., idx)
+    return Q1, H1, idx, norm[None]
 
 
 def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7, use_householder: bool = False,
@@ -145,7 +153,7 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e
         Q, H, infodict = run_householder_arnoldi(A=A, rhs=rhs, max_iters=max_iters)
     else:
         init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-        Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=rhs, init_val=init_val, max_iters=max_iters, tol=tol, pbar=pbar)
+        Q, H, _, infodict = get_arnoldi_matrix(A=A, init_val=init_val, max_iters=max_iters, tol=tol, pbar=pbar)
     if len(start_vector.shape) == 1:
         return Stiefel(Dense(Q[0])), Dense(H[0]), infodict
     else:
@@ -235,7 +243,7 @@ def initialize_householder_arnoldi(xnp, rhs, max_iters, dtype):
     return Q, H, zj
 
 
-def get_arnoldi_matrix(A: LinearOperator, rhs: Array, init_val: Tuple, max_iters: int, tol: float, pbar: bool):
+def get_arnoldi_matrix(A: LinearOperator, init_val: Tuple, max_iters: int, tol: float, pbar: bool):
     xnp = A.xnp
     max_iters = min(max_iters, A.shape[0])
 
@@ -248,7 +256,7 @@ def get_arnoldi_matrix(A: LinearOperator, rhs: Array, init_val: Tuple, max_iters
     def body_fun(state):
         Q, H, idx, _ = state
         new_vec = (A @ Q[..., idx].T).T
-        h_vec = xnp.zeros(shape=(rhs.shape[-1], max_iters + 1), dtype=new_vec.dtype, device=xnp.get_device(new_vec))
+        h_vec = xnp.zeros(shape=(H.shape[0], max_iters + 1), dtype=new_vec.dtype, device=xnp.get_device(new_vec))
 
         def inner_loop(jdx, result):
             new_vec, h_vec = result

@@ -3,6 +3,7 @@ from cola.ops import Householder
 from cola.ops import Product
 from cola.ops import Dense
 from cola.fns import lazify
+from cola.linalg.decompositions.arnoldi import ira
 from cola.linalg.decompositions.arnoldi import get_arnoldi_matrix
 from cola.linalg.decompositions.arnoldi import arnoldi_eigs
 from cola.linalg.decompositions.arnoldi import run_householder_arnoldi
@@ -66,11 +67,11 @@ def test_arnoldi_vjp(backend):
 def test_ira(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    diag = generate_spectrum(coeff=0.5, scale=1.0, size=4, dtype=np.float32)
+    diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np.float32)
     A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype, device=None)
     zr = xnp.randn(A.shape[1], dtype=xnp.float32, device=None, key=xnp.PRNGKey(123))
     rhs = xnp.cast(zr, dtype=dtype)
-    eigvals, eigvecs, _ = arnoldi_eigs(lazify(A), rhs, max_iters=A.shape[-1])
+    eigvals, eigvecs, _ = ira(lazify(A), rhs, max_iters=7)
     approx = xnp.sort(xnp.cast(eigvals, xnp.float32))
     soln = xnp.sort(xnp.array(diag, xnp.float32, device=None))
 
@@ -136,8 +137,7 @@ def test_get_arnoldi_matrix(backend):
     Q_sol, H_sol = run_arnoldi(A_np, rhs_np, max_iter=max_iter, tol=1e-7, dtype=np.complex128)
 
     init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iter, dtype=A.dtype)
-    fn = xnp.jit(get_arnoldi_matrix, static_argnums=(3, 4, 5))
-    Q_approx, H_approx, *_ = fn(lazify(A), rhs, init_val, max_iter, tol=1e-12, pbar=False)
+    Q_approx, H_approx, *_ = get_arnoldi_matrix(lazify(A), init_val, max_iter, tol=1e-12, pbar=False)
     rel_error = relative_error(Q_approx[0], Q_approx[1])
     rel_error += relative_error(H_approx[0], H_approx[1])
     assert rel_error < 1e-12
@@ -152,8 +152,7 @@ def test_get_arnoldi_matrix(backend):
 
     max_iter = 10
     init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iter, dtype=A.dtype)
-    fn = xnp.jit(get_arnoldi_matrix, static_argnums=(3, 4, 5))
-    Q_approx, H_approx, *_ = fn(lazify(A), rhs, init_val, max_iter, tol=1e-12, pbar=False)
+    Q_approx, H_approx, *_ = get_arnoldi_matrix(lazify(A), init_val, max_iter, tol=1e-12, pbar=False)
     Q_approx, H_approx = Q_approx[0], H_approx[0]
     e_vec = xnp.canonical(max_iter - 1, shape=(max_iter, 1), dtype=dtype, device=None)
     alter = (H_approx[-1, -1] * Q_approx[:, [-1]]) @ e_vec.T
