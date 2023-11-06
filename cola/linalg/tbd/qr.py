@@ -3,8 +3,7 @@ from cola.ops import Dense
 
 
 def shifted_qr(A, shifts):
-    xnp = A.xnp
-    dtype, device = A.dtype, A.device
+    xnp, dtype, device = A.xnp, A.dtype, A.device
     Adense = A.to_dense()
     Id = xnp.eye(*A.shape, dtype=dtype, device=device)
     max_iters = shifts.shape[0]
