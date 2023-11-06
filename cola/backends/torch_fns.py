@@ -175,8 +175,8 @@ def solvetri(matrix, rhs, lower=True):
 
 def qr(matrix, full_matrices=False):
     mode = "reduced" if not full_matrices else "complete"
-    Q = torch.linalg.qr(matrix, mode=mode)
-    return Q
+    Q, R = torch.linalg.qr(matrix, mode=mode)
+    return Q, R
 
 
 def expand(array, axis):
