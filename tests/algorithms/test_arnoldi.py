@@ -200,30 +200,50 @@ def test_get_arnoldi_matrix(backend):
     assert rel_error < 1e-12
 
 
-@parametrize(['numpy'])
-def test_numpy_arnoldi(backend):
-    xnp = get_xnp(backend)
-    del xnp
-    float_formatter = "{:.2f}".format
-    np.set_printoptions(formatter={'float_kind': float_formatter})
-    # dtype = np.complex64
-    dtype = np.float64
-    diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np.float32)
-    A = np.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype)
+def test_numpy_iram():
+    np.set_printoptions(formatter={"float": "{:0.2f}".format})
+    np_dtype = np.float64
+    diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
+    A = np.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=48), dtype=np_dtype)
     rhs = np.random.normal(size=(A.shape[0], ))
-    # rhs = np.random.normal(size=(A.shape[0], 2)).view(np.complex128)[:, 0]
+    V, H = run_iram(A, rhs, eig_n=5, max_size=8, max_iter=100, tol=1e-12, dtype=np_dtype)
+    breakpoint()
+    abs_error = np.linalg.norm(A @ V[:, :-1] - V[:, :-1] @ H[:-1])
+    print(f"Abs error: {abs_error:1.2e}")
 
-    # Q, H = run_householder_arnoldi_np(A, rhs, max_iter=A.shape[0], dtype=dtype)
-    # abs_error = np.linalg.norm(np.eye(A.shape[0]) - Q.T @ Q)
-    # assert abs_error < 1e-4
-    # abs_error = np.linalg.norm(Q.T @ A @ Q - H)
-    # assert abs_error < 1e-6
 
-    Q, H = run_arnoldi(A, rhs, max_iter=A.shape[0] - 2, tol=1e-12, dtype=dtype)
-    abs_error = np.linalg.norm(A @ Q[:, :-1] - Q @ H)
+def test_numpy_arnoldi():
+    np.set_printoptions(formatter={"float": "{:0.2f}".format})
+    np_dtype = np.float64
+    diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
+    A = np.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=np_dtype)
+    rhs = np.random.normal(size=(A.shape[0], ))
+
+    init_val = init_arnoldi_np(rhs, max_iter=A.shape[0] - 2, dtype=np_dtype)
+    Q, H = run_arnoldi(A, init_val, max_iter=A.shape[0] - 2, tol=1e-12)
+
+    part1, part2 = check_arnoldi_fact_np(Q, H, A, iter=A.shape[0] - 2)
+    abs_error = np.linalg.norm(part1 - part2)
+    print(f"Abs error: {abs_error:1.2e}")
+    assert abs_error < 1e-12
+
+    init_val = init_arnoldi_np(rhs, max_iter=A.shape[0], dtype=np_dtype)
+    Q, H = run_arnoldi(A, init_val, max_iter=A.shape[0], tol=1e-12)
+    abs_error = np.linalg.norm(A @ Q[:, :-1] - Q[:, :-1] @ H[:-1])
+    print(f"Abs error: {abs_error:1.2e}")
     assert abs_error < 1e-10
-    abs_error = np.linalg.norm(Q[:, :-1].conj().T @ A @ Q[:, :-1] - H[:-1, :])
-    assert abs_error < 1e-10
+
+    init_val = init_arnoldi_np(rhs, max_iter=8, dtype=np_dtype)
+    Q_sol, H_sol = run_arnoldi(A, init_val, max_iter=8, tol=1e-12)
+    init_val = init_arnoldi_np(rhs, max_iter=8, dtype=np_dtype)
+    Q, H = run_arnoldi(A, init_val, max_iter=5, tol=1e-12)
+    vec = H[5, 4] * Q[:, [5]]
+    init_val = init_arnoldi_from_vec_np(Q, H, vec, max_iter=8, idx=5)
+    Q, H = run_arnoldi(A, init_val, max_iter=8, tol=1e-12)
+    for soln, approx in ((Q_sol, Q), (H_sol, H)):
+        rel_error = relative_error(soln, approx)
+        print(f"Rel error: {abs_error:1.2e}")
+        assert rel_error < 1e-12
 
 
 def run_householder_arnoldi_np(A, rhs, max_iter, dtype):
@@ -273,24 +293,99 @@ def get_householder_vec_np(x, idx):
     return vec, beta
 
 
-def run_arnoldi(A, rhs, max_iter, tol, dtype):
-    Q, H = initialize_arnoldi_np(rhs, max_iter=max_iter, dtype=dtype)
-    idx, vec = 0, rhs.copy()
-    norm = np.linalg.norm(vec)
+def run_iram(A, rhs, eig_n, max_size, max_iter, tol, dtype):
+    init_val = init_arnoldi_np(rhs, max_size, dtype)
+    norm, nq, counter = 2 * tol, max_size - eig_n, 0
+    while (counter < max_iter) & (norm > tol):
+        V, H = run_arnoldi(A, init_val, max_iter=max_size, tol=tol)
+        # part1, part2 = check_arnoldi_fact_np(V, H, A, iter=max_size)
+        eigvals, _ = np.linalg.eig(H[:-1])
+        eigvals = np.sort(eigvals)
+        print(eigvals)
+        vec = np.copy(H[-1, -1] * V[:, [-1]])
+        H, Q = run_shift_np(H[:-1].copy(), eigvals[:nq])
 
-    while (idx <= max_iter) & (norm > tol):
-        Q[:, idx] = vec / norm
+        # V_new = V[:, :-1] @ Q
+        # part1 = A @ V_new
+        # part2 = V_new @ H
+        # part2 += vec @ Q[[-1], :]
+        # diff = np.linalg.norm(part1 - part2)
+        # print(f"Abs error: {diff:1.2e}")
+
+        beta = H[eig_n, eig_n - 1]
+        sigma = Q[-1, eig_n - 1]
+        new_vec = beta * V[:, [eig_n]] + sigma * vec
+        V0 = V[:, :-1] @ Q[:, :eig_n]
+        H0 = H[:eig_n, :eig_n]
+
+        # part1 = A @ V0
+        # e_vec = np.zeros(shape=(5, 1), dtype=H.dtype)
+        # e_vec[4] = 1.0
+        # extra = new_vec @ e_vec.T
+        # part2 = V0 @ H0
+        # part2 += extra
+        # diff = np.linalg.norm(part1 - part2)
+        # print(f"Abs error: {diff:1.2e}")
+
+        init_val = init_arnoldi_from_vec_np(V0, H0, new_vec, max_iter=max_size, idx=nq + 1)
+
+        norm = np.linalg.norm(A @ V0 - V0 @ H0)
+        print(norm)
+        counter += 1
+    return V0, H0
+
+
+def run_shift_np(A, shifts):
+    Q, Id = np.eye(A.shape[0], dtype=A.dtype), np.eye(A.shape[0], dtype=A.dtype)
+    for jdx in range(len(shifts)):
+        Q1, _ = np.linalg.qr(A - shifts[jdx] * Id, mode="complete")
+        A = Q1.T @ A @ Q1
+        Q = Q @ Q1
+    return A, Q
+
+
+def run_arnoldi(A, init_val, max_iter, tol):
+    Q, H, idx, norm = init_val
+
+    while (idx < max_iter) & (norm > tol):
         vec = A @ Q[:, idx]
         for jdx in range(idx + 1):
             H[jdx, idx] = Q[:, jdx].conj().T @ vec
             vec -= H[jdx, idx] * Q[:, jdx]
         norm = np.linalg.norm(vec)
         H[idx + 1, idx] = norm
+        Q[:, idx + 1] = vec / norm
         idx += 1
-    return Q, H[:max_iter + 1, :max_iter]
-
-
-def initialize_arnoldi_np(rhs, max_iter, dtype):
-    H = np.zeros(shape=(max_iter + 2, max_iter + 2), dtype=dtype)
-    Q = np.zeros(shape=(rhs.shape[0], max_iter + 1), dtype=dtype)
     return Q, H
+
+
+def init_arnoldi_from_vec_np(Q0, H0, vec, max_iter, idx):
+    dtype = H0.dtype
+    H1 = np.zeros(shape=(max_iter + 1, max_iter), dtype=dtype)
+    Q1 = np.zeros(shape=(vec.shape[0], max_iter + 1), dtype=dtype)
+    H1[:idx, :idx] = H0[:idx, :idx].copy()
+    norm = np.linalg.norm(vec)
+    H1[idx, idx - 1] = norm
+    Q1[:, :idx] = Q0[:, :idx].copy()
+    Q1[:, [idx]] = vec / norm
+    return Q1, H1, idx, norm
+
+
+def init_arnoldi_np(rhs, max_iter, dtype):
+    H = np.zeros(shape=(max_iter + 1, max_iter), dtype=dtype)
+    Q = np.zeros(shape=(rhs.shape[0], max_iter + 1), dtype=dtype)
+    idx, vec = 0, rhs.copy()
+    norm = np.linalg.norm(vec)
+    Q[:, idx] = vec / norm
+    return Q, H, idx, norm
+
+
+def check_arnoldi_fact_np(Q, H, A, iter):
+    vec = H[iter, iter - 1] * Q[:, [iter]]
+    e_vec = np.zeros(shape=(iter, 1), dtype=H.dtype)
+    e_vec[iter - 1] = 1.0
+    extra = vec @ e_vec.T
+    part1 = A @ Q[:, :iter]
+    part2 = Q[:, :iter] @ H[:iter, :iter]
+    part2 += extra
+    return part1, part2
