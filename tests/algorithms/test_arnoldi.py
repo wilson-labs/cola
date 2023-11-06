@@ -7,7 +7,8 @@ from cola.linalg.decompositions.arnoldi import ira
 from cola.linalg.decompositions.arnoldi import get_arnoldi_matrix
 from cola.linalg.decompositions.arnoldi import arnoldi_eigs
 from cola.linalg.decompositions.arnoldi import run_householder_arnoldi
-from cola.linalg.decompositions.arnoldi import initialize_arnoldi
+from cola.linalg.decompositions.arnoldi import init_arnoldi
+from cola.linalg.decompositions.arnoldi import init_arnoldi_from_vec
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
@@ -83,6 +84,44 @@ def test_ira(backend):
     assert rel_error < 1e-3
 
 
+@parametrize(["torch"])
+def test_arnoldi_factorization_restarted(backend):
+    xnp = get_xnp(backend)
+    dtype, np_dtype = xnp.float64, np.float64
+    diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
+    A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype, device=None)
+    A = lazify(A)
+    zr = xnp.randn((A.shape[1], 1), dtype=dtype, device=None, key=xnp.PRNGKey(123))
+    rhs = xnp.cast(zr, dtype=dtype)
+    init_val = init_arnoldi(xnp, rhs, max_iters=7, dtype=A.dtype)
+    V, H, *_ = get_arnoldi_matrix(A, init_val, 3, tol=1e-12, pbar=False)
+
+    V, H = V[0], H[0]
+    e_vec = xnp.canonical(2, shape=(3, 1), dtype=dtype, device=None)
+    new_vec = (H[3, 2] * V[:, [3]])
+    alter = new_vec @ e_vec.T
+    approx = A @ V[:, :3]
+    soln = V[:, :3] @ H[:3, :3] + alter
+    rel_error = relative_error(approx, soln)
+    assert rel_error < 1e-12
+
+    init_val = init_arnoldi_from_vec(H, V, xnp, new_vec[:, 0], rest=3)
+    V, H, *_ = get_arnoldi_matrix(A, init_val, 7, tol=1e-12, pbar=False)
+    V, H = V[0], H[0]
+    e_vec = xnp.canonical(H.shape[1] - 1, shape=(H.shape[1], 1), dtype=dtype, device=None)
+    new_vec = (H[-1, -1] * V[:, [-1]])
+    alter = new_vec @ e_vec.T
+    rel_error = relative_error(A @ V[:, :-1], V[:, :-1] @ H[:-1] + alter)
+    assert rel_error < 1e-12
+
+    A_np, rhs_np = np.array(A.to_dense(), dtype=np_dtype), np.array(rhs[:, 0], dtype=np_dtype)
+    Q_sol, H_sol = run_arnoldi(A_np, rhs_np, max_iter=7, tol=1e-7, dtype=np_dtype)
+
+    for soln, approx in ((Q_sol, V), (H_sol, H)):
+        rel_error = relative_error(xnp.array(soln, dtype=dtype, device=None), approx)
+        assert rel_error < 1e-12
+
+
 @parametrize(all_backends)
 def test_arnoldi(backend):
     xnp = get_xnp(backend)
@@ -136,7 +175,7 @@ def test_get_arnoldi_matrix(backend):
     A_np, rhs_np = np.array(A, dtype=np.complex128), np.array(rhs[:, 0], dtype=np.complex128)
     Q_sol, H_sol = run_arnoldi(A_np, rhs_np, max_iter=max_iter, tol=1e-7, dtype=np.complex128)
 
-    init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iter, dtype=A.dtype)
+    init_val = init_arnoldi(xnp, rhs, max_iters=max_iter, dtype=A.dtype)
     Q_approx, H_approx, *_ = get_arnoldi_matrix(lazify(A), init_val, max_iter, tol=1e-12, pbar=False)
     rel_error = relative_error(Q_approx[0], Q_approx[1])
     rel_error += relative_error(H_approx[0], H_approx[1])
@@ -151,7 +190,7 @@ def test_get_arnoldi_matrix(backend):
     assert rel_error < 1e-12
 
     max_iter = 10
-    init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iter, dtype=A.dtype)
+    init_val = init_arnoldi(xnp, rhs, max_iters=max_iter, dtype=A.dtype)
     Q_approx, H_approx, *_ = get_arnoldi_matrix(lazify(A), init_val, max_iter, tol=1e-12, pbar=False)
     Q_approx, H_approx = Q_approx[0], H_approx[0]
     e_vec = xnp.canonical(max_iter - 1, shape=(max_iter, 1), dtype=dtype, device=None)

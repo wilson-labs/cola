@@ -80,7 +80,7 @@ def ira(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7, 
 
     nq = 4
 
-    init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
+    init_val = init_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
     V, H, *_ = get_arnoldi_matrix(A=A, init_val=init_val, max_iters=max_iters, tol=tol, pbar=pbar)
     V, H = V[0], H[0]
     vec = H[-1, -1] * V[:, -1]
@@ -92,12 +92,17 @@ def ira(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7, 
     eta = Q[-1, rest - 1]
     new_vec = V[:, rest] + eta * vec
     V = V[:, :-1] @ Q
-    init_val = update_arnoldi(H, V, xnp, new_vec, rest)
-    # qq, hh, *_ = init_val
-    # e_vec = xnp.canonical(max_iters - 1, shape=(max_iters, 1), dtype=H.dtype, device=None)
-    # alter = (hh[0, -1, -1] * qq[0, :, [-1]]) @ e_vec.T
-    # aa = A @ qq[0, :, :-1]
-    # bb = qq[0, :, :-1] @ hh[0, :-1] + alter
+    init_val = init_arnoldi_from_vec(H, V, xnp, new_vec, rest)
+
+    V, H, *_ = init_val
+    qq, hh = V[0], H[0]
+    e_vec = xnp.canonical(2, shape=(3, 1), dtype=H.dtype, device=None)
+    alter = (hh[3, 2] * qq[:, [3]]) @ e_vec.T
+    aa = A @ qq[:, :3]
+    bb = qq[:, :3] @ hh[:3, :3] + alter
+    diff = xnp.norm(aa - bb)
+    del diff
+
     V, H, _, infodict = get_arnoldi_matrix(A=A, init_val=init_val, max_iters=max_iters, tol=tol, pbar=pbar)
 
     if len(start_vector.shape) == 1:
@@ -108,15 +113,16 @@ def ira(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7, 
         return V, H, infodict
 
 
-def update_arnoldi(H, V, xnp, new_vec, rest):
+def init_arnoldi_from_vec(H, V, xnp, new_vec, rest):
     max_iters, dtype, device = H.shape[1], H.dtype, H.device
     idx, norm = xnp.array(rest, dtype=xnp.int32, device=H.device), xnp.norm(new_vec)
     H1 = xnp.zeros(shape=(1, max_iters + 1, max_iters), dtype=dtype, device=device)
     Q1 = xnp.zeros(shape=(1, V.shape[0], max_iters + 1), dtype=dtype, device=device)
 
     H1 = xnp.update_array(H1, H[None][:, :rest, :rest], ..., slice(None, rest, None), slice(None, rest, None))
+    H1 = xnp.update_array(H1, norm, ..., rest, rest - 1)
     Q1 = xnp.update_array(Q1, V[None][:, :, :rest], ..., slice(None, rest, None))
-    Q1 = xnp.update_array(Q1, new_vec[None], ..., idx)
+    Q1 = xnp.update_array(Q1, new_vec[None] / norm, ..., idx)
     return Q1, H1, idx, norm[None]
 
 
@@ -152,7 +158,7 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e
     if use_householder:
         Q, H, infodict = run_householder_arnoldi(A=A, rhs=rhs, max_iters=max_iters)
     else:
-        init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
+        init_val = init_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
         Q, H, _, infodict = get_arnoldi_matrix(A=A, init_val=init_val, max_iters=max_iters, tol=tol, pbar=pbar)
     if len(start_vector.shape) == 1:
         return Stiefel(Dense(Q[0])), Dense(H[0]), infodict
@@ -256,7 +262,7 @@ def get_arnoldi_matrix(A: LinearOperator, init_val: Tuple, max_iters: int, tol: 
     def body_fun(state):
         Q, H, idx, _ = state
         new_vec = (A @ Q[..., idx].T).T
-        h_vec = xnp.zeros(shape=(H.shape[0], max_iters + 1), dtype=new_vec.dtype, device=xnp.get_device(new_vec))
+        h_vec = xnp.zeros(shape=(H.shape[0], H.shape[1]), dtype=new_vec.dtype, device=xnp.get_device(new_vec))
 
         def inner_loop(jdx, result):
             new_vec, h_vec = result
@@ -280,7 +286,7 @@ def get_arnoldi_matrix(A: LinearOperator, init_val: Tuple, max_iters: int, tol: 
     return Q, H, idx, info
 
 
-def initialize_arnoldi(xnp, rhs, max_iters, dtype):
+def init_arnoldi(xnp, rhs, max_iters, dtype):
     device = xnp.get_device(rhs)
     idx = xnp.array(0, dtype=xnp.int32, device=device)
     H = xnp.zeros(shape=(rhs.shape[-1], max_iters + 1, max_iters), dtype=dtype, device=device)
