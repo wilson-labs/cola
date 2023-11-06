@@ -20,7 +20,6 @@ sign = torch.sign
 any = torch.any
 inv = torch.linalg.inv
 pinv = torch.linalg.pinv
-norm = torch.linalg.norm
 abs = torch.abs
 all = torch.all
 mean = torch.mean
@@ -65,6 +64,10 @@ promote_types = torch.promote_types
 finfo = torch.finfo
 slogdet = torch.linalg.slogdet
 iscomplexobj = torch.is_complex
+
+
+def norm(array, axis=None, keepdims=False):
+    return torch.linalg.norm(array, dim=axis, keepdim=keepdims)
 
 
 def get_array_device(array):

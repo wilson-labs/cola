@@ -1,4 +1,6 @@
+from typing import Tuple
 from cola import Stiefel
+from cola.linalg.tbd.qr import shifted_qr
 from cola.ops import LinearOperator
 from cola.ops import Array, Dense
 from cola.ops import Householder, Product
@@ -56,10 +58,58 @@ def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
     """
     Q, H, info = arnoldi(A=A, start_vector=start_vector, max_iters=max_iters, tol=tol, use_householder=use_householder,
                          pbar=pbar, key=key)
+    Q, H = Q[:, :-1], H[:-1]
     xnp = A.xnp
     eigvals, vs = xnp.eig(H.to_dense())
     eigvectors = Q @ lazify(vs)
     return eigvals, eigvectors, info
+
+
+def ira(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7, pbar: bool = False, key=None):
+    """
+    Computes the Arnoldi decomposition of the linear operator A, A = QHQ^*.
+
+    Args:
+        A (LinearOperator): A linear operator of size (n, n).
+        start_vector (Array, optional): An initial vector to start Arnoldi of size (n, ).
+         Defaults to a random probe.
+        max_iters (int): The maximum number of iterations to run.
+        tol (float, optional): Stopping criteria.
+        pbar (bool, optional): Show a progress bar.
+        key (PNRGKey, optional): PRNGKey for random number generation.
+
+    Returns:
+        tuple:
+            - Q (Array): Unitary matrix of size (n, max_iters) or (b, n, max_iters)
+            - H (Array): The upper Hessenberg matrix of size (max_iters, max_iters) or (b, max_iters, max_iters)
+            - info (dict): General information about the iterative procedure.
+    """
+    xnp = A.xnp
+    if start_vector is None:
+        key = xnp.PRNGKey(42) if key is None else key
+        start_vector = xnp.randn(A.shape[-1], dtype=A.dtype, device=A.device, key=key)
+    if len(start_vector.shape) == 1:
+        rhs = start_vector[:, None]
+    else:
+        rhs = start_vector
+
+    init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
+    V, H, *_ = get_arnoldi_matrix(A=A, rhs=rhs, init_val=init_val, max_iters=max_iters, tol=tol, pbar=pbar)
+    eigvals, _ = xnp.eig(H)
+    H, Q = shifted_qr(Dense(H), shifts=eigvals)
+    V = V @ Q
+    rhs = 0.
+    rest = max_iters
+    idx, norm = xnp.array(0, dtype=xnp.int32, device=A.device), xnp.norm(rhs, axis=-2)
+    init_val = (V, H, idx, norm)
+    V, H, _, infodict = get_arnoldi_matrix(A=A, rhs=rhs, init_val=init_val, max_iters=rest, tol=tol, pbar=pbar)
+
+    if len(start_vector.shape) == 1:
+        return Stiefel(Dense(V[0])), Dense(H[0]), infodict
+    else:
+        H = xnp.vmap(Dense)(H)
+        V = Stiefel(xnp.vmap(Dense)(V))
+        return V, H, infodict
 
 
 def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7, use_householder: bool = False,
@@ -94,7 +144,8 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e
     if use_householder:
         Q, H, infodict = run_householder_arnoldi(A=A, rhs=rhs, max_iters=max_iters)
     else:
-        Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=rhs, max_iters=max_iters, tol=tol, pbar=pbar)
+        init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
+        Q, H, _, infodict = get_arnoldi_matrix(A=A, rhs=rhs, init_val=init_val, max_iters=max_iters, tol=tol, pbar=pbar)
     if len(start_vector.shape) == 1:
         return Stiefel(Dense(Q[0])), Dense(H[0]), infodict
     else:
@@ -184,54 +235,49 @@ def initialize_householder_arnoldi(xnp, rhs, max_iters, dtype):
     return Q, H, zj
 
 
-def get_arnoldi_matrix(A: LinearOperator, rhs: Array, max_iters: int, tol: float, pbar: bool):
+def get_arnoldi_matrix(A: LinearOperator, rhs: Array, init_val: Tuple, max_iters: int, tol: float, pbar: bool):
     xnp = A.xnp
     max_iters = min(max_iters, A.shape[0])
 
     def cond_fun(state):
         _, H, idx, norm = state
         is_not_max = idx < max_iters
-        is_large = (norm > tol * H[1, 0, :].real) | (idx <= 0)
-        # is_large = norm > tol
+        is_large = (norm > tol * H[:, 1, 0].real) | (idx <= 0)
         return is_not_max & xnp.any(is_large)
 
     def body_fun(state):
         Q, H, idx, _ = state
-        new_vec = A @ Q[..., idx, :]
-        h_vec = xnp.zeros(shape=(max_iters + 1, rhs.shape[-1]), dtype=new_vec.dtype, device=xnp.get_device(new_vec))
+        new_vec = (A @ Q[..., idx].T).T
+        h_vec = xnp.zeros(shape=(rhs.shape[-1], max_iters + 1), dtype=new_vec.dtype, device=xnp.get_device(new_vec))
 
         def inner_loop(jdx, result):
             new_vec, h_vec = result
-            angle = xnp.sum(xnp.conj(Q[..., jdx, :]) * new_vec, axis=-2)
-            h_vec = xnp.update_array(h_vec, angle, jdx)
-            new_vec = new_vec - h_vec[jdx][None] * Q[..., jdx, :]
+            angle = xnp.sum(xnp.conj(Q[..., jdx]) * new_vec, axis=-1)
+            h_vec = xnp.update_array(h_vec, angle, ..., jdx)
+            new_vec = new_vec - h_vec[..., [jdx]] * Q[..., jdx]
             return (new_vec, h_vec)
 
         new_vec, h_vec = xnp.for_loop(0, idx + 1, inner_loop, (new_vec, h_vec))
 
-        norm = xnp.norm(new_vec, axis=-2)
+        norm = xnp.norm(new_vec, axis=-1, keepdims=True)
         new_vec /= xnp.clip(norm, a_min=tol / 2.)
-        h_vec = xnp.update_array(h_vec, norm, idx + 1)
-        H = xnp.update_array(H, h_vec, ..., idx, slice(None, None, None))
-        Q = xnp.update_array(Q, new_vec, ..., idx + 1, slice(None, None, None))
-        return Q, H, idx + 1, norm
+        h_vec = xnp.update_array(h_vec, norm[:, 0], ..., idx + 1)
+        H = xnp.update_array(H, h_vec, ..., idx)
+        Q = xnp.update_array(Q, new_vec, ..., idx + 1)
+        return Q, H, idx + 1, norm[:, 0]
 
-    init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
     while_fn, info = xnp.while_loop_winfo(lambda s: s[-1][0], tol, max_iters, pbar=pbar)
     state = while_fn(cond_fun, body_fun, init_val)
     Q, H, idx, _ = state
-    Q, H = Q[:, :-1], H[:-1, :]
-    Q = xnp.permute(Q, (2, 0, 1))
-    H = xnp.permute(H, (2, 0, 1))
     return Q, H, idx, info
 
 
 def initialize_arnoldi(xnp, rhs, max_iters, dtype):
     device = xnp.get_device(rhs)
     idx = xnp.array(0, dtype=xnp.int32, device=device)
-    H = xnp.zeros(shape=(max_iters + 1, max_iters, rhs.shape[-1]), dtype=dtype, device=device)
-    Q = xnp.zeros(shape=(rhs.shape[-2], max_iters + 1, rhs.shape[-1]), dtype=dtype, device=device)
-    rhs = rhs / xnp.norm(rhs, axis=-2)
-    Q = xnp.update_array(Q, xnp.copy(rhs), ..., 0, slice(None, None, None))
+    H = xnp.zeros(shape=(rhs.shape[-1], max_iters + 1, max_iters), dtype=dtype, device=device)
+    Q = xnp.zeros(shape=(rhs.shape[-1], rhs.shape[-2], max_iters + 1), dtype=dtype, device=device)
     norm = xnp.norm(rhs, axis=-2)
+    rhs = rhs / norm
+    Q = xnp.update_array(Q, xnp.copy(rhs.T), ..., 0)
     return Q, H, idx, norm

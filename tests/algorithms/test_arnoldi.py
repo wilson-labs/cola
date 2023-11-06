@@ -6,6 +6,7 @@ from cola.fns import lazify
 from cola.linalg.decompositions.arnoldi import get_arnoldi_matrix
 from cola.linalg.decompositions.arnoldi import arnoldi_eigs
 from cola.linalg.decompositions.arnoldi import run_householder_arnoldi
+from cola.linalg.decompositions.arnoldi import initialize_arnoldi
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
@@ -62,6 +63,26 @@ def test_arnoldi_vjp(backend):
 
 
 @parametrize(all_backends)
+def test_ira(backend):
+    xnp = get_xnp(backend)
+    dtype = xnp.float32
+    diag = generate_spectrum(coeff=0.5, scale=1.0, size=4, dtype=np.float32)
+    A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype, device=None)
+    zr = xnp.randn(A.shape[1], dtype=xnp.float32, device=None, key=xnp.PRNGKey(123))
+    rhs = xnp.cast(zr, dtype=dtype)
+    eigvals, eigvecs, _ = arnoldi_eigs(lazify(A), rhs, max_iters=A.shape[-1])
+    approx = xnp.sort(xnp.cast(eigvals, xnp.float32))
+    soln = xnp.sort(xnp.array(diag, xnp.float32, device=None))
+
+    rel_error = relative_error(soln, approx)
+    assert rel_error < 1e-3
+
+    approx = eigvecs @ xnp.diag(eigvals) @ xnp.inv(eigvecs.to_dense())
+    rel_error = relative_error(A, approx)
+    assert rel_error < 1e-3
+
+
+@parametrize(all_backends)
 def test_arnoldi(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex64
@@ -102,7 +123,7 @@ def ignore_test_householder_arnoldi_decomp(backend):
         assert rel_error < 1e-5
 
 
-@parametrize(['torch'])
+@parametrize(["torch"])
 def test_get_arnoldi_matrix(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex128  # double precision on real and complex coordinates to achieve 1e-12 tol
@@ -114,24 +135,30 @@ def test_get_arnoldi_matrix(backend):
     A_np, rhs_np = np.array(A, dtype=np.complex128), np.array(rhs[:, 0], dtype=np.complex128)
     Q_sol, H_sol = run_arnoldi(A_np, rhs_np, max_iter=max_iter, tol=1e-7, dtype=np.complex128)
 
-    fn = xnp.jit(get_arnoldi_matrix, static_argnums=(2, 3, 4))
-    Q_approx, H_approx, *_ = fn(lazify(A), rhs, max_iter, tol=1e-12, pbar=False)
-    todense = xnp.vmap(lambda A: A.to_dense())
-    Q_approx = todense(Q_approx)
-    H_approx = todense(H_approx)
-    rel_error = relative_error(Q_approx[0, :, :], Q_approx[1, :, :])
-    rel_error += relative_error(H_approx[0, :, :], H_approx[1, :, :])
+    init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iter, dtype=A.dtype)
+    fn = xnp.jit(get_arnoldi_matrix, static_argnums=(3, 4, 5))
+    Q_approx, H_approx, *_ = fn(lazify(A), rhs, init_val, max_iter, tol=1e-12, pbar=False)
+    rel_error = relative_error(Q_approx[0], Q_approx[1])
+    rel_error += relative_error(H_approx[0], H_approx[1])
     assert rel_error < 1e-12
 
-    Q_approx, H_approx = Q_approx[0, :, :], H_approx[0, :, :]
-    for soln, approx in ((Q_sol[:, :-1], Q_approx), (H_sol[:-1, :], H_approx)):
+    Q_approx, H_approx = Q_approx[0, :, :-1], H_approx[0, :-1]
+    for soln, approx in ((Q_sol[:, :-1], Q_approx), (H_sol[:-1], H_approx)):
         rel_error = relative_error(xnp.array(soln, dtype=dtype, device=None), approx)
         assert rel_error < 1e-12
 
-    # Next test is only valid when full decomposition is ran
-    rel_error = relative_error(A @ Q_approx, Q_approx @ H_approx)
-    assert rel_error < 1e-12
     rel_error = relative_error(Q_approx.conj().T @ A @ Q_approx, H_approx)
+    assert rel_error < 1e-12
+
+    max_iter = 10
+    init_val = initialize_arnoldi(xnp, rhs, max_iters=max_iter, dtype=A.dtype)
+    fn = xnp.jit(get_arnoldi_matrix, static_argnums=(3, 4, 5))
+    Q_approx, H_approx, *_ = fn(lazify(A), rhs, init_val, max_iter, tol=1e-12, pbar=False)
+    Q_approx, H_approx = Q_approx[0], H_approx[0]
+    e_vec = xnp.canonical(max_iter - 1, shape=(max_iter, 1), dtype=dtype, device=None)
+    alter = (H_approx[-1, -1] * Q_approx[:, [-1]]) @ e_vec.T
+    Q_approx, H_approx = Q_approx[:, :-1], H_approx[:-1]
+    rel_error = relative_error(A @ Q_approx, Q_approx @ H_approx + alter)
     assert rel_error < 1e-12
 
 
@@ -209,7 +236,7 @@ def get_householder_vec_np(x, idx):
 
 
 def run_arnoldi(A, rhs, max_iter, tol, dtype):
-    Q, H = initialize_arnoldi(rhs, max_iter=max_iter, dtype=dtype)
+    Q, H = initialize_arnoldi_np(rhs, max_iter=max_iter, dtype=dtype)
     idx, vec = 0, rhs.copy()
     norm = np.linalg.norm(vec)
 
@@ -225,7 +252,7 @@ def run_arnoldi(A, rhs, max_iter, tol, dtype):
     return Q, H[:max_iter + 1, :max_iter]
 
 
-def initialize_arnoldi(rhs, max_iter, dtype):
+def initialize_arnoldi_np(rhs, max_iter, dtype):
     H = np.zeros(shape=(max_iter + 2, max_iter + 2), dtype=dtype)
     Q = np.zeros(shape=(rhs.shape[0], max_iter + 1), dtype=dtype)
     return Q, H
