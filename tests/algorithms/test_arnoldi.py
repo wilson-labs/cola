@@ -86,6 +86,12 @@ def test_ira(backend):
         print(f"Rel error: {rel_error:1.2e}")
         assert rel_error < 1e-11
 
+    eigvals, _ = xnp.eig(H)
+    eigvals = xnp.sort(eigvals.real)
+    rel_error = relative_error(np.sort(diag[:eig_n]), np.array(eigvals))
+    print(f"Rel error: {rel_error:1.2e}")
+    assert rel_error < 1e-15
+
 
 @parametrize(["torch"])
 def test_arnoldi_factorization_restarted(backend):

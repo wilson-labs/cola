@@ -65,13 +65,32 @@ def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
 
 
 def ira(A: LinearOperator, start_vector=None, eig_n: int = 5, max_size: int = 20, max_iters: int = 100,
-        tol: float = 1e-7, pbar: bool = False, key=None):
+        tol: float = 1e-7, pbar: bool = False):
     """
-    ...
+    Runs the Implicitly Restarted Arnoldi Method (IRAM), which basically
+    finds a factorization A V = V H using constant memory.
+
+    Args:
+        A (LinearOperator): A linear operator of size (n, n).
+        start_vector (Array, optional): An initial vector to start Arnoldi of size (n, ).
+         Defaults to a random probe.
+        eig_n (int): The number of eigenvalues to estimate.
+        max_size (int): The maximum number of inner Arnoldi iterations to run.
+        max_iters (int): The maximum number of outer iterations to run.
+        tol (float, optional): Stopping criteria.
+        pbar (bool, optional): Show a progress bar.
+
+    Returns:
+        tuple:
+            - V (Array): Unitary matrix of size (n, max_iters) or (b, n, max_iters)
+            - H (Array): The upper Hessenberg matrix of size (max_iters, max_iters) or (b, max_iters, max_iters)
+            - idx (Array): The number of iterations ran
+            - info (dict): General information about the iterative procedure.
     """
     xnp = A.xnp
     init_val = init_arnoldi(xnp=xnp, rhs=start_vector, max_iters=max_size, dtype=A.dtype)
     nq = max_size - eig_n
+    # TODO: add slice logic to select top or bottom
     eig_slice = slice(None, nq, None)
 
     def cond_fun(state):
@@ -85,6 +104,7 @@ def ira(A: LinearOperator, start_vector=None, eig_n: int = 5, max_size: int = 20
         V, H, *_ = arnoldi_fact(A, state, max_iters=max_size, tol=tol, pbar=pbar)
         V, H = V[0], H[0]
         eigvals, _ = xnp.eig(H[:-1])
+        # TODO: think what to do about complex sorting
         eigvals = xnp.sort(eigvals.real)
         vec = H[-1, -1] * V[:, [-1]]
         H, Q = run_shift(H[:-1], eigvals[eig_slice], xnp)
@@ -100,8 +120,8 @@ def ira(A: LinearOperator, start_vector=None, eig_n: int = 5, max_size: int = 20
 
     while_fn, info = xnp.while_loop_winfo(lambda s: s[-1][0], tol, max_iters, pbar=pbar)
     state = while_fn(cond_fun, body_fun, init_val)
-    Q, H, idx, _ = state
-    return Q, H, idx, info
+    V, H, idx, _ = state
+    return V, H, idx, info
 
 
 def run_shift(H, shifts, xnp):
