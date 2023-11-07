@@ -72,30 +72,31 @@ def ira(A: LinearOperator, start_vector=None, eig_n: int = 5, max_size: int = 20
     xnp = A.xnp
     init_val = init_arnoldi(xnp=xnp, rhs=start_vector, max_iters=max_size, dtype=A.dtype)
     nq = max_size - eig_n
-    slice = (None, nq, None)
+    eig_slice = slice(None, nq, None)
 
     def cond_fun(state):
         _, H, idx, norm = state
         is_not_max = idx < max_iters
-        is_large = (norm > tol * H[:, 1, 0].real) | (idx <= 0)
+        is_large = (norm > tol)
         return is_not_max & xnp.any(is_large)
 
     def body_fun(state):
         V, H, idx, _ = state
-        V, H = get_arnoldi_matrix(A, state, max_iters=max_size, tol=tol, pbar=pbar)
+        V, H, *_ = get_arnoldi_matrix(A, state, max_iters=max_size, tol=tol, pbar=pbar)
+        V, H = V[0], H[0]
         eigvals, _ = xnp.eig(H[:-1])
-        eigvals = xnp.sort(eigvals)
+        eigvals = xnp.sort(eigvals.real)
         vec = H[-1, -1] * V[:, [-1]]
-        H, Q = run_shift(H[:-1], eigvals[slice])
+        H, Q = run_shift(H[:-1], eigvals[eig_slice], xnp)
         beta = H[eig_n, eig_n - 1]
         sigma = Q[-1, eig_n - 1]
         new_vec = beta * V[:, [eig_n]] + sigma * vec
         V0 = V[:, :-1] @ Q[:, :eig_n]
         H0 = H[:eig_n, :eig_n]
-        init_val = init_arnoldi_from_vec(H, V, xnp, new_vec, rest=eig_n)
+        init_val = init_arnoldi_from_vec(H0, V0, xnp, new_vec.T, rest=eig_n, max_iters=max_size)
         V, H, *_ = init_val
         norm = xnp.norm(A @ V0 - V0 @ H0)
-        return V, H, idx + 1, norm
+        return V, H, idx + 1, norm[None]
 
     while_fn, info = xnp.while_loop_winfo(lambda s: s[-1][0], tol, max_iters, pbar=pbar)
     state = while_fn(cond_fun, body_fun, init_val)
@@ -103,8 +104,8 @@ def ira(A: LinearOperator, start_vector=None, eig_n: int = 5, max_size: int = 20
     return Q, H, idx, info
 
 
-def run_shift(H, shifts):
-    xnp, dtype, device = H.xnp, H.dtype, H.device
+def run_shift(H, shifts, xnp):
+    dtype, device = H.dtype, H.device
     Id = xnp.eye(*H.shape, dtype=dtype, device=device)
     max_iters = shifts.shape[0]
 
@@ -112,7 +113,7 @@ def run_shift(H, shifts):
         H, V = state
         Q, _ = xnp.qr(H - shifts[idx] * Id, full_matrices=True)
         H = Q.conj().T @ H @ Q
-        V @= Q
+        V = V @ Q
         return H, V
 
     init_val = (H, xnp.eye(*H.shape, dtype=dtype, device=device))
@@ -120,8 +121,8 @@ def run_shift(H, shifts):
     return H, V
 
 
-def init_arnoldi_from_vec(H, V, xnp, new_vec, rest):
-    max_iters, dtype, device = H.shape[1], H.dtype, H.device
+def init_arnoldi_from_vec(H, V, xnp, new_vec, rest, max_iters):
+    dtype, device = H.dtype, H.device
     idx, norm = xnp.array(rest, dtype=xnp.int32, device=H.device), xnp.norm(new_vec)
     H1 = xnp.zeros(shape=(1, max_iters + 1, max_iters), dtype=dtype, device=device)
     Q1 = xnp.zeros(shape=(1, V.shape[0], max_iters + 1), dtype=dtype, device=device)
@@ -129,7 +130,7 @@ def init_arnoldi_from_vec(H, V, xnp, new_vec, rest):
     H1 = xnp.update_array(H1, H[None][:, :rest, :rest], ..., slice(None, rest, None), slice(None, rest, None))
     H1 = xnp.update_array(H1, norm, ..., rest, rest - 1)
     Q1 = xnp.update_array(Q1, V[None][:, :, :rest], ..., slice(None, rest, None))
-    Q1 = xnp.update_array(Q1, new_vec[None] / norm, ..., idx)
+    Q1 = xnp.update_array(Q1, new_vec / norm, ..., idx)
     return Q1, H1, idx, norm[None]
 
 

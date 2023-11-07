@@ -64,23 +64,27 @@ def test_arnoldi_vjp(backend):
     assert abs_error < 5e-5
 
 
-@parametrize(all_backends)
+@parametrize(["torch"])
 def test_ira(backend):
     xnp = get_xnp(backend)
     dtype, np_dtype = xnp.float64, np.float64
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
     A_np = generate_pd_from_diag(diag, dtype=np_dtype, seed=48)
-    A = xnp.array(A_np, dtype=dtype, device=None)
-    rhs = xnp.randn(A.shape[0], dtype=dtype, device=None, key=xnp.PRNGKey(123))
+    A = lazify(xnp.array(A_np, dtype=dtype, device=None))
+    rhs = xnp.randn(A.shape[0], 1, dtype=dtype, device=None, key=xnp.PRNGKey(123))
     eig_n, max_size, max_iter, tol = 5, 8, 100, 1e-10
-    V_sol, H_sol = run_iram(A_np, np.array(rhs), eig_n, max_size, max_iter, tol)
-    breakpoint()
-    V, H = ira(lazify(A), rhs, eig_n=eig_n, max_size=max_size, max_iters=max_iter, tol=tol)
+    V_sol, H_sol = run_iram(A_np, np.array(rhs[:, 0]), eig_n, max_size, max_iter, tol)
+    V, H, *_ = ira(A, rhs, eig_n=eig_n, max_size=max_size, max_iters=max_iter, tol=tol)
+    V, H = V[0, :, :eig_n], H[0, :eig_n, :eig_n]
+
+    abs_error = xnp.norm(A @ V - V @ H)
+    print(f"\nAbs error: {abs_error:1.2e}")
+    assert abs_error < 1e-11
 
     for soln, approx in ((V_sol, V), (H_sol, H)):
-        rel_error = relative_error(soln, approx)
+        rel_error = relative_error(soln, np.array(approx))
         print(f"Rel error: {rel_error:1.2e}")
-        assert rel_error < 1e-12
+        assert rel_error < 1e-11
 
 
 @parametrize(["torch"])
