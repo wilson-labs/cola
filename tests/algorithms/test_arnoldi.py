@@ -115,7 +115,8 @@ def test_arnoldi_factorization_restarted(backend):
     assert rel_error < 1e-12
 
     A_np, rhs_np = np.array(A.to_dense(), dtype=np_dtype), np.array(rhs[:, 0], dtype=np_dtype)
-    Q_sol, H_sol = run_arnoldi(A_np, rhs_np, max_iter=7, tol=1e-7)
+    init_val = init_arnoldi_np(rhs_np, max_iter=7, dtype=np_dtype)
+    Q_sol, H_sol = run_arnoldi(A_np, init_val, max_iter=7, tol=1e-7)
 
     for soln, approx in ((Q_sol, V), (H_sol, H)):
         rel_error = relative_error(xnp.array(soln, dtype=dtype, device=None), approx)
@@ -167,13 +168,15 @@ def ignore_test_householder_arnoldi_decomp(backend):
 def test_arnoldi_factorization(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex128  # double precision on real and complex coordinates to achieve 1e-12 tol
+    np_dtype = np.complex128
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=20, dtype=np.float32) - 0.5
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
     rhs = xnp.randn(A.shape[1], 1, dtype=dtype, device=None, key=xnp.PRNGKey(1256))
     rhs = xnp.concat((rhs, rhs), axis=-1)
     max_iter = A.shape[0]
-    A_np, rhs_np = np.array(A, dtype=np.complex128), np.array(rhs[:, 0], dtype=np.complex128)
-    Q_sol, H_sol = run_arnoldi(A_np, rhs_np, max_iter=max_iter, tol=1e-7, dtype=np.complex128)
+    A_np, rhs_np = np.array(A, dtype=np_dtype), np.array(rhs[:, 0], dtype=np_dtype)
+    init_val = init_arnoldi_np(rhs_np, max_iter=max_iter, dtype=np_dtype)
+    Q_sol, H_sol = run_arnoldi(A_np, init_val, max_iter=max_iter, tol=1e-7)
 
     init_val = init_arnoldi(xnp, rhs, max_iters=max_iter, dtype=A.dtype)
     Q_approx, H_approx, *_ = get_arnoldi_matrix(lazify(A), init_val, max_iter, tol=1e-12, pbar=False)
