@@ -115,7 +115,7 @@ def test_arnoldi_factorization_restarted(backend):
     assert rel_error < 1e-12
 
     A_np, rhs_np = np.array(A.to_dense(), dtype=np_dtype), np.array(rhs[:, 0], dtype=np_dtype)
-    Q_sol, H_sol = run_arnoldi(A_np, rhs_np, max_iter=7, tol=1e-7, dtype=np_dtype)
+    Q_sol, H_sol = run_arnoldi(A_np, rhs_np, max_iter=7, tol=1e-7)
 
     for soln, approx in ((Q_sol, V), (H_sol, H)):
         rel_error = relative_error(xnp.array(soln, dtype=dtype, device=None), approx)
@@ -164,7 +164,7 @@ def ignore_test_householder_arnoldi_decomp(backend):
 
 
 @parametrize(["torch"])
-def test_get_arnoldi_matrix(backend):
+def test_arnoldi_factorization(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex128  # double precision on real and complex coordinates to achieve 1e-12 tol
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=20, dtype=np.float32) - 0.5
@@ -207,9 +207,9 @@ def test_numpy_iram():
     A = np.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=48), dtype=np_dtype)
     rhs = np.random.normal(size=(A.shape[0], ))
     V, H = run_iram(A, rhs, eig_n=5, max_size=8, max_iter=100, tol=1e-12, dtype=np_dtype)
-    breakpoint()
-    abs_error = np.linalg.norm(A @ V[:, :-1] - V[:, :-1] @ H[:-1])
-    print(f"Abs error: {abs_error:1.2e}")
+    abs_error = np.linalg.norm(A @ V - V @ H)
+    print(f"\nAbs error: {abs_error:1.2e}")
+    assert abs_error < 1e-12
 
 
 def test_numpy_arnoldi():
@@ -301,7 +301,6 @@ def run_iram(A, rhs, eig_n, max_size, max_iter, tol, dtype):
         # part1, part2 = check_arnoldi_fact_np(V, H, A, iter=max_size)
         eigvals, _ = np.linalg.eig(H[:-1])
         eigvals = np.sort(eigvals)
-        print(eigvals)
         vec = np.copy(H[-1, -1] * V[:, [-1]])
         H, Q = run_shift_np(H[:-1].copy(), eigvals[:nq])
 
@@ -327,10 +326,9 @@ def run_iram(A, rhs, eig_n, max_size, max_iter, tol, dtype):
         # diff = np.linalg.norm(part1 - part2)
         # print(f"Abs error: {diff:1.2e}")
 
-        init_val = init_arnoldi_from_vec_np(V0, H0, new_vec, max_iter=max_size, idx=nq + 1)
+        init_val = init_arnoldi_from_vec_np(V0, H0, new_vec, max_iter=max_size, idx=eig_n)
 
         norm = np.linalg.norm(A @ V0 - V0 @ H0)
-        print(norm)
         counter += 1
     return V0, H0
 
