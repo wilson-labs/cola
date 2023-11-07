@@ -1,6 +1,5 @@
 from typing import Tuple
 from cola import Stiefel
-from cola.linalg.tbd.qr import shifted_qr
 from cola.ops import LinearOperator
 from cola.ops import Array, Dense
 from cola.ops import Householder, Product
@@ -65,52 +64,60 @@ def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
     return eigvals, eigvectors, info
 
 
-def ira(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e-7, pbar: bool = False, key=None):
+def ira(A: LinearOperator, start_vector=None, eig_n: int = 5, max_size: int = 20, max_iters: int = 100,
+        tol: float = 1e-7, pbar: bool = False, key=None):
     """
-    Computes the Arnoldi decomposition of the linear operator A, A = QHQ^*.
+    ...
     """
     xnp = A.xnp
-    if start_vector is None:
-        key = xnp.PRNGKey(42) if key is None else key
-        start_vector = xnp.randn(A.shape[-1], dtype=A.dtype, device=A.device, key=key)
-    if len(start_vector.shape) == 1:
-        rhs = start_vector[:, None]
-    else:
-        rhs = start_vector
+    init_val = init_arnoldi(xnp=xnp, rhs=start_vector, max_iters=max_size, dtype=A.dtype)
+    nq = max_size - eig_n
+    slice = (None, nq, None)
 
-    nq = 4
+    def cond_fun(state):
+        _, H, idx, norm = state
+        is_not_max = idx < max_iters
+        is_large = (norm > tol * H[:, 1, 0].real) | (idx <= 0)
+        return is_not_max & xnp.any(is_large)
 
-    init_val = init_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-    V, H, *_ = get_arnoldi_matrix(A=A, init_val=init_val, max_iters=max_iters, tol=tol, pbar=pbar)
-    V, H = V[0], H[0]
-    vec = H[-1, -1] * V[:, -1]
-    eigvals, _ = xnp.eig(H[:-1])
-    eigvals = xnp.sort(eigvals.real)
-    H, Q = shifted_qr(Dense(H[:-1]), shifts=eigvals[:nq])
-    H, Q = H.to_dense(), Q.to_dense()
-    rest = max_iters - nq
-    eta = Q[-1, rest - 1]
-    new_vec = V[:, rest] + eta * vec
-    V = V[:, :-1] @ Q
-    init_val = init_arnoldi_from_vec(H, V, xnp, new_vec, rest)
+    def body_fun(state):
+        V, H, idx, _ = state
+        V, H = get_arnoldi_matrix(A, state, max_iters=max_size, tol=tol, pbar=pbar)
+        eigvals, _ = xnp.eig(H[:-1])
+        eigvals = xnp.sort(eigvals)
+        vec = H[-1, -1] * V[:, [-1]]
+        H, Q = run_shift(H[:-1], eigvals[slice])
+        beta = H[eig_n, eig_n - 1]
+        sigma = Q[-1, eig_n - 1]
+        new_vec = beta * V[:, [eig_n]] + sigma * vec
+        V0 = V[:, :-1] @ Q[:, :eig_n]
+        H0 = H[:eig_n, :eig_n]
+        init_val = init_arnoldi_from_vec(H, V, xnp, new_vec, rest=eig_n)
+        V, H, *_ = init_val
+        norm = xnp.norm(A @ V0 - V0 @ H0)
+        return V, H, idx + 1, norm
 
-    V, H, *_ = init_val
-    qq, hh = V[0], H[0]
-    e_vec = xnp.canonical(2, shape=(3, 1), dtype=H.dtype, device=None)
-    alter = (hh[3, 2] * qq[:, [3]]) @ e_vec.T
-    aa = A @ qq[:, :3]
-    bb = qq[:, :3] @ hh[:3, :3] + alter
-    diff = xnp.norm(aa - bb)
-    del diff
+    while_fn, info = xnp.while_loop_winfo(lambda s: s[-1][0], tol, max_iters, pbar=pbar)
+    state = while_fn(cond_fun, body_fun, init_val)
+    Q, H, idx, _ = state
+    return Q, H, idx, info
 
-    V, H, _, infodict = get_arnoldi_matrix(A=A, init_val=init_val, max_iters=max_iters, tol=tol, pbar=pbar)
 
-    if len(start_vector.shape) == 1:
-        return Stiefel(Dense(V[0])), Dense(H[0]), infodict
-    else:
-        H = xnp.vmap(Dense)(H)
-        V = Stiefel(xnp.vmap(Dense)(V))
-        return V, H, infodict
+def run_shift(H, shifts):
+    xnp, dtype, device = H.xnp, H.dtype, H.device
+    Id = xnp.eye(*H.shape, dtype=dtype, device=device)
+    max_iters = shifts.shape[0]
+
+    def body_fun(idx, state):
+        H, V = state
+        Q, _ = xnp.qr(H - shifts[idx] * Id, full_matrices=True)
+        H = Q.conj().T @ H @ Q
+        V @= Q
+        return H, V
+
+    init_val = (H, xnp.eye(*H.shape, dtype=dtype, device=device))
+    H, V = xnp.for_loop(0, max_iters, body_fun, init_val)
+    return H, V
 
 
 def init_arnoldi_from_vec(H, V, xnp, new_vec, rest):
