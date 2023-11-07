@@ -82,7 +82,7 @@ def ira(A: LinearOperator, start_vector=None, eig_n: int = 5, max_size: int = 20
 
     def body_fun(state):
         V, H, idx, _ = state
-        V, H, *_ = get_arnoldi_matrix(A, state, max_iters=max_size, tol=tol, pbar=pbar)
+        V, H, *_ = arnoldi_fact(A, state, max_iters=max_size, tol=tol, pbar=pbar)
         V, H = V[0], H[0]
         eigvals, _ = xnp.eig(H[:-1])
         eigvals = xnp.sort(eigvals.real)
@@ -167,7 +167,7 @@ def arnoldi(A: LinearOperator, start_vector=None, max_iters=100, tol: float = 1e
         Q, H, infodict = run_householder_arnoldi(A=A, rhs=rhs, max_iters=max_iters)
     else:
         init_val = init_arnoldi(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-        Q, H, _, infodict = get_arnoldi_matrix(A=A, init_val=init_val, max_iters=max_iters, tol=tol, pbar=pbar)
+        Q, H, _, infodict = arnoldi_fact(A=A, init_val=init_val, max_iters=max_iters, tol=tol, pbar=pbar)
     if len(start_vector.shape) == 1:
         return Stiefel(Dense(Q[0])), Dense(H[0]), infodict
     else:
@@ -257,7 +257,7 @@ def initialize_householder_arnoldi(xnp, rhs, max_iters, dtype):
     return Q, H, zj
 
 
-def get_arnoldi_matrix(A: LinearOperator, init_val: Tuple, max_iters: int, tol: float, pbar: bool):
+def arnoldi_fact(A: LinearOperator, init_val: Tuple, max_iters: int, tol: float, pbar: bool):
     xnp = A.xnp
     max_iters = min(max_iters, A.shape[0])
 

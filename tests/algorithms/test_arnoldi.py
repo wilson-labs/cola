@@ -4,7 +4,7 @@ from cola.ops import Product
 from cola.ops import Dense
 from cola.fns import lazify
 from cola.linalg.decompositions.arnoldi import ira
-from cola.linalg.decompositions.arnoldi import get_arnoldi_matrix
+from cola.linalg.decompositions.arnoldi import arnoldi_fact
 from cola.linalg.decompositions.arnoldi import arnoldi_eigs
 from cola.linalg.decompositions.arnoldi import run_householder_arnoldi
 from cola.linalg.decompositions.arnoldi import init_arnoldi
@@ -97,7 +97,7 @@ def test_arnoldi_factorization_restarted(backend):
     zr = xnp.randn((A.shape[1], 1), dtype=dtype, device=None, key=xnp.PRNGKey(123))
     rhs = xnp.cast(zr, dtype=dtype)
     init_val = init_arnoldi(xnp, rhs, max_iters=7, dtype=A.dtype)
-    V, H, *_ = get_arnoldi_matrix(A, init_val, 3, tol=1e-12, pbar=False)
+    V, H, *_ = arnoldi_fact(A, init_val, 3, tol=1e-12, pbar=False)
 
     V, H = V[0], H[0]
     e_vec = xnp.canonical(2, shape=(3, 1), dtype=dtype, device=None)
@@ -108,8 +108,8 @@ def test_arnoldi_factorization_restarted(backend):
     rel_error = relative_error(approx, soln)
     assert rel_error < 1e-12
 
-    init_val = init_arnoldi_from_vec(H, V, xnp, new_vec[:, 0], rest=3)
-    V, H, *_ = get_arnoldi_matrix(A, init_val, 7, tol=1e-12, pbar=False)
+    init_val = init_arnoldi_from_vec(H, V, xnp, new_vec[:, 0], rest=3, max_iters=7)
+    V, H, *_ = arnoldi_fact(A, init_val, 7, tol=1e-12, pbar=False)
     V, H = V[0], H[0]
     e_vec = xnp.canonical(H.shape[1] - 1, shape=(H.shape[1], 1), dtype=dtype, device=None)
     new_vec = (H[-1, -1] * V[:, [-1]])
@@ -182,7 +182,7 @@ def test_arnoldi_factorization(backend):
     Q_sol, H_sol = run_arnoldi(A_np, init_val, max_iter=max_iter, tol=1e-7)
 
     init_val = init_arnoldi(xnp, rhs, max_iters=max_iter, dtype=A.dtype)
-    Q_approx, H_approx, *_ = get_arnoldi_matrix(lazify(A), init_val, max_iter, tol=1e-12, pbar=False)
+    Q_approx, H_approx, *_ = arnoldi_fact(lazify(A), init_val, max_iter, tol=1e-12, pbar=False)
     rel_error = relative_error(Q_approx[0], Q_approx[1])
     rel_error += relative_error(H_approx[0], H_approx[1])
     assert rel_error < 1e-12
@@ -197,7 +197,7 @@ def test_arnoldi_factorization(backend):
 
     max_iter = 10
     init_val = init_arnoldi(xnp, rhs, max_iters=max_iter, dtype=A.dtype)
-    Q_approx, H_approx, *_ = get_arnoldi_matrix(lazify(A), init_val, max_iter, tol=1e-12, pbar=False)
+    Q_approx, H_approx, *_ = arnoldi_fact(lazify(A), init_val, max_iter, tol=1e-12, pbar=False)
     Q_approx, H_approx = Q_approx[0], H_approx[0]
     e_vec = xnp.canonical(max_iter - 1, shape=(max_iter, 1), dtype=dtype, device=None)
     alter = (H_approx[-1, -1] * Q_approx[:, [-1]]) @ e_vec.T
