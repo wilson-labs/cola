@@ -9,7 +9,7 @@ from cola.linalg.decompositions.arnoldi import arnoldi_eigs
 from cola.linalg.decompositions.arnoldi import run_householder_arnoldi
 from cola.linalg.decompositions.arnoldi import init_arnoldi
 from cola.linalg.decompositions.arnoldi import init_arnoldi_from_vec
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.utils.test_utils import get_xnp, get_numpy_dtype, parametrize, relative_error
 from cola.backends import all_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 from cola.utils.test_utils import generate_lower_from_diag
@@ -67,7 +67,8 @@ def test_arnoldi_vjp(backend):
 @parametrize(["torch"])
 def test_ira(backend):
     xnp = get_xnp(backend)
-    dtype, np_dtype = xnp.float64, np.float64
+    dtype = xnp.float64
+    np_dtype = get_numpy_dtype(dtype)
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
     A_np = generate_pd_from_diag(diag, dtype=np_dtype, seed=48)
     A = lazify(xnp.array(A_np, dtype=dtype, device=None))
@@ -96,7 +97,8 @@ def test_ira(backend):
 @parametrize(["torch"])
 def test_arnoldi_factorization_restarted(backend):
     xnp = get_xnp(backend)
-    dtype, np_dtype = xnp.float64, np.float64
+    dtype = xnp.float64
+    np_dtype = get_numpy_dtype(dtype)
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
     A = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=48), dtype=dtype, device=None)
     A = lazify(A)
@@ -177,7 +179,7 @@ def ignore_test_householder_arnoldi_decomp(backend):
 def test_arnoldi_factorization(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex128  # double precision on real and complex coordinates to achieve 1e-12 tol
-    np_dtype = np.complex128
+    np_dtype = get_numpy_dtype(dtype)
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=20, dtype=np.float32) - 0.5
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
     rhs = xnp.randn(A.shape[1], 1, dtype=dtype, device=None, key=xnp.PRNGKey(1256))

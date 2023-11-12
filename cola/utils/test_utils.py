@@ -208,3 +208,25 @@ def generate_clustered_spectrum(clusters, sizes, std=0.025, seed=None, dtype=np.
         diag.append(sub_diags)
     diag = np.concatenate(diag, axis=0)
     return np.sort(diag)[::-1]
+
+
+def get_numpy_dtype(dtype):
+    """
+    Translates xnp.dtype to the numpy version
+    """
+    if dtype in [np.float32, np.float64, np.complex64, np.complex128, np.int32, np.int64]:
+        return dtype
+    try:
+        import torch
+        match dtype:
+            case torch.float32:
+                return np.float32
+            case torch.float64:
+                return np.float64
+            case torch.complex64:
+                return np.complex64
+            case torch.complex128:
+                return np.complex128
+    except ImportError:
+        pass
+    raise ImportError(f"Dtype: {dtype} is not valid")
