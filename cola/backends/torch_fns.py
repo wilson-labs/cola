@@ -66,8 +66,8 @@ slogdet = torch.linalg.slogdet
 iscomplexobj = torch.is_complex
 
 
-def norm(array, axis=None, keepdims=False):
-    return torch.linalg.norm(array, dim=axis, keepdim=keepdims)
+def norm(array, axis=None, keepdims=False, ord=None):
+    return torch.linalg.norm(array, dim=axis, keepdim=keepdims, ord=ord)
 
 
 def get_array_device(array):
