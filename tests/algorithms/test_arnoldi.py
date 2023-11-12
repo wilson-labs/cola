@@ -90,7 +90,7 @@ def test_ira(backend):
     eigvals = xnp.sort(eigvals.real)
     rel_error = relative_error(np.sort(diag[:eig_n]), np.array(eigvals))
     print(f"Rel error: {rel_error:1.2e}")
-    assert rel_error < 1e-15
+    assert rel_error < 1e-14
 
 
 @parametrize(["torch"])

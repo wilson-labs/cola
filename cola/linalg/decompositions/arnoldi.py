@@ -300,6 +300,7 @@ def arnoldi_fact(A: LinearOperator, init_val: Tuple, max_iters: int, tol: float,
             return (new_vec, h_vec)
 
         new_vec, h_vec = xnp.for_loop(0, idx + 1, inner_loop, (new_vec, h_vec))
+        # new_vec, h_vec = do_dgks_correction(new_vec, h_vec, Q[:, :, :idx + 1], xnp)
 
         norm = xnp.norm(new_vec, axis=-1, keepdims=True)
         new_vec /= xnp.clip(norm, a_min=tol / 2.)
@@ -323,3 +324,12 @@ def init_arnoldi(xnp, rhs, max_iters, dtype):
     rhs = rhs / norm
     Q = xnp.update_array(Q, xnp.copy(rhs.T), ..., 0)
     return Q, H, idx, norm
+
+
+def do_dgks_correction(v, h, V, xnp):
+    corr = xnp.sum(xnp.conj(V) * v[:, :, None], axis=-2)
+    v = v - xnp.sum(V * corr[:, None, :], axis=-1)
+    zeros = xnp.zeros(shape=(h.shape[-2], (h.shape[-1] - corr.shape[-1])), dtype=h.dtype, device=h.device)
+    corr = xnp.concat((corr, zeros), axis=-1)
+    h = h + corr
+    return v, h
