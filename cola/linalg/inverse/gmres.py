@@ -96,6 +96,7 @@ def gmres_fwd(A, rhs, x0, max_iters, tol, P, use_householder, use_triangular, pb
     Q, H, infodict = arnoldi(A=A, start_vector=res, max_iters=max_iters, tol=tol, pbar=pbar,
                              use_householder=use_householder)
     Q, H = Q.to_dense(), H.to_dense()
+    Q, H = Q[:, :, :-1], H[:, :-1, :]
 
     beta = xnp.norm(res, axis=-2)
     e1 = xnp.zeros(shape=(H.shape[1], beta.shape[0]), dtype=rhs.dtype, device=A.device)
