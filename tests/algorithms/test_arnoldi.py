@@ -4,6 +4,7 @@ from cola.ops import Product
 from cola.ops import Dense
 from cola.fns import lazify
 from cola.linalg.decompositions.arnoldi import ira
+from cola.linalg.decompositions.arnoldi import get_deflation_eig_slice
 from cola.linalg.decompositions.arnoldi import arnoldi_fact
 from cola.linalg.decompositions.arnoldi import arnoldi_eigs
 from cola.linalg.decompositions.arnoldi import run_householder_arnoldi
@@ -92,6 +93,27 @@ def test_ira(backend):
     rel_error = relative_error(np.sort(diag[:eig_n]), np.array(eigvals))
     print(f"Rel error: {rel_error:1.2e}")
     assert rel_error < 1e-14
+
+
+@parametrize(["torch"])
+def test_deflation_eig_slice(backend):
+    xnp = get_xnp(backend)
+    dtype = xnp.complex64
+    eigvals = [1 + 1j, -3 + 0.5j, 0.1 + 5j, 0.3 + 2j, 1 + 0j]
+    eigvals = xnp.array(eigvals, dtype=dtype, device=None)
+    eig_slice1 = get_deflation_eig_slice(eigvals, which="LM", eig_n=3, xnp=xnp)
+    eig_slice2 = get_deflation_eig_slice(eigvals, which="SM", eig_n=2, xnp=xnp)
+
+    # Deflation requires the complement
+    soln1 = [1 + 0j, 1 + 1j]
+    soln2 = [0.3 + 2j, -3 + 0.5j, 0.1 + 5j]
+
+    for soln, eig_slice in ((soln1, eig_slice1), (soln2, eig_slice2)):
+        approx = eigvals[eig_slice]
+        soln = xnp.array(soln, dtype=dtype, device=None)
+        rel_error = relative_error(soln, approx)
+        print(f"Rel error: {rel_error:1.2e}")
+        assert rel_error < 1e-14
 
 
 @parametrize(["torch"])

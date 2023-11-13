@@ -64,8 +64,8 @@ def arnoldi_eigs(A: LinearOperator, start_vector: Array = None, max_iters: int =
     return eigvals, eigvectors, info
 
 
-def ira(A: LinearOperator, start_vector=None, eig_n: int = 5, max_size: int = 20, max_iters: int = 100,
-        tol: float = 1e-7, pbar: bool = False):
+def ira(A: LinearOperator, start_vector=None, eig_n: int = 5, which: str = "LM", max_size: int = 20,
+        max_iters: int = 100, tol: float = 1e-7, pbar: bool = False):
     """
     Runs the Implicitly Restarted Arnoldi Method (IRAM), which basically
     finds a factorization A V = V H using constant memory.
@@ -89,9 +89,6 @@ def ira(A: LinearOperator, start_vector=None, eig_n: int = 5, max_size: int = 20
     """
     xnp = A.xnp
     init_val = init_arnoldi(xnp=xnp, rhs=start_vector, max_iters=max_size, dtype=A.dtype)
-    nq = max_size - eig_n
-    # TODO: add slice logic to select top or bottom
-    eig_slice = slice(None, nq, None)
 
     def cond_fun(state):
         _, H, idx, norm = state
@@ -104,10 +101,10 @@ def ira(A: LinearOperator, start_vector=None, eig_n: int = 5, max_size: int = 20
         V, H, *_ = arnoldi_fact(A, state, max_iters=max_size, tol=tol, pbar=pbar)
         V, H = V[0], H[0]
         eigvals, _ = xnp.eig(H[:-1])
-        # TODO: think what to do about complex sorting
-        eigvals = xnp.sort(eigvals.real)
+        eig_slice = get_deflation_eig_slice(eigvals, which=which, eig_n=eig_n, xnp=xnp)
+        eigvals = xnp.array(eigvals[eig_slice], dtype=A.dtype, device=A.device)
         vec = H[-1, -1] * V[:, [-1]]
-        H, Q = run_shift(H[:-1], eigvals[eig_slice], xnp)
+        H, Q = run_shift(H[:-1], eigvals, xnp)
         beta = H[eig_n, eig_n - 1]
         sigma = Q[-1, eig_n - 1]
         new_vec = beta * V[:, [eig_n]] + sigma * vec
@@ -122,6 +119,20 @@ def ira(A: LinearOperator, start_vector=None, eig_n: int = 5, max_size: int = 20
     state = while_fn(cond_fun, body_fun, init_val)
     V, H, idx, _ = state
     return V, H, idx, info
+
+
+def get_deflation_eig_slice(eigvals, which, eig_n, xnp):
+    total_n = eigvals.shape[-1]
+    nq = total_n - eig_n
+    match which:
+        case "LM":
+            idx = xnp.argsort(xnp.abs(eigvals))
+            eig_slice = slice(None, nq, None)
+            return idx[eig_slice]
+        case "SM":
+            idx = xnp.argsort(xnp.abs(eigvals))
+            eig_slice = slice(total_n - nq, total_n, None)
+            return idx[eig_slice]
 
 
 def run_shift(H, shifts, xnp):
