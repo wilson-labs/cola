@@ -78,6 +78,7 @@ def test_lanczos_complex(backend):
     np_dtype = np.complex64
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
     A = xnp.array(generate_diagonals(diag, seed=21), dtype=dtype, device=None)
+    A = A @ A.H
     rhs = xnp.randn(A.shape[0], 1, dtype=dtype, device=None)
     alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
 
@@ -87,6 +88,7 @@ def test_lanczos_complex(backend):
     idx = info["iterations"] - 1
     alpha, beta = T.alpha[:, :, 0], T.beta[:, :, 0]
     Q, T = Q.to_dense(), xnp.vmap(T.__class__.to_dense)(T)
+    Q, T = Q[0], T[0]
 
     assert idx == idx_np
     comparisons = [
@@ -98,6 +100,7 @@ def test_lanczos_complex(backend):
     ]
     for soln, approx in comparisons:
         rel_error = relative_error(soln, approx)
+        print(f"rel error: {rel_error:1.3e}")
         assert rel_error < 5e-5
 
 
