@@ -311,7 +311,7 @@ def arnoldi_fact(A: LinearOperator, init_val: Tuple, max_iters: int, tol: float,
             return (new_vec, h_vec)
 
         new_vec, h_vec = xnp.for_loop(0, idx + 1, inner_loop, (new_vec, h_vec))
-        new_vec, h_vec = do_dgks_correction(new_vec, h_vec, Q[:, :, :idx + 1], xnp)
+        # new_vec, h_vec = do_dgks_correction(new_vec, h_vec, Q[:, :, :idx + 1], xnp)
 
         norm = xnp.norm(new_vec, axis=-1, keepdims=True)
         new_vec /= xnp.clip(norm, a_min=tol / 2.)

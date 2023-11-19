@@ -78,7 +78,7 @@ def test_lanczos_complex(backend):
     np_dtype = np.complex64
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
     A = xnp.array(generate_diagonals(diag, seed=21), dtype=dtype, device=None)
-    A = A @ A.H
+    A = A @ A.conj().T
     rhs = xnp.randn(A.shape[0], 1, dtype=dtype, device=None)
     alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
 
