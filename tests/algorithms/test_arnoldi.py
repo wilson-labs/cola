@@ -334,33 +334,16 @@ def run_iram(A, rhs, eig_n, max_size, max_iter, tol):
     norm, nq, counter = 2 * tol, max_size - eig_n, 0
     while (counter < max_iter) & (norm > tol):
         V, H = run_arnoldi(A, init_val, max_iter=max_size, tol=tol)
-        # part1, part2 = check_arnoldi_fact_np(V, H, A, iter=max_size)
         eigvals, _ = np.linalg.eig(H[:-1])
         eigvals = np.sort(eigvals)
         vec = np.copy(H[-1, -1] * V[:, [-1]])
         H, Q = run_shift_np(H[:-1].copy(), eigvals[:nq])
-
-        # V_new = V[:, :-1] @ Q
-        # part1 = A @ V_new
-        # part2 = V_new @ H
-        # part2 += vec @ Q[[-1], :]
-        # diff = np.linalg.norm(part1 - part2)
-        # print(f"Abs error: {diff:1.2e}")
 
         beta = H[eig_n, eig_n - 1]
         sigma = Q[-1, eig_n - 1]
         new_vec = beta * V[:, [eig_n]] + sigma * vec
         V0 = V[:, :-1] @ Q[:, :eig_n]
         H0 = H[:eig_n, :eig_n]
-
-        # part1 = A @ V0
-        # e_vec = np.zeros(shape=(5, 1), dtype=H.dtype)
-        # e_vec[4] = 1.0
-        # extra = new_vec @ e_vec.T
-        # part2 = V0 @ H0
-        # part2 += extra
-        # diff = np.linalg.norm(part1 - part2)
-        # print(f"Abs error: {diff:1.2e}")
 
         init_val = init_arnoldi_from_vec_np(V0, H0, new_vec, max_iter=max_size, idx=eig_n)
 
