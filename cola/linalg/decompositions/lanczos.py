@@ -273,9 +273,9 @@ def init_lanczos(xnp, rhs, max_iters, dtype):
     subdiag = xnp.zeros(shape=(rhs.shape[-1], max_iters + 1), dtype=dtype, device=device)
     V = xnp.zeros(shape=(rhs.shape[-1], rhs.shape[0], max_iters + 2), dtype=dtype, device=device)
     norm = xnp.norm(rhs, axis=-2, keepdims=True)
-    rhs /= norm
+    rhs = rhs / norm
     V = xnp.update_array(V, xnp.copy(rhs.T), ..., 1)
-    return V, diag, subdiag, i, norm
+    return V, diag, subdiag, i
 
 
 def do_double_gram(vec, new_vec, xnp):
