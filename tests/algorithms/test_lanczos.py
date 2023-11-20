@@ -90,8 +90,8 @@ def _test_irl(backend):
     print(f"\nAbs error: {abs_error:1.2e}")
     assert abs_error < 1e-10
 
-    breakpoint()
     V, H, *_ = irl(A, rhs, eig_n=eig_n, max_size=max_size, max_iters=max_iter, tol=tol)
+    breakpoint()
     V, H = V[0, :, :eig_n], H[0, :eig_n, :eig_n]
 
     abs_error = xnp.norm(A @ V - V @ H)
@@ -114,7 +114,7 @@ def _test_irl(backend):
 def test_lanczos_complex(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex64
-    np_dtype = np.complex64
+    np_dtype = get_numpy_dtype(dtype)
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
     A = xnp.array(generate_diagonals(diag, seed=21), dtype=dtype, device=None)
     A = A @ A.conj().T
@@ -145,7 +145,7 @@ def test_lanczos_complex(backend):
 def test_lanczos_random(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    np_dtype = np.float32
+    np_dtype = get_numpy_dtype(dtype)
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
     rhs = xnp.ones(shape=(A.shape[0], 1), dtype=dtype, device=None)
@@ -197,7 +197,7 @@ def test_lanczos_manual(backend):
 def test_lanczos_iter(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    np_dtype = np.float32
+    np_dtype = get_numpy_dtype(dtype)
     max_eig = 6
     A = xnp.diag(xnp.array([4, 2, 1, max_eig], dtype=dtype, device=None))
     rhs = xnp.ones(shape=(A.shape[0], 7), dtype=dtype, device=None)

@@ -97,31 +97,34 @@ def irl(A: LinearOperator, start_vector=None, eig_n: int = 5, which: str = "LM",
     init_val = init_lanczos(xnp=xnp, rhs=start_vector, max_iters=max_size, dtype=A.dtype)
 
     def cond_fun(state):
-        _, H, idx, norm = state
+        *_, idx, norm = state
         is_not_max = idx < max_iters
         is_large = (norm > tol)
         return is_not_max & xnp.any(is_large)
 
     def body_fun(state):
-        V, subdiag, diag, idx, _ = state
+        V, diag, subdiag, idx, _ = state
+        breakpoint()
         V, diag, subdiag, *_ = lanczos_fact(A, state, max_iters=max_size, tol=tol, pbar=pbar)
         T = Tridiagonal(subdiag, diag, subdiag).to_dense()
         V, T = V[0], T[0]
         eigvals, _ = xnp.eig(T)
         eig_slice = get_deflation_eig_slice(eigvals, which=which, eig_n=eig_n, xnp=xnp)
         eigvals = xnp.array(eigvals[eig_slice], dtype=A.dtype, device=A.device)
-        # vec = diag[-1] * V[:, [-1]]
+        vec = diag[-1] * V[:, [-1]]
         T, Q = run_shift(T[:-1], eigvals, xnp)
+
         beta = T[eig_n, eig_n - 1]
-        # sigma = Q[-1, eig_n - 1]
-        # new_vec = beta * V[:, [eig_n]] + sigma * vec
+        sigma = Q[-1, eig_n - 1]
+        new_vec = beta * V[:, [eig_n]] + sigma * vec
         new_vec = beta * V[:, [eig_n]]
         V0 = V[:, :-1] @ Q[:, :eig_n]
         T0 = T[:eig_n, :eig_n]
-        init_val = init_lanczos_from_vec(diag, subdiag, V0, xnp, new_vec.T, rest=eig_n, max_iters=max_size)
-        V, H, *_ = init_val
         norm = xnp.norm(A @ V0 - V0 @ T0)
-        return V, subdiag, diag, idx + 1, norm[None]
+
+        init_val = init_lanczos_from_vec(diag, subdiag, V0, xnp, new_vec.T, rest=eig_n, max_iters=max_size)
+        V, diag, subdiag, *_ = init_val
+        return V, diag, subdiag, idx + 1, norm[None]
 
     while_fn, info = xnp.while_loop_winfo(lambda s: s[-1][0], tol, max_iters, pbar=pbar)
     state = while_fn(cond_fun, body_fun, init_val)
@@ -269,9 +272,10 @@ def init_lanczos(xnp, rhs, max_iters, dtype):
     diag = xnp.zeros(shape=(rhs.shape[-1], max_iters), dtype=dtype, device=device)
     subdiag = xnp.zeros(shape=(rhs.shape[-1], max_iters + 1), dtype=dtype, device=device)
     V = xnp.zeros(shape=(rhs.shape[-1], rhs.shape[0], max_iters + 2), dtype=dtype, device=device)
-    rhs = rhs / xnp.norm(rhs, axis=-2, keepdims=True)
+    norm = xnp.norm(rhs, axis=-2, keepdims=True)
+    rhs /= norm
     V = xnp.update_array(V, xnp.copy(rhs.T), ..., 1)
-    return V, diag, subdiag, i
+    return V, diag, subdiag, i, norm
 
 
 def do_double_gram(vec, new_vec, xnp):
