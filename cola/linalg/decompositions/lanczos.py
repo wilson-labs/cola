@@ -105,6 +105,24 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
     else:
         rhs = start_vector
 
+    init_val = init_lanczos(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
+    i, vec, beta, alpha, info = lanczos_fact(A, init_val, max_iters, tol)
+    alpha, beta, Q, iters = alpha[..., 1:-1], beta, vec[..., 1:-1], i - 1
+    if xnp.__name__.find("jax") < 0:
+        alpha, beta, Q = alpha[..., :iters - 1], beta[..., :iters], Q[..., :iters]
+    if len(start_vector.shape) == 1:
+        alpha, beta = alpha[0], beta[0]
+        T = Tridiagonal(alpha, beta, alpha)
+        return Unitary(Dense(Q[0, :, :])), T, info
+    else:
+        T = xnp.vmap(Tridiagonal)(alpha, beta, alpha)
+        Q = Unitary(xnp.vmap(Dense)(Q))
+        return Q, T, info
+
+
+def lanczos_fact(A: LinearOperator, init_val, max_iters=100, tol=1e-7, pbar=False):
+    xnp = A.xnp
+
     def body_fun(state):
         i, vec, beta, alpha = state
         update = xnp.norm(vec[..., i], axis=-1, keepdims=True)
@@ -137,23 +155,12 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
         flag = is_not_max & xnp.any(is_large)
         return flag
 
-    init_val = initialize_lanczos_vec(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
     while_fn, info = xnp.while_loop_winfo(error, tol, max_iters, pbar=pbar)
     i, vec, beta, alpha = while_fn(cond_fun, body_fun, init_val)
-    alpha, beta, Q, iters = alpha[..., 1:-1], beta, vec[..., 1:-1], i - 1
-    if xnp.__name__.find("jax") < 0:
-        alpha, beta, Q = alpha[..., :iters - 1], beta[..., :iters], Q[..., :iters]
-    if len(start_vector.shape) == 1:
-        alpha, beta = alpha[0], beta[0]
-        T = Tridiagonal(alpha, beta, alpha)
-        return Unitary(Dense(Q[0, :, :])), T, info
-    else:
-        T = xnp.vmap(Tridiagonal)(alpha, beta, alpha)
-        Q = Unitary(xnp.vmap(Dense)(Q))
-        return Q, T, info
+    return i, vec, beta, alpha, info
 
 
-def initialize_lanczos_vec(xnp, rhs, max_iters, dtype):
+def init_lanczos(xnp, rhs, max_iters, dtype):
     device = xnp.get_device(rhs)
     i = xnp.array(1, dtype=xnp.int32, device=device)
     beta = xnp.zeros(shape=(rhs.shape[-1], max_iters), dtype=dtype, device=device)
@@ -174,16 +181,6 @@ def do_gram(vec, new_vec, xnp):
     aux = xnp.sum(xnp.conj(vec) * xnp.expand(new_vec, -1), axis=-2, keepdims=True)
     new_vec -= xnp.sum(vec * aux, axis=-1)
     return new_vec
-
-
-def initialize_lanczos(xnp, vec, max_iters, dtype):
-    device = xnp.get_device(vec)
-    i = xnp.array(1, dtype=xnp.int32, device=device)
-    beta = xnp.zeros(shape=(max_iters + 1, 1), dtype=dtype, device=device)
-    alpha = xnp.zeros(shape=(max_iters + 1, 1), dtype=dtype, device=device)
-    vec /= xnp.norm(vec)
-    vec_prev = xnp.copy(vec)
-    return i, vec, vec_prev, beta, alpha
 
 
 def get_lu_from_tridiagonal(A: LinearOperator) -> Array:
