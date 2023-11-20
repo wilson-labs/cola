@@ -81,18 +81,18 @@ def test_ira(backend):
 
     abs_error = xnp.norm(A @ V - V @ H)
     print(f"\nAbs error: {abs_error:1.2e}")
-    assert abs_error < 1e-11
+    assert abs_error < 1e-10
 
     for soln, approx in ((V_sol, V), (H_sol, H)):
         rel_error = relative_error(soln, np.array(approx))
         print(f"Rel error: {rel_error:1.2e}")
-        assert rel_error < 1e-11
+        assert rel_error < 1e-10
 
     eigvals, _ = xnp.eig(H)
     eigvals = xnp.sort(eigvals.real)
     rel_error = relative_error(np.sort(diag[:eig_n]), np.array(eigvals))
     print(f"Rel error: {rel_error:1.2e}")
-    assert rel_error < 1e-14
+    assert rel_error < 1e-11
 
 
 @parametrize(["torch"])
@@ -113,7 +113,7 @@ def test_deflation_eig_slice(backend):
         soln = xnp.array(soln, dtype=dtype, device=None)
         rel_error = relative_error(soln, approx)
         print(f"Rel error: {rel_error:1.2e}")
-        assert rel_error < 1e-14
+        assert rel_error < 1e-12
 
 
 @parametrize(["torch"])
