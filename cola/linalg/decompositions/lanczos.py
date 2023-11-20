@@ -110,11 +110,12 @@ def irl(A: LinearOperator, start_vector=None, eig_n: int = 5, which: str = "LM",
         eigvals, _ = xnp.eig(T)
         eig_slice = get_deflation_eig_slice(eigvals, which=which, eig_n=eig_n, xnp=xnp)
         eigvals = xnp.array(eigvals[eig_slice], dtype=A.dtype, device=A.device)
-        vec = diag[-1] * V[:, [-1]]
+        # vec = diag[-1] * V[:, [-1]]
         T, Q = run_shift(T[:-1], eigvals, xnp)
         beta = T[eig_n, eig_n - 1]
-        sigma = Q[-1, eig_n - 1]
-        new_vec = beta * V[:, [eig_n]] + sigma * vec
+        # sigma = Q[-1, eig_n - 1]
+        # new_vec = beta * V[:, [eig_n]] + sigma * vec
+        new_vec = beta * V[:, [eig_n]]
         V0 = V[:, :-1] @ Q[:, :eig_n]
         T0 = T[:eig_n, :eig_n]
         init_val = init_lanczos_from_vec(diag, subdiag, V0, xnp, new_vec.T, rest=eig_n, max_iters=max_size)
