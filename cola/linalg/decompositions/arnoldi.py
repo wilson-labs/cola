@@ -161,7 +161,7 @@ def init_arnoldi_from_vec(H, V, xnp, new_vec, rest, max_iters):
     H1 = xnp.update_array(H1, H[None][:, :rest, :rest], ..., slice(None, rest, None), slice(None, rest, None))
     H1 = xnp.update_array(H1, norm, ..., rest, rest - 1)
     Q1 = xnp.update_array(Q1, V[None][:, :, :rest], ..., slice(None, rest, None))
-    Q1 = xnp.update_array(Q1, new_vec / norm, ..., idx)
+    Q1 = xnp.update_array(Q1, new_vec / xnp.clip(norm, 1e-10), ..., idx)
     return Q1, H1, idx, norm[None]
 
 
