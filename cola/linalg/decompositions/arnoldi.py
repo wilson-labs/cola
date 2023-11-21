@@ -102,7 +102,7 @@ def ira(A: LinearOperator, start_vector=None, eig_n: int = 5, which: str = "LM",
         V, H = V[0], H[0]
         eigvals, _ = xnp.eig(H[:-1])
         eig_slice = get_deflation_eig_slice(eigvals, which=which, eig_n=eig_n, xnp=xnp)
-        eigvals = xnp.array(eigvals[eig_slice], dtype=A.dtype, device=A.device)
+        eigvals = xnp.cast(eigvals[eig_slice], dtype=A.dtype)
         vec = H[-1, -1] * V[:, [-1]]
         H, Q = run_shift(H[:-1], eigvals, xnp)
         beta = H[eig_n, eig_n - 1]

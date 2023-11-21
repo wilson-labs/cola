@@ -113,7 +113,7 @@ def irl(A: LinearOperator, start_vector=None, eig_n: int = 5, which: str = "LM",
         V = V[0]
         eigvals, _ = xnp.eigh(T.to_dense())
         eig_slice = get_deflation_eig_slice(eigvals, which=which, eig_n=eig_n, xnp=xnp)
-        eigvals = xnp.array(eigvals[eig_slice], dtype=A.dtype, device=A.device)
+        eigvals = xnp.cast(eigvals[eig_slice], dtype=A.dtype)
         # vec = subdiag[0, -1] * V[:, [-1]]
         vec = V[:, [-1]]
         T, Q = run_shift(T, eigvals, xnp)
