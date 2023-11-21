@@ -1,6 +1,7 @@
 import numpy as np
 from cola.fns import lazify
 from cola.ops import Dense
+from cola.ops import Tridiagonal
 from cola.linalg.decompositions.lanczos import irl
 from cola.linalg.decompositions.lanczos import lanczos
 from cola.linalg.decompositions.lanczos import lanczos_eigs
@@ -90,20 +91,21 @@ def _test_irl(backend):
     print(f"\nAbs error: {abs_error:1.2e}")
     assert abs_error < 1e-10
 
-    V, H, *_ = irl(A, rhs, eig_n=eig_n, max_size=max_size, max_iters=max_iter, tol=tol)
+    V, beta, alpha, idx, _ = irl(A, rhs, eig_n=eig_n, max_size=max_size, max_iters=max_iter, tol=tol)
     breakpoint()
-    V, H = V[0, :, :eig_n], H[0, :eig_n, :eig_n]
+    T = Tridiagonal(alpha[0, 1:idx], beta[0, :idx], alpha[0, 1:idx]).to_dense()
+    V, T = V[0, :, :eig_n], T[:eig_n, :eig_n]
 
-    abs_error = xnp.norm(A @ V - V @ H)
+    abs_error = xnp.norm(A @ V - V @ T)
     print(f"\nAbs error: {abs_error:1.2e}")
     assert abs_error < 1e-10
 
-    for soln, approx in ((V_sol, V), (T_sol, H)):
+    for soln, approx in ((V_sol, V), (T_sol, T)):
         rel_error = relative_error(soln, np.array(approx))
         print(f"Rel error: {rel_error:1.2e}")
         assert rel_error < 1e-10
 
-    eigvals, _ = xnp.eigh(H)
+    eigvals, _ = xnp.eigh(T)
     eigvals = xnp.sort(eigvals)
     rel_error = relative_error(np.sort(diag[:eig_n]), np.array(eigvals))
     print(f"Rel error: {rel_error:1.2e}")

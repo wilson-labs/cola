@@ -9,6 +9,7 @@ from torch.func import grad as _grad
 from cola.utils.torch_tqdm import while_loop_winfo
 
 Parameter = Parameter
+argmax = torch.argmax
 logdet = torch.logdet
 exp = torch.exp
 cos = torch.cos

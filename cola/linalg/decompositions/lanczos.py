@@ -95,41 +95,43 @@ def irl(A: LinearOperator, start_vector=None, eig_n: int = 5, which: str = "LM",
     """
     xnp = A.xnp
     init_val = init_lanczos(xnp=xnp, rhs=start_vector, max_iters=max_size, dtype=A.dtype)
+    init_val = init_val + (
+        0,
+        xnp.array([1.], dtype=A.dtype, device=A.device),
+    )
 
     def cond_fun(state):
-        *_, idx, norm = state
-        is_not_max = idx < max_iters
+        *_, counter, norm = state
+        is_not_max = counter < max_iters
         is_large = (norm > tol)
         return is_not_max & xnp.any(is_large)
 
     def body_fun(state):
-        V, diag, subdiag, idx, _ = state
-        breakpoint()
-        V, diag, subdiag, *_ = lanczos_fact(A, state, max_iters=max_size, tol=tol, pbar=pbar)
-        T = Tridiagonal(subdiag, diag, subdiag).to_dense()
-        V, T = V[0], T[0]
-        eigvals, _ = xnp.eig(T)
+        V, diag, subdiag, idx, counter, _ = state
+        V, diag, subdiag, *_ = lanczos_fact(A, (V, diag, subdiag, idx), max_iters=max_size, tol=tol, pbar=pbar)
+        T = Tridiagonal(subdiag[0, 1:-1], diag[0], subdiag[0, 1:-1]).to_dense()
+        V = V[0]
+        eigvals, _ = xnp.eig(T.to_dense())
         eig_slice = get_deflation_eig_slice(eigvals, which=which, eig_n=eig_n, xnp=xnp)
         eigvals = xnp.array(eigvals[eig_slice], dtype=A.dtype, device=A.device)
-        vec = diag[-1] * V[:, [-1]]
-        T, Q = run_shift(T[:-1], eigvals, xnp)
+        vec = diag[0, -1] * V[:, [-1]]
+        T, Q = run_shift(T, eigvals, xnp)
 
         beta = T[eig_n, eig_n - 1]
         sigma = Q[-1, eig_n - 1]
         new_vec = beta * V[:, [eig_n]] + sigma * vec
-        new_vec = beta * V[:, [eig_n]]
-        V0 = V[:, :-1] @ Q[:, :eig_n]
+        V0 = V[:, 1:-1] @ Q[:, :eig_n]
         T0 = T[:eig_n, :eig_n]
         norm = xnp.norm(A @ V0 - V0 @ T0)
 
-        init_val = init_lanczos_from_vec(diag, subdiag, V0, xnp, new_vec.T, rest=eig_n, max_iters=max_size)
-        V, diag, subdiag, *_ = init_val
-        return V, diag, subdiag, idx + 1, norm[None]
+        init_val = init_lanczos_from_vec(T0, V0, xnp, new_vec.T, rest=eig_n, max_iters=max_size)
+        V, diag, subdiag, idx, _ = init_val
+        return V, diag, subdiag, idx + 1, counter + 1, norm[None]
 
     while_fn, info = xnp.while_loop_winfo(lambda s: s[-1][0], tol, max_iters, pbar=pbar)
     state = while_fn(cond_fun, body_fun, init_val)
-    V, H, idx, _ = state
-    return V, H, idx, info
+    V, diag, subdiag, idx, *_ = state
+    return V, diag, subdiag, idx, info
 
 
 def get_deflation_eig_slice(eigvals, which, eig_n, xnp):
@@ -163,17 +165,20 @@ def run_shift(H, shifts, xnp):
     return H, V
 
 
-def init_lanczos_from_vec(H, V, xnp, new_vec, rest, max_iters):
-    dtype, device = H.dtype, H.device
-    idx, norm = xnp.array(rest, dtype=xnp.int32, device=H.device), xnp.norm(new_vec)
-    H1 = xnp.zeros(shape=(1, max_iters + 1, max_iters), dtype=dtype, device=device)
-    Q1 = xnp.zeros(shape=(1, V.shape[0], max_iters + 1), dtype=dtype, device=device)
+def init_lanczos_from_vec(T, V, xnp, rhs, rest, max_iters):
+    dtype, device = T.dtype, T.device
+    idx, norm = xnp.array(rest, dtype=xnp.int32, device=T.device), xnp.norm(rhs)
+    diag = xnp.zeros(shape=(rhs.shape[0], max_iters), dtype=dtype, device=device)
+    subdiag = xnp.zeros(shape=(rhs.shape[0], max_iters + 1), dtype=dtype, device=device)
+    Q1 = xnp.zeros(shape=(rhs.shape[0], rhs.shape[1], max_iters + 2), dtype=dtype, device=device)
 
-    H1 = xnp.update_array(H1, H[None][:, :rest, :rest], ..., slice(None, rest, None), slice(None, rest, None))
-    H1 = xnp.update_array(H1, norm, ..., rest, rest - 1)
-    Q1 = xnp.update_array(Q1, V[None][:, :, :rest], ..., slice(None, rest, None))
-    Q1 = xnp.update_array(Q1, new_vec / xnp.clip(norm, 1e-10), ..., idx)
-    return Q1, H1, idx, norm[None]
+    diag = xnp.update_array(diag, xnp.diag(T)[None], ..., slice(None, rest, None))
+    subdiag = xnp.update_array(subdiag, xnp.diag(T, -1)[None], ..., slice(1, rest, None))
+    subdiag = xnp.update_array(subdiag, norm, ..., rest)
+
+    Q1 = xnp.update_array(Q1, V[None][:, :, :rest], ..., slice(1, rest + 1, None))
+    Q1 = xnp.update_array(Q1, rhs / xnp.clip(norm, 1e-10), ..., idx + 1)
+    return Q1, diag, subdiag, idx, norm[None]
 
 
 def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7, pbar=False, key=None):
