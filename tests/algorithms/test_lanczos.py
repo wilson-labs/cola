@@ -334,7 +334,7 @@ def run_irl(A, rhs, eig_n, max_size, max_iter, tol):
     while (counter < max_iter) & (norm > tol):
         V, diag, subdiag, idx = run_lanczos(A, init_val, max_iter=max_size, tol=tol)
         T = construct_tri(subdiag[1:idx], diag[:idx])
-        eigvals, _ = np.linalg.eig(T)
+        eigvals, _ = np.linalg.eigh(T)
         eigvals = np.sort(eigvals)
         vec = np.copy(subdiag[-1] * V[:, [-1]])
         T, Q = run_shift_np(T.copy(), eigvals[:nq])
