@@ -111,10 +111,11 @@ def irl(A: LinearOperator, start_vector=None, eig_n: int = 5, which: str = "LM",
         V, diag, subdiag, *_ = lanczos_fact(A, (V, diag, subdiag, idx), max_iters=max_size, tol=tol, pbar=pbar)
         T = Tridiagonal(subdiag[0, 1:-1], diag[0], subdiag[0, 1:-1]).to_dense()
         V = V[0]
-        eigvals, _ = xnp.eig(T.to_dense())
+        eigvals, _ = xnp.eigh(T.to_dense())
         eig_slice = get_deflation_eig_slice(eigvals, which=which, eig_n=eig_n, xnp=xnp)
         eigvals = xnp.array(eigvals[eig_slice], dtype=A.dtype, device=A.device)
-        vec = diag[0, -1] * V[:, [-1]]
+        # vec = subdiag[0, -1] * V[:, [-1]]
+        vec = V[:, [-1]]
         T, Q = run_shift(T, eigvals, xnp)
 
         beta = T[eig_n, eig_n - 1]
