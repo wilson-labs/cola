@@ -64,15 +64,16 @@ class ArnoldiUnary(LinearOperator):
         if "start_vector" in self.kwargs.keys():
             self.kwargs.pop("start_vector")
         Q, H, info = arnoldi(A=self.A, start_vector=V, **self.kwargs)
-        # Q of shape (n, m, bs) H of shape (m,m,bs)
+        Q, H = Q.to_dense()[:, :, :-1], H.to_dense()[:, :-1]
+        # Q of shape (n, m, bs) H of shape (m, m, bs)
         self.info.update(info)
-        eigvals, P = self.xnp.eig(H.to_dense())
+        eigvals, P = self.xnp.eig(H)
         norms = self.xnp.norm(V, axis=0)
 
         e0 = self.xnp.canonical(0, (P.shape[1], V.shape[-1]), dtype=P.dtype, device=self.device)
         Pinv0 = self.xnp.solve(P, e0.T)  # (bs, m, m) vs (bs, m)
         out = Pinv0 * norms[:, None]  # (bs, m)
-        Q = self.xnp.cast(Q.to_dense(), dtype=P.dtype)  # (bs, n, m)
+        Q = self.xnp.cast(Q, dtype=P.dtype)  # (bs, n, m)
         # (bs,n,m) @ (bs,m,m) @ (bs, m) -> (bs, n)
         zero_thresh = 10 * xnp.finfo(self.dtype).eps * xnp.max(xnp.abs(eigvals), axis=1, keepdims=True)
         f_eigvals = xnp.where(xnp.abs(eigvals) > zero_thresh, self.f(eigvals), xnp.zeros_like(eigvals))

@@ -9,6 +9,7 @@ from torch.func import grad as _grad
 from cola.utils.torch_tqdm import while_loop_winfo
 
 Parameter = Parameter
+argmax = torch.argmax
 logdet = torch.logdet
 exp = torch.exp
 cos = torch.cos
@@ -20,7 +21,6 @@ sign = torch.sign
 any = torch.any
 inv = torch.linalg.inv
 pinv = torch.linalg.pinv
-norm = torch.linalg.norm
 abs = torch.abs
 all = torch.all
 mean = torch.mean
@@ -65,6 +65,10 @@ promote_types = torch.promote_types
 finfo = torch.finfo
 slogdet = torch.linalg.slogdet
 iscomplexobj = torch.is_complex
+
+
+def norm(array, axis=None, keepdims=False, ord=None):
+    return torch.linalg.norm(array, dim=axis, keepdim=keepdims, ord=ord)
 
 
 def get_array_device(array):
@@ -175,8 +179,8 @@ def solvetri(matrix, rhs, lower=True):
 
 def qr(matrix, full_matrices=False):
     mode = "reduced" if not full_matrices else "complete"
-    Q = torch.linalg.qr(matrix, mode=mode)
-    return Q
+    Q, R = torch.linalg.qr(matrix, mode=mode)
+    return Q, R
 
 
 def expand(array, axis):

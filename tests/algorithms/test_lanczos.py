@@ -1,12 +1,15 @@
 import numpy as np
 from cola.fns import lazify
 from cola.ops import Dense
+from cola.ops import Tridiagonal
+from cola.linalg.decompositions.lanczos import irl
 from cola.linalg.decompositions.lanczos import lanczos
 from cola.linalg.decompositions.lanczos import lanczos_eigs
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends, tracing_backends
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
 from cola.utils.test_utils import generate_diagonals
+from cola.utils.test_utils import get_numpy_dtype
 
 _tol = 1e-6
 
@@ -71,24 +74,56 @@ def test_lanczos_vjp(backend):
     assert abs_error < _tol * 50
 
 
+@parametrize(["torch"])
+def test_irl(backend):
+    xnp = get_xnp(backend)
+    dtype = xnp.float64
+    np_dtype = get_numpy_dtype(dtype)
+    diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
+    A_np = generate_pd_from_diag(diag, dtype=np_dtype, seed=48)
+    A = lazify(xnp.array(A_np, dtype=dtype, device=None))
+    rhs = xnp.randn(A.shape[0], 1, dtype=dtype, device=None, key=xnp.PRNGKey(123))
+    eig_n, max_size, max_iter, tol = 5, 8, 100, 1e-10
+    V_sol, T_sol = run_irl(A_np, np.array(rhs[:, 0]), eig_n, max_size, max_iter, tol)
+    approx, _ = np.linalg.eigh(T_sol)
+    abs_error = np.linalg.norm(np.sort(diag[:eig_n]) - approx)
+    print(f"\nAbs error: {abs_error:1.2e}")
+    assert abs_error < 1e-10
+
+    V, beta, alpha, idx, _ = irl(A, rhs, eig_n=eig_n, max_size=max_size, max_iters=max_iter, tol=tol)
+    T = Tridiagonal(alpha[0, 1:idx], beta[0, :idx], alpha[0, 1:idx]).to_dense()
+    V, T = V[0, :, 1:eig_n + 1], T[:eig_n, :eig_n]
+
+    for soln, approx in ((V_sol, V), (T_sol, T)):
+        rel_error = relative_error(soln, np.array(approx))
+        print(f"Rel error: {rel_error:1.2e}")
+        assert rel_error < 1e-10
+
+    eigvals, _ = xnp.eigh(T)
+    eigvals = xnp.sort(eigvals)
+    rel_error = relative_error(np.sort(diag[:eig_n]), np.array(eigvals))
+    print(f"Rel error: {rel_error:1.2e}")
+    assert rel_error < 1e-11
+
+
 @parametrize(all_backends)
 def test_lanczos_complex(backend):
     xnp = get_xnp(backend)
     dtype = xnp.complex64
-    np_dtype = np.complex64
+    np_dtype = get_numpy_dtype(dtype)
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
     A = xnp.array(generate_diagonals(diag, seed=21), dtype=dtype, device=None)
+    A = A @ A.conj().T
     rhs = xnp.randn(A.shape[0], 1, dtype=dtype, device=None)
-    alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
+    Q_np, beta_np, alpha_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
 
     B = lazify(A)
     max_iters, tol = A.shape[0], 1e-7
     Q, T, info = lanczos(B, rhs, max_iters=max_iters, tol=tol, pbar=False)
-    idx = info["iterations"] - 1
     alpha, beta = T.alpha[:, :, 0], T.beta[:, :, 0]
     Q, T = Q.to_dense(), xnp.vmap(T.__class__.to_dense)(T)
+    Q, T = Q[0], T[0]
 
-    assert idx == idx_np
     comparisons = [
         (T_np, T),
         (Q_np, Q),
@@ -98,6 +133,7 @@ def test_lanczos_complex(backend):
     ]
     for soln, approx in comparisons:
         rel_error = relative_error(soln, approx)
+        print(f"rel error: {rel_error:1.3e}")
         assert rel_error < 5e-5
 
 
@@ -105,19 +141,17 @@ def test_lanczos_complex(backend):
 def test_lanczos_random(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    np_dtype = np.float32
+    np_dtype = get_numpy_dtype(dtype)
     diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
     A = xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
     rhs = xnp.ones(shape=(A.shape[0], 1), dtype=dtype, device=None)
-    alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
+    Q_np, beta_np, alpha_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
 
     B, max_iters, tol = lazify(A), A.shape[0], 1e-7
     Q, T, info = lanczos(B, rhs, max_iters=max_iters, tol=tol, pbar=False)
-    idx = info["iterations"] - 1
     alpha, beta = T.alpha[:, :, 0], T.beta[:, :, 0]
     Q, T = Q.to_dense(), xnp.vmap(T.__class__.to_dense)(T)
 
-    assert idx == idx_np
     comparisons = [
         (T_np, T),
         (Q_np, Q),
@@ -159,25 +193,73 @@ def test_lanczos_manual(backend):
 def test_lanczos_iter(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
+    np_dtype = get_numpy_dtype(dtype)
     max_eig = 6
     A = xnp.diag(xnp.array([4, 2, 1, max_eig], dtype=dtype, device=None))
     rhs = xnp.ones(shape=(A.shape[0], 7), dtype=dtype, device=None)
-    alpha_np, beta_np, idx_np, Q_np, T_np = case_numpy(A, rhs, xnp)
+    Q_np, beta_np, alpha_np, T_np = case_numpy(A, rhs, xnp, np_dtype)
 
     max_iters, tol = A.shape[0], 1e-7
     B = lazify(A)
     Q, T, info = lanczos(B, rhs, max_iters=max_iters, tol=tol, pbar=False)
-    idx, Q = info["iterations"] - 1, Q.to_dense()
+    Q = Q.to_dense()
     alpha, beta = T.alpha[:, :, 0], T.beta[:, :, 0]
     T = xnp.vmap(T.__class__.to_dense)(T)
     eigvals, _ = xnp.eigh(T)
 
-    assert idx == idx_np[0]
     comparisons = [(T_np, T), (Q_np, Q), (Q @ T, A @ Q), (alpha_np, alpha), (beta_np, beta),
                    (xnp.array(max_eig, dtype=dtype, device=None), eigvals[0, -1])]
     for soln, check in comparisons:
         rel_error = relative_error(soln, check)
         assert rel_error < _tol
+
+
+def test_numpy_lanczos():
+    np.set_printoptions(formatter={"float": "{:0.2f}".format})
+    np_dtype = np.float64
+    diag = generate_spectrum(coeff=0.5, scale=1.0, size=10, dtype=np_dtype)
+    A = np.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=48), dtype=np_dtype)
+    rhs = np.random.normal(size=(A.shape[0], ))
+
+    init_val = init_lanczos_np(rhs, max_iter=A.shape[0] - 2, dtype=np_dtype)
+    Q, diag, subdiag, idx = run_lanczos(A, init_val, max_iter=A.shape[0] - 2, tol=1e-12)
+    T = construct_tri(subdiag[1:idx], diag[:idx])
+    V = Q[:, 1:idx + 1]
+
+    part1 = V.T @ A @ V
+    part2 = T
+    abs_error = np.linalg.norm(part1 - part2)
+    print(f"Abs error: {abs_error:1.2e}")
+    assert abs_error < 1e-12
+
+    part1 = A @ V - V @ T
+    part2 = Q[:, -1] * subdiag[-1]
+    abs_error = np.linalg.norm(part1[:, -1] - part2)
+    print(f"Abs error: {abs_error:1.2e}")
+    assert abs_error < 1e-12
+
+    init_val = init_lanczos_np(rhs, max_iter=A.shape[0], dtype=np_dtype)
+    Q, diag, subdiag, idx = run_lanczos(A, init_val, max_iter=A.shape[0], tol=1e-12)
+    Q = Q[:, 1:idx + 1]
+    T = construct_tri(subdiag[1:idx], diag[:idx])
+    abs_error = np.linalg.norm(A @ Q - Q @ T)
+    print(f"Abs error: {abs_error:1.2e}")
+    assert abs_error < 1e-10
+
+    init_val = init_lanczos_np(rhs, max_iter=8, dtype=np_dtype)
+    Q_sol, diag, subdiag, idx = run_lanczos(A, init_val, max_iter=8, tol=1e-12)
+    T_sol = construct_tri(subdiag[1:idx], diag[:idx])
+    init_val = init_lanczos_np(rhs, max_iter=8, dtype=np_dtype)
+    Q, diag, subdiag, idx = run_lanczos(A, init_val, max_iter=5, tol=1e-12)
+    T = construct_tri(subdiag[1:idx], diag[:idx])
+    vec = subdiag[idx] * Q[:, [idx + 1]]
+    init_val = init_lanczos_from_vec_np(Q[:, 1:], T, vec, max_iter=8, idx=idx)
+    Q, diag, subdiag, idx = run_lanczos(A, init_val, max_iter=8, tol=1e-12)
+    T = construct_tri(subdiag[1:idx], diag[:idx])
+    for soln, approx in ((Q_sol, Q), (T_sol, T)):
+        rel_error = relative_error(soln, approx)
+        print(f"Rel error: {abs_error:1.2e}")
+        assert rel_error < 1e-12
 
 
 def case_early(xnp, dtype):
@@ -220,15 +302,18 @@ def case_numpy(A, rhs, xnp, np_dtype=np.float64):
     rhs_np = np.array(rhs, np_dtype)
     results = []
     for bs in range(rhs_np.shape[-1]):
-        out = run_lanczos(A_np, rhs_np[:, bs], max_iter=A_np.shape[0], dtype=np_dtype)
-        T = construct_tri(out[0], out[1])
-        out += (T, )
-        results.append(out)
+        init_val = init_lanczos_np(rhs_np[:, bs], max_iter=A_np.shape[0], dtype=np_dtype)
+        V, diag, subdiag, idx = run_lanczos(A_np, init_val, max_iter=A_np.shape[0])
+        T = construct_tri(subdiag[1:idx], diag[:idx])
+        results.append((V[:, 1:idx + 1], diag[:idx], subdiag[1:idx], T))
 
     if rhs_np.shape[-1] > 1:
         out = stack_batches(results)
+    else:
+        out = results[0]
     out = [xnp.array(vec, rhs.dtype, device=None) for vec in out]
-    return out
+    Q, beta, alpha, T = out
+    return Q, beta, alpha, T
 
 
 def stack_batches(results):
@@ -243,32 +328,82 @@ def stack_batches(results):
     return out
 
 
-def run_lanczos(A, rhs, max_iter, dtype, tolerance=1e-8):
-    max_iter = min(A.shape[0], max_iter)
-    vec, alpha, beta = initialize_lanczos(rhs, max_iter=max_iter, dtype=dtype)
-    for idx in range(1, max_iter + 1):
-        vec[:, idx + 1] = A @ vec[:, idx]
-        beta[idx - 1] = vec[:, idx + 1].conj().T @ vec[:, idx]
-        vec[:, idx + 1] -= beta[idx - 1] * vec[:, idx]
-        vec[:, idx + 1] -= alpha[idx - 1] * vec[:, idx - 1]
-        vec = do_double_gram(vec, ind=idx + 1)
+def run_irl(A, rhs, eig_n, max_size, max_iter, tol):
+    init_val = init_lanczos_np(rhs, max_size, A.dtype)
+    norm, nq, counter = 2 * tol, max_size - eig_n, 0
+    while (counter < max_iter) & (norm > tol):
+        V, diag, subdiag, idx = run_lanczos(A, init_val, max_iter=max_size, tol=tol)
+        T = construct_tri(subdiag[1:idx], diag[:idx])
+        eigvals, _ = np.linalg.eigh(T)
+        eigvals = np.sort(eigvals)
+        vec = np.copy(subdiag[-1] * V[:, [-1]])
+        T, Q = run_shift_np(T.copy(), eigvals[:nq])
 
-        alpha[idx] = np.linalg.norm(vec[:, idx + 1])
-        if alpha[idx] < tolerance * np.sqrt(A.shape[0]):
+        beta = T[eig_n, eig_n - 1]
+        sigma = Q[-1, eig_n - 1]
+        new_vec = beta * V[:, [eig_n]] + sigma * vec
+        V0 = V[:, 1:-1] @ Q[:, :eig_n]
+        T0 = T[:eig_n, :eig_n]
+        norm = np.linalg.norm(A @ V0 - V0 @ T0)
+
+        init_val = init_lanczos_from_vec_np(V0, T0, new_vec, max_iter=max_size, idx=eig_n)
+        counter += 1
+    return V0, T0
+
+
+def init_lanczos_from_vec_np(Q0, T0, vec, max_iter, idx):
+    dtype = Q0.dtype
+    subdiag = np.zeros(shape=(max_iter + 1, ), dtype=dtype)
+    diag = np.zeros(shape=(max_iter, ), dtype=dtype)
+    Q1 = np.zeros(shape=(vec.shape[0], max_iter + 2), dtype=dtype)
+
+    diag[:idx] = np.diag(T0.copy())
+    subdiag[1:idx] = np.diag(T0, k=-1).copy()
+    norm = np.linalg.norm(vec)
+    subdiag[idx] = norm
+    Q1[:, 1:idx + 1] = Q0[:, :idx].copy()
+    Q1[:, [idx + 1]] = vec / norm
+    return Q1, diag, subdiag, idx + 1, norm
+
+
+def run_shift_np(A, shifts):
+    Q, Id = np.eye(A.shape[0], dtype=A.dtype), np.eye(A.shape[0], dtype=A.dtype)
+    for jdx in range(len(shifts)):
+        Q1, _ = np.linalg.qr(A - shifts[jdx] * Id, mode="complete")
+        A = Q1.T @ A @ Q1
+        Q = Q @ Q1
+    return A, Q
+
+
+def run_lanczos(A, init_val, max_iter, tol=1e-8):
+    V, diag, subdiag, idx, norm = init_val
+    while (idx <= max_iter):
+        V[:, idx + 1] = A @ V[:, idx]
+        diag[idx - 1] = V[:, idx + 1].conj().T @ V[:, idx]
+        V[:, idx + 1] -= diag[idx - 1] * V[:, idx]
+        V[:, idx + 1] -= subdiag[idx - 1] * V[:, idx - 1]
+        V = do_double_gram(V, ind=idx + 1)
+
+        norm = np.linalg.norm(V[:, idx + 1])
+        subdiag[idx] = norm
+        idx += 1
+        if norm < tol * np.sqrt(A.shape[0]):
             break
         else:
-            vec[:, idx + 1] = vec[:, idx + 1] / alpha[idx]
+            V[:, idx] = V[:, idx] / norm
 
-    return alpha[1:idx], beta[:idx], idx, vec[:, 1:idx + 1]
+    return V, diag, subdiag, idx - 1
 
 
-def initialize_lanczos(rhs, max_iter, dtype):
-    alpha = np.zeros(shape=(max_iter + 1, ), dtype=dtype)
-    beta = np.zeros(shape=(max_iter, ), dtype=dtype)
-    vec = np.zeros(shape=rhs.shape + (max_iter + 2, ), dtype=dtype)
-    vec[:, 1] = rhs
-    vec[:, 1] = vec[:, 1] / np.linalg.norm(vec[:, 1])
-    return vec, alpha, beta
+def init_lanczos_np(rhs, max_iter, dtype):
+    subdiag = np.zeros(shape=(max_iter + 1, ), dtype=dtype)
+    diag = np.zeros(shape=(max_iter, ), dtype=dtype)
+    V = np.zeros(shape=rhs.shape + (max_iter + 2, ), dtype=dtype)
+    idx = 1
+    V[:, idx] = rhs.copy()
+    norm = np.linalg.norm(V[:, idx])
+    V[:, idx] = V[:, idx] / norm
+    return V, diag, subdiag, idx, norm
 
 
 def do_double_gram(vec, ind):

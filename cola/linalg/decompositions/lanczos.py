@@ -70,6 +70,118 @@ def LanczosDecomposition(A: LinearOperator, start_vector=None, max_iters=100, to
     return A_approx
 
 
+def irl(A: LinearOperator, start_vector=None, eig_n: int = 5, which: str = "LM", max_size: int = 20,
+        max_iters: int = 100, tol: float = 1e-7, pbar: bool = False):
+    """
+    Runs the Implicitly Restarted Lanczos (IRL), which basically
+    finds a factorization A V = V H using constant memory.
+
+    Args:
+        A (LinearOperator): A linear operator of size (n, n).
+        start_vector (Array, optional): An initial vector to start Lanczos of size (n, ).
+         Defaults to a random probe.
+        eig_n (int): The number of eigenvalues to estimate.
+        max_size (int): The maximum number of inner Lanczos iterations to run.
+        max_iters (int): The maximum number of outer iterations to run.
+        tol (float, optional): Stopping criteria.
+        pbar (bool, optional): Show a progress bar.
+
+    Returns:
+        tuple:
+            - V (Array): Unitary matrix of size (n, max_iters) or (b, n, max_iters)
+            - H (Array): The Triangular  matrix of size (max_iters, max_iters) or (b, max_iters, max_iters)
+            - idx (Array): The number of iterations ran
+            - info (dict): General information about the iterative procedure.
+    """
+    xnp = A.xnp
+    init_val = init_lanczos(xnp=xnp, rhs=start_vector, max_iters=max_size, dtype=A.dtype)
+    init_val = init_val + (
+        0,
+        xnp.array([1.], dtype=A.dtype, device=A.device),
+    )
+
+    def cond_fun(state):
+        *_, counter, norm = state
+        is_not_max = counter < max_iters
+        is_large = (norm > tol)
+        return is_not_max & xnp.any(is_large)
+
+    def body_fun(state):
+        V, diag, subdiag, idx, counter, _ = state
+        V, diag, subdiag, *_ = lanczos_fact(A, (V, diag, subdiag, idx), max_iters=max_size, tol=tol, pbar=pbar)
+        T = Tridiagonal(subdiag[0, 1:-1], diag[0], subdiag[0, 1:-1]).to_dense()
+        V = V[0]
+        eigvals, _ = xnp.eigh(T.to_dense())
+        eig_slice = get_deflation_eig_slice(eigvals, which=which, eig_n=eig_n, xnp=xnp)
+        eigvals = xnp.cast(eigvals[eig_slice], dtype=A.dtype)
+        # vec = subdiag[0, -1] * V[:, [-1]]
+        vec = V[:, [-1]]
+        T, Q = run_shift(T, eigvals, xnp)
+
+        beta = T[eig_n, eig_n - 1]
+        sigma = Q[-1, eig_n - 1]
+        new_vec = beta * V[:, [eig_n]] + sigma * vec
+        V0 = V[:, 1:-1] @ Q[:, :eig_n]
+        T0 = T[:eig_n, :eig_n]
+        norm = xnp.norm(A @ V0 - V0 @ T0)
+
+        init_val = init_lanczos_from_vec(T0, V0, xnp, new_vec.T, rest=eig_n, max_iters=max_size)
+        V, diag, subdiag, idx, _ = init_val
+        return V, diag, subdiag, idx + 1, counter + 1, norm[None]
+
+    while_fn, info = xnp.while_loop_winfo(lambda s: s[-1][0], tol, max_iters, pbar=pbar)
+    state = while_fn(cond_fun, body_fun, init_val)
+    V, diag, subdiag, idx, *_ = state
+    return V, diag, subdiag, idx, info
+
+
+def get_deflation_eig_slice(eigvals, which, eig_n, xnp):
+    total_n = eigvals.shape[-1]
+    nq = total_n - eig_n
+    match which:
+        case "LM":
+            idx = xnp.argsort(xnp.abs(eigvals))
+            eig_slice = slice(None, nq, None)
+            return idx[eig_slice]
+        case "SM":
+            idx = xnp.argsort(xnp.abs(eigvals))
+            eig_slice = slice(total_n - nq, total_n, None)
+            return idx[eig_slice]
+
+
+def run_shift(H, shifts, xnp):
+    dtype, device = H.dtype, H.device
+    Id = xnp.eye(*H.shape, dtype=dtype, device=device)
+    max_iters = shifts.shape[0]
+
+    def body_fun(idx, state):
+        H, V = state
+        Q, _ = xnp.qr(H - shifts[idx] * Id, full_matrices=True)
+        H = Q.conj().T @ H @ Q
+        V = V @ Q
+        return H, V
+
+    init_val = (H, xnp.eye(*H.shape, dtype=dtype, device=device))
+    H, V = xnp.for_loop(0, max_iters, body_fun, init_val)
+    return H, V
+
+
+def init_lanczos_from_vec(T, V, xnp, rhs, rest, max_iters):
+    dtype, device = T.dtype, T.device
+    idx, norm = xnp.array(rest, dtype=xnp.int32, device=T.device), xnp.norm(rhs)
+    diag = xnp.zeros(shape=(rhs.shape[0], max_iters), dtype=dtype, device=device)
+    subdiag = xnp.zeros(shape=(rhs.shape[0], max_iters + 1), dtype=dtype, device=device)
+    Q1 = xnp.zeros(shape=(rhs.shape[0], rhs.shape[1], max_iters + 2), dtype=dtype, device=device)
+
+    diag = xnp.update_array(diag, xnp.diag(T)[None], ..., slice(None, rest, None))
+    subdiag = xnp.update_array(subdiag, xnp.diag(T, -1)[None], ..., slice(1, rest, None))
+    subdiag = xnp.update_array(subdiag, norm, ..., rest)
+
+    Q1 = xnp.update_array(Q1, V[None][:, :, :rest], ..., slice(1, rest + 1, None))
+    Q1 = xnp.update_array(Q1, rhs / xnp.clip(norm, 1e-10), ..., idx + 1)
+    return Q1, diag, subdiag, idx, norm[None]
+
+
 def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e-7, pbar=False, key=None):
     """
     Computes the Lanczos decomposition of a the operator A, A = Q T Q^*.
@@ -105,41 +217,8 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
     else:
         rhs = start_vector
 
-    def body_fun(state):
-        i, vec, beta, alpha = state
-        update = xnp.norm(vec[..., i], axis=-1, keepdims=True)
-        vec = xnp.update_array(vec, vec[..., i] / update, ..., i)
-
-        aux = xnp.permute(vec, axes=[1, 0, 2])
-        new_vec = (A @ aux[..., i]).T
-        update = xnp.sum(xnp.conj(new_vec) * vec[..., i], axis=-1)
-        beta = xnp.update_array(beta, update, ..., i - 1)
-        aux = beta[..., [i - 1]] * vec[..., i] + alpha[..., [i - 1]] * vec[..., i - 1]
-        new_vec -= aux
-        new_vec = do_double_gram(vec, new_vec, xnp)
-
-        vec = xnp.update_array(vec, new_vec, ..., i + 1)
-        alpha = xnp.update_array(alpha, xnp.norm(vec[..., i + 1], axis=-1), ..., i)
-
-        return i + 1, vec, beta, alpha
-
-    def error(state):
-        i, *_, alpha = state
-        err = xnp.array(1e-30, dtype=alpha.real.dtype, device=xnp.get_device(alpha))
-        rel_err = alpha[..., i - 1].real / xnp.maximum(alpha[..., 1].real, err)
-        # rel_err = alpha[..., i - 1].real
-        return xnp.max(rel_err, axis=0) + (i <= 1) * 1.
-
-    def cond_fun(state):
-        i, *_, alpha = state
-        is_not_max = i <= max_iters
-        is_large = (alpha[..., i - 1].real > tol * alpha[..., 1].real) | (i <= 1)
-        flag = is_not_max & xnp.any(is_large)
-        return flag
-
-    init_val = initialize_lanczos_vec(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
-    while_fn, info = xnp.while_loop_winfo(error, tol, max_iters, pbar=pbar)
-    i, vec, beta, alpha = while_fn(cond_fun, body_fun, init_val)
+    init_val = init_lanczos(xnp, rhs, max_iters=max_iters, dtype=A.dtype)
+    vec, beta, alpha, i, info = lanczos_fact(A, init_val, max_iters, tol)
     alpha, beta, Q, iters = alpha[..., 1:-1], beta, vec[..., 1:-1], i - 1
     if xnp.__name__.find("jax") < 0:
         alpha, beta, Q = alpha[..., :iters - 1], beta[..., :iters], Q[..., :iters]
@@ -153,15 +232,56 @@ def lanczos(A: LinearOperator, start_vector: Array = None, max_iters=100, tol=1e
         return Q, T, info
 
 
-def initialize_lanczos_vec(xnp, rhs, max_iters, dtype):
+def lanczos_fact(A: LinearOperator, init_val, max_iters=100, tol=1e-7, pbar=False):
+    xnp = A.xnp
+
+    def body_fun(state):
+        V, diag, subdiag, i = state
+        update = xnp.norm(V[..., i], axis=-1, keepdims=True)
+        V = xnp.update_array(V, V[..., i] / update, ..., i)
+
+        aux = xnp.permute(V, axes=[1, 0, 2])
+        new_vec = (A @ aux[..., i]).T
+        update = xnp.sum(xnp.conj(new_vec) * V[..., i], axis=-1)
+        diag = xnp.update_array(diag, update, ..., i - 1)
+        aux = diag[..., [i - 1]] * V[..., i] + subdiag[..., [i - 1]] * V[..., i - 1]
+        new_vec -= aux
+        new_vec = do_double_gram(V, new_vec, xnp)
+
+        V = xnp.update_array(V, new_vec, ..., i + 1)
+        subdiag = xnp.update_array(subdiag, xnp.norm(V[..., i + 1], axis=-1), ..., i)
+
+        return V, diag, subdiag, i + 1
+
+    def error(state):
+        *_, subdiag, i = state
+        err = xnp.array(1e-30, dtype=subdiag.real.dtype, device=xnp.get_device(subdiag))
+        rel_err = subdiag[..., i - 1].real / xnp.maximum(subdiag[..., 1].real, err)
+        # rel_err = alpha[..., i - 1].real
+        return xnp.max(rel_err, axis=0) + (i <= 1) * 1.
+
+    def cond_fun(state):
+        *_, subdiag, i = state
+        is_not_max = i <= max_iters
+        is_large = (subdiag[..., i - 1].real > tol * subdiag[..., 1].real) | (i <= 1)
+        flag = is_not_max & xnp.any(is_large)
+        return flag
+
+    while_fn, info = xnp.while_loop_winfo(error, tol, max_iters, pbar=pbar)
+    V, diag, subdiag, i = while_fn(cond_fun, body_fun, init_val)
+    return V, diag, subdiag, i, info
+
+
+def init_lanczos(xnp, rhs, max_iters, dtype):
     device = xnp.get_device(rhs)
     i = xnp.array(1, dtype=xnp.int32, device=device)
-    beta = xnp.zeros(shape=(rhs.shape[-1], max_iters), dtype=dtype, device=device)
-    alpha = xnp.zeros(shape=(rhs.shape[-1], max_iters + 1), dtype=dtype, device=device)
-    vec = xnp.zeros(shape=(rhs.shape[-1], rhs.shape[0], max_iters + 2), dtype=dtype, device=device)
-    rhs = rhs / xnp.norm(rhs, axis=-2, keepdims=True)
-    vec = xnp.update_array(vec, xnp.copy(rhs.T), ..., 1)
-    return i, vec, beta, alpha
+    diag = xnp.zeros(shape=(rhs.shape[-1], max_iters), dtype=dtype, device=device)
+    subdiag = xnp.zeros(shape=(rhs.shape[-1], max_iters + 1), dtype=dtype, device=device)
+    V = xnp.zeros(shape=(rhs.shape[-1], rhs.shape[0], max_iters + 2), dtype=dtype, device=device)
+    norm = xnp.norm(rhs, axis=-2, keepdims=True)
+    rhs = rhs / norm
+    V = xnp.update_array(V, xnp.copy(rhs.T), ..., 1)
+    return V, diag, subdiag, i
 
 
 def do_double_gram(vec, new_vec, xnp):
@@ -174,16 +294,6 @@ def do_gram(vec, new_vec, xnp):
     aux = xnp.sum(xnp.conj(vec) * xnp.expand(new_vec, -1), axis=-2, keepdims=True)
     new_vec -= xnp.sum(vec * aux, axis=-1)
     return new_vec
-
-
-def initialize_lanczos(xnp, vec, max_iters, dtype):
-    device = xnp.get_device(vec)
-    i = xnp.array(1, dtype=xnp.int32, device=device)
-    beta = xnp.zeros(shape=(max_iters + 1, 1), dtype=dtype, device=device)
-    alpha = xnp.zeros(shape=(max_iters + 1, 1), dtype=dtype, device=device)
-    vec /= xnp.norm(vec)
-    vec_prev = xnp.copy(vec)
-    return i, vec, vec_prev, beta, alpha
 
 
 def get_lu_from_tridiagonal(A: LinearOperator) -> Array:

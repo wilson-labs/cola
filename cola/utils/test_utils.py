@@ -135,15 +135,18 @@ def transform_to_csr(sparse_matrix, xnp, dtype):
     return data, indices, indptr, sparse_matrix.shape
 
 
-def generate_lower_from_diag(diag, dtype=np.float32, seed=None, orthogonalize=True):
+def generate_lower_from_diag(diag, dtype=np.float32, orthogonalize=True, seed=None):
     if seed:
         np.random.seed(seed=seed)
-    Q = np.random.normal(size=(diag.shape[0], diag.shape[0])).astype(dtype)
+    L = np.random.normal(size=(diag.shape[0], diag.shape[0])).astype(dtype)
     if orthogonalize:
-        Q, _ = np.linalg.qr(Q, mode='reduced')
-    Q = np.tril(Q)
-    np.fill_diagonal(Q, diag)
-    return Q
+        L, _ = np.linalg.qr(L, mode='reduced')
+    is_complex = True if dtype in [np.complex64, np.complex128] else False
+    if is_complex:
+        L += (1 / 100) * np.random.randn(*L.shape) * 1j
+    L = np.tril(L)
+    np.fill_diagonal(L, diag)
+    return L
 
 
 def generate_diagonals(diag, seed=None):
@@ -182,9 +185,13 @@ def generate_beta_spectrum(coeff, scale, size, alpha=1., beta=1., seed=48, dtype
 
 
 def generate_spectrum(coeff, scale, size, dtype=np.float32):
+    is_complex = True if dtype in [np.complex64, np.complex128] else False
     x = np.linspace(0, 1, num=size + 1)[:-1].astype(dtype)
     y = 1 - x**coeff
     y *= scale
+    if is_complex:
+        random_imaginary = (scale / 100) * np.random.randn(y.shape[0]) * 1j
+        y += random_imaginary
     return y
 
 
@@ -201,3 +208,25 @@ def generate_clustered_spectrum(clusters, sizes, std=0.025, seed=None, dtype=np.
         diag.append(sub_diags)
     diag = np.concatenate(diag, axis=0)
     return np.sort(diag)[::-1]
+
+
+def get_numpy_dtype(dtype):
+    """
+    Translates xnp.dtype to the numpy version
+    """
+    if dtype in [np.float32, np.float64, np.complex64, np.complex128, np.int32, np.int64]:
+        return dtype
+    try:
+        import torch
+        match dtype:
+            case torch.float32:
+                return np.float32
+            case torch.float64:
+                return np.float64
+            case torch.complex64:
+                return np.complex64
+            case torch.complex128:
+                return np.complex128
+    except ImportError:
+        pass
+    raise ImportError(f"Dtype: {dtype} is not valid")

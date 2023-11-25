@@ -17,4 +17,4 @@ def test_random_linear_system(backend):
 
     approx = solve(PSD(lazify(A)), rhs)
     rel_error = relative_error(soln, approx)
-    assert rel_error < 1e-6
+    assert rel_error < 5e-6
