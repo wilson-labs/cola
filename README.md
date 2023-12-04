@@ -14,7 +14,7 @@
 
 # Compositional Linear Algebra (CoLA)
 
-[![Documentation](https://readthedocs.org/projects/cola/badge/)](https://cola.readthedocs.io/en/latest/)
+[![Documentation](https://readthedocs.org/projects/cola/badge/)](https://cola.readthedocs.io/en/stable/)
 [![tests](https://github.com/wilson-labs/cola/actions/workflows/python-package.yml/badge.svg)](https://github.com/wilson-labs/cola/actions/workflows/python-package.yml)
 [![codecov](https://codecov.io/gh/wilson-labs/cola/branch/main/graph/badge.svg?token=bBnkfHv30C)](https://codecov.io/gh/wilson-labs/cola)
 [![PyPI version](https://img.shields.io/pypi/v/cola-ml)](https://pypi.org/project/cola-ml/)
