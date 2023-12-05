@@ -104,7 +104,6 @@ Trace, Diagonal, Frobenius Norm
 
 .. autofunction:: cola.linalg.trace
 .. autofunction:: cola.linalg.diag
-.. autofunction:: cola.linalg.norm
 
 Algorithms
 ~~~~~~~~~~
