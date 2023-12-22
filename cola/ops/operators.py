@@ -406,6 +406,15 @@ class Sliced(LinearOperator):
         output = self.A @ Y
         return output[start_slices]
 
+    def _rmatmat(self, X: Array) -> Array:
+        xnp = self.xnp
+        start_slices, end_slices = self.slices
+        device = xnp.get_device(X)
+        Y = xnp.zeros(shape=(X.shape[0], self.A.shape[0]), dtype=self.dtype, device=device)
+        Y = xnp.update_array(Y, X, ..., start_slices)
+        output = Y @ self.A
+        return output[..., end_slices]
+
     def __str__(self):
         has_length = hasattr(self.slices[0], '__len__')
         if has_length:
