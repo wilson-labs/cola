@@ -14,6 +14,7 @@ from cola.ops import Householder
 from cola.ops import Sparse
 from cola.ops import Jacobian
 from cola.ops import LinearOperator
+from cola.ops import Kernel
 from cola.linalg.decompositions.arnoldi import get_householder_vec
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends, tracing_backends
@@ -65,6 +66,26 @@ def test_find_device(backend):
         print(xnp.get_default_device())
         print(Op.device == xnp.get_default_device())
         assert Op.device == xnp.get_default_device()
+
+
+@parametrize(['torch'])
+def test_kernel(backend):
+    N, D, B = 7, 3, 5
+    xnp = get_xnp(backend)
+    dtype = xnp.float32
+    device = None
+    x = xnp.randn(N, D, dtype=dtype, device=device)
+    V = xnp.ones(shape=(N, B), dtype=dtype, device=device)
+
+    def f(x2):
+        out = x[:, None, :] - x2[None, :, :]
+        out = xnp.exp(-xnp.norm(out, axis=-1))
+        return out.T
+
+    Ker = Kernel(f, x, block_size=2)
+    approx = Ker @ V
+    soln = f(x) @ V
+    assert xnp.norm(approx - soln) < 1e-8
 
 
 @parametrize(['torch'])

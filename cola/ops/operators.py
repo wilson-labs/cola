@@ -586,6 +586,30 @@ class Householder(LinearOperator):
         return out
 
 
+class Kernel(LinearOperator):
+    def __init__(self, f, x, block_size):
+        self.f = f
+        self.x = x
+        self.block_size = block_size
+        super().__init__(dtype=x.dtype, shape=(x.shape[0], x.shape[0]))
+        self.iters = self.shape[0] // block_size
+
+    def _matmat(self, V):
+        xnp = self.xnp
+        out = xnp.zeros(shape=V.shape, dtype=V.dtype, device=V.device)
+        for idx in range(self.iters):
+            here = slice(idx * self.block_size, (idx + 1) * self.block_size)
+            update = self.f(self.x[here]) @ V
+            out = xnp.update_array(out, update, here)
+        here = slice((idx + 1) * self.block_size, None)
+        update = self.f(self.x[here]) @ V
+        out = xnp.update_array(out, update, here)
+        return out
+
+    def __str__(self):
+        return "Ker(f,x)"
+
+
 class FFT(LinearOperator):
     """ FFT matrix. Uses convention so matrix is unitary."""
     def __init__(self, n, dtype=None):
@@ -603,7 +627,7 @@ def FIM(logits_fn, theta):
         where p is a classifier probability distribution. Averages over batch dimensions.
 
         Args:
-            logit_fn (function that maps parameters to logits of shape (*, n_classes)
+            logit_fn function that maps parameters to logits of shape (*, n_classes)
             theta (array_like): parameter vector to eval Fisher at
 
         Returns:
