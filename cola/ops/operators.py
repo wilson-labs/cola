@@ -603,7 +603,7 @@ def FIM(logits_fn, theta):
         where p is a classifier probability distribution. Averages over batch dimensions.
 
         Args:
-            logit_fn (function that maps parameters to logits of shape (*, n_classes)
+            logit_fn function that maps parameters to logits of shape (*, n_classes)
             theta (array_like): parameter vector to eval Fisher at
 
         Returns:
