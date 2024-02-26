@@ -37,9 +37,9 @@ def get_xnp(backend: str) -> ModuleType:
                 return fns
             case "jax":
                 from cola.backends import jax_fns as fns
-                # import jax.config as config
-                # config.update('jax_platform_name', 'cpu')  # Force tests to run tests on CPU
-                # do we actually want this here?
+                import jax
+                jax.config.update('jax_platform_name', 'cpu')  # Force tests to run tests on CPU
+                # TODO: do we actually want this here?
                 return fns
             case "numpy":
                 from cola.backends import np_fns as fns
