@@ -601,12 +601,10 @@ class Kernel(LinearOperator):
         xnp = self.xnp
         out = xnp.zeros(shape=V.shape, dtype=V.dtype, device=V.device)
         for idx in range(self.iters1):
-            # loc1 = slice(idx * self.block_size1, (idx + 1) * self.block_size1)
             fit1 = None if idx + 1 == self.iters1 else (idx + 1) * self.block_size1
             loc1 = slice(idx * self.block_size1, fit1)
             update = xnp.zeros(shape=(self.x1[loc1].shape[0], V.shape[1]), dtype=V.dtype, device=V.device)
             for jdx in range(self.iters2):
-                # loc2 = slice(jdx * self.block_size2, (jdx + 1) * self.block_size2)
                 fit2 = None if jdx + 1 == self.iters2 else (jdx + 1) * self.block_size2
                 loc2 = slice(jdx * self.block_size2, fit2)
                 update += self.fn(self.x1[loc1], self.x2[loc2]) @ V[loc2]

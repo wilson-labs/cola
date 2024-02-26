@@ -79,14 +79,17 @@ def test_kernel(backend):
     V = xnp.ones(shape=(N, B), dtype=dtype, device=device)
 
     def f(x1, x2):
-        out = x2[:, None, :] - x1[None, :, :]
+        out = x1[:, None, :] - x2[None, :, :]
         out = xnp.exp(-xnp.norm(out, axis=-1))
-        return out.T
+        return out
 
-    Ker = Kernel(x, x, fn=f, block_size1=2, block_size2=3)
-    approx = Ker @ V
-    soln = f(x, x) @ V
-    assert xnp.norm(approx - soln) < 1e-10
+    for (bs1, bs2) in [(2, 3), (N, 1), (1, N), (3, N), (1, 1)]:
+        Ker = Kernel(x, x, fn=f, block_size1=bs1, block_size2=bs2)
+        approx = Ker @ V
+        soln = f(x, x) @ V
+        diff = xnp.norm(approx - soln)
+        print(f"Abs diff: {diff:1.5e}")
+        assert diff < 1e-10
 
 
 @parametrize(['torch'])
