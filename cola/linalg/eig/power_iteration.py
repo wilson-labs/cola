@@ -72,5 +72,9 @@ def power_iteration(A: LinearOperator, tol=1e-6, max_iter=1000, pbar=False, key=
         return (i < max_iter) & (err(state) > tol)
 
     while_loop, infodict = xnp.while_loop_winfo(err, tol, pbar=pbar)
-    _, v, _, emax, _ = while_loop(cond, body, (0, v, v, 10., 1.))
+    i0 = xnp.array(0, dtype=xnp.int64, device=A.device)
+    eig0 = xnp.array(10., dtype=A.dtype, device=A.device)
+    eigprev0 = xnp.array(1., dtype=A.dtype, device=A.device)
+    # _, v, _, emax, _ = while_loop(cond, body, (0, v, v, 10., 1.))
+    _, v, _, emax, _ = while_loop(cond, body, (i0, v, v, eig0, eigprev0))
     return v, emax, infodict
