@@ -41,8 +41,8 @@ def get_test_operator(backend: str, precision: str, op_name: str, device: str = 
     device = xnp.device(device)
 
     if backend == 'jax' and dtype == xnp.float64:
-        from jax.config import config
-        config.update('jax_enable_x64', True)
+        import jax
+        jax.config.update('jax_enable_x64', True)
 
     # Define the operator
     op = None

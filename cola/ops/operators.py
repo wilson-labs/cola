@@ -586,6 +586,46 @@ class Householder(LinearOperator):
         return out
 
 
+class Kernel(LinearOperator):
+    """ Kernel operator based on a given function f where the matvec is evaluated on the fly.
+    That is, [Kv]_i = \\sum_{j} f(x1_i, x2_j) v_j.
+    The variables block_size1 and block_size2 determine the memory usage of the matvec
+    and matmat operations.
+        Args:
+            x1 (array): N-D array
+            x2 (array): N-D array
+            fn (callable): function that defines the kernel
+            block_size1 (int): block size for x1
+            block_size2 (int): block size for x2
+    """
+    def __init__(self, x1, x2, fn, block_size1, block_size2):
+        self.x1 = x1
+        self.x2 = x2
+        self.fn = fn
+        self.block_size1 = block_size1
+        self.block_size2 = block_size2
+        super().__init__(dtype=x1.dtype, shape=(x1.shape[0], x2.shape[0]))
+        self.iters1 = self.shape[0] // block_size1
+        self.iters2 = self.shape[1] // block_size2
+
+    def _matmat(self, V):
+        xnp = self.xnp
+        out = xnp.zeros(shape=V.shape, dtype=V.dtype, device=V.device)
+        for idx in range(self.iters1):
+            fit1 = None if idx + 1 == self.iters1 else (idx + 1) * self.block_size1
+            loc1 = slice(idx * self.block_size1, fit1)
+            update = xnp.zeros(shape=(self.x1[loc1].shape[0], V.shape[1]), dtype=V.dtype, device=V.device)
+            for jdx in range(self.iters2):
+                fit2 = None if jdx + 1 == self.iters2 else (jdx + 1) * self.block_size2
+                loc2 = slice(jdx * self.block_size2, fit2)
+                update += self.fn(self.x1[loc1], self.x2[loc2]) @ V[loc2]
+            out = xnp.update_array(out, update, loc1)
+        return out
+
+    def __str__(self):
+        return "Ker(x1, x2, fn)"
+
+
 class FFT(LinearOperator):
     """ FFT matrix. Uses convention so matrix is unitary."""
     def __init__(self, n, dtype=None):
