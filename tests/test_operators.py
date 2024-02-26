@@ -71,21 +71,22 @@ def test_find_device(backend):
 @parametrize(['torch'])
 def test_kernel(backend):
     N, D, B = 7, 3, 5
+    # N, D, B = 6, 3, 5
     xnp = get_xnp(backend)
-    dtype = xnp.float32
+    dtype = xnp.float64
     device = None
     x = xnp.randn(N, D, dtype=dtype, device=device)
     V = xnp.ones(shape=(N, B), dtype=dtype, device=device)
 
-    def f(x2):
-        out = x[:, None, :] - x2[None, :, :]
+    def f(x1, x2):
+        out = x2[:, None, :] - x1[None, :, :]
         out = xnp.exp(-xnp.norm(out, axis=-1))
         return out.T
 
-    Ker = Kernel(f, x, block_size=2)
+    Ker = Kernel(x, x, fn=f, block_size1=2, block_size2=3)
     approx = Ker @ V
-    soln = f(x) @ V
-    assert xnp.norm(approx - soln) < 1e-8
+    soln = f(x, x) @ V
+    assert xnp.norm(approx - soln) < 1e-10
 
 
 @parametrize(['torch'])

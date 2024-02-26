@@ -587,27 +587,34 @@ class Householder(LinearOperator):
 
 
 class Kernel(LinearOperator):
-    def __init__(self, f, x, block_size):
-        self.f = f
-        self.x = x
-        self.block_size = block_size
-        super().__init__(dtype=x.dtype, shape=(x.shape[0], x.shape[0]))
-        self.iters = self.shape[0] // block_size
+    def __init__(self, x1, x2, fn, block_size1, block_size2):
+        self.x1 = x1
+        self.x2 = x2
+        self.fn = fn
+        self.block_size1 = block_size1
+        self.block_size2 = block_size2
+        super().__init__(dtype=x1.dtype, shape=(x1.shape[0], x1.shape[0]))
+        self.iters1 = self.shape[0] // block_size1
+        self.iters2 = self.shape[0] // block_size2
 
     def _matmat(self, V):
         xnp = self.xnp
         out = xnp.zeros(shape=V.shape, dtype=V.dtype, device=V.device)
-        for idx in range(self.iters):
-            here = slice(idx * self.block_size, (idx + 1) * self.block_size)
-            update = self.f(self.x[here]) @ V
-            out = xnp.update_array(out, update, here)
-        here = slice((idx + 1) * self.block_size, None)
-        update = self.f(self.x[here]) @ V
-        out = xnp.update_array(out, update, here)
+        for idx in range(self.iters1):
+            # loc1 = slice(idx * self.block_size1, (idx + 1) * self.block_size1)
+            fit1 = None if idx + 1 == self.iters1 else (idx + 1) * self.block_size1
+            loc1 = slice(idx * self.block_size1, fit1)
+            update = xnp.zeros(shape=(self.x1[loc1].shape[0], V.shape[1]), dtype=V.dtype, device=V.device)
+            for jdx in range(self.iters2):
+                # loc2 = slice(jdx * self.block_size2, (jdx + 1) * self.block_size2)
+                fit2 = None if jdx + 1 == self.iters2 else (jdx + 1) * self.block_size2
+                loc2 = slice(jdx * self.block_size2, fit2)
+                update += self.fn(self.x1[loc1], self.x2[loc2]) @ V[loc2]
+            out = xnp.update_array(out, update, loc1)
         return out
 
     def __str__(self):
-        return "Ker(f,x)"
+        return "Ker(x1, x2, fn)"
 
 
 class FFT(LinearOperator):
