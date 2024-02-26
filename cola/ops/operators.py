@@ -587,15 +587,26 @@ class Householder(LinearOperator):
 
 
 class Kernel(LinearOperator):
+    """ Kernel operator based on a given function f where the matvec is evaluated on the fly.
+    That is, [Kv]_i = \\sum_{j} f(x1_i, x2_j) v_j.
+    The variables block_size1 and block_size2 determine the memory usage of the matvec
+    and matmat operations.
+        Args:
+            x1 (array): N-D array
+            x2 (array): N-D array
+            fn (callable): function that defines the kernel
+            block_size1 (int): block size for x1
+            block_size2 (int): block size for x2
+    """
     def __init__(self, x1, x2, fn, block_size1, block_size2):
         self.x1 = x1
         self.x2 = x2
         self.fn = fn
         self.block_size1 = block_size1
         self.block_size2 = block_size2
-        super().__init__(dtype=x1.dtype, shape=(x1.shape[0], x1.shape[0]))
+        super().__init__(dtype=x1.dtype, shape=(x1.shape[0], x2.shape[0]))
         self.iters1 = self.shape[0] // block_size1
-        self.iters2 = self.shape[0] // block_size2
+        self.iters2 = self.shape[1] // block_size2
 
     def _matmat(self, V):
         xnp = self.xnp

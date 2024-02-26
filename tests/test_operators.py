@@ -71,7 +71,6 @@ def test_find_device(backend):
 @parametrize(['torch'])
 def test_kernel(backend):
     N, D, B = 7, 3, 5
-    # N, D, B = 6, 3, 5
     xnp = get_xnp(backend)
     dtype = xnp.float64
     device = None
