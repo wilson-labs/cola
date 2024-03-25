@@ -474,7 +474,7 @@ class Hessian(LinearOperator):
         Matrix has shape (n, n)
 
     Args:
-        f (callable): Function representing the mapping from R^n to R^m.
+        f (callable): Function representing the mapping from R^n to R.
         x (array_like): 1-D array representing the point at which to compute the Hessian.
 
     Example:
@@ -492,16 +492,16 @@ class Hessian(LinearOperator):
     def _matmat(self, X):
         xnp = self.xnp
         # hack to make it work with pytorch
-        if xnp.__name__ == 'cola.torch_fns' and False:
+        if xnp.__name__ == 'cola.backends.torch_fns':
             expanded_x = self.x[None, :] + self.xnp.zeros((X.shape[0], 1), dtype=self.x.dtype, device=self.device)
             fn = partial(self.xnp.vjp_derivs, self.xnp.vmap(self.xnp.grad(self.f)), (expanded_x, ))
             out = fn((X, ))
         else:
             mvm = partial(xnp.jvp_derivs, xnp.grad(self.f), (self.x, ), create_graph=False)
             out = xnp.vmap(mvm)((X.T, )).T
-            if xnp.__name__ == 'cola.torch_fns':  # pytorch converts to double silently
-                out = out.to(dtype=self.dtype, device=self.device)
-            return out
+        if xnp.__name__ == 'cola.backends.torch_fns':  # pytorch converts to double silently
+            out = out.to(dtype=self.dtype, device=self.device)
+        return out
 
     def __str__(self):
         return "H"
