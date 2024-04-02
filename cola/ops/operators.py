@@ -484,23 +484,14 @@ class Hessian(LinearOperator):
         >>> op = Hessian(f, x)
     """
     def __init__(self, f, x):
-        self.f = f
-        self.x = x
+        self.f, self.x = f, x
         assert len(x.shape) == 1, "x must be a vector"
         super().__init__(dtype=x.dtype, shape=(x.shape[0], x.shape[0]))
 
     def _matmat(self, X):
         xnp = self.xnp
-        # hack to make it work with pytorch
-        if xnp.__name__ == 'cola.backends.torch_fns' and False:
-            expanded_x = self.x[None, :] + self.xnp.zeros((X.shape[0], 1), dtype=self.x.dtype, device=self.device)
-            fn = partial(self.xnp.vjp_derivs, self.xnp.vmap(self.xnp.grad(self.f)), (expanded_x, ))
-            out = fn((X, ))
-        else:
-            mvm = partial(xnp.jvp_derivs, xnp.grad(self.f), (self.x, ), create_graph=False)
-            out = xnp.vmap(mvm)((X.T, )).T
-        if xnp.__name__ == 'cola.backends.torch_fns':  # pytorch converts to double silently
-            out = out.to(dtype=self.dtype, device=self.device)
+        mvm = partial(xnp.jvp_derivs, xnp.grad(self.f), (self.x, ), create_graph=False)
+        out = xnp.vmap(mvm)((X.T, )).T
         return out
 
     def __str__(self):
