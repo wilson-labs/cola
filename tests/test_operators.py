@@ -15,12 +15,33 @@ from cola.ops import Sparse
 from cola.ops import Jacobian
 from cola.ops import LinearOperator
 from cola.ops import Kernel
+from cola.ops import Hessian
 from cola.linalg.decompositions.arnoldi import get_householder_vec
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends, tracing_backends
 from linalg.operator_market import op_names, get_test_operator
 
 _tol = 1e-6
+
+
+@parametrize(tracing_backends)
+def test_Hessian(backend):
+    xnp = get_xnp(backend)
+    dtype = xnp.float32
+    P = 27
+    cons = xnp.array([idx for idx in range(P)], dtype=dtype, device=None)
+    x = xnp.ones(shape=(P, ), device=None, dtype=dtype)
+
+    def fn(z):
+        out = cons * z**2.
+        return xnp.sum(out)
+
+    H = Hessian(fn, x)
+    approx = H.to_dense()
+    soln = 2 * xnp.diag(cons)
+    rel_error = relative_error(approx, soln, xnp=xnp)
+    assert rel_error < _tol
+
 
 _exclude = (slice(None), slice(None), ['square_fft'])
 
