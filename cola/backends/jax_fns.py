@@ -115,7 +115,7 @@ def while_loop_no_jit(cond_fun, body_fun, init_val):
 
 
 def get_array_device(array):
-    return array.device()
+    return list(array.devices())[0]
 
 
 def is_cuda_available():
@@ -163,7 +163,7 @@ def lu_solve(a, b):
 
 def get_device(array):
     if not isinstance(array, jax.core.Tracer) and hasattr(array, 'device'):
-        return array.device()
+        return array.device
     else:
         return get_default_device()
 
@@ -175,7 +175,7 @@ def get_default_device():
 def device(device_name):
     del device_name
     zeros = jnp.zeros(1)
-    return zeros.device()
+    return list(zeros.devices())[0]
 
 
 def diag(v, diagonal=0):
