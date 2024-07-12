@@ -1,24 +1,21 @@
-import numpy as np
 import logging
+
 import jax
-from jax import vjp
-from jax import jit, vmap, grad
+import numpy as np
+from jax import grad, jit, vjp, vmap
 from jax import numpy as jnp
 from jax import tree_util as tu
-from jax.random import PRNGKey
-from jax.random import normal
-from jax.lax import while_loop as _while_loop
-from jax.lax import fori_loop as _for_loop
-from jax.lax import conj as conj_lax
-from jax.lax import dynamic_slice
-from jax.lax import expand_dims
-from jax.lax.linalg import cholesky
-from jax.lax.linalg import svd
-from jax.lax.linalg import qr
 from jax.experimental.sparse import CSR
+from jax.lax import conj as conj_lax
+from jax.lax import dynamic_slice, expand_dims
+from jax.lax import fori_loop as _for_loop
+from jax.lax import while_loop as _while_loop
+from jax.lax.linalg import cholesky, qr, svd
+from jax.random import PRNGKey, normal
 from jax.scipy.linalg import block_diag
 from jax.scipy.linalg import lu as lu_lax
 from jax.scipy.linalg import solve_triangular as solvetri
+
 from cola.utils.jax_tqdm import pbar_while, while_loop_winfo
 
 cos = jnp.cos
@@ -115,7 +112,9 @@ def while_loop_no_jit(cond_fun, body_fun, init_val):
 
 
 def get_array_device(array):
-    return list(array.devices())[0]
+    devices = list(array.devices())
+    assert len(devices) == 0, "array found on more than one device"
+    return devices[0]
 
 
 def is_cuda_available():
@@ -169,13 +168,15 @@ def get_device(array):
 
 
 def get_default_device():
-    return jax.devices()[0]
+    devices = list(jax.devices())
+    assert len(devices) == 0, "array found on more than one device"
+    return devices[0]
 
 
 def device(device_name):
     del device_name
     zeros = jnp.zeros(1)
-    return list(zeros.devices())[0]
+    return get_array_device(zeros)
 
 
 def diag(v, diagonal=0):
