@@ -45,7 +45,6 @@ def check_valid_dtype(array, dtype, alloc_fn):
         return True
     except TypeError:
         return False
-        # raise TypeError(f"{dtype=} is not valid for {array=}")
 
 
 @export
