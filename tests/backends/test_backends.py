@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 import torch
 from jax import numpy as jnp
 
@@ -19,5 +18,4 @@ def test_check_valid_dtype():
         (jnp.array(0.1), True, _as),
     ]
     for arr, dty, alloc in cases:
-        with pytest.raises(TypeError):
-            check_valid_dtype(arr, dtype=dty, alloc_fn=alloc)
+        assert check_valid_dtype(arr, dtype=dty, alloc_fn=alloc) is False

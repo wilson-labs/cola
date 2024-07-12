@@ -113,7 +113,7 @@ def while_loop_no_jit(cond_fun, body_fun, init_val):
 
 def get_array_device(array):
     devices = list(array.devices())
-    assert len(devices) == 0, "array found on more than one device"
+    assert len(devices) == 1, "array found on more than one device"
     return devices[0]
 
 
@@ -169,7 +169,7 @@ def get_device(array):
 
 def get_default_device():
     devices = list(jax.devices())
-    assert len(devices) == 0, "array found on more than one device"
+    assert len(devices) == 1, "array found on more than one device"
     return devices[0]
 
 

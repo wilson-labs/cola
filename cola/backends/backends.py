@@ -12,10 +12,10 @@ def get_library_fns(dtype):
     try:
         from jax import numpy as jnp
 
-        check_valid_dtype(jnp.array(0.1), dtype=dtype, alloc_fn=lambda x, y: x.astype(y))
-        from cola.backends import jax_fns as fns
+        if check_valid_dtype(jnp.array(0.1), dtype=dtype, alloc_fn=lambda x, y: x.astype(y)):
+            from cola.backends import jax_fns as fns
 
-        return fns
+            return fns
 
     except ImportError:
         pass
@@ -23,16 +23,15 @@ def get_library_fns(dtype):
     try:
         import torch
 
-        check_valid_dtype(torch.tensor(0.1), dtype=dtype, alloc_fn=lambda x, y: x.to(y))
-        from cola.backends import torch_fns as fns
+        if check_valid_dtype(torch.tensor(0.1), dtype=dtype, alloc_fn=lambda x, y: x.to(y)):
+            from cola.backends import torch_fns as fns
 
-        return fns
+            return fns
 
     except ImportError:
         pass
 
-    if dtype in [np.float32, np.float64, np.complex64, np.complex128, np.int32, np.int64]:
-        check_valid_dtype(np.array(0.1), dtype=dtype, alloc_fn=lambda x, y: x.astype(y))
+    if check_valid_dtype(np.array(0.1), dtype=dtype, alloc_fn=lambda x, y: x.astype(y)):
         from cola.backends import np_fns as fns
 
         return fns
@@ -43,8 +42,10 @@ def get_library_fns(dtype):
 def check_valid_dtype(array, dtype, alloc_fn):
     try:
         alloc_fn(array, dtype)
+        return True
     except TypeError:
-        raise TypeError(f"{dtype=} is not a valid for {array=}")
+        return False
+        # raise TypeError(f"{dtype=} is not valid for {array=}")
 
 
 @export
