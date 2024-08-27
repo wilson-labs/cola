@@ -1,10 +1,16 @@
 import numpy as np
+
+from cola.backends import all_backends
 from cola.fns import lazify
 from cola.linalg.eig.iram import iram
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.backends import all_backends
-from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
-from cola.utils.test_utils import get_numpy_dtype
+from cola.utils.test_utils import (
+    generate_pd_from_diag,
+    generate_spectrum,
+    get_numpy_dtype,
+    get_xnp,
+    parametrize,
+    relative_error,
+)
 
 
 @parametrize(all_backends)

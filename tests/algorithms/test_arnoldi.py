@@ -1,19 +1,26 @@
 import numpy as np
-from cola.ops import Householder
-from cola.ops import Product
-from cola.ops import Dense
-from cola.fns import lazify
-from cola.linalg.decompositions.arnoldi import ira
-from cola.linalg.decompositions.arnoldi import get_deflation_eig_slice
-from cola.linalg.decompositions.arnoldi import arnoldi_fact
-from cola.linalg.decompositions.arnoldi import arnoldi_eigs
-from cola.linalg.decompositions.arnoldi import run_householder_arnoldi
-from cola.linalg.decompositions.arnoldi import init_arnoldi
-from cola.linalg.decompositions.arnoldi import init_arnoldi_from_vec
-from cola.utils.test_utils import get_xnp, get_numpy_dtype, parametrize, relative_error
+
 from cola.backends import all_backends
-from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
-from cola.utils.test_utils import generate_lower_from_diag
+from cola.fns import lazify
+from cola.linalg.decompositions.arnoldi import (
+    arnoldi_eigs,
+    arnoldi_fact,
+    get_deflation_eig_slice,
+    init_arnoldi,
+    init_arnoldi_from_vec,
+    ira,
+    run_householder_arnoldi,
+)
+from cola.ops import Dense, Householder, Product
+from cola.utils.test_utils import (
+    generate_lower_from_diag,
+    generate_pd_from_diag,
+    generate_spectrum,
+    get_numpy_dtype,
+    get_xnp,
+    parametrize,
+    relative_error,
+)
 
 
 @parametrize(all_backends).excluding[:]

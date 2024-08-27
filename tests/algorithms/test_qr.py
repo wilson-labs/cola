@@ -1,9 +1,9 @@
 import numpy as np
-from cola.ops import Dense
+
 from cola.backends import tracing_backends
 from cola.linalg.tbd.qr import shifted_qr
-from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.ops import Dense
+from cola.utils.test_utils import generate_pd_from_diag, generate_spectrum, get_xnp, parametrize, relative_error
 
 
 @parametrize(tracing_backends)
