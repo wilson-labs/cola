@@ -5,6 +5,7 @@ from cola.ops import Diagonal
 from cola.linalg.preconditioning.preconditioners import NystromPrecond
 from cola.linalg.inverse.cg import run_batched_cg
 from cola.linalg.inverse.cg import run_cg
+from cola.linalg.inverse.cg import cond_fun
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 from cola.backends import all_backends, tracing_backends
 from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
@@ -98,6 +99,26 @@ def test_cg_complex(backend):
 
     rel_error = relative_error(soln, approx)
     assert rel_error < 1e-5
+
+
+@parametrize(all_backends)
+def test_cond_fun(backend):
+    xnp = get_xnp(backend)
+    dtype = xnp.float32
+    res = xnp.array([[1.0, 0.1, 0.0001], [1.0, 0.1, 0.0001]], dtype=dtype, device=None)
+    iter = xnp.array(5, dtype=xnp.int32, device=None)
+    flag = cond_fun((-1, iter, res, -1), tol=1e-2, max_iters=10, xnp=xnp)
+    assert flag
+
+    res = xnp.array([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], dtype=dtype, device=None)
+    iter = xnp.array(11, dtype=xnp.int32, device=None)
+    flag = cond_fun((-1, iter, res, -1), tol=1e-2, max_iters=10, xnp=xnp)
+    assert not flag
+
+    res = xnp.array([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], dtype=dtype, device=None)
+    iter = xnp.array(3, dtype=xnp.int32, device=None)
+    flag = cond_fun((-1, iter, res, -1), tol=1e+1, max_iters=10, xnp=xnp)
+    assert not flag
 
 
 @parametrize(all_backends)

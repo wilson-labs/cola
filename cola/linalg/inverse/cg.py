@@ -1,10 +1,9 @@
-from cola.linalg.algorithm_base import Algorithm
-from cola.ops import Array
-from cola.ops import LinearOperator
-from cola.ops import I_like
-from cola.utils.custom_autodiff import iterative_autograd
-from cola.utils import export
 from dataclasses import dataclass
+
+from cola.linalg.algorithm_base import Algorithm
+from cola.ops import Array, I_like, LinearOperator
+from cola.utils import export
+from cola.utils.custom_autodiff import iterative_autograd
 
 _small_value = 1e-40
 
@@ -134,7 +133,7 @@ def initialize(A, b, preconditioner, x0, xnp):
 def cond_fun(value, tol, max_iters, xnp):
     _, k, r, *_ = value
     rs = xnp.norm(r, axis=-2, keepdims=True)
-    res_meet = xnp.all(rs > tol)
+    res_meet = xnp.any(rs > tol)
     flag = (res_meet) & (k < max_iters)
     return flag
 
