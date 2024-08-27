@@ -1,21 +1,22 @@
 import numpy as np
-import torch
-from jax import numpy as jnp
+import pytest
 
 from cola.backends.backends import check_valid_dtype
 
 
 def test_check_valid_dtype():
-    def _to(x, y):
-        return x.to(y)
+    assert check_valid_dtype(np.array(0.1), dtype=True, alloc_fn=_as) is False
 
-    def _as(x, y):
-        return x.astype(y)
+    torch = pytest.importorskip("torch")
+    assert check_valid_dtype(torch.tensor(0.1), dtype=torch.Tensor, alloc_fn=_to) is False
 
-    cases = [
-        (torch.tensor(0.1), torch.Tensor, _to),
-        (np.array(0.1), True, _as),
-        (jnp.array(0.1), True, _as),
-    ]
-    for arr, dty, alloc in cases:
-        assert check_valid_dtype(arr, dtype=dty, alloc_fn=alloc) is False
+    jnp = pytest.importorskip("jax.numpy")
+    assert check_valid_dtype(jnp.array(0.1), dtype=True, alloc_fn=_as) is False
+
+
+def _to(x, y):
+    return x.to(y)
+
+
+def _as(x, y):
+    return x.astype(y)
