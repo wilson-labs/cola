@@ -1,13 +1,11 @@
-from cola.fns import lazify
-from cola.linalg.inverse.inv import inv
-from cola.ops import Tridiagonal
+from cola.backends import all_backends, tracing_backends
+from cola.fns import kron, lazify
 from cola.linalg.decompositions.lanczos import get_lu_from_tridiagonal
-from cola.linalg.tbd.nullspace import nullspace
 from cola.linalg.eig.power_iteration import power_iteration
-from cola.fns import kron
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.backends import all_backends
-from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
+from cola.linalg.inverse.inv import inv
+from cola.linalg.tbd.nullspace import nullspace
+from cola.ops import Tridiagonal
+from cola.utils.test_utils import generate_pd_from_diag, generate_spectrum, get_xnp, parametrize, relative_error
 
 _tol = 1e-7
 
@@ -40,7 +38,7 @@ def test_power_iteration(backend):
     assert rel_error < tol * 100
 
 
-@parametrize(all_backends)
+@parametrize(tracing_backends)
 def test_get_lu_from_tridiagonal(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32

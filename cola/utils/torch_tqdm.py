@@ -72,6 +72,7 @@ def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,
 
 
 def update_pbar(error, tol, info, max_iters):
+    error = float(error)
     errstart = info.setdefault('errstart', error)
     howclose = np.log(error / errstart) / np.log(tol / errstart)
     if max_iters is not None:
