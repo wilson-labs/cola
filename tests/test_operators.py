@@ -1,25 +1,28 @@
-import pytest
 import numpy as np
-from cola.fns import kron, lazify
-from cola.ops import Tridiagonal
-from cola.ops import Diagonal
-from cola.ops import Identity
-from cola.ops import I_like
-from cola.ops import KronSum
-from cola.ops import Sum
-from cola.ops import ScalarMul
-from cola.ops import Product
-from cola.ops import Sliced
-from cola.ops import Householder
-from cola.ops import Sparse
-from cola.ops import Jacobian
-from cola.ops import LinearOperator
-from cola.ops import Kernel
-from cola.ops import Hessian
-from cola.linalg.decompositions.arnoldi import get_householder_vec
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
+import pytest
+from linalg.operator_market import get_test_operator, op_names
+
 from cola.backends import all_backends, tracing_backends
-from linalg.operator_market import op_names, get_test_operator
+from cola.fns import kron, lazify
+from cola.linalg.decompositions.arnoldi import get_householder_vec
+from cola.ops import (
+    Diagonal,
+    Hessian,
+    Householder,
+    I_like,
+    Identity,
+    Jacobian,
+    Kernel,
+    KronSum,
+    LinearOperator,
+    Product,
+    ScalarMul,
+    Sliced,
+    Sparse,
+    Sum,
+    Tridiagonal,
+)
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
 
 _tol = 1e-6
 
@@ -116,15 +119,28 @@ def test_kernel(backend):
 def test_sparse(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    A = [[0., 1., 0., 0., 0.], [0., 2., -1., 0., 0.], [0., 0., 0., 0., 0.], [6.6, 0., 0., 0., 1.4]]
+    A = [[0., 1., 0., 2.], [0., 0., 0., 3.], [4., 5., 6., 0.]]
     A = xnp.array(A, dtype=dtype, device=None)
-    data = xnp.array([1., 2., -1., 6.6, 1.4], dtype=dtype, device=None)
-    indices = xnp.array([1, 1, 2, 0, 4], dtype=xnp.int64, device=None)
-    indptr = xnp.array([0, 1, 3, 3, 5], dtype=xnp.int64, device=None)
-    shape = (4, 5)
-    As = Sparse(data, indices, indptr, shape)
-    x = xnp.array([0.29466099, 0.71853315, -0.06172857, -0.0432496, 0.44698924], dtype=dtype, device=None)
-    rel_error = relative_error(A @ x, As @ x)
+    x1 = xnp.array([1., 0., -1., 1.], dtype=dtype, device=None)
+    soln1 = xnp.array([2., 3., -2.], dtype=dtype, device=None)
+    x2 = xnp.array([1., 2., 3.], dtype=dtype, device=None)
+    soln2 = xnp.array([12., 16., 18., 8.], dtype=dtype, device=None)
+
+    data = xnp.array([1., 2., 3., 4., 5., 6.], dtype=dtype, device=None)
+    row_indices = xnp.array([0., 0., 1., 2., 2., 2.], dtype=xnp.int64, device=None)
+    col_indices = xnp.array([1., 3., 3., 0., 1., 2.], dtype=xnp.int64, device=None)
+    Aop = Sparse(data, row_indices, col_indices, shape=(3, 4))
+
+    rel_error = relative_error(Aop @ x1, soln1)
+    assert rel_error < _tol
+
+    rel_error = relative_error(x2 @ Aop, soln2)
+    assert rel_error < _tol
+
+    rel_error = relative_error(Aop.to_dense(), A)
+    assert rel_error < _tol
+
+    rel_error = relative_error(Aop.T.to_dense(), A.T)
     assert rel_error < _tol
 
 

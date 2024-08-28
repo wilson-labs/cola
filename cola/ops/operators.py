@@ -1,9 +1,12 @@
-from functools import reduce, partial
-from cola.ops.operator_base import LinearOperator, Array
-from cola.backends import get_library_fns
-from plum import parametric
-import cola
+from functools import partial, reduce
+
 import numpy as np
+from plum import parametric
+from scipy.sparse import coo_array
+
+import cola
+from cola.backends import get_library_fns
+from cola.ops.operator_base import Array, LinearOperator
 
 
 class Dense(LinearOperator):
@@ -58,12 +61,22 @@ class Sparse(LinearOperator):
         >>> shape = (3, 3)
         >>> op = Sparse(data, indices, indptr, shape)
     """
-    def __init__(self, data, indices, indptr, shape):
+    def __init__(self, data, row_indices, col_indices, shape):
         super().__init__(dtype=data.dtype, shape=shape)
-        self.A = self.xnp.sparse_csr(indptr, indices, data)
+        self.data = data
+        self.row_indices = row_indices
+        self.col_indices = col_indices
+        A = coo_array((data, (row_indices, col_indices)), shape=shape).tocsr()
+        row_pointers = self.xnp.array(A.indptr, dtype=self.xnp.int64, device=data.device)
+        indices = self.xnp.array(A.indices, dtype=self.xnp.int64, device=data.device)
+        data = self.xnp.array(A.data, dtype=data.dtype, device=data.device)
+        self.A = self.xnp.sparse_csr(row_pointers, indices, data, shape)
 
     def _matmat(self, V):
         return self.A @ V
+
+    def _rmatmat(self, V):
+        return (self.T @ V.T).T
 
 
 class ScalarMul(LinearOperator):
