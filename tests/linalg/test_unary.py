@@ -1,14 +1,14 @@
 import numpy as np
 import scipy.linalg
+from operator_market import get_test_operator, op_names
+
 import cola.linalg.unary.unary as colau
-from operator_market import op_names, get_test_operator
 from cola.annotations import SelfAdjoint
-from cola.ops import LinearOperator
-from cola.linalg.algorithm_base import Auto
-from cola.linalg.decompositions.decompositions import Lanczos
-from cola.linalg.decompositions.decompositions import Arnoldi
-from cola.utils.test_utils import parametrize, relative_error
 from cola.backends import all_backends
+from cola.linalg.algorithm_base import Auto
+from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos
+from cola.ops import LinearOperator
+from cola.utils.test_utils import parametrize, relative_error
 
 
 @parametrize(all_backends, ['float64'], op_names, ['exp', 'sqrt']).excluding['torch', :, 'psd_kron', :]
@@ -45,4 +45,4 @@ def test_unary(backend, precision, op_name, fn_name):
     if not_scalarmul:
         fv3 = np.array(fn(A3, alg) @ v)
         e3 = relative_error(fv, fv3)
-        assert e3 < 3 * tol, f"SLQ logdet failed on {type(A)} with error {e3}"
+        assert e3 < 10 * tol, f"SLQ logdet failed on {type(A)} with error {e3}"

@@ -1,15 +1,18 @@
 import numpy as np
-from cola.fns import lazify
-from cola.ops import Dense
-from cola.ops import Tridiagonal
-from cola.linalg.decompositions.lanczos import irl
-from cola.linalg.decompositions.lanczos import lanczos
-from cola.linalg.decompositions.lanczos import lanczos_eigs
+
 from cola.backends import all_backends, tracing_backends
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
-from cola.utils.test_utils import generate_diagonals
-from cola.utils.test_utils import get_numpy_dtype
+from cola.fns import lazify
+from cola.linalg.decompositions.lanczos import irl, lanczos, lanczos_eigs
+from cola.ops import Dense, Tridiagonal
+from cola.utils.test_utils import (
+    generate_diagonals,
+    generate_pd_from_diag,
+    generate_spectrum,
+    get_numpy_dtype,
+    get_xnp,
+    parametrize,
+    relative_error,
+)
 
 _tol = 1e-6
 

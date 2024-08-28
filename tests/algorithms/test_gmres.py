@@ -1,14 +1,11 @@
 import numpy as np
-from cola.fns import lazify
-from cola.ops import Identity
-from cola.ops import Diagonal
-from cola.linalg.inverse.inv import inv
-from cola.linalg.inverse.gmres import GMRES
-from cola.linalg.inverse.gmres import gmres
-from cola.linalg.inverse.gmres import gmres_fwd
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
+
 from cola.backends import all_backends, tracing_backends
-from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
+from cola.fns import lazify
+from cola.linalg.inverse.gmres import GMRES, gmres, gmres_fwd
+from cola.linalg.inverse.inv import inv
+from cola.ops import Diagonal, Identity
+from cola.utils.test_utils import generate_pd_from_diag, generate_spectrum, get_xnp, parametrize, relative_error
 
 
 @parametrize(tracing_backends)
