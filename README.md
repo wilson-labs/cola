@@ -23,7 +23,7 @@
 <!-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wilson-labs/cola/blob/master/docs/notebooks/colabs/all.ipynb) -->
 
 CoLA is a framework for scalable linear algebra, automatically exploiting the structure often found in machine learning problems and beyond.
-CoLA natively supports PyTorch, Jax, as well as (limited) Numpy if Jax is not installed.
+CoLA natively supports PyTorch, JAX, as well as (limited) NumPy if JAX is not installed.
 
 ## Installation
 ```shell
