@@ -1,25 +1,28 @@
-import pytest
 import numpy as np
-from cola.fns import kron, lazify
-from cola.ops import Tridiagonal
-from cola.ops import Diagonal
-from cola.ops import Identity
-from cola.ops import I_like
-from cola.ops import KronSum
-from cola.ops import Sum
-from cola.ops import ScalarMul
-from cola.ops import Product
-from cola.ops import Sliced
-from cola.ops import Householder
-from cola.ops import Sparse
-from cola.ops import Jacobian
-from cola.ops import LinearOperator
-from cola.ops import Kernel
-from cola.ops import Hessian
-from cola.linalg.decompositions.arnoldi import get_householder_vec
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
+import pytest
+from linalg.operator_market import get_test_operator, op_names
+
 from cola.backends import all_backends, tracing_backends
-from linalg.operator_market import op_names, get_test_operator
+from cola.fns import kron, lazify
+from cola.linalg.decompositions.arnoldi import get_householder_vec
+from cola.ops import (
+    Diagonal,
+    Hessian,
+    Householder,
+    I_like,
+    Identity,
+    Jacobian,
+    Kernel,
+    KronSum,
+    LinearOperator,
+    Product,
+    ScalarMul,
+    Sliced,
+    Sparse,
+    Sum,
+    Tridiagonal,
+)
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
 
 _tol = 1e-6
 
@@ -44,6 +47,18 @@ def test_Hessian(backend):
 
 
 _exclude = (slice(None), slice(None), ['square_fft'])
+
+
+@parametrize(tracing_backends)
+def test_device_inheritance(backend):
+    xnp = get_xnp(backend)
+    xnp = get_xnp(backend)
+    dtype = xnp.float32
+    Aop = Diagonal(xnp.array([0.1, -0.2], dtype=dtype, device=None))
+    Aop.device = "cuda:0"
+
+    assert Aop.T.device == Aop.device
+    assert Aop.H.device == Aop.device
 
 
 @parametrize(tracing_backends, ['float32'], op_names).excluding[_exclude]

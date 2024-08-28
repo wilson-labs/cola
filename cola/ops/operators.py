@@ -1,9 +1,11 @@
-from functools import reduce, partial
-from cola.ops.operator_base import LinearOperator, Array
-from cola.backends import get_library_fns
-from plum import parametric
-import cola
+from functools import partial, reduce
+
 import numpy as np
+from plum import parametric
+
+import cola
+from cola.backends import get_library_fns
+from cola.ops.operator_base import Array, LinearOperator
 
 
 class Dense(LinearOperator):
@@ -359,6 +361,7 @@ class Transpose(LinearOperator):
     def __init__(self, A):
         self.A = A
         super().__init__(dtype=A.dtype, shape=(A.shape[1], A.shape[0]))
+        self.device = A.device
 
     def _matmat(self, x):
         return self.A._rmatmat(x.T).T
@@ -376,6 +379,7 @@ class Adjoint(LinearOperator):
     def __init__(self, A):
         self.A = A
         super().__init__(dtype=A.dtype, shape=(A.shape[1], A.shape[0]))
+        self.device = A.device
 
     def _matmat(self, x):
         return self.xnp.conj(self.A._rmatmat(self.xnp.conj(x).T)).T
