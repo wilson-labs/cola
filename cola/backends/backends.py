@@ -97,6 +97,6 @@ class AutoRegisteringPyTree(type):
             def tree_unflatten(ctx, children):
                 return cls.tree_unflatten(children, ctx)
 
-            torch.utils._pytree._register_pytree_node(cls, tree_flatten, tree_unflatten)
+            torch.utils._pytree.register_pytree_node(cls, tree_flatten, tree_unflatten)
         except ImportError:
             pass
