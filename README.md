@@ -153,7 +153,7 @@ If you use CoLA, please cite the following paper:
 | **Implementation**|      ✓      |  ✓  |    ✓   |
 
 
-| Backends      | PyTorch | Jax | Numpy |
+| Backends      | PyTorch | JAX | NumPy |
 |:----------------:|:-----------:|:---:|:-------:|
 | **Implementation**|      ✓      |  ✓  |Most operations|
 
