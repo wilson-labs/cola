@@ -2,6 +2,7 @@ from functools import partial, reduce
 
 import numpy as np
 from plum import parametric
+from scipy.sparse import coo_array
 
 import cola
 from cola.backends import get_library_fns
@@ -45,27 +46,39 @@ class Triangular(Dense):
 
 
 class Sparse(LinearOperator):
-    """ Sparse CSR linear operator.
+    """ Sparse linear operator.
 
     Args:
         data (array_like): 1-D array representing the nonzero values of the sparse matrix.
-        indices (array_like): 1-D array representing the column indices of the nonzero values.
-        indptr (array_like): 1-D array representing the index pointers for the rows of the matrix.
+        row_indices (array_like): 1-D array representing the row indices of the nonzero values.
+        col_indices (array_like): 1-D array representing the column indices of the nonzero values.
         shape (tuple): Shape of the sparse matrix.
 
     Example:
         >>> data = jnp.array([1, 2, 3, 4, 5, 6])
-        >>> indices = jnp.array([0, 2, 1, 0, 2, 1])
-        >>> indptr = jnp.array([0, 2, 4, 6])
-        >>> shape = (3, 3)
-        >>> op = Sparse(data, indices, indptr, shape)
+        >>> rol_indices = jnp.array([0, 0, 1, 2, 2, 2])
+        >>> col_indices = jnp.array([1, 3, 3, 0, 1, 2])
+        >>> shape = (3, 4)
+        >>> op = Sparse(data, row_indices, col_indices, shape)
     """
-    def __init__(self, data, indices, indptr, shape):
+    def __init__(self, data, row_indices, col_indices, shape):
         super().__init__(dtype=data.dtype, shape=shape)
-        self.A = self.xnp.sparse_csr(indptr, indices, data)
+        xnp = self.xnp
+        indx = xnp.argsort(row_indices)
+        self.data = data[indx]
+        self.row_indices = row_indices[indx]
+        self.col_indices = col_indices[indx]
+        A = coo_array((xnp.to_np(self.data), (xnp.to_np(self.row_indices), xnp.to_np(self.col_indices))),
+                      shape=shape).tocsr()
+        row_pointers = xnp.array(A.indptr, dtype=xnp.int32, device=data.device)
+        indices = xnp.array(A.indices, dtype=xnp.int32, device=data.device)
+        self.A = xnp.sparse_csr(row_pointers, indices, self.data, shape)
 
     def _matmat(self, V):
         return self.A @ V
+
+    def _rmatmat(self, V):
+        return (self.T @ V.T).T
 
 
 class ScalarMul(LinearOperator):

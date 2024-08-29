@@ -1,11 +1,13 @@
 import hashlib
 import logging
-import torch
+
 import optree
-from torch.nn import Parameter
-from torch.func import vjp, jvp
-from torch.func import vmap as _vmap
+import torch
 from torch.func import grad as _grad
+from torch.func import jvp, vjp
+from torch.func import vmap as _vmap
+from torch.nn import Parameter
+
 from cola.utils.torch_tqdm import while_loop_winfo
 
 Parameter = Parameter
@@ -52,7 +54,6 @@ nan_to_num = torch.nan_to_num
 is_array = torch.is_tensor
 autograd = torch.autograd
 argsort = torch.argsort
-sparse_csr = torch.sparse_csr_tensor
 roll = torch.roll
 maximum = torch.maximum
 isreal = torch.isreal
@@ -65,6 +66,14 @@ promote_types = torch.promote_types
 finfo = torch.finfo
 slogdet = torch.linalg.slogdet
 iscomplexobj = torch.is_complex
+
+
+def to_np(array):
+    return array.detach().cpu().numpy()
+
+
+def sparse_csr(row_pointers, col_indices, data, shape):
+    return torch.sparse_csr_tensor(crow_indices=row_pointers, col_indices=col_indices, values=data, size=shape)
 
 
 def norm(array, axis=None, keepdims=False, ord=None):

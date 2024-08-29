@@ -127,19 +127,34 @@ def test_kernel(backend):
         assert diff < 1e-10
 
 
-@parametrize(['torch'])
+@parametrize(tracing_backends)
 def test_sparse(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32
-    A = [[0., 1., 0., 0., 0.], [0., 2., -1., 0., 0.], [0., 0., 0., 0., 0.], [6.6, 0., 0., 0., 1.4]]
+    A = [[0., 1., 0., 2.], [0., 0., 0., 3.], [4., 5., 6., 0.]]
     A = xnp.array(A, dtype=dtype, device=None)
-    data = xnp.array([1., 2., -1., 6.6, 1.4], dtype=dtype, device=None)
-    indices = xnp.array([1, 1, 2, 0, 4], dtype=xnp.int64, device=None)
-    indptr = xnp.array([0, 1, 3, 3, 5], dtype=xnp.int64, device=None)
-    shape = (4, 5)
-    As = Sparse(data, indices, indptr, shape)
-    x = xnp.array([0.29466099, 0.71853315, -0.06172857, -0.0432496, 0.44698924], dtype=dtype, device=None)
-    rel_error = relative_error(A @ x, As @ x)
+    x1 = xnp.array([1., 0., -1., 1.], dtype=dtype, device=None)
+    soln1 = xnp.array([2., 3., -2.], dtype=dtype, device=None)
+    x2 = xnp.array([1., 2., 3.], dtype=dtype, device=None)
+    soln2 = xnp.array([12., 16., 18., 8.], dtype=dtype, device=None)
+
+    data = xnp.array([4., 5., 6., 1., 2., 3.], dtype=dtype, device=None)
+    if backend == "torch":
+        data.requires_grad = True
+    row_indices = xnp.array([2., 2., 2., 0., 0., 1.], dtype=xnp.int64, device=None)
+    col_indices = xnp.array([0., 1., 2., 1., 3., 3.], dtype=xnp.int64, device=None)
+    Aop = Sparse(data, row_indices, col_indices, shape=(3, 4))
+
+    rel_error = relative_error(Aop @ x1, soln1)
+    assert rel_error < _tol
+
+    rel_error = relative_error(x2 @ Aop, soln2)
+    assert rel_error < _tol
+
+    rel_error = relative_error(Aop.to_dense(), A)
+    assert rel_error < _tol
+
+    rel_error = relative_error(Aop.T.to_dense(), A.T)
     assert rel_error < _tol
 
 

@@ -7,7 +7,7 @@ from plum import dispatch
 from cola.ops import LinearOperator, Array
 from cola.ops import Dense
 from cola.ops import Kronecker, Product, KronSum, Sum
-from cola.ops import ScalarMul, Transpose, Adjoint
+from cola.ops import ScalarMul, Transpose, Adjoint, Sparse
 from cola.ops import BlockDiag, Diagonal, Triangular, Identity
 from cola.utils import export
 import cola
@@ -133,6 +133,11 @@ def transpose(A: LinearOperator):
 @dispatch
 def transpose(A: Triangular):
     return Triangular(A.A.T, lower=not A.lower)
+
+
+@dispatch
+def transpose(A: Sparse):
+    return Sparse(A.data, A.col_indices, A.row_indices, shape=(A.shape[1], A.shape[0]))
 
 
 @dispatch
