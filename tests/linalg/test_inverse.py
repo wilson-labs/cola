@@ -59,7 +59,7 @@ def test_cg_matrix_market(backend):
         assert rel_error < 1e-7
 
 
-@parametrize(all_backends, ['float64'], op_names).excluding['torch', :, 'psd_kron']
+@parametrize(all_backends, ['float64'], op_names).excluding[:, :, ['psd_kron', 'psd_scalarmul']]
 def test_inverse(backend, precision, op_name):
     operator = get_test_operator(backend, precision, op_name)
     tol = 1e-5

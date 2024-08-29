@@ -56,7 +56,7 @@ def test_device_allocation_through_combination(backend):
     B = Dense(xnp.randn(3, 3, dtype=dtype, device=None))
     B.device = "cuda"
     C = I_like(A)
-    D = C - A @ B
+    D = C + A @ B
     assert D.device == "cuda"
 
 
