@@ -6,6 +6,7 @@ from cola.backends import all_backends, tracing_backends
 from cola.fns import kron, lazify
 from cola.linalg.decompositions.arnoldi import get_householder_vec
 from cola.ops import (
+    Dense,
     Diagonal,
     Hessian,
     Householder,
@@ -44,6 +45,19 @@ def test_Hessian(backend):
     soln = 2 * xnp.diag(cons)
     rel_error = relative_error(approx, soln, xnp=xnp)
     assert rel_error < _tol
+
+
+@parametrize(tracing_backends)
+def test_device_allocation_through_combination(backend):
+    xnp = get_xnp(backend)
+    dtype = xnp.float32
+    A = Diagonal(xnp.array([1., 2., 3.], dtype=dtype, device=None))
+    A.device = "cuda"
+    B = Dense(xnp.randn(3, 3, dtype=dtype, device=None))
+    B.device = "cuda"
+    C = I_like(A)
+    D = C - A @ B
+    assert D.device == "cuda"
 
 
 _exclude = (slice(None), slice(None), ['square_fft'])
@@ -365,9 +379,13 @@ def test_identity(backend):
     rhs = xnp.array(rhs, dtype=dtype, device=None)
     soln = rhs
     B = Identity(dtype=dtype, shape=Id.shape)
+    B.device = "cuda"
     approx = B @ rhs
-    C = I_like(Id)
+    C = I_like(B)
 
+    assert B.device == C.device
+    B.to("cpu")
+    C.to("cpu")
     rel_error = relative_error(soln, approx)
     assert rel_error < _tol
     rel_error = relative_error(Id, B.to_dense())

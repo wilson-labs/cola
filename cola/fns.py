@@ -2,15 +2,28 @@
 Like with linalg, these functions have dispatch rules and should be used in favor of the
 LinearOperator constructors when possible. """
 
-from typing import List, Union, Any
+from typing import Any, List, Union
+
 from plum import dispatch
-from cola.ops import LinearOperator, Array
-from cola.ops import Dense
-from cola.ops import Kronecker, Product, KronSum, Sum
-from cola.ops import ScalarMul, Transpose, Adjoint, Sparse
-from cola.ops import BlockDiag, Diagonal, Triangular, Identity
-from cola.utils import export
+
 import cola
+from cola.ops import (
+    Adjoint,
+    Array,
+    BlockDiag,
+    Dense,
+    Diagonal,
+    Identity,
+    Kronecker,
+    KronSum,
+    LinearOperator,
+    Product,
+    ScalarMul,
+    Sum,
+    Transpose,
+    Triangular,
+)
+from cola.utils import export
 
 Scalar = Array
 
@@ -90,23 +103,24 @@ def add(A: Sum, B: Sum):
 
 @dispatch
 def mul(A: LinearOperator, c: Scalar):
-    S = ScalarMul(c, (A.shape[-2], A.shape[-2]), A.dtype)
+    S = ScalarMul(c, (A.shape[-2], A.shape[-2]), A.dtype, A.device)
     return Product(*[S, A])
 
 
 @dispatch
 def mul(A: ScalarMul, c: Scalar):
-    return ScalarMul(A.c * c, A.shape, A.dtype)
+    return ScalarMul(A.c * c, A.shape, A.dtype, A.device)
 
 
 @dispatch
 def mul(c: Scalar, A: ScalarMul):
-    return ScalarMul(A.c * c, A.shape, A.dtype)
+    return ScalarMul(A.c * c, A.shape, A.dtype, A.device)
 
 
 @dispatch
 def mul(A: ScalarMul, B: ScalarMul):
-    return ScalarMul(A.c * B.c, A.shape, A.dtype)
+    assert A.device == B.device, "there is a device mismatch"
+    return ScalarMul(A.c * B.c, A.shape, A.dtype, A.device)
 
 
 @dispatch
