@@ -1,11 +1,15 @@
+import hashlib
 import logging
 import sys
-import hashlib
+
 import numpy as np
-from scipy.linalg import block_diag as _block_diag, lu as _lu, solve_triangular
-from scipy.signal import convolve2d
-from cola.utils.torch_tqdm import while_loop_winfo
 import optree
+from scipy.linalg import block_diag as _block_diag
+from scipy.linalg import lu as _lu
+from scipy.linalg import solve_triangular
+from scipy.signal import convolve2d
+
+from cola.utils.torch_tqdm import while_loop_winfo
 
 
 class NumpyNotImplementedError(NotImplementedError):
@@ -75,6 +79,11 @@ slogdet = np.linalg.slogdet
 promote_types = np.promote_types
 finfo = np.finfo
 iscomplexobj = np.iscomplexobj
+
+
+def lstsq(A, b):
+    soln, *_ = np.linalg.lstsq(A, b)
+    return soln
 
 
 def eig(array):

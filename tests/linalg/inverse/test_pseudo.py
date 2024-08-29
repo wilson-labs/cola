@@ -6,7 +6,7 @@ from cola.backends import all_backends
 from nonsquare_operator_market import get_test_operator
 
 
-@parametrize(all_backends, ["float64"], ["psd_diagonal", "square_dense"])
+@parametrize(all_backends, ["float64"], ["psd_diagonal", "nonsquare_dense"])
 def test_pseudo(backend, precision, op_name):
     operator = get_test_operator(backend, precision, op_name)
     tol = 1e-5
@@ -15,7 +15,7 @@ def test_pseudo(backend, precision, op_name):
     Ainv = pseudo(A, Auto(tol=tol))
     Ainv2 = pseudo(A2, Auto(tol=tol))
     Ainv3 = pseudo(A2, Auto(tol=tol, method="iterative"))
-    B = xnp.randn(*(A.shape[-1], 10), dtype=dtype, device=None)
+    B = xnp.randn(*(A.shape[0], 10), dtype=dtype, device=None)
     X = Ainv @ B
     rel_error = relative_error(A @ X, B)
     assert rel_error < 3 * tol, f"Dispatch rules failed on {type(A)} with {rel_error}"

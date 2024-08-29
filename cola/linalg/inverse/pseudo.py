@@ -19,7 +19,7 @@ class LSTSQ(Algorithm):
 
 class LSTSQSolve(LinearOperator):
     def __init__(self, A: LinearOperator):
-        super().__init__(A.dtype, A.shape)
+        super().__init__(A.dtype, (A.shape[-1], A.shape[-2]))
         self.A = A.to_dense()
 
     def _matmat(self, X):
@@ -66,7 +66,9 @@ def pseudo(A: LinearOperator, alg: Auto):
 
 @dispatch
 def pseudo(A: LinearOperator, alg: LSTSQ_GMRES):
-    return IterativeOperatorWInfo(A, alg)
+    Op = IterativeOperatorWInfo(A, alg)
+    Op.shape = (A.shape[-1], A.shape[-2])
+    return Op
 
 
 @dispatch

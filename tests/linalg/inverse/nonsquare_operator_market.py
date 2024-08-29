@@ -3,7 +3,7 @@ from cola.utils.test_utils import get_xnp
 
 op_names: set[str] = {
     "psd_diagonal"
-    "square_dense",
+    "nonsquare_dense",
 }
 
 
@@ -21,8 +21,8 @@ def get_test_operator(backend: str, precision: str, op_name: str, device: str = 
         case ("psd", "diagonal"):
             op = Diagonal(xnp.array([.1, .5, .22, 8.], dtype=dtype, device=device))
 
-        case ("square", sub_op_name):
-            M1 = xnp.array([[1, 0], [3, -4]], dtype=dtype, device=device)
+        case ("nonsquare", sub_op_name):
+            M1 = xnp.array([[1., 0., 0.], [3., -4., 2.]], dtype=dtype, device=device)
             match sub_op_name:
                 case 'dense':
                     op = Dense(M1)
