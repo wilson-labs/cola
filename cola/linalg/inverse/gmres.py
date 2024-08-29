@@ -1,10 +1,31 @@
-from cola.ops import LinearOperator
-from cola.ops import Array
+from dataclasses import dataclass
+
+from cola.linalg.algorithm_base import Algorithm
 from cola.linalg.decompositions.arnoldi import arnoldi
+from cola.ops import Array, LinearOperator
 from cola.utils import export
 from cola.utils.custom_autodiff import iterative_autograd
-from cola.linalg.algorithm_base import Algorithm
-from dataclasses import dataclass
+
+
+@dataclass
+class LSTSQ_GMRES(Algorithm):
+    """
+    Uses GMRES to solve the least-squares problem of AX = B.
+    Args:
+        tol (float, optional): Relative error tolerance for Arnoldi.
+        max_iters (int, optional): The maximum number of iterations to run in Arnoldi.
+        pbar (bool, optional): Whether to show progress bar.
+        x0 (Array, optional): (n,) or (n, b) guess for initial solution.
+        P (LinearOperator, optional): Preconditioner. Defaults to the identity.
+    """
+    tol: float = 1e-6
+    max_iters: int = 1000
+    pbar: bool = False
+    x0: Array = None
+    P: LinearOperator = None
+
+    def __call__(self, A, b):
+        return gmres(A.H @ A, A.H @ b, **self.__dict__)
 
 
 @export

@@ -103,6 +103,11 @@ def sparse_csr(row_pointers, col_indices, data, shape):
     return out
 
 
+def lstsq(A, b):
+    soln, *_ = jnp.linalg.lstsq(A, b)
+    return soln
+
+
 def iscomplexobj(x):
     return jnp.iscomplex(x).any()
 
