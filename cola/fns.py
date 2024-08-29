@@ -19,6 +19,7 @@ from cola.ops import (
     LinearOperator,
     Product,
     ScalarMul,
+    Sparse,
     Sum,
     Transpose,
     Triangular,
