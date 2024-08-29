@@ -63,14 +63,16 @@ class Sparse(LinearOperator):
     """
     def __init__(self, data, row_indices, col_indices, shape):
         super().__init__(dtype=data.dtype, shape=shape)
-        self.data = data
-        self.row_indices = row_indices
-        self.col_indices = col_indices
-        A = coo_array((data, (row_indices, col_indices)), shape=shape).tocsr()
-        row_pointers = self.xnp.array(A.indptr, dtype=self.xnp.int32, device=data.device)
-        indices = self.xnp.array(A.indices, dtype=self.xnp.int32, device=data.device)
-        data = self.xnp.array(A.data, dtype=data.dtype, device=data.device)
-        self.A = self.xnp.sparse_csr(row_pointers, indices, data, shape)
+        xnp = self.xnp
+        indx = xnp.argsort(row_indices)
+        self.data = data[indx]
+        self.row_indices = row_indices[indx]
+        self.col_indices = col_indices[indx]
+        A = coo_array((xnp.to_np(self.data), (xnp.to_np(self.row_indices), xnp.to_np(self.col_indices))),
+                      shape=shape).tocsr()
+        row_pointers = xnp.array(A.indptr, dtype=xnp.int32, device=data.device)
+        indices = xnp.array(A.indices, dtype=xnp.int32, device=data.device)
+        self.A = xnp.sparse_csr(row_pointers, indices, self.data, shape)
 
     def _matmat(self, V):
         return self.A @ V

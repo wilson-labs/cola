@@ -126,9 +126,11 @@ def test_sparse(backend):
     x2 = xnp.array([1., 2., 3.], dtype=dtype, device=None)
     soln2 = xnp.array([12., 16., 18., 8.], dtype=dtype, device=None)
 
-    data = xnp.array([1., 2., 3., 4., 5., 6.], dtype=dtype, device=None)
-    row_indices = xnp.array([0., 0., 1., 2., 2., 2.], dtype=xnp.int64, device=None)
-    col_indices = xnp.array([1., 3., 3., 0., 1., 2.], dtype=xnp.int64, device=None)
+    data = xnp.array([4., 5., 6., 1., 2., 3.], dtype=dtype, device=None)
+    if backend == "torch":
+        data.requires_grad = True
+    row_indices = xnp.array([2., 2., 2., 0., 0., 1.], dtype=xnp.int64, device=None)
+    col_indices = xnp.array([0., 1., 2., 1., 3., 3.], dtype=xnp.int64, device=None)
     Aop = Sparse(data, row_indices, col_indices, shape=(3, 4))
 
     rel_error = relative_error(Aop @ x1, soln1)

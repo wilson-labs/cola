@@ -94,6 +94,10 @@ promote_types = jnp.promote_types
 finfo = jnp.finfo
 
 
+def to_np(array):
+    return jax.device_get(array)
+
+
 def sparse_csr(row_pointers, col_indices, data, shape):
     out = BCSR((data, col_indices, row_pointers), shape=shape)
     return out

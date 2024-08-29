@@ -68,6 +68,10 @@ slogdet = torch.linalg.slogdet
 iscomplexobj = torch.is_complex
 
 
+def to_np(array):
+    return array.detach().cpu().numpy()
+
+
 def sparse_csr(row_pointers, col_indices, data, shape):
     return torch.sparse_csr_tensor(crow_indices=row_pointers, col_indices=col_indices, values=data, size=shape)
 
