@@ -46,20 +46,20 @@ class Triangular(Dense):
 
 
 class Sparse(LinearOperator):
-    """ Sparse CSR linear operator.
+    """ Sparse linear operator.
 
     Args:
         data (array_like): 1-D array representing the nonzero values of the sparse matrix.
-        indices (array_like): 1-D array representing the column indices of the nonzero values.
-        indptr (array_like): 1-D array representing the index pointers for the rows of the matrix.
+        row_indices (array_like): 1-D array representing the row indices of the nonzero values.
+        col_indices (array_like): 1-D array representing the column indices of the nonzero values.
         shape (tuple): Shape of the sparse matrix.
 
     Example:
         >>> data = jnp.array([1, 2, 3, 4, 5, 6])
-        >>> indices = jnp.array([0, 2, 1, 0, 2, 1])
-        >>> indptr = jnp.array([0, 2, 4, 6])
-        >>> shape = (3, 3)
-        >>> op = Sparse(data, indices, indptr, shape)
+        >>> rol_indices = jnp.array([0, 0, 1, 2, 2, 2])
+        >>> col_indices = jnp.array([1, 3, 3, 0, 1, 2])
+        >>> shape = (3, 4)
+        >>> op = Sparse(data, row_indices, col_indices, shape)
     """
     def __init__(self, data, row_indices, col_indices, shape):
         super().__init__(dtype=data.dtype, shape=shape)
@@ -67,8 +67,8 @@ class Sparse(LinearOperator):
         self.row_indices = row_indices
         self.col_indices = col_indices
         A = coo_array((data, (row_indices, col_indices)), shape=shape).tocsr()
-        row_pointers = self.xnp.array(A.indptr, dtype=self.xnp.int64, device=data.device)
-        indices = self.xnp.array(A.indices, dtype=self.xnp.int64, device=data.device)
+        row_pointers = self.xnp.array(A.indptr, dtype=self.xnp.int32, device=data.device)
+        indices = self.xnp.array(A.indices, dtype=self.xnp.int32, device=data.device)
         data = self.xnp.array(A.data, dtype=data.dtype, device=data.device)
         self.A = self.xnp.sparse_csr(row_pointers, indices, data, shape)
 

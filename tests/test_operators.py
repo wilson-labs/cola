@@ -115,7 +115,7 @@ def test_kernel(backend):
         assert diff < 1e-10
 
 
-@parametrize(['torch'])
+@parametrize(tracing_backends)
 def test_sparse(backend):
     xnp = get_xnp(backend)
     dtype = xnp.float32

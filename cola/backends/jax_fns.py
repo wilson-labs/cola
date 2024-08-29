@@ -5,7 +5,7 @@ import numpy as np
 from jax import grad, jit, vjp, vmap
 from jax import numpy as jnp
 from jax import tree_util as tu
-from jax.experimental.sparse import CSR
+from jax.experimental.sparse import BCSR
 from jax.lax import conj as conj_lax
 from jax.lax import dynamic_slice, expand_dims
 from jax.lax import fori_loop as _for_loop
@@ -94,9 +94,8 @@ promote_types = jnp.promote_types
 finfo = jnp.finfo
 
 
-def sparse_csr(indptr, indices, data):
-    N = indptr.shape[0] - 1
-    out = CSR((data, indices, indptr), shape=(N, N))
+def sparse_csr(row_pointers, col_indices, data, shape):
+    out = BCSR((data, col_indices, row_pointers), shape=shape)
     return out
 
 
