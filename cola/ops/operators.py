@@ -141,7 +141,7 @@ class Product(LinearOperator):
     def __init__(self, *Ms):
         self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
         devices = [M.device for M in self.Ms]
-        assert all(x == devices[0] for x in devices), "There is a device mismatch"
+        assert all(x == devices[0] for x in devices), "There is a device mismatch in Product"
         for M1, M2 in zip(Ms[:-1], Ms[1:]):
             if M1.shape[-1] != M2.shape[-2]:
                 raise ValueError(f"dimension mismatch {M1.shape} vs {M2.shape}")
@@ -170,7 +170,7 @@ class Sum(LinearOperator):
     def __init__(self, *Ms):
         self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
         devices = [M.device for M in self.Ms]
-        assert all(x == devices[0] for x in devices), "There is a device mismatch"
+        assert all(x == devices[0] for x in devices), "There is a device mismatch in Sum"
         shape = Ms[0].shape
         for M in Ms:
             if M.shape != shape:

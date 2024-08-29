@@ -1,16 +1,15 @@
-from scipy.io import mmread
 import pytest
-from cola.linalg.inverse.inv import inv
-from cola.linalg.algorithm_base import Auto
-from cola.ops import LinearOperator
-from cola.ops import Sparse
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.utils.test_utils import transform_to_csr
-from cola.linalg.inverse.cg import CG
-from cola.linalg.inverse.gmres import GMRES
+from operator_market import get_test_operator, op_names
+from scipy.io import mmread
+
 from cola.annotations import PSD
 from cola.backends import all_backends, tracing_backends
-from operator_market import op_names, get_test_operator
+from cola.linalg.algorithm_base import Auto
+from cola.linalg.inverse.cg import CG
+from cola.linalg.inverse.gmres import GMRES
+from cola.linalg.inverse.inv import inv
+from cola.ops import LinearOperator, Sparse
+from cola.utils.test_utils import get_xnp, parametrize, relative_error, transform_to_csr
 
 
 @pytest.mark.market
