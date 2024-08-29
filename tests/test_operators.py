@@ -49,6 +49,18 @@ def test_Hessian(backend):
 _exclude = (slice(None), slice(None), ['square_fft'])
 
 
+@parametrize(tracing_backends)
+def test_device_inheritance(backend):
+    xnp = get_xnp(backend)
+    xnp = get_xnp(backend)
+    dtype = xnp.float32
+    Aop = Diagonal(xnp.array([0.1, -0.2], dtype=dtype, device=None))
+    Aop.device = "cuda:0"
+
+    assert Aop.T.device == Aop.device
+    assert Aop.H.device == Aop.device
+
+
 @parametrize(tracing_backends, ['float32'], op_names).excluding[_exclude]
 def test_ops_to(backend, precision, op_name):
     Op = get_test_operator(backend, precision, op_name)

@@ -374,6 +374,7 @@ class Transpose(LinearOperator):
     def __init__(self, A):
         self.A = A
         super().__init__(dtype=A.dtype, shape=(A.shape[1], A.shape[0]))
+        self.device = A.device
 
     def _matmat(self, x):
         return self.A._rmatmat(x.T).T
@@ -391,6 +392,7 @@ class Adjoint(LinearOperator):
     def __init__(self, A):
         self.A = A
         super().__init__(dtype=A.dtype, shape=(A.shape[1], A.shape[0]))
+        self.device = A.device
 
     def _matmat(self, x):
         return self.xnp.conj(self.A._rmatmat(self.xnp.conj(x).T)).T
