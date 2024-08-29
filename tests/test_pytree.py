@@ -1,10 +1,11 @@
-from cola.fns import kron
-from cola.linalg.logdet.logdet import logdet
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.backends import tracing_backends
-from cola.linalg.algorithm_base import Auto
-from cola.ops import Dense, Diagonal, Product, ScalarMul
 from functools import partial
+
+from cola.backends import tracing_backends
+from cola.fns import kron
+from cola.linalg.algorithm_base import Auto
+from cola.linalg.logdet.logdet import logdet
+from cola.ops import Dense, Diagonal, Product, ScalarMul
+from cola.utils.test_utils import get_xnp, parametrize, relative_error
 
 
 @parametrize(tracing_backends).excluding['torch']
@@ -92,7 +93,7 @@ def test_grad(backend):
     g = xnp.grad(f)(D)
     assert relative_error(g.diag, e1) < 1e-6
 
-    g = xnp.grad(f)(Product(D, ScalarMul(3., D.shape, D.dtype)))
+    g = xnp.grad(f)(Product(D, ScalarMul(3., D.shape, D.dtype, device=D.device)))
     g1, g2 = xnp.tree_flatten(g)[0]
     ones = xnp.ones((1, ), dtype=dtype, device=device)
     assert relative_error(g1, 3 * e1) < 1e-6

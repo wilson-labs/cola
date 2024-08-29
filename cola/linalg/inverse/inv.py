@@ -1,20 +1,23 @@
 import numpy as np
-from plum import parametric
-from plum import dispatch
-from cola.ops.operators import LinearOperator
-from cola.ops.operators import Diagonal, Permutation
-from cola.ops.operators import Identity
-from cola.ops.operators import ScalarMul
-from cola.ops.operators import BlockDiag, Triangular
-from cola.ops.operators import Kronecker, Product
-from cola.utils import export
+from plum import dispatch, parametric
+
 from cola.annotations import PSD, Unitary
-from cola.linalg.algorithm_base import Algorithm, Auto
-from cola.linalg.decompositions.decompositions import Cholesky, LU
-from cola.linalg.decompositions.decompositions import plu, cholesky
-from cola.linalg.algorithm_base import IterativeOperatorWInfo
+from cola.linalg.algorithm_base import Algorithm, Auto, IterativeOperatorWInfo
+from cola.linalg.decompositions.decompositions import LU, Cholesky, cholesky, plu
 from cola.linalg.inverse.cg import CG
 from cola.linalg.inverse.gmres import GMRES
+from cola.ops.operators import (
+    BlockDiag,
+    Diagonal,
+    Identity,
+    Kronecker,
+    LinearOperator,
+    Permutation,
+    Product,
+    ScalarMul,
+    Triangular,
+)
+from cola.utils import export
 
 
 @export
@@ -114,7 +117,7 @@ def inv(A: Identity, alg: Algorithm):
 
 @dispatch
 def inv(A: ScalarMul, alg: Algorithm):
-    return ScalarMul(1 / A.c, shape=A.shape, dtype=A.dtype)
+    return ScalarMul(1 / A.c, shape=A.shape, dtype=A.dtype, device=A.c.device)
 
 
 @dispatch

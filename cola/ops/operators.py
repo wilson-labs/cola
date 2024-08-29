@@ -83,9 +83,10 @@ class Sparse(LinearOperator):
 
 class ScalarMul(LinearOperator):
     """ Linear Operator representing scalar multiplication"""
-    def __init__(self, c, shape, dtype=None):
+    def __init__(self, c, shape, dtype=None, device=None):
         super().__init__(dtype=dtype or type(c), shape=shape)
-        self.c = self.xnp.array(c, dtype=dtype, device=self.device)
+        self.c = self.xnp.array(c, dtype=dtype, device=device)
+        self.device = device
 
     #     self.ensure_const_register_as_array()
 
@@ -128,8 +129,10 @@ class Identity(LinearOperator):
 
 def I_like(A: LinearOperator) -> Identity:
     """ A function that produces an Identity operator with the same
-        shape and dtype as A """
-    return Identity(dtype=A.dtype, shape=A.shape)
+        shape, dtype and device as A """
+    Op = Identity(dtype=A.dtype, shape=A.shape)
+    Op.to(A.device)
+    return Op
 
 
 @parametric
@@ -137,12 +140,15 @@ class Product(LinearOperator):
     """ Matrix Multiply Product of Linear ops """
     def __init__(self, *Ms):
         self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
+        devices = [M.device for M in self.Ms]
+        assert all(x == devices[0] for x in devices), "There is a device mismatch in Product"
         for M1, M2 in zip(Ms[:-1], Ms[1:]):
             if M1.shape[-1] != M2.shape[-2]:
                 raise ValueError(f"dimension mismatch {M1.shape} vs {M2.shape}")
         shape = (Ms[0].shape[-2], Ms[-1].shape[-1])
         dtype = reduce(self.Ms[0].xnp.promote_types, (M.dtype for M in Ms))
         super().__init__(dtype, shape)
+        self.device = devices[0]
 
     def _matmat(self, v):
         for M in self.Ms[::-1]:
@@ -163,12 +169,15 @@ class Sum(LinearOperator):
     """ Sum of Linear ops """
     def __init__(self, *Ms):
         self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
+        devices = [M.device for M in self.Ms]
+        assert all(x == devices[0] for x in devices), "There is a device mismatch in Sum"
         shape = Ms[0].shape
         for M in Ms:
             if M.shape != shape:
                 raise ValueError(f"dimension mismatch {M.shape} vs {shape}")
         dtype = Ms[0].dtype
         super().__init__(dtype, shape)
+        self.device = devices[0]
 
     def _matmat(self, v):
         return sum(M @ v for M in self.Ms)
@@ -322,6 +331,7 @@ class Diagonal(LinearOperator):
             >>> op = Diagonal(d)
         """
     def __init__(self, diag):
+        assert len(diag.shape) == 1, f"diagonal is not a vector, it is of shape {diag.shape=}"
         self.diag = diag
         super().__init__(dtype=diag.dtype, shape=(len(diag), ) * 2)
 
@@ -663,5 +673,3 @@ def FIM(logits_fn, theta):
     def entropy(theta):
         log_probs = xnp.log_softmax(logits_fn(theta), axis=-1)
         return -xnp.sum(probs * log_probs, axis=-1).mean()
-
-    return cola.PSD(Hessian(entropy, theta))
