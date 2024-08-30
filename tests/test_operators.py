@@ -171,6 +171,11 @@ def test_sparse(backend):
     rel_error = relative_error(Aop.T.to_dense(), A.T)
     assert rel_error < _tol
 
+    if backend == "torch":
+        loss = (Aop @ x1).sum()
+        loss.backward()
+        assert data.grad is not None
+
 
 @parametrize(['jax'])
 def test_jacobian(backend):
