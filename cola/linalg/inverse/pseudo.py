@@ -53,7 +53,7 @@ def pseudo(A: LinearOperator, alg: Auto):
         - if A is large, use iterative algorithms
     """
     if not hasattr(alg, "method"):
-        alg.method = "dense" if bool(np.prod(A.shape)) else "iterative"
+        alg.method = "dense" if bool(np.prod(A.shape) <= _SIZE) else "iterative"
 
     match alg.method:
         case "dense":
