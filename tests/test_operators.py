@@ -3,7 +3,7 @@ import pytest
 from linalg.operator_market import get_test_operator, op_names
 
 from cola.backends import all_backends, tracing_backends
-from cola.fns import kron, lazify
+from cola.fns import kron, lazify, no_dispatch
 from cola.linalg.decompositions.arnoldi import get_householder_vec
 from cola.ops import (
     Dense,
@@ -26,6 +26,32 @@ from cola.ops import (
 from cola.utils.test_utils import get_xnp, parametrize, relative_error
 
 _tol = 1e-6
+
+
+@parametrize(all_backends)
+def test_no_dispatch(backend):
+    xnp = get_xnp(backend)
+    dtype = xnp.float32
+    A = Diagonal(xnp.array([1., 2., 3.], dtype=dtype, device=None))
+    B = Dense(xnp.randn(3, 3, dtype=dtype, device=None))
+    C = I_like(B)
+    D = C - B @ A
+    Z = no_dispatch(D)
+    x = xnp.array([1., -2., 0.5], dtype=dtype, device=None)
+
+    assert isinstance(Z, LinearOperator)
+
+    rel_error = relative_error(D @ x, Z @ x)
+    assert rel_error < _tol
+
+    rel_error = relative_error(D.T @ x, Z.T @ x)
+    assert rel_error < _tol
+
+    rel_error = relative_error(D.to_dense(), Z.to_dense())
+    assert rel_error < _tol
+
+    rel_error = relative_error(D.T.to_dense(), Z.T.to_dense())
+    assert rel_error < _tol
 
 
 @parametrize(tracing_backends)

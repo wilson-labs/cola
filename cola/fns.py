@@ -47,6 +47,12 @@ def densify(A: Union[LinearOperator, Array]):
         return A
 
 
+@export
+def no_dispatch(A: LinearOperator):
+    Op = LinearOperator(dtype=A.dtype, shape=A.shape, matmat=A._matmat)
+    return Op
+
+
 @dispatch
 def dot(A: LinearOperator, B: LinearOperator):
     return Product(A, B)
