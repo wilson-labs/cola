@@ -156,7 +156,7 @@ class Lanczos(Algorithm):
 
 @dispatch
 def svd(A: LinearOperator):
-    U, Sigma, V = A.xnp.svd(A.to_dense())
+    U, Sigma, V = A.xnp.svd(A.to_dense(), full_matrices=True)
     idx = A.xnp.argsort(Sigma, axis=-1)
     return Unitary(Dense(U[:, idx])), Diagonal(Sigma[..., idx]), Unitary(Dense(V[:, idx]))
 

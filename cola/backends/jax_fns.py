@@ -93,8 +93,8 @@ promote_types = jnp.promote_types
 finfo = jnp.finfo
 
 
-def svd(A):
-    U, S, VH = jnp.linalg.svd(A, full_matrices=True)
+def svd(A, full_matrices):
+    U, S, VH = jnp.linalg.svd(A, full_matrices=full_matrices)
     return U, S, VH.T.conj()
 
 

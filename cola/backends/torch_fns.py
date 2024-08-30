@@ -67,8 +67,8 @@ slogdet = torch.linalg.slogdet
 iscomplexobj = torch.is_complex
 
 
-def svd(A):
-    U, S, VH = torch.linalg.svd(A, full_matrices=True)
+def svd(A, full_matrices):
+    U, S, VH = torch.linalg.svd(A, full_matrices=full_matrices)
     return U, S, VH.H
 
 

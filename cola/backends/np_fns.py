@@ -85,8 +85,8 @@ def lstsq(A, b):
     return soln
 
 
-def svd(A):
-    U, S, VH = np.linalg.svd(A, full_matrices=True)
+def svd(A, full_matrices):
+    U, S, VH = np.linalg.svd(A, full_matrices=full_matrices)
     return U, S, VH.T.conj()
 
 
