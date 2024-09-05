@@ -12,7 +12,6 @@ from cola.linalg.decompositions.lanczos import lanczos, lanczos_eigs
 from cola.ops import (
     Array,
     BlockDiag,
-    Dense,
     Diagonal,
     Identity,
     Kronecker,
@@ -24,15 +23,6 @@ from cola.ops import (
 from cola.utils import export
 
 PRNGKey = Any
-
-
-@export
-class SVD(Algorithm):
-    """
-    Performs SVD on A.
-    """
-    def __call__(self, A: LinearOperator):
-        return svd(A)
 
 
 @export
@@ -152,13 +142,6 @@ class Lanczos(Algorithm):
 
     def __call__(self, A: LinearOperator):
         return lanczos(A, **self.__dict__)
-
-
-@dispatch
-def svd(A: LinearOperator):
-    U, Sigma, V = A.xnp.svd(A.to_dense(), full_matrices=True)
-    idx = A.xnp.argsort(Sigma, axis=-1)
-    return Unitary(Dense(U[:, idx])), Diagonal(Sigma[..., idx]), Unitary(Dense(V[:, idx]))
 
 
 @dispatch

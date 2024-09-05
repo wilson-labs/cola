@@ -1,13 +1,23 @@
 import numpy as np
 from plum import dispatch
+
 from cola.annotations import Unitary
-from cola.ops.operator_base import LinearOperator
-from cola.ops.operators import Diagonal
-from cola.ops.operators import I_like
-from cola.ops.operators import Identity
+from cola.fns import lazify
 from cola.linalg.algorithm_base import Algorithm, Auto
-from cola.linalg.decompositions.decompositions import SVD, LanczosSVD
+from cola.linalg.decompositions.decompositions import Lanczos
+from cola.linalg.inverse.inv import inv
+from cola.ops.operator_base import LinearOperator
+from cola.ops.operators import Dense, Diagonal, I_like, Identity
 from cola.utils import export
+
+
+@export
+class DenseSVD(Algorithm):
+    """
+    Performs SVD on A.
+    """
+    def __call__(self, A: LinearOperator):
+        return svd(A)
 
 
 @export
@@ -29,28 +39,32 @@ def svd(A: LinearOperator, alg: Algorithm = Auto()):
 def svd(A: LinearOperator, alg: Auto):
     """ Auto:
         - if A is small, use dense SVD
-        - if A is large, use dense Lanczos SVD
+        - if A is large, use Lanczos
     """
-    if not hasattr(alg, "method"):
-        alg.method = "dense" if bool(np.prod(A.shape) <= 1e6) else "iterative"
-    match alg.method:
-        case "dense":
-            alg = SVD()
-        case "iterative":
-            alg.__dict__.pop("method")
-            alg = LanczosSVD(**alg.__dict__)
+    match bool(np.prod(A.shape) <= 1e6):
+        case True:
+            alg = DenseSVD()
+        case False:
+            alg = Lanczos(**alg.__dict__)
     return svd(A, alg)
 
 
 @dispatch
-def svd(A: LinearOperator, alg: SVD):
-    U, Sigma, V = alg(A)
-    return U, Sigma, V
+def svd(A: LinearOperator, alg: DenseSVD):
+    U, Sigma, V = A.xnp.svd(A.to_dense(), full_matrices=True)
+    idx = A.xnp.argsort(Sigma, axis=-1)
+    return Unitary(Dense(U[:, idx])), Diagonal(Sigma[..., idx]), Unitary(Dense(V[:, idx]))
 
 
 @dispatch
-def svd(A: LinearOperator, alg: LanczosSVD):
-    U, Sigma, V = alg(A)
+def svd(A: LinearOperator, alg: Lanczos):
+    xnp = A.xnp
+    Q, T, _ = alg(A.H @ A)
+    eigvals, eigvectors = xnp.eigh(T.to_dense())
+    idx = xnp.argsort(eigvals, axis=-1)
+    V = Unitary(Q @ lazify(eigvectors[:, idx]))
+    Sigma = Diagonal(xnp.sqrt(eigvals[..., idx]))
+    U = Unitary(lazify((A @ V @ inv(Sigma)).to_dense()))
     return U, Sigma, V
 
 
