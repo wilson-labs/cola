@@ -16,7 +16,7 @@ def test_svd(backend):
     A = lazify(xnp.array(generate_pd_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None))
     soln_vals = xnp.sort(xnp.array(diag, dtype=dtype, device=None))
 
-    U, Sigma, V = svd(A, Auto(tol=1e-6))
+    U, Sigma, V = svd(A, A.shape[0], "LM", Auto(tol=1e-6))
 
     rel_error = relative_error(soln_vals, Sigma.diag)
     print(f"Rel error: {rel_error:2.5e}")
@@ -26,7 +26,7 @@ def test_svd(backend):
     print(f"Rel error: {rel_error:2.5e}")
     assert rel_error < _tol * 5
 
-    U, Sigma, V = svd(A, Lanczos(tol=1e-6))
+    U, Sigma, V = svd(A, A.shape[0], "LM", Lanczos(tol=1e-6))
 
     rel_error = relative_error(soln_vals, Sigma.diag)
     print(f"Rel error: {rel_error:2.5e}")
