@@ -49,6 +49,13 @@ def densify(A: Union[LinearOperator, Array]):
 
 @export
 def no_dispatch(A: LinearOperator):
+    """
+    This function allows the user to circumvent dispatch functionality that might be triggered
+    based on the type of the operator.
+    For example, if we have `D = A @ B + a * C` where `A`, `B`, `C` are linear operators and
+    `a` is a scalar then to avoid triggering sum, product and scalar product dispatch rules
+    we can wrap `D` as `D = cola.no_dispatch(D)`.
+    """
     Op = LinearOperator(dtype=A.dtype, shape=A.shape, matmat=A._matmat)
     return Op
 
