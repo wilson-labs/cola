@@ -60,10 +60,16 @@ def svd(A: LinearOperator, k: int, which: str, alg: DenseSVD):
 def svd(A: LinearOperator, k: int, which: str, alg: Lanczos):
     xnp = A.xnp
     eig_slice = get_slice(k, which)
-    eig_vals, V, _ = lanczos_eigs(A.H @ A, **alg.__dict__)
-    V = Unitary(V[:, eig_slice])
-    Sigma = Diagonal(xnp.sqrt(eig_vals[eig_slice]))
-    U = Unitary(lazify((A @ V @ inv(Sigma)).to_dense()))
+    if A.shape[1] <= A.shape[0]:
+        eig_vals, V, _ = lanczos_eigs(A.H @ A, **alg.__dict__)
+        V = Unitary(V[:, eig_slice])
+        Sigma = Diagonal(xnp.sqrt(eig_vals[eig_slice]))
+        U = Unitary(lazify((A @ V @ inv(Sigma)).to_dense()))
+    else:
+        eig_vals, U, _ = lanczos_eigs(A @ A.H, **alg.__dict__)
+        U = Unitary(U[:, eig_slice])
+        Sigma = Diagonal(xnp.sqrt(eig_vals[eig_slice]))
+        V = Unitary(lazify((inv(Sigma) @ U.H @ A).to_dense().conj().T))
     return U, Sigma, V
 
 
