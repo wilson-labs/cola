@@ -2,6 +2,7 @@ from cola.backends import all_backends
 from cola.fns import lazify
 from cola.linalg.algorithm_base import Auto
 from cola.linalg.decompositions.decompositions import Lanczos
+from cola.linalg.eig.lobpcg import LOBPCG
 from cola.linalg.svd.svd import svd
 from cola.utils.test_utils import generate_pd_from_diag, generate_spectrum, get_xnp, parametrize, relative_error
 
@@ -33,5 +34,11 @@ def test_svd(backend):
     assert rel_error < _tol * 5
 
     rel_error = relative_error((U @ Sigma @ V.H).to_dense(), A.to_dense())
+    print(f"Rel error: {rel_error:2.5e}")
+    assert rel_error < _tol * 5
+
+    U, Sigma, V = svd(A, A.shape[0], "LM", LOBPCG())
+
+    rel_error = relative_error(soln_vals[-Sigma.shape[0]:], Sigma.diag)
     print(f"Rel error: {rel_error:2.5e}")
     assert rel_error < _tol * 5

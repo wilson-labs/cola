@@ -3,9 +3,9 @@ from plum import dispatch
 
 from cola.annotations import Unitary
 from cola.fns import lazify
-from cola.linalg.decompositions.lanczos import lanczos_eigs
 from cola.linalg.algorithm_base import Algorithm, Auto
-from cola.linalg.decompositions.decompositions import Lanczos
+from cola.linalg.decompositions.decompositions import Lanczos, get_slice
+from cola.linalg.decompositions.lanczos import lanczos_eigs
 from cola.linalg.eig.lobpcg import LOBPCG, lobpcg
 from cola.linalg.inverse.inv import inv
 from cola.ops.operator_base import LinearOperator
@@ -59,10 +59,10 @@ def svd(A: LinearOperator, k: int, which: str, alg: DenseSVD):
 @dispatch
 def svd(A: LinearOperator, k: int, which: str, alg: Lanczos):
     xnp = A.xnp
-    # eig_slice = get_slice(k, which)
+    eig_slice = get_slice(k, which)
     eig_vals, V, _ = lanczos_eigs(A.H @ A, **alg.__dict__)
-    V = Unitary(V)
-    Sigma = Diagonal(xnp.sqrt(eig_vals))
+    V = Unitary(V[:, eig_slice])
+    Sigma = Diagonal(xnp.sqrt(eig_vals[eig_slice]))
     U = Unitary(lazify((A @ V @ inv(Sigma)).to_dense()))
     return U, Sigma, V
 
@@ -70,9 +70,10 @@ def svd(A: LinearOperator, k: int, which: str, alg: Lanczos):
 @dispatch
 def svd(A: LinearOperator, k: int, which: str, alg: LOBPCG):
     xnp = A.xnp
+    eig_slice = get_slice(k, which)
     eig_vals, V = lobpcg(A.H @ A, **alg.__dict__)
-    V = Unitary(V)
-    Sigma = Diagonal(xnp.sqrt(eig_vals))
+    V = Unitary(V[:, eig_slice])
+    Sigma = Diagonal(xnp.sqrt(eig_vals[eig_slice]))
     U = Unitary(lazify((A @ V @ inv(Sigma)).to_dense()))
     return U, Sigma, V
 

@@ -209,3 +209,16 @@ def plu(A: BlockDiag):
     P, L, U = zip(*[plu(Ai) for Ai in A.Ms])
     BD = lambda *args: BlockDiag(*args, multiplicities=A.multiplicities)  # noqa
     return BD(*P), BD(*L), BD(*U)
+
+
+def get_slice(num, which):
+    if num == -1:
+        raise ValueError(f"Number of eigenvalues {num} must be explicitly specified")
+    if which == "SM":
+        eig_slice = slice(0, num, None)
+    elif which == "LM":
+        id = -1 if num is None else -num
+        eig_slice = slice(id, None, None)
+    else:
+        raise NotImplementedError(f"which={which} is not implemented")
+    return eig_slice
