@@ -5,7 +5,7 @@ from cola.ops import Triangular, Kronecker, Permutation
 from cola.ops import Dense, BlockDiag, Jacobian, Hessian, FFT
 from cola.annotations import SelfAdjoint
 from cola.annotations import PSD
-from cola.utils.test_utils import get_xnp
+from cola.utils.utils_for_tests import get_xnp
 from functools import reduce
 import cola
 

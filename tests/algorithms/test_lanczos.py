@@ -4,15 +4,15 @@ from cola.backends import all_backends, tracing_backends
 from cola.fns import lazify
 from cola.linalg.decompositions.lanczos import irl, lanczos, lanczos_eigs
 from cola.ops import Dense, Tridiagonal
-from cola.utils.test_utils import (
+from cola.utils.utils_for_tests import (
     generate_diagonals,
     generate_pd_from_diag,
     generate_spectrum,
-    get_numpy_dtype,
     get_xnp,
     parametrize,
     relative_error,
 )
+from cola.utils.utils_linalg import get_numpy_dtype
 
 _tol = 1e-6
 

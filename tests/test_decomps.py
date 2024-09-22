@@ -1,4 +1,4 @@
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.utils.utils_for_tests import get_xnp, parametrize, relative_error
 from cola.backends import all_backends
 from linalg.operator_market import op_names, get_test_operator
 from cola.linalg.inverse.inv import inv

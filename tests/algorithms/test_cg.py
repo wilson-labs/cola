@@ -6,10 +6,10 @@ from cola.linalg.preconditioning.preconditioners import NystromPrecond
 from cola.linalg.inverse.cg import run_batched_cg
 from cola.linalg.inverse.cg import run_cg
 from cola.linalg.inverse.cg import cond_fun
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.utils.utils_for_tests import get_xnp, parametrize, relative_error
 from cola.backends import all_backends, tracing_backends
-from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
-from cola.utils.test_utils import generate_diagonals
+from cola.utils.utils_for_tests import generate_spectrum, generate_pd_from_diag
+from cola.utils.utils_for_tests import generate_diagonals
 
 _tol = 1e-7
 

@@ -3,7 +3,7 @@ from operator_market import op_names, get_test_operator
 from cola.annotations import SelfAdjoint, PSD
 from cola.ops.operator_base import LinearOperator
 from cola.ops.operators import Dense
-from cola.utils.test_utils import parametrize, relative_error
+from cola.utils.utils_for_tests import parametrize, relative_error
 from cola.linalg.logdet.logdet import logdet
 from cola.linalg.algorithm_base import Auto
 from cola.linalg.decompositions.decompositions import Lanczos

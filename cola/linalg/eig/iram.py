@@ -5,7 +5,7 @@ from cola.ops import LinearOperator
 from cola.ops import Array
 from cola.ops import Dense
 from cola.utils import export
-from cola.utils.test_utils import get_numpy_dtype
+from cola.utils.utils_linalg import get_numpy_dtype
 
 
 @export

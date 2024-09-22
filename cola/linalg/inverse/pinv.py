@@ -7,6 +7,7 @@ from cola.linalg.inverse.cg import CG
 from cola.ops.operators import Diagonal, Identity, LinearOperator, Permutation, ScalarMul, I_like
 from cola.annotations import PSD
 from cola.utils import export
+from cola.utils.utils_linalg import get_precision
 
 _SIZE = 1e6
 
@@ -69,15 +70,6 @@ def pinv(A: LinearOperator, alg: CG):
     cons = get_precision(xnp, A.dtype) * xnp.sqrt(cola.eigmax(M))
     Op = IterativeOperatorWInfo(M, alg)
     return PSD(Op + cons * I_like(M)) @ A.H
-
-
-def get_precision(xnp, dtype):
-    if dtype == xnp.float32:
-        return 1e-6
-    elif dtype == xnp.float64:
-        return 1e-15
-    else:
-        raise TypeError(f"Incorrect dtype {dtype}")
 
 
 @dispatch

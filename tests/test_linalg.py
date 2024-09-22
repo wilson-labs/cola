@@ -5,7 +5,7 @@ from cola.linalg.eig.power_iteration import power_iteration
 from cola.linalg.inverse.inv import inv
 from cola.linalg.tbd.nullspace import nullspace
 from cola.ops import Tridiagonal
-from cola.utils.test_utils import generate_pd_from_diag, generate_spectrum, get_xnp, parametrize, relative_error
+from cola.utils.utils_for_tests import generate_pd_from_diag, generate_spectrum, get_xnp, parametrize, relative_error
 
 _tol = 1e-7
 

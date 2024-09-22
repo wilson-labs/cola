@@ -3,7 +3,7 @@ from cola.linalg.algorithm_base import Auto
 from cola.linalg.inverse.cg import CG
 from cola.linalg.inverse.pinv import LSTSQ
 from cola.ops import LinearOperator
-from cola.utils.test_utils import parametrize, relative_error
+from cola.utils.utils_for_tests import parametrize, relative_error
 from cola.backends import all_backends
 from nonsquare_operator_market import get_test_operator
 

@@ -4,7 +4,7 @@ from cola.backends import all_backends
 from cola.fns import lazify
 from cola.linalg.tbd.slq import stochastic_lanczos_quad
 from cola.ops import Diagonal
-from cola.utils.test_utils import generate_pd_from_diag, generate_spectrum, get_xnp, parametrize, relative_error
+from cola.utils.utils_for_tests import generate_pd_from_diag, generate_spectrum, get_xnp, parametrize, relative_error
 
 
 # @parametrize(tracing_backends)

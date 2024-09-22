@@ -14,10 +14,10 @@ from cola.linalg.decompositions.decompositions import Arnoldi
 from cola.linalg.algorithm_base import Auto
 from cola.linalg.eig.eigs import eig
 from cola.linalg.eig.lobpcg import LOBPCG
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.utils.utils_for_tests import get_xnp, parametrize, relative_error
 from cola.backends import all_backends, tracing_backends
-from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
-from cola.utils.test_utils import transform_to_csr
+from cola.utils.utils_for_tests import generate_spectrum, generate_pd_from_diag
+from cola.utils.utils_for_tests import transform_to_csr
 
 _tol = 1e-6
 

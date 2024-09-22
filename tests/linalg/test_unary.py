@@ -8,7 +8,7 @@ from cola.backends import all_backends
 from cola.linalg.algorithm_base import Auto
 from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos
 from cola.ops import LinearOperator
-from cola.utils.test_utils import parametrize, relative_error
+from cola.utils.utils_for_tests import parametrize, relative_error
 
 
 @parametrize(all_backends, ['float64'], op_names, ['exp', 'sqrt']).excluding['torch', :, 'psd_kron', :]

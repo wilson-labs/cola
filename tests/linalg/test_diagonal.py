@@ -4,7 +4,7 @@ from cola.linalg.trace.diagonal_estimation import exact_diag
 from cola.linalg.trace.diagonal_estimation import hutchinson_diag_estimate as approx_diag
 from cola.linalg.trace.diag_trace import trace
 from cola.linalg.trace.diag_trace import diag
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.utils.utils_for_tests import get_xnp, parametrize, relative_error
 from cola.linalg.trace.diagonal_estimation import Exact, Hutch
 from cola.backends import all_backends
 

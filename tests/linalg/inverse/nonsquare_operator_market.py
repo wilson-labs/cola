@@ -1,5 +1,5 @@
 from cola.ops import Dense, Diagonal, LinearOperator
-from cola.utils.test_utils import get_xnp
+from cola.utils.utils_for_tests import get_xnp
 
 op_names: set[str] = {
     "psd_diagonal"
