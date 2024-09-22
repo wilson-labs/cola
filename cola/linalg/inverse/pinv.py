@@ -63,8 +63,7 @@ def pinv(A: LinearOperator, alg: Auto):
 @dispatch
 def pinv(A: LinearOperator, alg: GMRES):
     Op = IterativeOperatorWInfo(A.H @ A, alg)
-    # Op.shape = (A.shape[-1], A.shape[-2])
-    return Op
+    return Op @ A.H
 
 
 @dispatch
