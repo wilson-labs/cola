@@ -1,9 +1,11 @@
 import numpy as np
 from plum import dispatch
 
+import cola
 from cola.linalg.algorithm_base import Algorithm, Auto, IterativeOperatorWInfo
-from cola.linalg.inverse.gmres import GMRES
-from cola.ops.operators import Diagonal, Identity, LinearOperator, Permutation, ScalarMul
+from cola.linalg.inverse.cg import CG
+from cola.ops.operators import Diagonal, Identity, LinearOperator, Permutation, ScalarMul, I_like
+from cola.annotations import PSD
 from cola.utils import export
 
 _SIZE = 1e6
@@ -56,14 +58,26 @@ def pinv(A: LinearOperator, alg: Auto):
         case True:
             alg = LSTSQ()
         case False:
-            alg = GMRES(**alg.__dict__)
+            alg = CG(**alg.__dict__)
     return pinv(A, alg)
 
 
 @dispatch
-def pinv(A: LinearOperator, alg: GMRES):
-    Op = IterativeOperatorWInfo(A.H @ A, alg)
-    return Op @ A.H
+def pinv(A: LinearOperator, alg: CG):
+    xnp = A.xnp
+    M = A.H @ A
+    cons = get_precision(xnp, A.dtype) * xnp.sqrt(cola.eigmax(M))
+    Op = IterativeOperatorWInfo(M, alg)
+    return PSD(Op + cons * I_like(M)) @ A.H
+
+
+def get_precision(xnp, dtype):
+    if dtype == xnp.float32:
+        return 1e-6
+    elif dtype == xnp.float64:
+        return 1e-15
+    else:
+        raise TypeError(f"Incorrect dtype {dtype}")
 
 
 @dispatch

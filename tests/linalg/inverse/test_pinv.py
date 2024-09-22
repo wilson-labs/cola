@@ -1,6 +1,6 @@
 from cola.linalg.inverse.pinv import pinv
 from cola.linalg.algorithm_base import Auto
-from cola.linalg.inverse.gmres import GMRES
+from cola.linalg.inverse.cg import CG
 from cola.linalg.inverse.pinv import LSTSQ
 from cola.ops import LinearOperator
 from cola.utils.test_utils import parametrize, relative_error
@@ -16,7 +16,7 @@ def test_pinv(backend, precision, op_name):
     A2 = LinearOperator(A.dtype, A.shape, A._matmat)
     Ainv = pinv(A, Auto(tol=tol))
     Ainv2 = pinv(A2, LSTSQ())
-    Ainv3 = pinv(A2, GMRES(tol=tol))
+    Ainv3 = pinv(A2, CG(tol=tol))
     B = xnp.randn(*(A.shape[0], 10), dtype=dtype, device=None)
     X = Ainv @ B
     rel_error = relative_error(A @ X, B)
