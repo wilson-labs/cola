@@ -1,11 +1,11 @@
-from cola.linalg.inverse.pinv import pinv
+from nonsquare_operator_market import get_test_operator
+
+from cola.backends import all_backends
 from cola.linalg.algorithm_base import Auto
 from cola.linalg.inverse.cg import CG
-from cola.linalg.inverse.pinv import LSTSQ
+from cola.linalg.inverse.pinv import LSTSQ, pinv
 from cola.ops import LinearOperator
 from cola.utils.utils_for_tests import parametrize, relative_error
-from cola.backends import all_backends
-from nonsquare_operator_market import get_test_operator
 
 
 @parametrize(all_backends, ["float64"], ["psd_diagonal", "nonsquare_dense"])

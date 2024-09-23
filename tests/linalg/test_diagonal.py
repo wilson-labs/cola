@@ -1,12 +1,10 @@
-from cola.fns import kron
-from cola.ops import Dense, LinearOperator, Identity, Diagonal
-from cola.linalg.trace.diagonal_estimation import exact_diag
-from cola.linalg.trace.diagonal_estimation import hutchinson_diag_estimate as approx_diag
-from cola.linalg.trace.diag_trace import trace
-from cola.linalg.trace.diag_trace import diag
-from cola.utils.utils_for_tests import get_xnp, parametrize, relative_error
-from cola.linalg.trace.diagonal_estimation import Exact, Hutch
 from cola.backends import all_backends
+from cola.fns import kron
+from cola.linalg.trace.diag_trace import diag, trace
+from cola.linalg.trace.diagonal_estimation import Exact, Hutch, exact_diag
+from cola.linalg.trace.diagonal_estimation import hutchinson_diag_estimate as approx_diag
+from cola.ops import Dense, Diagonal, Identity, LinearOperator
+from cola.utils.utils_for_tests import get_xnp, parametrize, relative_error
 
 
 @parametrize(all_backends)
