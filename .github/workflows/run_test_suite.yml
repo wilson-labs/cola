@@ -9,14 +9,14 @@ jobs:
     strategy:
       matrix:
         jax: ["stable", "none"]
-        torch: ["stable", "none"]
+        torch: ["stable", "latest", "none"]
         include:
           - torch: "stable"
             jax: "stable"
             codecov: "upload"  # Upload to codecov only if we're testing both jax and torch
         exclude:
+          - torch: "latest"
             jax: "stable"
-
     runs-on: ubuntu-latest
 
     steps:
@@ -32,7 +32,10 @@ jobs:
     - name: (Maybe) install PyTorch
       if: ${{ matrix.torch != 'none' }}
       run: |
-        if [[ ${{ matrix.torch }} == "stable" ]]; then
+        if [[ ${{ matrix.torch }} == "latest" ]]; then
+          # python -m pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cpu;
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu;
+        elif [[ ${{ matrix.torch }} == "stable" ]]; then
           python -m pip install torch --index-url https://download.pytorch.org/whl/cpu;
         fi
 
