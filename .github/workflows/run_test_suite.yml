@@ -15,7 +15,6 @@ jobs:
             jax: "stable"
             codecov: "upload"  # Upload to codecov only if we're testing both jax and torch
         exclude:
-          - torch: "latest"
             jax: "stable"
 
     runs-on: ubuntu-latest
