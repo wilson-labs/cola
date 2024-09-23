@@ -5,7 +5,7 @@ from cola.fns import lazify
 from cola.linalg.inverse.gmres import GMRES, gmres, gmres_fwd
 from cola.linalg.inverse.inv import inv
 from cola.ops import Diagonal, Identity
-from cola.utils.test_utils import generate_pd_from_diag, generate_spectrum, get_xnp, parametrize, relative_error
+from cola.utils.utils_for_tests import generate_pd_from_diag, generate_spectrum, get_xnp, parametrize, relative_error
 
 
 @parametrize(tracing_backends)

@@ -1,14 +1,15 @@
 import numpy as np
-from operator_market import op_names, get_test_operator
-from cola.annotations import SelfAdjoint, PSD
-from cola.ops.operator_base import LinearOperator
-from cola.ops.operators import Dense
-from cola.utils.test_utils import parametrize, relative_error
-from cola.linalg.logdet.logdet import logdet
+from operator_market import get_test_operator, op_names
+
+from cola.annotations import PSD, SelfAdjoint
+from cola.backends import all_backends
 from cola.linalg.algorithm_base import Auto
 from cola.linalg.decompositions.decompositions import Lanczos
-from cola.linalg.trace.diag_trace import Hutch, Exact
-from cola.backends import all_backends
+from cola.linalg.logdet.logdet import logdet
+from cola.linalg.trace.diag_trace import Exact, Hutch
+from cola.ops.operator_base import LinearOperator
+from cola.ops.operators import Dense
+from cola.utils.utils_for_tests import parametrize, relative_error
 
 _exclude = (slice(None), slice(None), ['psd_identity', 'psd_scalarmul', 'selfadj_tridiagonal'])
 

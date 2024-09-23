@@ -76,6 +76,11 @@ def sparse_csr(row_pointers, col_indices, data, shape):
     return torch.sparse_csr_tensor(crow_indices=row_pointers, col_indices=col_indices, values=data, size=shape)
 
 
+def lstsq(A, b):
+    soln = torch.linalg.lstsq(A, b).solution
+    return soln
+
+
 def norm(array, axis=None, keepdims=False, ord=None):
     return torch.linalg.norm(array, dim=axis, keepdim=keepdims, ord=ord)
 

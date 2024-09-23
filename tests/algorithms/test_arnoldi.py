@@ -12,15 +12,15 @@ from cola.linalg.decompositions.arnoldi import (
     run_householder_arnoldi,
 )
 from cola.ops import Dense, Householder, Product
-from cola.utils.test_utils import (
+from cola.utils.utils_for_tests import (
     generate_lower_from_diag,
     generate_pd_from_diag,
     generate_spectrum,
-    get_numpy_dtype,
     get_xnp,
     parametrize,
     relative_error,
 )
+from cola.utils.utils_linalg import get_numpy_dtype
 
 
 @parametrize(all_backends).excluding[:]

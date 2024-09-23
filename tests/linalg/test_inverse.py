@@ -9,7 +9,7 @@ from cola.linalg.inverse.cg import CG
 from cola.linalg.inverse.gmres import GMRES
 from cola.linalg.inverse.inv import inv
 from cola.ops import LinearOperator, Sparse
-from cola.utils.test_utils import get_xnp, parametrize, relative_error, transform_to_csr
+from cola.utils.utils_for_tests import get_xnp, parametrize, relative_error, transform_to_csr
 
 
 @pytest.mark.market

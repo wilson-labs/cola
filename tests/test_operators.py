@@ -23,7 +23,7 @@ from cola.ops import (
     Sum,
     Tridiagonal,
 )
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.utils.utils_for_tests import get_xnp, parametrize, relative_error
 
 _tol = 1e-6
 

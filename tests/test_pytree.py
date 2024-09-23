@@ -5,7 +5,7 @@ from cola.fns import kron
 from cola.linalg.algorithm_base import Auto
 from cola.linalg.logdet.logdet import logdet
 from cola.ops import Dense, Diagonal, Product, ScalarMul
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
+from cola.utils.utils_for_tests import get_xnp, parametrize, relative_error
 
 
 @parametrize(tracing_backends).excluding['torch']

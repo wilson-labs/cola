@@ -1,23 +1,24 @@
-import pytest
-from scipy.io import mmread
-import scipy
 import numpy as np
+import pytest
+import scipy
+from scipy.io import mmread
+
+from cola.annotations import PSD, SelfAdjoint
+from cola.backends import all_backends, tracing_backends
 from cola.fns import lazify
-from cola.ops.operators import Diagonal
-from cola.ops.operators import Identity
-from cola.ops.operators import Triangular
-from cola.ops.operators import Sparse
-from cola.annotations import PSD
-from cola.annotations import SelfAdjoint
-from cola.linalg.decompositions.decompositions import Lanczos
-from cola.linalg.decompositions.decompositions import Arnoldi
 from cola.linalg.algorithm_base import Auto
+from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos
 from cola.linalg.eig.eigs import eig
 from cola.linalg.eig.lobpcg import LOBPCG
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.backends import all_backends, tracing_backends
-from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
-from cola.utils.test_utils import transform_to_csr
+from cola.ops.operators import Diagonal, Identity, Sparse, Triangular
+from cola.utils.utils_for_tests import (
+    generate_pd_from_diag,
+    generate_spectrum,
+    get_xnp,
+    parametrize,
+    relative_error,
+    transform_to_csr,
+)
 
 _tol = 1e-6
 

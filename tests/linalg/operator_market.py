@@ -1,13 +1,25 @@
-from cola.fns import lazify
-from cola.ops import LinearOperator, Tridiagonal, Diagonal, Identity
-from cola.ops import KronSum, Product
-from cola.ops import Triangular, Kronecker, Permutation
-from cola.ops import Dense, BlockDiag, Jacobian, Hessian, FFT
-from cola.annotations import SelfAdjoint
-from cola.annotations import PSD
-from cola.utils.test_utils import get_xnp
 from functools import reduce
+
 import cola
+from cola.annotations import PSD, SelfAdjoint
+from cola.fns import lazify
+from cola.ops import (
+    FFT,
+    BlockDiag,
+    Dense,
+    Diagonal,
+    Hessian,
+    Identity,
+    Jacobian,
+    Kronecker,
+    KronSum,
+    LinearOperator,
+    Permutation,
+    Product,
+    Triangular,
+    Tridiagonal,
+)
+from cola.utils.utils_for_tests import get_xnp
 
 op_names: set[str] = {
     'psd_big',  # skipped by default

@@ -1,12 +1,10 @@
-from cola.fns import kron
-from cola.fns import lazify
+from cola.annotations import SelfAdjoint
+from cola.backends import all_backends
+from cola.fns import kron, lazify
 from cola.linalg import sqrt
 from cola.linalg.algorithm_base import Auto
 from cola.ops import Diagonal
-from cola.annotations import SelfAdjoint
-from cola.utils.test_utils import get_xnp, parametrize, relative_error
-from cola.backends import all_backends
-from cola.utils.test_utils import generate_spectrum, generate_pd_from_diag
+from cola.utils.utils_for_tests import generate_pd_from_diag, generate_spectrum, get_xnp, parametrize, relative_error
 
 _tol = 1e-6
 

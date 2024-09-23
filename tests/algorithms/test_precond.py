@@ -8,7 +8,7 @@ from cola.linalg.preconditioning.preconditioners import (
     select_rank_adaptively,
     sqrt,
 )
-from cola.utils.test_utils import (
+from cola.utils.utils_for_tests import (
     construct_e_vec,
     generate_pd_from_diag,
     generate_spectrum,
