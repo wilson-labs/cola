@@ -8,7 +8,7 @@ jobs:
 
     strategy:
       matrix:
-        jax: ["stable", "none"]  # No easy way to install the latest version of jax
+        jax: ["stable", "none"]
         torch: ["stable", "none"]
         include:
           - torch: "stable"
@@ -17,9 +17,7 @@ jobs:
         exclude:
           - torch: "latest"
             jax: "stable"
-          #- torch: "stable"
-            #jax: "latest"
-            #
+
     runs-on: ubuntu-latest
 
     steps:
@@ -35,9 +33,7 @@ jobs:
     - name: (Maybe) install PyTorch
       if: ${{ matrix.torch != 'none' }}
       run: |
-        if [[ ${{ matrix.torch }} == "latest" ]]; then
-          python -m pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cpu;
-        elif [[ ${{ matrix.torch }} == "stable" ]]; then
+        if [[ ${{ matrix.torch }} == "stable" ]]; then
           python -m pip install torch --index-url https://download.pytorch.org/whl/cpu;
         fi
 
