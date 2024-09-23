@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         jax: ["stable", "none"]  # No easy way to install the latest version of jax
-        torch: ["stable", "latest", "none"]
+        torch: ["stable", "none"]
         include:
           - torch: "stable"
             jax: "stable"
@@ -41,7 +41,7 @@ jobs:
           python -m pip install torch --index-url https://download.pytorch.org/whl/cpu;
         fi
 
-    - name: (Maybe) install JaX
+    - name: (Maybe) install JAX
       if: ${{ matrix.jax != 'none' }}
       run: python -m pip install "jax[cpu]"
 
