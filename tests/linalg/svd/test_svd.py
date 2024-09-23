@@ -4,7 +4,7 @@ from cola.linalg.algorithm_base import Auto
 from cola.linalg.decompositions.decompositions import Lanczos
 from cola.linalg.eig.lobpcg import LOBPCG
 from cola.linalg.svd.svd import svd
-from cola.utils.test_utils import (
+from cola.utils.utils_for_tests import (
     generate_lower_from_diag,
     generate_pd_from_diag,
     generate_spectrum,
