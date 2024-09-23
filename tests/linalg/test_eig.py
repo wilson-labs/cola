@@ -105,7 +105,7 @@ def test_general(backend):
     soln_vals = xnp.sort(xnp.array(diag, dtype=dtype, device=None))
     A = SelfAdjoint(lazify(A))
 
-    eig_vals, eig_vecs = eig(A, A.shape[0], "LM", Auto(tol=1e-6))
+    eig_vals, eig_vecs = eig(A, A.shape[0], alg=Auto(tol=1e-6))
     eig_vals, eig_vecs = xnp.cast(eig_vals, dtype), xnp.cast(eig_vecs.to_dense(), dtype)
     approx = eig_vecs @ xnp.diag(eig_vals) @ eig_vecs.T
     rel_error = relative_error(soln_vals, xnp.sort(eig_vals))

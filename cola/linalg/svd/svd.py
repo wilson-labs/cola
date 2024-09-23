@@ -22,7 +22,7 @@ class DenseSVD(Algorithm):
 
 @export
 @dispatch.abstract
-def svd(A: LinearOperator, k: int, which: str, alg: Algorithm = Auto()):
+def svd(A: LinearOperator, k: int, which: str = "LM", alg: Algorithm = Auto()):
     """
     Computes the SVD of the linear operator A.
 

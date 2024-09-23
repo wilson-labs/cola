@@ -18,7 +18,7 @@ from cola.utils import export
 
 @export
 @dispatch.abstract
-def eig(A: LinearOperator, k: int = -1, which: str = 'LM', alg: Algorithm = Auto()):
+def eig(A: LinearOperator, k: int, which: str = "LM", alg: Algorithm = Auto()):
     """
     Computes eigenvalues and eigenvectors of a linear operator.
 

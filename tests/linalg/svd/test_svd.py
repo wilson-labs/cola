@@ -26,7 +26,7 @@ def test_svd(backend):
     L = xnp.array(generate_lower_from_diag(diag, dtype=diag.dtype, seed=21), dtype=dtype, device=None)
     L = lazify(L[:-2, :])
 
-    U, Sigma, V = svd(A, A.shape[0], "LM", Auto(tol=1e-6))
+    U, Sigma, V = svd(A, A.shape[0], alg=Auto(tol=1e-6))
 
     rel_error = relative_error(soln_vals, Sigma.diag)
     print(f"Rel error: {rel_error:2.5e}")
