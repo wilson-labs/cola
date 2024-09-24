@@ -1,16 +1,26 @@
 """ Decompositions of linear operators, e.g. LU, Cholesky, Lanczos, Arnoldi, SVD"""
-from plum import dispatch
 from dataclasses import dataclass
-from cola.ops import LinearOperator, Array
-from cola.ops import Triangular, Permutation, Diagonal
-from cola.ops import Identity, ScalarMul, Kronecker, BlockDiag
-from cola.utils import export
-from cola.linalg.algorithm_base import Algorithm
-from cola.linalg.decompositions.lanczos import lanczos
-from cola.linalg.decompositions.arnoldi import arnoldi
-from cola.linalg.algorithm_base import Auto
+from typing import Any, Optional
+
+from plum import dispatch
+
 import cola.linalg
-from typing import Optional, Any
+from cola.annotations import Unitary
+from cola.linalg.algorithm_base import Algorithm, Auto
+from cola.linalg.decompositions.arnoldi import arnoldi
+from cola.linalg.decompositions.lanczos import lanczos, lanczos_eigs
+from cola.ops import (
+    Array,
+    BlockDiag,
+    Diagonal,
+    Identity,
+    Kronecker,
+    LinearOperator,
+    Permutation,
+    ScalarMul,
+    Triangular,
+)
+from cola.utils import export
 
 PRNGKey = Any
 
@@ -76,6 +86,31 @@ class Arnoldi(Algorithm):
 
     def __call__(self, A: LinearOperator):
         return arnoldi(A, **self.__dict__)
+
+
+@dataclass
+class LanczosSVD(Algorithm):
+    """
+    Does the SVD using the Lanczos decomposition,
+    Args:
+        start_vector (Array, optional): (n,) or (n, b) vector to start the algorithm.
+        max_iters (int, optional): The maximum number of iterations to run.
+        tol (float, optional): Relative error tolerance.
+        pbar (bool, optional): Whether to show progress bar.
+        key (PRNGKey, optional): Random key to use for the algorithm.
+            PRNGKey for jax, long integer for numpy or pytorch.
+    """
+    start_vector: Array = None
+    max_iters: int = 1_000
+    tol: float = 1e-6
+    pbar: bool = False
+    key: Optional[PRNGKey] = None
+
+    def __call__(self, A: LinearOperator):
+        Sigma0_2, V, _ = lanczos_eigs(A.H @ A, **self.__dict__)
+        Sigma1_2, U, _ = lanczos_eigs(A @ A.H, **self.__dict__)
+        Sigma = A.xnp.sqrt(Sigma0_2)
+        return Unitary(U), Diagonal(Sigma), Unitary(V)
 
 
 @export
@@ -174,3 +209,16 @@ def plu(A: BlockDiag):
     P, L, U = zip(*[plu(Ai) for Ai in A.Ms])
     BD = lambda *args: BlockDiag(*args, multiplicities=A.multiplicities)  # noqa
     return BD(*P), BD(*L), BD(*U)
+
+
+def get_slice(num, which):
+    if num == -1:
+        raise ValueError(f"Number of eigenvalues {num} must be explicitly specified")
+    if which == "SM":
+        eig_slice = slice(0, num, None)
+    elif which == "LM":
+        id = -1 if num is None else -num
+        eig_slice = slice(id, None, None)
+    else:
+        raise NotImplementedError(f"which={which} is not implemented")
+    return eig_slice

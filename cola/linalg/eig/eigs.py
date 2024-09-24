@@ -1,27 +1,24 @@
 import numpy as np
 from plum import dispatch
-from cola.annotations import Unitary, Stiefel
+
+from cola.annotations import SelfAdjoint, Stiefel, Unitary
 from cola.fns import lazify
-from cola.annotations import SelfAdjoint
-from cola.linalg.trace.diag_trace import diag
-from cola.ops.operator_base import LinearOperator
-from cola.ops.operators import Diagonal
-from cola.ops.operators import I_like
-from cola.ops.operators import Identity
-from cola.ops.operators import Triangular
-from cola.linalg.decompositions.lanczos import lanczos_eigs
-from cola.linalg.decompositions.arnoldi import arnoldi_eigs
 from cola.linalg.algorithm_base import Algorithm, Auto
-from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos
+from cola.linalg.decompositions.arnoldi import arnoldi_eigs
+from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos, get_slice
+from cola.linalg.decompositions.lanczos import lanczos_eigs
 from cola.linalg.eig.lobpcg import LOBPCG, lobpcg
 from cola.linalg.eig.power_iteration import PowerIteration
+from cola.linalg.trace.diag_trace import diag
 from cola.linalg.unary.unary import Eig, Eigh
+from cola.ops.operator_base import LinearOperator
+from cola.ops.operators import Diagonal, I_like, Identity, Triangular
 from cola.utils import export
 
 
 @export
 @dispatch.abstract
-def eig(A: LinearOperator, k: int = -1, which: str = 'LM', alg: Algorithm = Auto()):
+def eig(A: LinearOperator, k: int, which: str = "LM", alg: Algorithm = Auto()):
     """
     Computes eigenvalues and eigenvectors of a linear operator.
 
@@ -183,16 +180,3 @@ def eig(A: Diagonal, k: int, which: str, alg: Algorithm):
     eig_vals = A.diag[sorted_ind]
     eig_vecs = I_like(A).to_dense()[:, sorted_ind]
     return eig_vals[eig_slice], Unitary(lazify(eig_vecs[:, eig_slice]))
-
-
-def get_slice(num, which):
-    if num == -1:
-        raise ValueError(f"Number of eigenvalues {num} must be explicitly specified")
-    if which == "SM":
-        eig_slice = slice(0, num, None)
-    elif which == "LM":
-        id = -1 if num is None else -num
-        eig_slice = slice(id, None, None)
-    else:
-        raise NotImplementedError(f"which={which} is not implemented")
-    return eig_slice

@@ -10,7 +10,7 @@ from jax.lax import conj as conj_lax
 from jax.lax import dynamic_slice, expand_dims
 from jax.lax import fori_loop as _for_loop
 from jax.lax import while_loop as _while_loop
-from jax.lax.linalg import cholesky, qr, svd
+from jax.lax.linalg import cholesky, qr
 from jax.random import PRNGKey, normal
 from jax.scipy.linalg import block_diag
 from jax.scipy.linalg import lu as lu_lax
@@ -58,7 +58,6 @@ copy = jnp.copy
 nan_to_num = jnp.nan_to_num
 dynamic_slice = dynamic_slice
 zeros_like = jnp.zeros_like
-svd = svd
 cholesky = cholesky
 solvetri = solvetri
 qr = qr
@@ -92,6 +91,11 @@ softmax = jax.nn.softmax
 log_softmax = jax.nn.log_softmax
 promote_types = jnp.promote_types
 finfo = jnp.finfo
+
+
+def svd(A, full_matrices):
+    U, S, VH = jnp.linalg.svd(A, full_matrices=full_matrices)
+    return U, S, VH.T.conj()
 
 
 def to_np(array):

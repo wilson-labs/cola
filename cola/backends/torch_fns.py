@@ -43,7 +43,6 @@ eig = torch.linalg.eig
 eigh = torch.linalg.eigh
 solve = torch.linalg.solve
 copy = torch.clone
-svd = torch.linalg.svd
 diag = torch.diag
 zeros_like = torch.zeros_like
 cholesky = torch.linalg.cholesky
@@ -66,6 +65,11 @@ promote_types = torch.promote_types
 finfo = torch.finfo
 slogdet = torch.linalg.slogdet
 iscomplexobj = torch.is_complex
+
+
+def svd(A, full_matrices):
+    U, S, VH = torch.linalg.svd(A, full_matrices=full_matrices)
+    return U, S, VH.H
 
 
 def to_np(array):

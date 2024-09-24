@@ -65,7 +65,6 @@ sort = np.sort
 sqrt = np.sqrt
 stack = np.stack
 sum = np.sum
-svd = np.linalg.svd
 where = np.where
 fft = np.fft.fft
 ifft = np.fft.ifft
@@ -84,6 +83,11 @@ iscomplexobj = np.iscomplexobj
 def lstsq(A, b):
     soln, *_ = np.linalg.lstsq(A, b)
     return soln
+
+
+def svd(A, full_matrices):
+    U, S, VH = np.linalg.svd(A, full_matrices=full_matrices)
+    return U, S, VH.T.conj()
 
 
 def eig(array):
