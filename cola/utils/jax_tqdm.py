@@ -1,12 +1,13 @@
 # Credit to Jeremie Coullon
 # Adapted from https://github.com/jeremiecoullon/jax-tqdm
 
-import typing
 import time
-from tqdm.auto import tqdm
-import numpy as np
+import typing
+
 import jax
+import numpy as np
 from jax.experimental import host_callback
+from tqdm.auto import tqdm
 
 
 def scan_tqdm(n: int, message: typing.Optional[str] = None) -> typing.Callable:

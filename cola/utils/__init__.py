@@ -1,9 +1,10 @@
 # from .dispatch import dispatch, parametric
-from plum import dispatch, parametric
-import sys
-import inspect
 import importlib
+import inspect
 import logging
+import sys
+
+from plum import dispatch, parametric
 
 
 def export(fn):

@@ -1,7 +1,8 @@
 from typing import Callable
-from cola.ops import LinearOperator
+
 from cola.linalg.decompositions.lanczos import lanczos
 from cola.linalg.inverse.cg import cg
+from cola.ops import LinearOperator
 from cola.utils import export
 from cola.utils.custom_autodiff import iterative_autograd
 

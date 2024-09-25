@@ -1,9 +1,8 @@
 import numpy as np
 from scipy.sparse.linalg import LinearOperator as LO
 from scipy.sparse.linalg import eigs
-from cola.ops import LinearOperator
-from cola.ops import Array
-from cola.ops import Dense
+
+from cola.ops import Array, Dense, LinearOperator
 from cola.utils import export
 from cola.utils.utils_linalg import get_numpy_dtype
 

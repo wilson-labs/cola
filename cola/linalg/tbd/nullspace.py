@@ -1,9 +1,11 @@
-from cola.ops import LinearOperator, Array
-from cola.backends import get_library_fns
-from cola.utils import export
 import logging
+
 import numpy as np
 from plum import dispatch
+
+from cola.backends import get_library_fns
+from cola.ops import Array, LinearOperator
+from cola.utils import export
 
 eigmax = None  # TODO: fix
 

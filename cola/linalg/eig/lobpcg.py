@@ -1,10 +1,11 @@
-import numpy as np
 from dataclasses import dataclass
-from cola.linalg.algorithm_base import Algorithm
+
+import numpy as np
 from scipy.sparse.linalg import LinearOperator as LO
 from scipy.sparse.linalg import lobpcg as lobpcg_sp
-from cola.ops import LinearOperator
-from cola.ops import Dense
+
+from cola.linalg.algorithm_base import Algorithm
+from cola.ops import Dense, LinearOperator
 from cola.utils import export
 
 

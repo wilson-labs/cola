@@ -1,10 +1,10 @@
 import numpy as np
 from plum import dispatch
 
+from cola.annotations import PSD
 from cola.linalg.algorithm_base import Algorithm, Auto, IterativeOperatorWInfo
 from cola.linalg.inverse.cg import CG
-from cola.ops.operators import Diagonal, Identity, LinearOperator, Permutation, ScalarMul, I_like
-from cola.annotations import PSD
+from cola.ops.operators import Diagonal, I_like, Identity, LinearOperator, Permutation, ScalarMul
 from cola.utils import export
 from cola.utils.utils_linalg import get_precision
 
