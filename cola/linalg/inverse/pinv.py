@@ -1,7 +1,6 @@
 import numpy as np
 from plum import dispatch
 
-import cola
 from cola.linalg.algorithm_base import Algorithm, Auto, IterativeOperatorWInfo
 from cola.linalg.inverse.cg import CG
 from cola.ops.operators import Diagonal, Identity, LinearOperator, Permutation, ScalarMul, I_like
@@ -43,7 +42,7 @@ def pinv(A: LinearOperator, alg: Algorithm = Auto()):
 
     Example:
         >>> A = MyLinearOperator()
-        >>> x = cola.pseudo(A) @ b
+        >>> x = cola.pinv(A) @ b
 
     """
 
@@ -67,7 +66,7 @@ def pinv(A: LinearOperator, alg: Auto):
 def pinv(A: LinearOperator, alg: CG):
     xnp = A.xnp
     M = A.H @ A
-    cons = get_precision(xnp, A.dtype) * xnp.sqrt(cola.eigmax(M))
+    cons = get_precision(xnp, A.dtype) * max(A.shape)
     Op = IterativeOperatorWInfo(M, alg)
     return PSD(Op + cons * I_like(M)) @ A.H
 
