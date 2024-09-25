@@ -1,7 +1,7 @@
+import cola
 from cola import SelfAdjoint, Unitary
 from cola.fns import lazify
-from cola.ops import Array, LinearOperator, Dense, Tridiagonal
-import cola
+from cola.ops import Array, Dense, LinearOperator, Tridiagonal
 
 
 def lanczos_eig_bwd(res, grads, unflatten, *args, **kwargs):

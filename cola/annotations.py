@@ -1,12 +1,24 @@
+from collections.abc import Iterable
 from functools import reduce
 from typing import Set, Union
-from collections.abc import Iterable
+
 from plum import dispatch
-from cola.ops import LinearOperator, Array
-from cola.ops import Kronecker, Product, Sum
-from cola.ops import Transpose, Adjoint
-from cola.ops import BlockDiag, Identity, ScalarMul
-from cola.ops import Hessian, Permutation, Sliced
+
+from cola.ops import (
+    Adjoint,
+    Array,
+    BlockDiag,
+    Hessian,
+    Identity,
+    Kronecker,
+    LinearOperator,
+    Permutation,
+    Product,
+    ScalarMul,
+    Sliced,
+    Sum,
+    Transpose,
+)
 from cola.utils import export
 
 Scalar = Array

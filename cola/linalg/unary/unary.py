@@ -1,22 +1,32 @@
-from plum import dispatch
 from dataclasses import dataclass
+from functools import reduce
 from numbers import Number
 from typing import Callable
-from functools import reduce
+
 import numpy as np
-from plum import parametric
+from plum import dispatch, parametric
+
+from cola.annotations import PSD, SelfAdjoint
 from cola.fns import lazify
-from cola.ops import LinearOperator
-from cola.ops import Diagonal, Identity, ScalarMul
-from cola.ops import BlockDiag, Kronecker, KronSum, I_like, Transpose, Adjoint
-from cola.annotations import SelfAdjoint, PSD
 from cola.linalg.algorithm_base import Algorithm, Auto
-from cola.linalg.inverse.inv import inv
+from cola.linalg.decompositions.arnoldi import arnoldi
+from cola.linalg.decompositions.decompositions import LU, Arnoldi, Cholesky, Lanczos
+from cola.linalg.decompositions.lanczos import lanczos
 from cola.linalg.inverse.cg import CG
 from cola.linalg.inverse.gmres import GMRES
-from cola.linalg.decompositions.lanczos import lanczos
-from cola.linalg.decompositions.arnoldi import arnoldi
-from cola.linalg.decompositions.decompositions import Arnoldi, Lanczos, LU, Cholesky
+from cola.linalg.inverse.inv import inv
+from cola.ops import (
+    Adjoint,
+    BlockDiag,
+    Diagonal,
+    I_like,
+    Identity,
+    Kronecker,
+    KronSum,
+    LinearOperator,
+    ScalarMul,
+    Transpose,
+)
 from cola.utils import export
 
 

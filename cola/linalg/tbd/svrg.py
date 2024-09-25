@@ -1,9 +1,11 @@
 import numpy as np
+
 import cola
+
 # from cola.linalg.eigs import eigmax
-from cola.ops import Sum, Product, Dense
-from cola.ops import I_like
+from cola.ops import Dense, I_like, Product, Sum
 from cola.utils import export
+
 # import standard Union type
 
 

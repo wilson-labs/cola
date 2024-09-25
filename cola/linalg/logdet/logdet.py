@@ -1,15 +1,25 @@
-import numpy as np
 from functools import reduce
+
+import numpy as np
 from plum import dispatch
+
 from cola.annotations import PSD
-from cola.ops.operators import LinearOperator, Triangular, Permutation, Identity, ScalarMul
-from cola.ops.operators import Diagonal, Kronecker, BlockDiag, Product
-from cola.utils import export
 from cola.linalg.algorithm_base import Algorithm, Auto
-from cola.linalg.decompositions.decompositions import Cholesky, LU, Arnoldi, Lanczos
-from cola.linalg.decompositions.decompositions import plu, cholesky
+from cola.linalg.decompositions.decompositions import LU, Arnoldi, Cholesky, Lanczos, cholesky, plu
 from cola.linalg.trace.diag_trace import trace
 from cola.linalg.unary.unary import log
+from cola.ops.operators import (
+    BlockDiag,
+    Diagonal,
+    Identity,
+    Kronecker,
+    LinearOperator,
+    Permutation,
+    Product,
+    ScalarMul,
+    Triangular,
+)
+from cola.utils import export
 
 
 def product(xs):

@@ -1,11 +1,12 @@
+import functools
 import inspect
 import itertools
+
+import numpy as np
 import pytest
 
-from cola.backends import get_library_fns, get_xnp, all_backends
+from cola.backends import all_backends, get_library_fns, get_xnp
 from cola.backends.np_fns import NumpyNotImplementedError
-import numpy as np
-import functools
 
 get_xnp = get_xnp
 

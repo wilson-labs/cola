@@ -1,10 +1,8 @@
 from typing import Tuple
-from cola import Stiefel
-from cola.ops import LinearOperator
-from cola.ops import Array, Dense
-from cola.ops import Householder, Product
+
 # from cola.utils import export
-from cola import lazify
+from cola import Stiefel, lazify
+from cola.ops import Array, Dense, Householder, LinearOperator, Product
 
 # def arnoldi_eigs_bwd(res, grads, unflatten, *args, **kwargs):
 #     val_grads, eig_grads, _ = grads

@@ -1,10 +1,12 @@
 from abc import abstractmethod
-from typing import Union, Tuple, Any
 from numbers import Number
+from typing import Any, Tuple, Union
+
 import numpy as np
+
 import cola
+from cola.backends import AutoRegisteringPyTree, get_library_fns, np_fns
 from cola.utils import export
-from cola.backends import np_fns, get_library_fns, AutoRegisteringPyTree
 
 Array = Dtype = Any
 export(Array)

@@ -1,14 +1,56 @@
-""" Linear Operators in CoLA"""
-from cola.utils import import_from_all, import_every
+from cola.ops.operator_base import Array, LinearOperator
+from cola.ops.operators import (
+    FFT,
+    Adjoint,
+    BlockDiag,
+    Concatenated,
+    ConvolveND,
+    Dense,
+    Diagonal,
+    Hessian,
+    Householder,
+    I_like,
+    Identity,
+    Jacobian,
+    Kernel,
+    Kronecker,
+    KronSum,
+    Permutation,
+    Product,
+    ScalarMul,
+    Sliced,
+    Sparse,
+    Sum,
+    Transpose,
+    Triangular,
+    Tridiagonal,
+)
 
-__all__ = []
-import_from_all("operator_base", globals(), __all__, __name__)
-
-
-# is_operator = lambda name,value: isinstance(value,type) and issubclass(value,LinearOperator)
-def has_docstring(name, value):
-    return hasattr(value, "__doc__") and value.__doc__ is not None
-
-
-import_every("operators", globals(), __all__, __name__)  # ,has_docstring)
-# import_from_all("decompositions", globals(), __all__, __name__)
+__all__ = [
+    "LinearOperator",
+    "Array",
+    "Dense",
+    "Triangular",
+    "Sparse",
+    "ScalarMul",
+    "Identity",
+    "Product",
+    "Sum",
+    "Kronecker",
+    "KronSum",
+    "BlockDiag",
+    "Diagonal",
+    "Tridiagonal",
+    "Transpose",
+    "Adjoint",
+    "Sliced",
+    "Jacobian",
+    "Hessian",
+    "Permutation",
+    "Concatenated",
+    "ConvolveND",
+    "Householder",
+    "Kernel",
+    "I_like",
+    "FFT",
+]
