@@ -142,11 +142,11 @@ If you use CoLA, please cite the following paper:
 
 | Linear Algebra    | inverse | eig | diag | trace | logdet | exp | sqrt | f(A) | SVD | pseudoinverse |
 |:-----------------:|:-------:|:---:|:----:|:-----:|:------:|:---:|:----:|:--------:|:---:|:-------------:|
-| **Implementation**|    ✓    |  ✓  |   ✓  |   ✓  |    ✓   |  ✓  |   ✓  |    ✓     |     |               |
+| **Implementation**|    ✓    |  ✓  |   ✓  |   ✓  |    ✓   |  ✓  |   ✓  |    ✓     |   ✓ |       ✓       |
 
 | LinearOperators   | Diag | BlockDiag | Kronecker | KronSum | Sparse | Jacobian | Hessian | Fisher | Concatenated | Triangular | FFT | Tridiagonal |
 |:-----------------:|:----:|:---------:|:---------:|:-------:|:------:|:--------:|:-------:|:------:|:------------:|:----------:|:---:|:-----------:|
-| **Implementation**|   ✓  |     ✓     |     ✓     |    ✓    |      |    ✓     |    ✓    |   ✓    |      ✓       |     ✓      |   ✓  |      ✓      |
+| **Implementation**|   ✓  |     ✓     |     ✓     |    ✓    |   ✓  |    ✓     |    ✓    |   ✓    |      ✓       |     ✓      |   ✓  |      ✓      |
 
 | Annotations      | SelfAdjoint | PSD | Unitary |
 |:----------------:|:-----------:|:---:|:-------:|
