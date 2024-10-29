@@ -22,7 +22,7 @@
 [![Downloads](https://static.pepy.tech/badge/cola-ml)](https://pepy.tech/project/cola-ml)
 <!-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/wilson-labs/cola/blob/master/docs/notebooks/colabs/all.ipynb) -->
 
-CoLA is a framework for scalable linear algebra, providing: 
+CoLA is a framework for scalable linear algebra in machine learning and beyond, providing: 
 
 (1) Fast hardware-sensitive (GPU accelerated) iterative algorithms for general matrix operations; <br>
 (2) Algorithms that can exploit matrix structure for efficiency; <br>
