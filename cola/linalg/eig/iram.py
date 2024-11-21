@@ -24,7 +24,7 @@ def iram(A: LinearOperator, start_vector: Array = None, eig_n: int = 6, max_iter
         return np.array(out, dtype=np_dtype)
 
     A2 = LO(shape=A.shape, dtype=np_dtype, matvec=matvec)
-    eigvals, eigvecs = eigs(A2, k=eig_n, M=None, sigma=None, which="LM", v0=v0, tol=tol)
+    eigvals, eigvecs = eigs(A2, k=eig_n, M=None, sigma=None, which="LM", maxiter=max_iters, v0=v0, tol=tol)
     eigvals = xnp.array(eigvals, dtype=A.dtype, device=A.device)
     eigvecs = xnp.array(eigvecs, dtype=A.dtype, device=A.device)
     info = {}
