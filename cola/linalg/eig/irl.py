@@ -21,7 +21,7 @@ def irl(A: LinearOperator, start_vector: Array = None, eig_n: int = 6, max_iters
     def matvec(x):
         X = xnp.array(x, dtype=A.dtype, device=A.device)
         out = A @ X
-        return np.array(out, dtype=np_dtype)
+        return np.array(out.cpu(), dtype=np_dtype)
 
     A2 = LO(shape=A.shape, dtype=np_dtype, matvec=matvec)
     eigvals, eigvecs = eigsh(A2, k=eig_n, M=None, sigma=None, which=which, v0=v0, tol=tol, maxiter=max_iters)
