@@ -81,12 +81,12 @@ def dot(A: Product, B: Product):
 
 
 @dispatch
-def dot(A: Any, B: Identity):
+def dot(A: LinearOperator, B: Identity):
     return A
 
 
 @dispatch
-def dot(A: Identity, B: Any):
+def dot(A: Identity, B: LinearOperator):
     return B
 
 
