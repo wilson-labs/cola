@@ -22,7 +22,7 @@ from cola.utils import export
 
 @export
 def solve(A, b, alg=Auto()):
-    """ Computes Linear solve of a linear operator. Equivalent to cola.inv
+    """Computes Linear solve of a linear operator. Equivalent to cola.inv
 
     Args:
         A (LinearOperator): The linear operator to compute the inverse of.
@@ -72,11 +72,11 @@ def inv(A: LinearOperator, alg: CG):
 @export
 @dispatch(precedence=-1)
 def inv(A: LinearOperator, alg: Auto):
-    """ Auto:
-        - if A is PSD and small, use Cholesky
-        - if A is PSD and large, use CG
-        - if A is not PSD and small, use LU
-        - if A is not PSD and large, use GMRES
+    """Auto:
+    - if A is PSD and small, use Cholesky
+    - if A is PSD and large, use CG
+    - if A is not PSD and small, use LU
+    - if A is not PSD and large, use GMRES
     """
     match (A.isa(PSD), bool(np.prod(A.shape) <= 1e6)):
         case (True, True):
@@ -143,7 +143,7 @@ def inv(A: Kronecker, alg: Algorithm):
 
 @dispatch
 def inv(A: Diagonal, alg: Algorithm):
-    return Diagonal(1. / A.diag)
+    return Diagonal(1.0 / A.diag)
 
 
 @dispatch
@@ -157,6 +157,7 @@ class TriangularInv(LinearOperator):
         super().__init__(A.dtype, A.shape)
         self.A = A.to_dense()
         self.lower = A.lower
+        self.device = A.device
 
     def _matmat(self, X):
         return self.xnp.solvetri(self.A, X, lower=self.lower)
