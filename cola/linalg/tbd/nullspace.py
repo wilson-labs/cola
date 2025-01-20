@@ -106,7 +106,7 @@ def krylov_constraint_solve_upto_r(C, r, tol=1e-5, max_iter=10000, pbar=False, i
     if final_error > 5 * tol:
         logging.warning(f"Normalized basis has too high error {final_error:.2e} for tol {tol:.2e}")
     scutoff = (S[rank] if r > rank else 0)
-    text = f"Singular value gap too small: {S[rank-1]:.2e}"
+    text = f"Singular value gap too small: {S[rank - 1]:.2e}"
     text += "above cutoff {scutoff:.2e} below cutoff. Final L, earlier {S[rank-5:rank]}"
     assert rank == 0 or scutoff < S[rank - 1] / 100, text
 
