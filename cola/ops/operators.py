@@ -421,6 +421,8 @@ class Sliced(LinearOperator):
     def __init__(self, A, slices):
         self.A = A
         self.slices = slices
+        if hasattr(slices[0], "device"):
+            slices = (slices[0].cpu(),) + (slices[1].cpu(),)
         new_shape = np.arange(A.shape[0])[slices[0]].shape + np.arange(A.shape[1])[slices[1]].shape
         super().__init__(dtype=A.dtype, shape=new_shape)
         self.device = A.device
