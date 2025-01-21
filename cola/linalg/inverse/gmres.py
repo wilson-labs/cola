@@ -115,7 +115,7 @@ def gmres_fwd(A, rhs, x0, max_iters, tol, P, use_householder, use_triangular, pb
         zero_thresh = 10 * tol * overall_max[:, None]
         padding = xnp.where(largest_vals < zero_thresh, xnp.ones_like(largest_vals), xnp.zeros_like(largest_vals))
         added_diag = xnp.vmap(xnp.diag)(padding)
-        y = xnp.solve(HT @ H + added_diag, HT[..., 0]) * beta[:, None]
+        y = xnp.solve(HT @ H + added_diag, HT[..., 0, None]).squeeze(-1) * beta[:, None]
         zeros = xnp.zeros_like(y)
         y = xnp.where(largest_vals < zero_thresh, zeros, y)
         pred = xnp.permute(Q @ y[..., None], axes=[1, 0, 2])[:, :, 0]
