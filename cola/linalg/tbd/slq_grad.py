@@ -34,9 +34,7 @@ def slq_bwd_grad(res, grads, unflatten, *args, **kwargs):
 @iterative_autograd(slq_bwd_grad)
 def slq_fwd_grad(A, num_samples, P, max_iters, tol, key):
     xnp = A.xnp
-    key = xnp.PRNGKey(0) if key is None else key
-    rhs = xnp.randn(A.shape[1], num_samples, dtype=A.dtype, key=key, device=A.device)
-    estimate = rhs
+    estimate = xnp.randn(A.shape[1], 1, dtype=A.dtype, key=xnp.PRNGKey(0), device=A.device)
     return 0.0 * xnp.mean(estimate)
 
 
