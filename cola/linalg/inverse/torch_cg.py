@@ -4,8 +4,8 @@ _small_value = 1e-40
 
 
 def cg(A, rhs, x0, P, tol, max_iters):
-    fn = torch.compile(run_batched_cg, dynamic=True, fullgraph=True, mode="max-autotune")
-    # fn = torch.compile(run_batched_cg)
+    # fn = torch.compile(run_batched_cg, dynamic=True, fullgraph=True, mode="max-autotune")
+    fn = torch.compile(run_batched_cg)
     # fn = run_batched_cg
     out = fn(A, rhs, x0, max_iters, tol, P)
     return out
