@@ -35,7 +35,8 @@ def slq_bwd_grad(A, grads, *args, **kwargs):
 
     probes = torch.randn(A.shape[1], num_samples, dtype=A.dtype, device=A.device)
     x0 = torch.zeros_like(probes)
-    probes_solves, *_ = cg(A, probes, x0=x0, P=P, tol=tol, max_iters=max_iters)
+    with torch.no_grad():
+        probes_solves, *_ = cg(A, probes, x0=x0, P=P, tol=tol, max_iters=max_iters)
     coef = 1.0 / probes.shape[-1]
     g = grads[0]
     d_solves = coef * g * probes_solves
