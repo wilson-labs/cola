@@ -6,7 +6,7 @@ from cola.utils.utils_for_tests import generate_pd_from_diag, generate_spectrum
 
 dtype = torch.float32
 # dtype = torch.float64
-device = "cpu"
+device = "cuda"
 N, M = 25, 5
 diag = generate_spectrum(coeff=0.75, scale=1.0, size=N, dtype=np.float32)
 A = torch.tensor(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype, device=device)
@@ -18,7 +18,7 @@ print(f"{diff:1.5e}")
 x0 = torch.zeros_like(rhs)
 max_iters = A.shape[0] + 10
 tol = 1e-15
-preconditioner = torch.eye(A.shape[0], dtype=dtype)
+preconditioner = torch.eye(A.shape[0], dtype=A.dtype, device=A.device)
 
 approx, *_ = run_batched_cg(A, rhs, x0, max_iters, tol, preconditioner=preconditioner)
 diff = torch.linalg.norm(A @ approx - rhs)
