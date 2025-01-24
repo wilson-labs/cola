@@ -4,7 +4,8 @@ _small_value = 1e-40
 
 
 def cg(A, rhs, x0, P, tol, max_iters):
-    fn = torch.compile(run_batched_cg)
+    fn = torch.compile(run_batched_cg, dynamic=True, fullgraph=True, mode="max-autotune")
+    # fn = torch.compile(run_batched_cg)
     # fn = run_batched_cg
     out = fn(A, rhs, x0, max_iters, tol, P)
     return out
@@ -17,26 +18,14 @@ def run_batched_cg(A, b, x0, max_iters, tol, preconditioner):
     _, _, r0, *_ = init_val
     tol = tol * torch.linalg.norm(r0, axis=-2, keepdims=True) + tol
 
-    def cond(state):
-        flag = cond_fun(state, tol, max_iters)
-        return flag
-
     def body_fun(state):
         state = take_cg_step(state, A, preconditioner)
         return state
 
-    def track_res(state):
-        return torch.linalg.norm(state[2], axis=-2).mean()
-
-    state = while_loop(cond_fun=cond, body_fun=body_fun, init_val=init_val)
+    state = init_val
+    for idx in range(max_iters):
+        state = body_fun(state)
     return state[0] * mult, state[2] * mult, state[1]
-
-
-def while_loop(cond_fun, body_fun, init_val):
-    val = init_val
-    while cond_fun(val):
-        val = body_fun(val)
-    return val
 
 
 def initialize(A, b, preconditioner, x0):
@@ -48,14 +37,6 @@ def initialize(A, b, preconditioner, x0):
     alpha0 = torch.zeros(gamma0.shape, dtype=r0.dtype, device=device)
     beta0 = torch.zeros(gamma0.shape, dtype=r0.dtype, device=device)
     return (x0, 0, r0, p0, alpha0, beta0, gamma0)
-
-
-def cond_fun(value, tol, max_iters):
-    _, k, r, *_ = value
-    rs = torch.linalg.norm(r, axis=-2, keepdims=True)
-    res_meet = torch.any(rs > tol)
-    flag = (res_meet) & (k < max_iters)
-    return flag
 
 
 def take_cg_step(state, A, preconditioner):
