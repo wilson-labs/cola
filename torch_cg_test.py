@@ -4,32 +4,29 @@ import torch
 
 from cola.linalg.inverse.torch_cg import cg, run_batched_cg
 
-# from cola.utils.utils_for_tests import generate_pd_from_diag, generate_spectrum
-
+max_iters = 100
+tol = 1e-15
 # dtype = torch.float32
 dtype = torch.float64
 repeat_n = 5
 device = "cuda"
-N, M, normalize = 20_000, 5, False
-# N, M, normalize = 10, 5, False
-# diag = generate_spectrum(coeff=0.75, scale=1.0, size=N, dtype=np.float32)
-# A = torch.tensor(generate_pd_from_diag(diag, dtype=diag.dtype, normalize=normalize), dtype=dtype, device=device)
-
+N, M = 20_000, 5
+# N, M = 10, 5
 A = torch.randn(N, dtype=dtype, device=device)
-eps = 1e-1
+eps = 1e-6
 A = A @ A.T + eps * torch.eye(A.shape[0], dtype=dtype, device=device)
 rhs = torch.ones(N, M, dtype=dtype, device=device)
-tic = time.time()
 soln = torch.linalg.solve(A, rhs)
 print(f"Size({N},{N})")
+tic = time.time()
+# L = torch.linalg.cholesky(A)
+L, _ = torch.linalg.cholesky_ex(A)
+torch.cuda.synchronize()
 diff = torch.linalg.norm(A @ soln - rhs)
 print(f"{time.time() - tic:1.5e} sec")
 print(f"{diff=:1.5e}")
 
 x0 = torch.zeros_like(rhs)
-# max_iters = A.shape[0] + 10
-max_iters = 10
-tol = 1e-15
 preconditioner = torch.eye(A.shape[0], dtype=A.dtype, device=A.device)
 
 tic = time.time()

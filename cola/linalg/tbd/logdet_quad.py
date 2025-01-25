@@ -38,11 +38,12 @@ logdet_quad = LogdetQuad.apply
 
 
 def logdet_quad_fwd(A, rhs):
-    L = torch.linalg.cholesky(A)
-    logdet = 2.0 * torch.sum(torch.log(torch.diag(L)))
-    soln = chol_solve(L, rhs)
-    quad = torch.sum(rhs * soln)
-    out = logdet + quad
+    with torch.no_grad():
+        L = torch.linalg.cholesky(A)
+        logdet = 2.0 * torch.sum(torch.log(torch.diag(L)))
+        soln = chol_solve(L, rhs)
+        quad = torch.sum(rhs * soln)
+        out = logdet + quad
     return out, logdet, quad, A, L, soln
 
 
@@ -50,7 +51,8 @@ def logdet_quad_bwd(grads, A, L, soln):
     num_samples = 100
     probes = torch.randn(A.shape[1], num_samples, dtype=A.dtype, device=A.device)
     coef = 1.0 / probes.shape[-1]
-    soln_probes = chol_solve(L, probes)
+    with torch.no_grad():
+        soln_probes = chol_solve(L, probes)
     all_soln = torch.concatenate((soln, soln_probes), dim=-1)
     all_rhs = torch.concatenate((-soln, coef * probes), dim=-1)
     g = grads[0]
@@ -67,7 +69,8 @@ def logdet_quad_bwd(grads, A, L, soln):
 def logdet_quad_accurate_bwd(grads, A, L, soln):
     probes = torch.eye(A.shape[1], dtype=A.dtype, device=A.device)
     coef = 1.0
-    soln_probes = chol_solve(L, probes)
+    with torch.no_grad():
+        soln_probes = chol_solve(L, probes)
     all_soln = torch.concatenate((soln, soln_probes), dim=-1)
     all_rhs = torch.concatenate((-soln, coef * probes), dim=-1)
     g = grads[0]
