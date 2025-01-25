@@ -3,34 +3,19 @@ from torch.autograd import Function
 from torch.func import vjp
 
 
-class LogdetQuadAccurate(Function):
-    @staticmethod
-    def forward(ctx, A, rhs):
-        out, logdet, quad, A, L, soln = logdet_quad_fwd(A, rhs)
-        ctx.save_for_backward(A, L, soln)
-        return out, logdet, quad
-
-    @staticmethod
-    def backward(ctx, *grads):
-        A, L, soln = ctx.saved_tensors
-        out = logdet_quad_accurate_bwd(grads, A, L, soln)
-        return out
-
-
-logdet_quad_accurate = LogdetQuadAccurate.apply
-
-
 class LogdetQuad(Function):
     @staticmethod
-    def forward(ctx, A, rhs):
+    def forward(ctx, A, rhs, vtol):
         out, logdet, quad, A, L, soln = logdet_quad_fwd(A, rhs)
         ctx.save_for_backward(A, L, soln)
+        ctx.vtol = vtol
         return out, logdet, quad
 
     @staticmethod
     def backward(ctx, *grads):
         A, L, soln = ctx.saved_tensors
-        out = logdet_quad_bwd(grads, A, L, soln)
+        vtol = ctx.vtol
+        out = logdet_quad_bwd(grads, A, L, soln, vtol)
         return out
 
 
@@ -47,34 +32,19 @@ def logdet_quad_fwd(A, rhs):
     return out, logdet, quad, A, L, soln
 
 
-def logdet_quad_bwd(grads, A, L, soln):
-    num_samples = 100
-    probes = torch.randn(A.shape[1], num_samples, dtype=A.dtype, device=A.device)
-    coef = 1.0 / probes.shape[-1]
+def logdet_quad_bwd(grads, A, L, soln, vtol):
+    if vtol > 0.0:
+        num_samples = round(1 / vtol**2.0)
+        probes = torch.randn(A.shape[1], num_samples, dtype=A.dtype, device=A.device)
+        coef = 1.0 / probes.shape[-1]
+    else:
+        probes = torch.eye(A.shape[1], dtype=A.dtype, device=A.device)
+        coef = 1.0
     with torch.no_grad():
-        soln_probes = chol_solve(L, probes)
-    all_soln = torch.concatenate((soln, soln_probes), dim=-1)
-    all_rhs = torch.concatenate((-soln, coef * probes), dim=-1)
-    g = grads[0]
-    d_solves = g * all_soln
-
-    def fun(theta):
-        return theta @ all_rhs
-
-    dA = vjp_derivs(fun=fun, primals=A, duals=d_solves)
-    out = dA + tuple([None] * 3)
-    return out
-
-
-def logdet_quad_accurate_bwd(grads, A, L, soln):
-    probes = torch.eye(A.shape[1], dtype=A.dtype, device=A.device)
-    coef = 1.0
-    with torch.no_grad():
-        soln_probes = chol_solve(L, probes)
-    all_soln = torch.concatenate((soln, soln_probes), dim=-1)
-    all_rhs = torch.concatenate((-soln, coef * probes), dim=-1)
-    g = grads[0]
-    d_solves = g * all_soln
+        L_soln = torch.linalg.solve_triangular(L.T, probes, upper=True)
+    all_soln = torch.concatenate((soln, L_soln), dim=-1)
+    all_rhs = torch.concatenate((-soln, coef * L_soln), dim=-1)
+    d_solves = grads[0] * all_soln
 
     def fun(theta):
         return theta @ all_rhs

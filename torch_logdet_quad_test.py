@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from cola.linalg.tbd.logdet_quad import logdet_quad, logdet_quad_accurate
+from cola.linalg.tbd.logdet_quad import logdet_quad
 from cola.utils.utils_for_tests import generate_pd_from_diag, generate_spectrum
 
 dtype = torch.float64
@@ -12,13 +12,13 @@ A = torch.tensor(generate_pd_from_diag(diag, dtype=diag.dtype), dtype=dtype, dev
 rhs = torch.ones(N, M, dtype=dtype, device=device)
 
 A = A.clone().detach().requires_grad_(True)
-out, *_ = logdet_quad(A, rhs)
+out, *_ = logdet_quad(A, rhs, 0.1)
 out.backward()
 print(out)
 print(A.grad.shape)
 
 A = A.clone().detach().requires_grad_(True)
-out, *_ = logdet_quad_accurate(A, rhs)
+out, *_ = logdet_quad(A, rhs, 0.0)
 out.backward()
 print(out)
 print(A.grad.shape)
