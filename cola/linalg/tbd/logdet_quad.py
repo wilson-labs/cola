@@ -7,13 +7,13 @@ class LogdetQuad(Function):
     @staticmethod
     def forward(ctx, A, rhs):
         out, A, L, soln = logdet_quad_fwd(A, rhs)
-        ctx.save_for_backward(A, L, rhs, soln)
+        ctx.save_for_backward(A, L, soln)
         return out
 
     @staticmethod
     def backward(ctx, *grads):
-        A, L, rhs, soln = ctx.saved_tensors
-        output = logdet_quad_bwd(grads, A, L, rhs, soln)
+        A, L, soln = ctx.saved_tensors
+        output = logdet_quad_bwd(grads, A, L, soln)
         return output
 
 
@@ -29,13 +29,15 @@ def logdet_quad_fwd(A, rhs):
     return out, A, L, soln
 
 
-def logdet_quad_bwd(grads, A, L, rhs, soln):
-    num_samples = 15
+def logdet_quad_bwd(grads, A, L, soln):
+    num_samples = 100
     probes = torch.randn(A.shape[1], num_samples, dtype=A.dtype, device=A.device)
+    coef = 1.0 / probes.shape[-1]
+    # probes = torch.eye(A.shape[1], dtype=A.dtype, device=A.device)
+    # coef = 1.0
     soln_probes = solve_chol(L, probes)
     all_soln = torch.concatenate((soln, soln_probes), dim=-1)
-    coef = 1.0 / probes.shape[-1]
-    all_rhs = torch.concatenate((-rhs, coef * probes), dim=-1)
+    all_rhs = torch.concatenate((-soln, coef * probes), dim=-1)
     g = grads[0]
     d_solves = g * all_soln
 
