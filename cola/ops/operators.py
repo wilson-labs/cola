@@ -10,13 +10,13 @@ from cola.ops.operator_base import Array, LinearOperator
 
 
 class Dense(LinearOperator):
-    """ LinearOperator wrapping of a dense matrix. O(n^2) memory and time mvms.
+    """LinearOperator wrapping of a dense matrix. O(n^2) memory and time mvms.
 
     Args:
         A (array_like): Dense matrix to be wrapped.
 
     Example:
-        >>> A = jnp.array([[1., 2.], [3., 4.]])
+        >>> A = jnp.array([[1.0, 2.0], [3.0, 4.0]])
         >>> op = Dense(A)
     """
     def __init__(self, A: Array):
@@ -39,14 +39,14 @@ class Dense(LinearOperator):
 
 
 class Triangular(Dense):
-    """ Triangular Linear Operator."""
+    """Triangular Linear Operator."""
     def __init__(self, A: Array, lower=True):
         super().__init__(A)
         self.lower = lower
 
 
 class Sparse(LinearOperator):
-    """ Sparse linear operator.
+    """Sparse linear operator.
 
     Args:
         data (array_like): 1-D array representing the nonzero values of the sparse matrix.
@@ -82,7 +82,7 @@ class Sparse(LinearOperator):
 
 
 class ScalarMul(LinearOperator):
-    """ Linear Operator representing scalar multiplication"""
+    """Linear Operator representing scalar multiplication"""
     def __init__(self, c, shape, dtype=None, device=None):
         super().__init__(dtype=dtype or type(c), shape=shape)
         self.c = self.xnp.array(c, dtype=dtype, device=device)
@@ -102,16 +102,16 @@ class ScalarMul(LinearOperator):
 
 
 class Identity(LinearOperator):
-    """ Linear Operator representing the identity matrix. Can also be created from I_like(A)
+    """Linear Operator representing the identity matrix. Can also be created from I_like(A)
 
-        Args:
-            shape (tuple): Shape of the identity matrix.
-            dtype: Data type of the identity matrix.
+    Args:
+        shape (tuple): Shape of the identity matrix.
+        dtype: Data type of the identity matrix.
 
-        Example:
-            >>> shape = (3, 3)
-            >>> dtype =  jnp.float64
-            >>> op = Identity(shape, dtype)
+    Example:
+        >>> shape = (3, 3)
+        >>> dtype = jnp.float64
+        >>> op = Identity(shape, dtype)
     """
     def __init__(self, shape, dtype):
         super().__init__(dtype=dtype, shape=shape)
@@ -128,8 +128,8 @@ class Identity(LinearOperator):
 
 
 def I_like(A: LinearOperator) -> Identity:
-    """ A function that produces an Identity operator with the same
-        shape, dtype and device as A """
+    """A function that produces an Identity operator with the same
+    shape, dtype and device as A"""
     Op = Identity(dtype=A.dtype, shape=A.shape)
     Op.to(A.device)
     return Op
@@ -137,7 +137,7 @@ def I_like(A: LinearOperator) -> Identity:
 
 @parametric
 class Product(LinearOperator):
-    """ Matrix Multiply Product of Linear ops """
+    """Matrix Multiply Product of Linear ops"""
     def __init__(self, *Ms):
         self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
         devices = [M.device for M in self.Ms]
@@ -166,7 +166,7 @@ class Product(LinearOperator):
 
 @parametric
 class Sum(LinearOperator):
-    """ Sum of Linear ops """
+    """Sum of Linear ops"""
     def __init__(self, *Ms):
         self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
         devices = [M.device for M in self.Ms]
@@ -197,7 +197,7 @@ def product(c):
 
 @parametric
 class Kronecker(LinearOperator):
-    """ Kronecker product of linear ops Kronecker([M1,M2]):= M1⊗M2
+    """Kronecker product of linear ops Kronecker([M1,M2]):= M1⊗M2
 
     Args:
         *Ms (array_like): Sequence of linear operators representing the Kronecker product operands.
@@ -240,15 +240,15 @@ def kronsum(A, B):
 
 @parametric
 class KronSum(LinearOperator):
-    """ Kronecker Sum Linear Operator, KronSum(A,B):= A ⊕ B = A ⊗ I + I ⊗ B
+    """Kronecker Sum Linear Operator, KronSum(A,B):= A ⊕ B = A ⊗ I + I ⊗ B
 
-        Args:
-            *Ms (array_like): Sequence of matrices representing the Kronecker sum operands.
+    Args:
+        *Ms (array_like): Sequence of matrices representing the Kronecker sum operands.
 
-        Example:
-            >>> M1 = jnp.array([[1, 2], [3, 4]])
-            >>> M2 = jnp.array([[5, 6], [7, 8]])
-            >>> op = KronSum(M1, M2)
+    Example:
+        >>> M1 = jnp.array([[1, 2], [3, 4]])
+        >>> M2 = jnp.array([[5, 6], [7, 8]])
+        >>> op = KronSum(M1, M2)
     """
     def __init__(self, *Ms):
         self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
@@ -276,7 +276,7 @@ class KronSum(LinearOperator):
 
 @parametric
 class BlockDiag(LinearOperator):
-    """ Block Diagonal Linear Operator. BlockDiag([A,B]):= [A 0; 0 B]
+    """Block Diagonal Linear Operator. BlockDiag([A,B]):= [A 0; 0 B]
 
     Args:
         *Ms (array_like): Sequence of matrices representing the blocks.
@@ -291,8 +291,10 @@ class BlockDiag(LinearOperator):
     def __init__(self, *Ms, multiplicities=None):
         self.Ms = tuple(cola.fns.lazify(M) for M in Ms)
         self.multiplicities = [1 for _ in Ms] if multiplicities is None else multiplicities
-        shape = (sum(Mi.shape[-2] * c for Mi, c in zip(Ms, self.multiplicities)),
-                 sum(Mi.shape[-1] * c for Mi, c in zip(Ms, self.multiplicities)))
+        shape = (
+            sum(Mi.shape[-2] * c for Mi, c in zip(Ms, self.multiplicities)),
+            sum(Mi.shape[-1] * c for Mi, c in zip(Ms, self.multiplicities)),
+        )
         dtype = reduce(self.Ms[0].xnp.promote_types, (M.dtype for M in Ms))
         super().__init__(dtype, shape)
 
@@ -321,15 +323,15 @@ class BlockDiag(LinearOperator):
 
 
 class Diagonal(LinearOperator):
-    """ Diagonal LinearOperator. O(n) time and space matmuls.
+    """Diagonal LinearOperator. O(n) time and space matmuls.
 
-        Args:
-            diag (array_like): 1-D array representing the diagonal elements of the matrix.
+    Args:
+        diag (array_like): 1-D array representing the diagonal elements of the matrix.
 
-        Example:
-            >>> d = jnp.array([1, 2, 3])
-            >>> op = Diagonal(d)
-        """
+    Example:
+        >>> d = jnp.array([1, 2, 3])
+        >>> op = Diagonal(d)
+    """
     def __init__(self, diag):
         assert len(diag.shape) == 1, f"diagonal is not a vector, it is of shape {diag.shape=}"
         self.diag = diag
@@ -349,7 +351,7 @@ class Diagonal(LinearOperator):
 
 
 class Tridiagonal(LinearOperator):
-    """ Tridiagonal linear operator. O(n) time and space matmuls.
+    """Tridiagonal linear operator. O(n) time and space matmuls.
 
     Args:
         alpha (array_like): 1-D array representing lower band of the operator.
@@ -380,7 +382,7 @@ def ensure_vec_is_matrix(vec):
 
 @parametric
 class Transpose(LinearOperator):
-    """ Transpose of a Linear Operator"""
+    """Transpose of a Linear Operator"""
     def __init__(self, A):
         self.A = A
         super().__init__(dtype=A.dtype, shape=(A.shape[1], A.shape[0]))
@@ -398,7 +400,7 @@ class Transpose(LinearOperator):
 
 @parametric
 class Adjoint(LinearOperator):
-    """ Complex conjugate transpose of a Linear Operator (aka adjoint)"""
+    """Complex conjugate transpose of a Linear Operator (aka adjoint)"""
     def __init__(self, A):
         self.A = A
         super().__init__(dtype=A.dtype, shape=(A.shape[1], A.shape[0]))
@@ -416,8 +418,8 @@ class Adjoint(LinearOperator):
 
 @parametric
 class Sliced(LinearOperator):
-    """ Slicing of another linear operator A.
-        Equivalent to A[slices[0], :][:, slices[1]] """
+    """Slicing of another linear operator A.
+    Equivalent to A[slices[0], :][:, slices[1]]"""
     def __init__(self, A, slices):
         self.A = A
         self.slices = slices
@@ -445,16 +447,16 @@ class Sliced(LinearOperator):
         return output[..., end_slices]
 
     def __str__(self):
-        has_length = hasattr(self.slices[0], '__len__')
+        has_length = hasattr(self.slices[0], "__len__")
         if has_length:
-            has_many = (len(self.slices[0]) > 5 or len(self.slices[1]) > 5)
+            has_many = len(self.slices[0]) > 5 or len(self.slices[1]) > 5
             if has_many:
                 return f"{str(self.A)}[slc1, slc2]"
         return f"{str(self.A)}[{self.slices[0]},{self.slices[1]}]"
 
 
 class Jacobian(LinearOperator):
-    """ Jacobian (linearization) of a function f: R^n -> R^m at point x.
+    """Jacobian (linearization) of a function f: R^n -> R^m at point x.
         Matrix has shape (m, n)
 
     Args:
@@ -463,8 +465,8 @@ class Jacobian(LinearOperator):
 
     Example:
         >>> def f(x):
-        ...     return  jnp.array([x[0]**2, x[1]**3, jnp.sin(x[2])])
-        >>> x =  jnp.array([1, 2, 3])
+        ...     return jnp.array([x[0] ** 2, x[1] ** 3, jnp.sin(x[2])])
+        >>> x = jnp.array([1, 2, 3])
         >>> op = Jacobian(f, x)
     """
     def __init__(self, f, x):
@@ -480,7 +482,7 @@ class Jacobian(LinearOperator):
     def _matmat(self, X):
         fn = self.xnp.vmap(partial(self.xnp.jvp_derivs, self.f, (self.x, )))
         out = fn((X.T, )).T
-        if self.xnp.__name__ == 'cola.torch_fns':  # pytorch converts to double silently
+        if self.xnp.__name__ == "cola.torch_fns":  # pytorch converts to double silently
             out = out.to(dtype=self.dtype)
         return out
 
@@ -490,7 +492,7 @@ class Jacobian(LinearOperator):
 
         fn = self.xnp.vmap(vjp)
         out = fn(X)[0]
-        if self.xnp.__name__ == 'cola.torch_fns':  # pytorch converts to double silently
+        if self.xnp.__name__ == "cola.torch_fns":  # pytorch converts to double silently
             out = out.to(dtype=self.dtype)
         return out
 
@@ -499,7 +501,7 @@ class Jacobian(LinearOperator):
 
 
 class Hessian(LinearOperator):
-    """ Hessian of a scalar function f: R^n -> R at point x.
+    """Hessian of a scalar function f: R^n -> R at point x.
         Matrix has shape (n, n)
 
     Args:
@@ -508,8 +510,8 @@ class Hessian(LinearOperator):
 
     Example:
         >>> def f(x):
-        ...     return x[1]**3+np.sin(x[2])
-        >>> x =  jnp.array([1, 2, 3])
+        ...     return x[1] ** 3 + np.sin(x[2])
+        >>> x = jnp.array([1, 2, 3])
         >>> op = Hessian(f, x)
     """
     def __init__(self, f, x):
@@ -528,7 +530,7 @@ class Hessian(LinearOperator):
 
 
 class Permutation(LinearOperator):
-    """ Permutation matrix.
+    """Permutation matrix.
 
     Args:
         perm (array_like): 1-D array representing the permutation.
@@ -549,8 +551,40 @@ class Permutation(LinearOperator):
 
 
 @parametric
+class FourBlocks(LinearOperator):
+    """Produces a linear operator from 4 other linear operators as follows [[A, B], [C, D]].
+    Args:
+        A, B, C, D (array_like): Each of the 4 blocks.
+    """
+    def __init__(self, A, B, C, D):
+        assert A.shape[0] == B.shape[0], f"mismatch {A.shape[0]=} and {B.shape[0]}"
+        assert A.shape[1] == C.shape[1], f"mismatch {A.shape[1]=} and {C.shape[1]}"
+        assert B.shape[1] == D.shape[1], f"mismatch {B.shape[1]=} and {D.shape[1]}"
+        assert C.shape[0] == D.shape[0], f"mismatch {C.shape[0]=} and {D.shape[0]}"
+        shape = (A.shape[0] + C.shape[0], A.shape[1] + B.shape[1])
+        self.A, self.B, self.C, self.D = A, B, C, D
+        super().__init__(A.dtype, shape)
+
+    def _matmat(self, V):
+        V1 = V[:self.A.shape[0]]
+        V2 = V[self.A.shape[0]:]
+        out1 = self.A @ V1 + self.B @ V2
+        out2 = self.C @ V1 + self.D @ V2
+        out = self.xnp.concat([out1, out2], axis=0)
+        return out
+
+    def _rmatmat(self, V):
+        V1 = V[..., :self.A.shape[1]]
+        V2 = V[..., self.A.shape[1]:]
+        out1 = V1 @ self.A + V2 @ self.C
+        out2 = V1 @ self.B + V2 @ self.D
+        out = self.xnp.concat([out1, out2], axis=1)
+        return out
+
+
+@parametric
 class Concatenated(LinearOperator):
-    """ Produces a linear operator equivalent to concatenating
+    """Produces a linear operator equivalent to concatenating
         a collection of matrices Ms along specified axis
 
     Args:
@@ -561,12 +595,12 @@ class Concatenated(LinearOperator):
         >>> M2 = jnp.array([[5, 6], [7, 8]])
         >>> A = Concatenated(M1, M2, axis=1)
         >>> A.shape
-        >>> (2,4)
+        >>> (2, 4)
     """
     def __init__(self, *Ms, axis=0):
         self.Ms = Ms
-        assert all(M.shape[axis] == Ms[0].shape[axis] for M in Ms), \
-            f"Trying to concatenate matrices of different sizes {[M.shape for M in Ms]}"
+        assert all(M.shape[axis] == Ms[0].shape[axis]
+                   for M in Ms), f"Trying to concatenate matrices of different sizes {[M.shape for M in Ms]}"
         concat_size = sum(M.shape[axis] for M in Ms)
         shape = (Ms[0].shape[0], concat_size) if axis == 1 else (concat_size, Ms[0].shape[1])
         self.axis = axis
@@ -577,13 +611,14 @@ class Concatenated(LinearOperator):
 
 
 class ConvolveND(LinearOperator):
-    """ n-Dimensional convolution Linear operator (only works in jax right now.) """
-    def __init__(self, filter, array_shape, mode='same'):
+    """n-Dimensional convolution Linear operator (only works in jax right now.)"""
+    def __init__(self, filter, array_shape, mode="same"):
         assert filter.dtype in [np.float32, np.float64], "Only supporting jax right now"
         self.filter = filter
         self.array_shape = array_shape
-        assert mode == 'same'
+        assert mode == "same"
         import jax.numpy as jnp
+
         super().__init__(dtype=filter.dtype, shape=(np.prod(array_shape), jnp.prod(array_shape)))
         self.conv = self.xnp.vmap(partial(self.xnp.convolve, in2=filter, mode=mode))
 
@@ -593,8 +628,8 @@ class ConvolveND(LinearOperator):
 
 
 class Householder(LinearOperator):
-    """ Householder rotation matrix."""
-    def __init__(self, vec, beta=2.):
+    """Householder rotation matrix."""
+    def __init__(self, vec, beta=2.0):
         super().__init__(shape=(vec.shape[-2], vec.shape[-2]), dtype=vec.dtype)
         self.vec = vec
         self.beta = self.xnp.array(beta, dtype=vec.dtype, device=self.device)
@@ -607,7 +642,7 @@ class Householder(LinearOperator):
 
 
 class Kernel(LinearOperator):
-    """ Kernel operator based on a given function f where the matvec is evaluated on the fly.
+    """Kernel operator based on a given function f where the matvec is evaluated on the fly.
     That is, [Kv]_i = \\sum_{j} f(x1_i, x2_j) v_j.
     The variables block_size1 and block_size2 determine the memory usage of the matvec
     and matmat operations.
@@ -647,27 +682,27 @@ class Kernel(LinearOperator):
 
 
 class FFT(LinearOperator):
-    """ FFT matrix. Uses convention so matrix is unitary."""
+    """FFT matrix. Uses convention so matrix is unitary."""
     def __init__(self, n, dtype=None):
         super().__init__(shape=(n, n), dtype=dtype, annotations={cola.Unitary})
 
     def _matmat(self, X):
-        return self.xnp.fft(X, axis=0, norm='ortho')
+        return self.xnp.fft(X, axis=0, norm="ortho")
 
     def _rmatmat(self, X):
-        return self.xnp.ifft(X.conj(), axis=1, norm='ortho').conj()
+        return self.xnp.ifft(X.conj(), axis=1, norm="ortho").conj()
 
 
 def FIM(logits_fn, theta):
-    """ Fisher information matrix for a probability model log p(y|theta)
-        where p is a classifier probability distribution. Averages over batch dimensions.
+    """Fisher information matrix for a probability model log p(y|theta)
+    where p is a classifier probability distribution. Averages over batch dimensions.
 
-        Args:
-            logit_fn function that maps parameters to logits of shape (*, n_classes)
-            theta (array_like): parameter vector to eval Fisher at
+    Args:
+        logit_fn function that maps parameters to logits of shape (*, n_classes)
+        theta (array_like): parameter vector to eval Fisher at
 
-        Returns:
-            Hessian(KL(p(y|theta')||p(y|theta))) (w.r.t. theta)
+    Returns:
+        Hessian(KL(p(y|theta')||p(y|theta))) (w.r.t. theta)
     """
     xnp = get_library_fns(theta.dtype)
     probs = xnp.softmax(logits_fn(theta), axis=-1)
