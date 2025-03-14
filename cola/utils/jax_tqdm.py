@@ -6,7 +6,8 @@ import typing
 
 import jax
 import numpy as np
-from jax.experimental import host_callback
+from jax.debug import callback
+from jax.experimental import io_callback
 from tqdm.auto import tqdm
 
 
@@ -94,45 +95,46 @@ def build_tqdm(n: int, message: typing.Optional[str] = None) -> typing.Tuple[typ
         print_rate = 1
     remainder = n % print_rate
 
-    def _define_tqdm(arg, transform):
+    def _define_tqdm(arg):
         tqdm_bars[0] = tqdm(range(n))
         tqdm_bars[0].set_description(message, refresh=False)
 
-    def _update_tqdm(arg, transform):
-        tqdm_bars[0].update(arg)
+    def _update_tqdm(arg):
+        tqdm_bars[0].update(float(arg))
 
     def _update_progress_bar(iter_num):
         "Updates tqdm from a JAX scan or loop"
         _ = jax.jax.lax.cond(
             iter_num == 0,
-            lambda _: host_callback.id_tap(_define_tqdm, None, result=iter_num),
-            lambda _: iter_num,
+            lambda _: callback(_define_tqdm, None),
+            lambda _: None,
             operand=None,
         )
 
         _ = jax.lax.cond(
             # update tqdm every multiple of `print_rate` except at the end
             (iter_num % print_rate == 0) & (iter_num != n - remainder),
-            lambda _: host_callback.id_tap(_update_tqdm, print_rate, result=iter_num),
-            lambda _: iter_num,
+            lambda _: callback(_update_tqdm, print_rate),
+            lambda _: None,
             operand=None,
         )
 
         _ = jax.lax.cond(
             # update tqdm by `remainder`
             iter_num == n - remainder,
-            lambda _: host_callback.id_tap(_update_tqdm, remainder, result=iter_num),
-            lambda _: iter_num,
+            lambda _: callback(_update_tqdm, remainder),
+            lambda _: None,
             operand=None,
         )
 
-    def _close_tqdm(arg, transform):
+    def _close_tqdm(arg):
         tqdm_bars[0].close()
+        return arg
 
     def close_tqdm(result, iter_num):
         return jax.lax.cond(
             iter_num == n - 1,
-            lambda _: host_callback.id_tap(_close_tqdm, None, result=result),
+            lambda _: io_callback(_close_tqdm, result),
             lambda _: result,
             operand=None,
         )
@@ -151,41 +153,41 @@ def pbar_while(errorfn, tol, desc='', every=1, hide=False):
         info = {'progval': 0, 'pbar': None}
         default_desc = f"Running {body_fun.__name__}"
 
-        def construct_tqdm(arg, transform):
+        def construct_tqdm(arg):
             _bar_format = "{l_bar}{bar}| {n:.3g}/{total_fmt} [{elapsed}<{remaining}, "
             _bar_format += "{rate_fmt}{postfix}]"
             info['pbar'] = tqdm(total=100, desc=f'{desc or default_desc}', bar_format=_bar_format)
 
-        def update_tqdm(arg, transform):
+        def update_tqdm(arg):
             error = errorfn(arg)
             errstart = info.setdefault('errstart', error)
             progress = max(100 * np.log(error / errstart) / np.log(tol / errstart) - info['progval'], 0)
             progress = min(100 - info['progval'], progress)
             if progress > 0:
                 info['progval'] += progress
-                info['pbar'].update(progress)
+                info['pbar'].update(float(progress))
 
-        def close_tqdm(arg, transform):
-            update_tqdm(arg, transform)
+        def close_tqdm(arg):
+            update_tqdm(arg)
             info['pbar'].close()
+            return False
 
         def newbody(ival):
             i, val = ival
             jax.lax.cond(
                 i % every == 0,
-                lambda _: host_callback.id_tap(update_tqdm, val, result=i),
-                lambda _: i,
+                lambda _: callback(update_tqdm, val),
+                lambda _: None,
                 operand=None,
             )
             return (i + 1, body_fun(val))
 
         def newcond(ival):
             i, val = ival
-            out = jax.lax.cond(cond_fun(val), lambda _: True,
-                               lambda _: host_callback.id_tap(close_tqdm, val, result=False), operand=None)
+            out = jax.lax.cond(cond_fun(val), lambda _: True, lambda _: io_callback(close_tqdm, val), operand=None)
             return out
 
-        host_callback.id_tap(construct_tqdm, None)
+        callback(construct_tqdm)
         _, val = jax.lax.while_loop(newcond, newbody, (0, init_val))
         return val
 
@@ -224,23 +226,23 @@ def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,
                 bar_format += "{rate_fmt}{postfix}]"
                 info['pbar'] = tqdm(total=100, desc=f'{desc or default_desc}', bar_format=bar_format)
 
-        def update_info(ival, _):
+        def update_info(ival):
             i, arg = ival
-            error = errorfn(arg)
+            error = float(errorfn(arg))
             info['errors'].append(error)
             if pbar:
                 errstart = info.setdefault('errstart', error)
                 howclose = np.log(error / errstart) / np.log(tol / errstart)
                 if max_iters is not None:
                     howclose = max((i + 1) / max_iters, howclose)
-                progress = min(100 - info['progval'], max(100 * howclose - info['progval'], 0))
+                progress = float(min(100 - info['progval'], max(100 * howclose - info['progval'], 0)))
                 if progress > 0:
                     info['progval'] += progress
                     info['pbar'].update(progress)
 
-        def close_info(arg, transform):
+        def close_info(arg):
             i, val = arg
-            update_info(arg, transform)
+            update_info(arg)
             info['iteration_time'] = (time.time() - info['iteration_time']) / (i + 1)
             if pbar:
                 info['pbar'].close()
@@ -254,8 +256,8 @@ def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,
             i, val = ival
             jax.lax.cond(
                 i % every == 0,
-                lambda _: host_callback.id_tap(update_info, ival, result=i),
-                lambda _: i,
+                lambda _: callback(update_info, ival),
+                lambda _: None,
                 operand=None,
             )
             return (i + 1, body_fun(val))
@@ -269,9 +271,9 @@ def while_loop_winfo(errorfn, tol, max_iters=None, every=1, desc='', pbar=False,
                 operand=None)
             return out
 
-        host_callback.id_tap(construct_info, None)
+        callback(construct_info, None)
         k, val = jax.lax.while_loop(newcond, newbody, (0, init_val))
-        host_callback.id_tap(close_info, (k, val))
+        callback(close_info, (k, val))
         return val
 
     return new_while, info
