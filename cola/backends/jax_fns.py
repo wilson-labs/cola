@@ -180,9 +180,7 @@ def get_device(array):
 
 
 def get_default_device():
-    devices = list(jax.devices())
-    assert len(devices) == 1, "array found on more than one device"
-    return devices[0]
+    return jax.default_device.value
 
 
 def device(device_name):
