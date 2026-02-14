@@ -4,7 +4,16 @@ from plum import dispatch
 from cola.annotations import PSD
 from cola.linalg.algorithm_base import Algorithm, Auto, IterativeOperatorWInfo
 from cola.linalg.inverse.cg import CG
-from cola.ops.operators import Diagonal, I_like, Identity, LinearOperator, Permutation, ScalarMul
+from cola.ops.operators import (
+    BlockDiag,
+    Diagonal,
+    I_like,
+    Identity,
+    Kronecker,
+    LinearOperator,
+    Permutation,
+    ScalarMul,
+)
 from cola.utils import export
 from cola.utils.utils_linalg import get_precision
 
@@ -88,9 +97,25 @@ def pinv(A: ScalarMul, alg: Algorithm):
 
 @dispatch
 def pinv(A: Diagonal, alg: Algorithm):
-    return Diagonal(1. / A.diag)
+    xnp = A.xnp
+    abs_diag = xnp.abs(A.diag)
+    # TODO: usage of tolerance?
+    mask = abs_diag > 1e-12
+    inv_diag = xnp.zeros_like(A.diag)
+    inv_diag = xnp.update_array(inv_diag, 1. / A.diag[mask], mask)
+    return Diagonal(inv_diag)
 
 
 @dispatch
 def pinv(A: Permutation, alg: Algorithm):
     return Permutation(A.xnp.argsort(A.perm), A.dtype)
+
+
+@dispatch
+def pinv(A: BlockDiag, alg: Algorithm):
+    return BlockDiag(*[pinv(M, alg) for M in A.Ms], multiplicities=A.multiplicities)
+
+
+@dispatch
+def pinv(A: Kronecker, alg: Algorithm):
+    return Kronecker(*[pinv(M, alg) for M in A.Ms])

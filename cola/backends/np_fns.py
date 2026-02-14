@@ -39,6 +39,7 @@ float64 = np.float64
 int32 = np.int32
 int64 = np.int64
 inv = np.linalg.inv
+pinv = np.linalg.pinv
 isreal = np.isreal
 kron = np.kron
 log = np.log

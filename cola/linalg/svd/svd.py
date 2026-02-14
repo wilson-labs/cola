@@ -9,7 +9,16 @@ from cola.linalg.decompositions.lanczos import lanczos_eigs
 from cola.linalg.eig.lobpcg import LOBPCG, lobpcg
 from cola.linalg.inverse.inv import inv
 from cola.ops.operator_base import LinearOperator
-from cola.ops.operators import Dense, Diagonal, I_like, Identity
+from cola.ops.operators import (
+    BlockDiag,
+    Dense,
+    Diagonal,
+    I_like,
+    Identity,
+    Kronecker,
+    Permutation,
+    ScalarMul,
+)
 from cola.utils import export
 
 
@@ -93,3 +102,38 @@ def svd(A: Identity, k: int, which: str, alg: Algorithm):
 @dispatch
 def svd(A: Diagonal, k: int, which: str, alg: Algorithm):
     return Unitary(I_like(A)), A, Unitary(I_like(A))
+
+
+@dispatch(precedence=1)
+def svd(A: ScalarMul, k: int, which: str, alg: Algorithm):
+    ones = A.xnp.ones((int(A.shape[0]), ), dtype=A.dtype, device=A.device)
+    phase = A.c / A.xnp.abs(A.c)
+    U = Diagonal(phase * ones)
+    Sigma = Diagonal(A.xnp.abs(A.c) * ones)
+    V = Diagonal(ones)
+    return U, Sigma, V
+
+
+@dispatch(precedence=1)
+def svd(A: Permutation, k: int, which: str, alg: Algorithm):
+    ones = A.xnp.ones((int(A.shape[0]), ), dtype=A.dtype, device=A.device)
+    U = A  # Permutation is unitary
+    Sigma = Diagonal(ones)
+    V = Diagonal(ones)
+    return U, Sigma, V
+
+
+@dispatch(precedence=1)
+def svd(A: BlockDiag, k: int, which: str, alg: Algorithm):
+    # U = BlockDiag(Ui), S = Diagonal(concat(si)), V = BlockDiag(Vi)
+    results = [svd(M, k, which, alg) for M in A.Ms]
+    Us, Ss, Vs = zip(*results)
+    return BlockDiag(*Us), Diagonal(A.xnp.concat([S.diag for S in Ss])), BlockDiag(*Vs)
+
+
+@dispatch(precedence=1)
+def svd(A: Kronecker, k: int, which: str, alg: Algorithm):
+    # A = (U1 ⊗ U2)(S1 ⊗ S2)(V1 ⊗ V2)^H
+    results = [svd(M, k, which, alg) for M in A.Ms]
+    Us, Ss, Vs = zip(*results)
+    return Kronecker(*Us), Kronecker(*Ss), Kronecker(*Vs)

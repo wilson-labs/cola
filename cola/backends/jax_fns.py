@@ -29,6 +29,7 @@ any = jnp.any
 stack = jnp.stack
 norm = jnp.linalg.norm
 inv = jnp.linalg.inv
+pinv = jnp.linalg.pinv
 log = jnp.log
 sum = jnp.sum
 abs = jnp.abs
