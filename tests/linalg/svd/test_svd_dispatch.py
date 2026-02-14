@@ -1,5 +1,4 @@
 from cola.ops.operators import BlockDiag, Diagonal, Kronecker, Permutation, ScalarMul
-from cola.linalg.algorithm_base import Auto
 from cola.linalg.svd.svd import svd
 from cola.utils.utils_for_tests import get_xnp, parametrize, relative_error
 from cola.backends import all_backends
