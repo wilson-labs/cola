@@ -43,7 +43,7 @@ def test_svd_permutation(backend):
     assert rel_error < 1e-5
 
     s_vals = S.diag
-    expected_s = xnp.ones((3,), dtype=dtype, device=None)
+    expected_s = xnp.ones((3, ), dtype=dtype, device=None)
     assert relative_error(s_vals, expected_s) < 1e-5
 
 
